@@ -82,7 +82,7 @@ You can deploy CEKA easily using spaces like [Vercel](https://vercel.com/) or [N
 Want to contribute or support CEKA?  
 Follow us on social media or send us an email at [civiceducationkenya@gmail.com](https://mail.google.com/mail/?extsrc=mailto&url=mailto%3Aciviceducationkenya%40gmail.com%3Fsubject%3DRE%3A%26body%3DDear%2520CEK%2C)
 
-Also, we are wholly fan-supported: [Buy Me A Coffee](https://www.buymeacoffee.com/civiceducationke/)
+Also, we are wholly fan-supported: [Buy Me A Coffee](https://ko-fi.com/civiceducationkenya)
 
 > Please do consider! Goes a long way :)
 
