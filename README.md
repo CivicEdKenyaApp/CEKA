@@ -1,73 +1,93 @@
-# Welcome to your Lovable project
+# 🇰🇪 CEKA – Civic Education Kenya App
 
-## Project info
+**CEKA** (Civic Education Kenya App) is a community-led open-source platform built to bridge the civic knowledge gap and empower Kenyan citizens with accessible, accurate, and engaging civic education.
 
-**URL**: https://lovable.dev/projects/7223cafd-f94e-41ce-a313-dfd3ab13f10e
+---
 
-## How can I edit this code?
+## 🚀 Quick Start
 
-There are several ways of editing your application.
+### 1. Clone the Repo
 
-**Use Lovable**
+```bash
+git clone https://github.com/YOUR-USERNAME/ceka.git
+cd ceka
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7223cafd-f94e-41ce-a313-dfd3ab13f10e) and start prompting.
+### 2. Install Dependencies
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+npm install
+```
 
-**Use your preferred IDE**
+### 3. Set Up Environment Variables
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Rename the `.env.example` file to `.env` and add your Supabase credentials:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-Follow these steps:
+> 🔐 Do NOT commit your `.env` file.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 4. Run the App Locally
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Your app should be running at [http://localhost:5173](http://localhost:5173)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 🧠 Built With
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/)
+- [TypeScript](https://www.typescriptlang.org/)
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 🌍 Why CEKA?
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+CEKA is a civic tech project built for the people, by the people. We aim to:
+- Make civic education easy and relatable
+- Inspire civic action and awareness
+- Connect citizens with verified information
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/7223cafd-f94e-41ce-a313-dfd3ab13f10e) and click on Share -> Publish.
+## 🛠️ Contributing
 
-## Can I connect a custom domain to my Lovable project?
+We welcome all collaborators — developers, designers, educators, and civic advocates!
 
-Yes it is!
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature-name`)
+3. Make your changes
+4. Commit and push (`git commit -m "Add feature"` and `git push origin feature-name`)
+5. Open a pull request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📦 Deployment
+
+You can deploy CEKA easily using spaces like [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/).
+
+---
+
+## 💬 Contact & Support
+
+Want to contribute or support CEKA?  
+Follow us on social media or send us an email at [civiceducationkenya@gmail.com](https://mail.google.com/mail/?extsrc=mailto&url=mailto%3Aciviceducationkenya%40gmail.com%3Fsubject%3DRE%3A%26body%3DDear%2520CEK%2C)
+
+Also, we are wholly fan-supported: [Buy Me A Coffee](https://www.buymeacoffee.com/civiceducationke/)
+
+> Please do consider! Goes a long way :)
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
