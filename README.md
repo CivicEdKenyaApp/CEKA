@@ -36,7 +36,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 npm run dev
 ```
 
-Your app should be running at [http://localhost:5173](http://localhost:5173)
+Your app should be running at [http://localhost:8080](http://localhost:8080/)
 
 ---
 
