@@ -1,19 +1,28 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, User, Upload } from 'lucide-react';
+import { Menu, Search, Bell, User, Upload, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/App';
 import Logo from '@/components/ui/Logo';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
 
 const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const { session } = useAuth();
+  const { language, setLanguage } = useLanguage();
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -45,7 +54,7 @@ const Navbar = () => {
                   : 'text-foreground/60'
               }`}
             >
-              {link.name}
+              {translate(link.name, language)}
             </Link>
           ))}
         </nav>
@@ -54,9 +63,37 @@ const Navbar = () => {
           {!isMobile && (
             <div className="relative w-40 lg:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-8" />
+              <Input placeholder={translate("Search...", language)} className="pl-8" />
             </div>
           )}
+          
+          {/* Language Selector */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Languages className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setLanguage('en')}>
+                      {translate("English", language)}
+                      {language === 'en' && <span className="ml-2">✓</span>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLanguage('sw')}>
+                      {translate("Swahili", language)}
+                      {language === 'sw' && <span className="ml-2">✓</span>}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TooltipTrigger>
+              <TooltipContent>
+                {translate("Change Language", language)}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           {isResourcesSection && !isMobile && (
             <TooltipProvider>
@@ -69,7 +106,7 @@ const Navbar = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Upload Resource
+                  {translate("Upload Resource", language)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -101,7 +138,7 @@ const Navbar = () => {
                   
                   <div className="relative w-full mb-6">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search..." className="pl-8" />
+                    <Input placeholder={translate("Search...", language)} className="pl-8" />
                   </div>
 
                   {navLinks.map((link) => (
@@ -115,21 +152,39 @@ const Navbar = () => {
                           : 'text-foreground/60'
                       }`}
                     >
-                      {link.name}
+                      {translate(link.name, language)}
                     </Link>
                   ))}
+                  
+                  {/* Language selector for mobile */}
+                  <div className="border-t my-2"></div>
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Languages", language)}</h3>
+                  <button 
+                    onClick={() => setLanguage('en')} 
+                    className={`py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center justify-between ${language === 'en' ? 'font-medium text-foreground' : ''}`}
+                  >
+                    {translate("English", language)}
+                    {language === 'en' && <span>✓</span>}
+                  </button>
+                  <button 
+                    onClick={() => setLanguage('sw')} 
+                    className={`py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center justify-between ${language === 'sw' ? 'font-medium text-foreground' : ''}`}
+                  >
+                    {translate("Swahili", language)}
+                    {language === 'sw' && <span>✓</span>}
+                  </button>
                   
                   {isResourcesSection && (
                     <>
                       <div className="border-t my-2"></div>
-                      <h3 className="font-medium text-sm text-muted-foreground mb-2">Resources</h3>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Resources", language)}</h3>
                       <Link to="/resources/upload" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload Resource
+                        {translate("Upload Resource", language)}
                       </Link>
                       <Link to="/notifications" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
                         <Bell className="h-4 w-4 mr-2" />
-                        Notifications
+                        {translate("Notifications", language)}
                       </Link>
                     </>
                   )}

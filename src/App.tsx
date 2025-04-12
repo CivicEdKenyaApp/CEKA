@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./integrations/supabase/client";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LegislativeTracker from "./pages/LegislativeTracker";
@@ -59,29 +60,31 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={{ session, loading }}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-              <Route path="/resources" element={<ResourceHub />} />
-              <Route path="/resources/:id" element={<ResourceDetail />} />
-              <Route path="/resources/upload" element={<ResourceUpload />} />
-              <Route path="/resources/pending" element={<PendingResources />} />
-              <Route path="/resources/type/:type" element={<ResourceHub />} />
-              <Route path="/constitution" element={<ConstitutionPage />} />
-              <Route path="/community" element={<CommunityPortal />} />
-              <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/notifications" element={<Notifications />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+                <Route path="/resources" element={<ResourceHub />} />
+                <Route path="/resources/:id" element={<ResourceDetail />} />
+                <Route path="/resources/upload" element={<ResourceUpload />} />
+                <Route path="/resources/pending" element={<PendingResources />} />
+                <Route path="/resources/type/:type" element={<ResourceHub />} />
+                <Route path="/constitution" element={<ConstitutionPage />} />
+                <Route path="/community" element={<CommunityPortal />} />
+                <Route path="/volunteer" element={<Volunteer />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/notifications" element={<Notifications />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
       </AuthContext.Provider>
     </QueryClientProvider>
   );
