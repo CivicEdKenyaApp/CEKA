@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/App';
 import AuthModal from './AuthModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ScrollListenerProps {
   children: React.ReactNode;
@@ -41,12 +42,23 @@ const ScrollListener = ({ children }: ScrollListenerProps) => {
       setTimeout(() => setIsBlurred(false), 300);
     }
   };
+
+  // Define gradient background for blurred state
+  const blurStyles = isBlurred && !session 
+    ? 'blur-sm after:absolute after:inset-0 after:bg-gradient-to-tr after:from-[#006600]/20 after:via-[#141414]/15 after:to-[#BB1600]/20 after:z-[-1]' 
+    : '';
   
   return (
     <>
-      <div className={`transition-all duration-300 ${isBlurred && !session ? 'blur-sm' : ''}`}>
+      <motion.div 
+        className={`relative transition-all duration-300 ${blurStyles}`}
+        animate={{ 
+          filter: isBlurred && !session ? 'blur(8px)' : 'blur(0px)'
+        }}
+        transition={{ duration: 0.5 }}
+      >
         {children}
-      </div>
+      </motion.div>
       <AuthModal 
         open={showAuth} 
         onOpenChange={handleAuthModalClose} 

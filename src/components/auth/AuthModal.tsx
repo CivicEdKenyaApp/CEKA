@@ -140,10 +140,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-background/90 border border-primary/10 shadow-lg">
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-gradient-to-br from-[#EEEEEE]/80 via-[#006600]/40 to-[#BB1600]/40 border border-primary/10 shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            {translate("Welcome to Citizen Engagement", language)}
+            {translate("Welcome to CEKA", language)}
           </DialogTitle>
           <DialogDescription className="text-center">
             {translate("Join our community of active citizens", language)}
@@ -198,14 +198,14 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2">
+              <span className="bg-transparent px-2 text-foreground">
                 {translate("Or", language)}
               </span>
             </div>
           </div>
           
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 bg-white/30">
               <TabsTrigger value="signin">{translate("Sign In", language)}</TabsTrigger>
               <TabsTrigger value="signup">{translate("Sign Up", language)}</TabsTrigger>
             </TabsList>
@@ -224,7 +224,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoComplete="email"
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <div className="space-y-2">
@@ -238,12 +238,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-kenya-green hover:bg-kenya-green/90" 
+                  className="w-full bg-kenya-green hover:bg-kenya-green/90 transition-all duration-300" 
                   disabled={loading}
                 >
                   {loading ? translate("Signing in...", language) : translate("Sign In", language)}
@@ -263,7 +263,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <div className="space-y-2">
@@ -276,7 +276,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <div className="space-y-2">
@@ -291,7 +291,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoComplete="email"
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <div className="space-y-2">
@@ -306,12 +306,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="transition-all focus:ring-2 focus:ring-primary/30"
+                    className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-kenya-green hover:bg-kenya-green/90" 
+                  className="w-full bg-kenya-green hover:bg-kenya-green/90 transition-all duration-300" 
                   disabled={loading}
                 >
                   {loading ? translate("Creating account...", language) : translate("Create Account", language)}

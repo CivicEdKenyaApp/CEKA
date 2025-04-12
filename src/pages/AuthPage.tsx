@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +24,6 @@ const AuthPage = () => {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (session) {
       navigate('/');
@@ -134,16 +132,23 @@ const AuthPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container max-w-md py-16"
+        className="container max-w-md py-16 relative"
       >
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#006600]/10 via-[#141414]/5 to-[#BB1600]/10 -z-10 rounded-2xl"></div>
+        
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">{translate("Welcome to CEKA", language)}</h1>
+          <p className="text-muted-foreground">{translate("Join our community of active citizens", language)}</p>
+        </div>
+        
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 bg-white/30">
             <TabsTrigger value="signin">{translate("Sign In", language)}</TabsTrigger>
             <TabsTrigger value="signup">{translate("Sign Up", language)}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
-            <Card className="border-primary/10 shadow-lg">
+            <Card className="border-primary/10 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>{translate("Sign In", language)}</CardTitle>
                 <CardDescription>
@@ -239,7 +244,7 @@ const AuthPage = () => {
           </TabsContent>
           
           <TabsContent value="signup">
-            <Card className="border-primary/10 shadow-lg">
+            <Card className="border-primary/10 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>{translate("Create Account", language)}</CardTitle>
                 <CardDescription>

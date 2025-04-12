@@ -1,7 +1,6 @@
+import { Language } from "@/contexts/LanguageContext"
 
-import { Language } from '@/contexts/LanguageContext';
-
-export const translations: Record<string, Record<Language, string>> = {
+const translations: Record<string, Record<Language, string>> = {
   // General
   'Loading...': { en: 'Loading...', sw: 'Inapakia...' },
   'Search...': { en: 'Search...', sw: 'Tafuta...' },
@@ -56,7 +55,14 @@ export const translations: Record<string, Record<Language, string>> = {
   'Continue with Google': { en: 'Continue with Google', sw: 'Endelea na Google' },
   'Continue with Twitter': { en: 'Continue with Twitter', sw: 'Endelea na Twitter' },
   'Welcome to Citizen Engagement': { en: 'Welcome to Citizen Engagement', sw: 'Karibu kwenye Ushiriki wa Raia' },
-  'Join our community of active citizens': { en: 'Join our community of active citizens', sw: 'Jiunge na jumuiya yetu ya raia wanaoshiriki' },
+  'Welcome to CEKA': {
+    en: "Welcome to CEKA",
+    sw: "Karibu CEKA"
+  },
+  "Join our community of active citizens": {
+    en: "Join our community of active citizens",
+    sw: "Jiunge na jumuiya yetu ya raia wanaoshiriki"
+  },
   'Signing in...': { en: 'Signing in...', sw: 'Inaingia...' },
   'Creating account...': { en: 'Creating account...', sw: 'Inaunda akaunti...' },
   'Error signing in': { en: 'Error signing in', sw: 'Hitilafu wakati wa kuingia' },
@@ -147,10 +153,9 @@ export const translations: Record<string, Record<Language, string>> = {
   'Notifications Settings': { en: 'Notifications Settings', sw: 'Mipangilio ya Arifa' }
 };
 
-export const translate = (key: string, language: Language): string => {
-  if (!translations[key]) {
-    console.warn(`Translation missing for: ${key}`);
-    return key;
+export function translate(text: string, language: Language): string {
+  if (translations[text] && translations[text][language]) {
+    return translations[text][language]
   }
-  return translations[key][language] || key;
-};
+  return text
+}
