@@ -141,7 +141,7 @@ const translations: TranslationDict = {
   },
   'Join Now': { en: 'Join Now', sw: 'Jiunge Sasa' },
   
-  // Volunteer
+  // Volunteer section
   'Volunteer Opportunities': { en: 'Volunteer Opportunities', sw: 'Fursa za Kujitolea' },
   'Make a difference in your community through civic engagement': { 
     en: 'Make a difference in your community through civic engagement', 
@@ -221,6 +221,7 @@ const translations: TranslationDict = {
   'Select resource type': { en: 'Select resource type', sw: 'Chagua aina ya rasilimali' },
   'PDF Document': { en: 'PDF Document', sw: 'Hati ya PDF' },
   'Infographic': { en: 'Infographic', sw: 'Mchoro wa Habari' },
+  'Video': { en: 'Video', sw: 'Video' },
   'Resource URL': { en: 'Resource URL', sw: 'URL ya Rasilimali' },
   'Provide a direct link to your resource (document, video, or infographic)': { 
     en: 'Provide a direct link to your resource (document, video, or infographic)', 
@@ -341,7 +342,38 @@ const translations: TranslationDict = {
   'The resource you\'re looking for doesn\'t exist or has been removed.': {
     en: 'The resource you\'re looking for doesn\'t exist or has been removed.',
     sw: 'Rasilimali unayotafuta haipo au imeondolewa.'
-  }
+  },
+  
+  // ResourceHighlights component
+  'Understanding the Constitution of Kenya': { 
+    en: 'Understanding the Constitution of Kenya', 
+    sw: 'Kuelewa Katiba ya Kenya' 
+  },
+  'A comprehensive guide to the Kenyan Constitution and its key provisions.': { 
+    en: 'A comprehensive guide to the Kenyan Constitution and its key provisions.', 
+    sw: 'Mwongozo kamili wa Katiba ya Kenya na masharti yake muhimu.' 
+  },
+  'How Laws Are Made in Kenya': { 
+    en: 'How Laws Are Made in Kenya', 
+    sw: 'Jinsi Sheria Zinavyoundwa nchini Kenya' 
+  },
+  'Visual explanation of the legislative process from bill proposal to enactment.': { 
+    en: 'Visual explanation of the legislative process from bill proposal to enactment.', 
+    sw: 'Maelezo ya kuona ya mchakato wa kutunga sheria kutoka pendekezo la mswada hadi kuundwa.' 
+  },
+  'Your Rights as a Kenyan Citizen': { 
+    en: 'Your Rights as a Kenyan Citizen', 
+    sw: 'Haki Zako kama Mwananchi wa Kenya' 
+  },
+  'Visual representation of fundamental rights guaranteed by the Constitution.': { 
+    en: 'Visual representation of fundamental rights guaranteed by the Constitution.', 
+    sw: 'Uwakilishi wa kuona wa haki za msingi zinazodhaminiwa na Katiba.' 
+  },
+  'Learn about governance, civic rights, and public participation': { 
+    en: 'Learn about governance, civic rights, and public participation', 
+    sw: 'Jifunze kuhusu utawala, haki za kiraia, na ushiriki wa umma' 
+  },
+  'PDF': { en: 'PDF', sw: 'PDF' }
 };
 
 // Translation function

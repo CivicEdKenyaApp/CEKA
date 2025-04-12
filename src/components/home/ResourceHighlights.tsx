@@ -65,8 +65,8 @@ const ResourceHighlights = () => {
               </CardHeader>
               <CardContent className="pt-6">
                 <Badge className="mb-3">{translate(resource.type, language)}</Badge>
-                <h3 className="font-semibold text-lg mb-2">{resource.title}</h3>
-                <p className="text-muted-foreground text-sm">{resource.description}</p>
+                <h3 className="font-semibold text-lg mb-2">{translate(resource.title, language)}</h3>
+                <p className="text-muted-foreground text-sm">{translate(resource.description, language)}</p>
               </CardContent>
               <CardFooter className="flex justify-between items-center border-t pt-4">
                 <Button variant="outline" size="sm" className="text-xs" asChild>
