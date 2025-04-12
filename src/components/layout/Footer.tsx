@@ -1,16 +1,21 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
 
 const Footer = () => {
+  const { language } = useLanguage();
+
   return (
     <footer className="bg-muted py-8 mt-12">
       <div className="container grid gap-8 md:grid-cols-4">
         <div className="space-y-3">
           <Logo variant="full" />
           <p className="text-sm text-muted-foreground">
-            Empowering Kenyan citizens with civic knowledge and tools for meaningful participation.
+            {translate('Empowering Kenyan citizens with civic knowledge and tools for meaningful participation.', language)}
           </p>
           <div className="flex items-center space-x-3">
             <a href="https://www.facebook.com/profile.php?id=61561994025207" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
@@ -37,28 +42,28 @@ const Footer = () => {
         </div>
         
         <div>
-          <h4 className="font-medium text-base mb-3">Quick Links</h4>
+          <h4 className="font-medium text-base mb-3">{translate('Quick Links', language)}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/" className="hover:text-kenya-green">Home</Link></li>
-            <li><Link to="/legislative-tracker" className="hover:text-kenya-green">Legislative Tracker</Link></li>
-            <li><Link to="/resources" className="hover:text-kenya-green">Resource Hub</Link></li>
-            <li><Link to="/community" className="hover:text-kenya-green">Community</Link></li>
-            <li><Link to="/volunteer" className="hover:text-kenya-green">Volunteer</Link></li>
+            <li><Link to="/" className="hover:text-kenya-green">{translate('Home', language)}</Link></li>
+            <li><Link to="/legislative-tracker" className="hover:text-kenya-green">{translate('Legislative Tracker', language)}</Link></li>
+            <li><Link to="/resources" className="hover:text-kenya-green">{translate('Resource Hub', language)}</Link></li>
+            <li><Link to="/community" className="hover:text-kenya-green">{translate('Community', language)}</Link></li>
+            <li><Link to="/volunteer" className="hover:text-kenya-green">{translate('Volunteer', language)}</Link></li>
           </ul>
         </div>
         
         <div>
-          <h4 className="font-medium text-base mb-3">Resources</h4>
+          <h4 className="font-medium text-base mb-3">{translate('Resources', language)}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/resources/type/constitution" className="hover:text-kenya-green">Constitution</Link></li>
-            <li><Link to="/resources/type/infographic" className="hover:text-kenya-green">Infographics</Link></li>
-            <li><Link to="/resources/type/video" className="hover:text-kenya-green">Videos</Link></li>
-            <li><Link to="/resources/type/document" className="hover:text-kenya-green">Documents</Link></li>
+            <li><Link to="/resources/type/constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
+            <li><Link to="/resources/type/infographic" className="hover:text-kenya-green">{translate('Infographic', language)}</Link></li>
+            <li><Link to="/resources/type/video" className="hover:text-kenya-green">{translate('Videos', language)}</Link></li>
+            <li><Link to="/resources/type/document" className="hover:text-kenya-green">{translate('Documents', language)}</Link></li>
           </ul>
         </div>
         
         <div>
-          <h4 className="font-medium text-base mb-3">Contact</h4>
+          <h4 className="font-medium text-base mb-3">{translate('Contact', language)}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -78,10 +83,10 @@ const Footer = () => {
       
       <div className="container mt-8 pt-4 border-t border-border">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. {translate('All rights reserved.', language)}</p>
           <div className="flex gap-4">
-            <Link to="/privacy" className="hover:text-kenya-green">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-kenya-green">Terms of Service</Link>
+            <Link to="/privacy" className="hover:text-kenya-green">{translate('Privacy Policy', language)}</Link>
+            <Link to="/terms" className="hover:text-kenya-green">{translate('Terms of Service', language)}</Link>
           </div>
         </div>
       </div>

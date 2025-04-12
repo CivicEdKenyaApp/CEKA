@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Layout from '@/components/layout/Layout';
 import { useAuth } from '@/App';
 import { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -22,6 +24,7 @@ const UserProfile = () => {
   const [updating, setUpdating] = useState(false);
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
+  const { language } = useLanguage();
 
   useEffect(() => {
     // Redirect if not logged in
@@ -55,7 +58,7 @@ const UserProfile = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error loading profile",
+        title: translate("Error loading profile", language),
         description: error.message,
       });
     } finally {
@@ -78,15 +81,15 @@ const UserProfile = () => {
       if (error) throw error;
       
       toast({
-        title: "Success!",
-        description: "Your profile has been updated.",
+        title: translate("Success!", language),
+        description: translate("Your profile has been updated.", language),
       });
       
       getProfile();
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error updating profile",
+        title: translate("Error updating profile", language),
         description: error.message,
       });
     } finally {
@@ -101,7 +104,7 @@ const UserProfile = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error signing out",
+        title: translate("Error signing out", language),
         description: error.message,
       });
     }
@@ -111,7 +114,7 @@ const UserProfile = () => {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          Loading...
+          {translate("Loading...", language)}
         </div>
       </Layout>
     );
@@ -130,14 +133,14 @@ const UserProfile = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <CardTitle className="text-2xl">Your Profile</CardTitle>
+            <CardTitle className="text-2xl">{translate("Your Profile", language)}</CardTitle>
             <CardDescription>
-              Manage your account details
+              {translate("Manage your account details", language)}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <label htmlFor="email" className="text-sm font-medium">{translate("Email", language)}</label>
               <Input
                 id="email"
                 type="email"
@@ -146,7 +149,7 @@ const UserProfile = () => {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium">Username</label>
+              <label htmlFor="username" className="text-sm font-medium">{translate("Username", language)}</label>
               <Input
                 id="username"
                 value={username}
@@ -154,7 +157,7 @@ const UserProfile = () => {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
+              <label htmlFor="fullName" className="text-sm font-medium">{translate("Full Name", language)}</label>
               <Input
                 id="fullName"
                 value={fullName}
@@ -168,14 +171,14 @@ const UserProfile = () => {
               className="w-full bg-kenya-green hover:bg-kenya-green/90" 
               disabled={updating}
             >
-              {updating ? "Updating..." : "Update Profile"}
+              {updating ? translate("Updating...", language) : translate("Update Profile", language)}
             </Button>
             <Button 
               onClick={handleSignOut} 
               variant="outline" 
               className="w-full"
             >
-              Sign Out
+              {translate("Sign Out", language)}
             </Button>
           </CardFooter>
         </Card>
