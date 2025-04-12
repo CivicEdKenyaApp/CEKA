@@ -20,9 +20,11 @@ export const translations: Record<string, Record<Language, string>> = {
   'Yes': { en: 'Yes', sw: 'Ndio' },
   'No': { en: 'No', sw: 'La' },
   'Success': { en: 'Success', sw: 'Imefaulu' },
+  'Success!': { en: 'Success!', sw: 'Imefaulu!' },
   'Error': { en: 'Error', sw: 'Hitilafu' },
   'Warning': { en: 'Warning', sw: 'Onyo' },
   'Info': { en: 'Info', sw: 'Habari' },
+  'Or': { en: 'Or', sw: 'Au' },
   
   // Navigation
   'Home': { en: 'Home', sw: 'Nyumbani' },
@@ -49,6 +51,17 @@ export const translations: Record<string, Record<Language, string>> = {
   'Confirm Password': { en: 'Confirm Password', sw: 'Thibitisha Nenosiri' },
   'Forgot Password?': { en: 'Forgot Password?', sw: 'Umesahau Nenosiri?' },
   'Reset Password': { en: 'Reset Password', sw: 'Weka upya Nenosiri' },
+  'Full Name': { en: 'Full Name', sw: 'Jina Kamili' },
+  'Username': { en: 'Username', sw: 'Jina la Mtumiaji' },
+  'Continue with Google': { en: 'Continue with Google', sw: 'Endelea na Google' },
+  'Continue with Twitter': { en: 'Continue with Twitter', sw: 'Endelea na Twitter' },
+  'Welcome to Citizen Engagement': { en: 'Welcome to Citizen Engagement', sw: 'Karibu kwenye Ushiriki wa Raia' },
+  'Join our community of active citizens': { en: 'Join our community of active citizens', sw: 'Jiunge na jumuiya yetu ya raia wanaoshiriki' },
+  'Signing in...': { en: 'Signing in...', sw: 'Inaingia...' },
+  'Creating account...': { en: 'Creating account...', sw: 'Inaunda akaunti...' },
+  'Error signing in': { en: 'Error signing in', sw: 'Hitilafu wakati wa kuingia' },
+  'Error signing up': { en: 'Error signing up', sw: 'Hitilafu wakati wa kujisajili' },
+  'Check your email for the confirmation link.': { en: 'Check your email for the confirmation link.', sw: 'Angalia barua pepe yako kwa kiungo cha uthibitisho.' },
   
   // ResourceHighlights component
   'Educational Resources': { en: 'Educational Resources', sw: 'Rasilimali za Elimu' },

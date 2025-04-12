@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./integrations/supabase/client";
@@ -41,18 +41,18 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -67,18 +67,62 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                <Route path="/resources" element={<ResourceHub />} />
-                <Route path="/resources/:id" element={<ResourceDetail />} />
-                <Route path="/resources/upload" element={<ResourceUpload />} />
-                <Route path="/resources/pending" element={<PendingResources />} />
-                <Route path="/resources/type/:type" element={<ResourceHub />} />
-                <Route path="/constitution" element={<ConstitutionPage />} />
-                <Route path="/community" element={<CommunityPortal />} />
-                <Route path="/volunteer" element={<Volunteer />} />
-                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/legislative-tracker" element={
+                  <ProtectedRoute>
+                    <LegislativeTracker />
+                  </ProtectedRoute>
+                } />
+                <Route path="/resources" element={
+                  <ProtectedRoute>
+                    <ResourceHub />
+                  </ProtectedRoute>
+                } />
+                <Route path="/resources/:id" element={
+                  <ProtectedRoute>
+                    <ResourceDetail />
+                  </ProtectedRoute>
+                } />
+                <Route path="/resources/upload" element={
+                  <ProtectedRoute>
+                    <ResourceUpload />
+                  </ProtectedRoute>
+                } />
+                <Route path="/resources/pending" element={
+                  <ProtectedRoute>
+                    <PendingResources />
+                  </ProtectedRoute>
+                } />
+                <Route path="/resources/type/:type" element={
+                  <ProtectedRoute>
+                    <ResourceHub />
+                  </ProtectedRoute>
+                } />
+                <Route path="/constitution" element={
+                  <ProtectedRoute>
+                    <ConstitutionPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/community" element={
+                  <ProtectedRoute>
+                    <CommunityPortal />
+                  </ProtectedRoute>
+                } />
+                <Route path="/volunteer" element={
+                  <ProtectedRoute>
+                    <Volunteer />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <UserProfile />
+                  </ProtectedRoute>
+                } />
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/notifications" element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
@@ -88,6 +132,21 @@ const App = () => {
       </AuthContext.Provider>
     </QueryClientProvider>
   );
+};
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { session, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+  }
+  
+  if (!session) {
+    return <Navigate to="/" />;
+  }
+  
+  return children;
 };
 
 export default App;
