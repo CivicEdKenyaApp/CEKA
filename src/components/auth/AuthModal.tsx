@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -148,8 +149,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-gradient-to-br from-[#EEEEEE]/80 via-[#006600]/40 to-[#BB1600]/40 border border-primary/10 shadow-lg relative">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-hidden">
+        {/* Kenya-themed color gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#006600]/10 via-[#EEEEEE]/5 to-[#BB1600]/10 pointer-events-none z-0"></div>
+        
+        <DialogHeader className="relative z-10">
           <DialogTitle className="text-2xl font-bold text-center">
             {translate("Welcome to CEKA 🇰🇪", language)}
           </DialogTitle>
@@ -158,7 +162,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 relative z-10">
           {/* Social Login Buttons */}
           <div className="flex flex-col gap-3">
             <motion.button
@@ -193,13 +197,13 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-transparent px-2 text-foreground">{translate("Or", language)}</span>
+              <span className="bg-white/80 px-2 text-foreground">{translate("Or", language)}</span>
             </div>
           </div>
 
           {/* Tabbed Forms */}
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/30">
+            <TabsList className="grid w-full grid-cols-2 bg-white/50">
               <TabsTrigger value="signin">{translate("Sign In", language)}</TabsTrigger>
               <TabsTrigger value="signup">{translate("Sign Up", language)}</TabsTrigger>
             </TabsList>
@@ -229,7 +233,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         </div>
 
         {/* Optional "Skip for now" dismiss button */}
-        <DialogFooter className="justify-center mt-4">
+        <DialogFooter className="justify-center mt-4 relative z-10">
           <button onClick={handleDismiss} className="text-sm text-gray-500 hover:underline">
             {translate("Skip for now", language)}
           </button>

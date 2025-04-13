@@ -15,12 +15,12 @@ const Layout = ({ children }: LayoutProps) => {
     <LanguageProvider>
       <div className="flex min-h-screen flex-col">
         <ScrollListener>
-          <>
+          <div className="flex flex-col flex-1">
             <Navbar />
             <main className="flex-1 pb-16 md:pb-0">{children}</main>
             <Footer />
             <BottomNavbar />
-          </>
+          </div>
         </ScrollListener>
       </div>
     </LanguageProvider>
