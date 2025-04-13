@@ -1,13 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Layout from '@/components/layout/Layout';
 import Hero from '@/components/home/Hero';
 import FeaturedLegislation from '@/components/home/FeaturedLegislation';
 import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
-import { useAuth } from '@/App';
-import { useNavigate } from 'react-router-dom';
 
 // Sample resource links for educational content
 export const sampleResources = {
@@ -26,17 +24,6 @@ export const sampleResources = {
 };
 
 const Index = () => {
-  const { session, loading } = useAuth();
-  const navigate = useNavigate();
-  
-  // Auto-redirect to auth page if not logged in
-  useEffect(() => {
-    if (!loading && !session) {
-      // We don't need this redirect since we're using the scroll-triggered auth modal
-      // navigate('/auth');
-    }
-  }, [session, loading, navigate]);
-  
   return (
     <Layout>
       <Hero />

@@ -1,3 +1,4 @@
+
 import { Language } from "@/contexts/LanguageContext"
 
 const translations: Record<string, Record<Language, string>> = {
@@ -68,6 +69,11 @@ const translations: Record<string, Record<Language, string>> = {
   'Error signing in': { en: 'Error signing in', sw: 'Hitilafu wakati wa kuingia' },
   'Error signing up': { en: 'Error signing up', sw: 'Hitilafu wakati wa kujisajili' },
   'Check your email for the confirmation link.': { en: 'Check your email for the confirmation link.', sw: 'Angalia barua pepe yako kwa kiungo cha uthibitisho.' },
+  'Sign in reminder': { en: 'Sign in reminder', sw: 'Kikumbusho cha kuingia' },
+  'Sign in to access all CEKA features': { en: 'Sign in to access all CEKA features', sw: 'Ingia ili kupata huduma zote za CEKA' },
+  'Skip for now': { en: 'Skip for now', sw: 'Ruka kwa sasa' },
+  'Welcome to CEKA 🇰🇪': { en: 'Welcome to CEKA 🇰🇪', sw: 'Karibu CEKA 🇰🇪' },
+  'Sign in to save your progress and access civic tools.': { en: 'Sign in to save your progress and access civic tools.', sw: 'Ingia ili kuhifadhi maendeleo yako na kupata zana za kiraia.' },
   
   // ResourceHighlights component
   'Educational Resources': { en: 'Educational Resources', sw: 'Rasilimali za Elimu' },

@@ -13,14 +13,16 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <LanguageProvider>
-      <ScrollListener>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1 pb-16 md:pb-0">{children}</main>
-          <Footer />
-          <BottomNavbar />
-        </div>
-      </ScrollListener>
+      <div className="flex min-h-screen flex-col">
+        <ScrollListener>
+          <>
+            <Navbar />
+            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            <Footer />
+            <BottomNavbar />
+          </>
+        </ScrollListener>
+      </div>
     </LanguageProvider>
   );
 };
