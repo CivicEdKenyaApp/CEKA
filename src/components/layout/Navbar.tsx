@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, User, Upload, Languages } from 'lucide-react';
+import { Menu, Search, Bell, User, Upload, Languages, HandHelping } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -33,6 +33,9 @@ const Navbar = () => {
   ];
 
   const isResourcesSection = location.pathname.includes('/resources');
+  const isVolunteerSection = location.pathname.includes('/volunteer');
+  const isCommunitySection = location.pathname.includes('/community');
+  const isLegislativeSection = location.pathname.includes('/legislative-tracker');
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -48,8 +51,8 @@ const Navbar = () => {
               key={link.path} 
               to={link.path} 
               className={`transition-colors hover:text-foreground/80 ${
-                location.pathname === link.path || 
-                (link.path === '/resources' && isResourcesSection) 
+                (location.pathname === link.path) || 
+                (link.path !== '/' && location.pathname.includes(link.path))
                   ? 'text-foreground font-medium' 
                   : 'text-foreground/60'
               }`}
@@ -146,8 +149,8 @@ const Navbar = () => {
                       key={link.path}
                       to={link.path}
                       className={`py-2 hover:text-foreground transition-colors ${
-                        location.pathname === link.path || 
-                        (link.path === '/resources' && isResourcesSection) 
+                        (location.pathname === link.path) || 
+                        (link.path !== '/' && location.pathname.includes(link.path))
                           ? 'text-foreground font-medium' 
                           : 'text-foreground/60'
                       }`}
@@ -182,12 +185,13 @@ const Navbar = () => {
                         <Upload className="h-4 w-4 mr-2" />
                         {translate("Upload Resource", language)}
                       </Link>
-                      <Link to="/notifications" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
-                        <Bell className="h-4 w-4 mr-2" />
-                        {translate("Notifications", language)}
-                      </Link>
                     </>
                   )}
+                  
+                  <Link to="/notifications" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
+                    <Bell className="h-4 w-4 mr-2" />
+                    {translate("Notifications", language)}
+                  </Link>
                 </div>
               </SheetContent>
             </Sheet>

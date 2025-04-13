@@ -148,14 +148,14 @@ const CommunityPortal = () => {
         </div>
         
         <Tabs defaultValue="discussions" className="w-full">
-          <TabsList className="mb-8">
+          <TabsList className="mb-8 z-30 relative">
             <TabsTrigger value="discussions">Discussions</TabsTrigger>
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           </TabsList>
           
           <TabsContent value="discussions" className="space-y-8">
             {/* Analytics widgets */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Card>
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="bg-muted p-3 rounded-full">

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Users, Bell, User } from 'lucide-react';
+import { Home, FileText, Users, Bell, User, HandHelping } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
@@ -27,9 +27,9 @@ const BottomNavbar = () => {
       icon: <Users className="h-5 w-5" />
     },
     {
-      name: 'Notifications',
-      path: '/notifications',
-      icon: <Bell className="h-5 w-5" />
+      name: 'Volunteer',
+      path: '/volunteer',
+      icon: <HandHelping className="h-5 w-5" />
     },
     {
       name: 'Profile',
@@ -44,7 +44,7 @@ const BottomNavbar = () => {
         {navItems.map((item) => {
           const isActive = 
             location.pathname === item.path || 
-            (item.path === '/resources' && location.pathname.includes('/resources'));
+            (item.path !== '/' && location.pathname.includes(item.path));
             
           return (
             <Link

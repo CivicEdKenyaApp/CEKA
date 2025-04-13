@@ -9,7 +9,6 @@ import ResourceTypeFilter from '@/components/resources/ResourceTypeFilter';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/App';
 
-// Mock data for initial display
 const mockResources = [
   {
     id: "1",
@@ -125,7 +124,6 @@ const mockResources = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
-  // Adding new documents for the Documents tab
   {
     id: "9",
     title: "National Civic Education Framework",
@@ -214,10 +212,7 @@ const ResourceHub = () => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        // In a real implementation, this would fetch from Supabase
-        // For now, we'll just use the mock data after a brief delay
         setTimeout(() => {
-          // Filter by type if specified in URL
           let filteredResources = [...mockResources];
           
           if (type) {
@@ -265,8 +260,6 @@ const ResourceHub = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Filter resources by search query
-    // This would be handled by the database in a real implementation
     console.log("Searching for:", searchQuery);
   };
 

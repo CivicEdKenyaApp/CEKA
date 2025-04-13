@@ -272,7 +272,7 @@ const Volunteer = () => {
           
           <div className="lg:col-span-3">
             <Tabs defaultValue="all">
-              <TabsList className="mb-6">
+              <TabsList className="mb-6 z-30 relative">
                 <TabsTrigger value="all">All Opportunities</TabsTrigger>
                 <TabsTrigger value="local">Local</TabsTrigger>
                 <TabsTrigger value="grassroots">Grassroots</TabsTrigger>
