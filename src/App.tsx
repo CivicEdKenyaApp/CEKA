@@ -11,6 +11,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LegislativeTracker from "./pages/LegislativeTracker";
+import LegislativeTrackerDetail from "./pages/LegislativeTrackerDetail";
 import ResourceHub from "./pages/ResourceHub";
 import ResourceDetail from "./pages/ResourceDetail";
 import ResourceUpload from "./pages/ResourceUpload";
@@ -67,11 +68,8 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/legislative-tracker" element={
-                  <ProtectedRoute>
-                    <LegislativeTracker />
-                  </ProtectedRoute>
-                } />
+                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+                <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
                     <ResourceHub />
