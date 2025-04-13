@@ -9,6 +9,7 @@ import { Bell } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
 
 interface ScrollListenerProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ const ScrollListener = ({ children }: ScrollListenerProps) => {
   const hasTriggered = useRef(false);
   const hasInteracted = useRef(false);
   const { language } = useLanguage();
+  const { toast } = useToast();
   
   // Check session storage on component mount
   useEffect(() => {
@@ -95,7 +97,14 @@ const ScrollListener = ({ children }: ScrollListenerProps) => {
       
       // Only show reminder if user is not logged in
       if (!session) {
-        setTimeout(() => setShowReminder(true), 1000);
+        setTimeout(() => {
+          setShowReminder(true);
+          // Show toast notification
+          toast({
+            title: translate("Sign-in Reminder", language),
+            description: translate("Sign in to access all CEKA features", language),
+          });
+        }, 1000);
       }
     }
   };
