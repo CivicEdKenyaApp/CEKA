@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,11 +22,13 @@ import UserProfile from "./pages/UserProfile";
 import AuthPage from "./pages/AuthPage";
 import Notifications from "./pages/Notifications";
 import ConstitutionPage from "./pages/ConstitutionPage";
+import JoinCommunity from "./pages/JoinCommunity";
+import VolunteerApplication from "./pages/VolunteerApplication";
+import ScrollToTop from "./components/ScrollToTop";
+import LoadingScreen from "./components/LoadingScreen";
 
-// Create a query client for React Query
 const queryClient = new QueryClient();
 
-// Create authentication context
 export const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
@@ -38,13 +39,11 @@ export const AuthContext = createContext<{
 
 export const useAuth = () => useContext(AuthContext);
 
-// Browser back button handler component
 const BackButtonHandler = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Handle hardware back button for mobile devices
     window.addEventListener('popstate', (e) => {
       e.preventDefault();
       navigate(-1);
@@ -63,14 +62,12 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -89,62 +86,25 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <BackButtonHandler>
+                  <ScrollToTop />
+                  <LoadingScreen />
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/legislative-tracker" element={<LegislativeTracker />} />
                     <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                    <Route path="/resources" element={
-                      <ProtectedRoute>
-                        <ResourceHub />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/resources/:id" element={
-                      <ProtectedRoute>
-                        <ResourceDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/resources/upload" element={
-                      <ProtectedRoute>
-                        <ResourceUpload />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/resources/pending" element={
-                      <ProtectedRoute>
-                        <PendingResources />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/resources/type/:type" element={
-                      <ProtectedRoute>
-                        <ResourceHub />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/constitution" element={
-                      <ProtectedRoute>
-                        <ConstitutionPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/community" element={
-                      <ProtectedRoute>
-                        <CommunityPortal />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/volunteer" element={
-                      <ProtectedRoute>
-                        <Volunteer />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <UserProfile />
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/resources" element={<ResourceHub />} />
+                    <Route path="/resources/:id" element={<ResourceDetail />} />
+                    <Route path="/resources/upload" element={<ResourceUpload />} />
+                    <Route path="/resources/pending" element={<PendingResources />} />
+                    <Route path="/resources/type/:type" element={<ResourceHub />} />
+                    <Route path="/constitution" element={<ConstitutionPage />} />
+                    <Route path="/community" element={<CommunityPortal />} />
+                    <Route path="/volunteer" element={<Volunteer />} />
+                    <Route path="/community/join" element={<JoinCommunity />} />
+                    <Route path="/volunteer/apply/:role" element={<VolunteerApplication />} />
+                    <Route path="/profile" element={<UserProfile />} />
                     <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/notifications" element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    } />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="/notifications" element={<Notifications />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BackButtonHandler>
@@ -155,21 +115,6 @@ const App = () => {
       </AuthContext.Provider>
     </QueryClientProvider>
   );
-};
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { session, loading } = useAuth();
-  
-  if (loading) {
-    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
-  }
-  
-  if (!session) {
-    return <Navigate to="/" />;
-  }
-  
-  return children;
 };
 
 export default App;
