@@ -79,7 +79,7 @@ const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
                       <li key={type} className="flex items-center gap-2">
                         {resourceIcons[type as keyof typeof resourceIcons]}
                         <a 
-                          href={link} 
+                          href={link as string} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="text-primary hover:underline transition-colors flex-1"
