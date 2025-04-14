@@ -22,11 +22,6 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
       {(variant === 'full' || variant === 'text-only') && (
         <div className="flex flex-col">
           <span className="font-bold text-kenya-green">CEKA</span>
-          {variant === 'full' && (
-            <span className="hidden sm:block text-xs font-normal text-muted-foreground">
-              Civic Education Kenya App
-            </span>
-          )}
         </div>
       )}
     </Link>

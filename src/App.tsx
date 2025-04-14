@@ -26,8 +26,8 @@ import ConstitutionPage from "./pages/ConstitutionPage";
 import JoinCommunity from "./pages/JoinCommunity";
 import VolunteerApplication from "./pages/VolunteerApplication";
 import Settings from "./pages/Settings";
-import ScrollToTop from "./components/ScrollToTop";
-import LoadingScreen from "./components/LoadingScreen";
+import ScrollToTop from "./components/utils/ScrollToTop";
+import LoadingScreen from "./components/utils/LoadingScreen";
 import PullToRefresh from "./components/PullToRefresh";
 
 const queryClient = new QueryClient();

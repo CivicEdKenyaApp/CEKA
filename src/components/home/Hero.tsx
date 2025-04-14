@@ -15,10 +15,10 @@ const Hero = () => {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
             <div className="space-y-2">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl tracking-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                 {translate('Empowering Citizens through', language)} 
                 <span className="block text-kenya-green">{translate('Civic Education', language)}</span>
-              </h2>
+              </h1>
               <p className="text-lg text-muted-foreground max-w-[600px] mx-auto md:mx-0">
                 {translate('Access civic knowledge, track legislation, and participate in building a better Kenya.', language)}
               </p>

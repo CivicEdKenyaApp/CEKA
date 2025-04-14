@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -67,9 +68,9 @@
     --ring: 212.7 26.8% 83.9%;
 
     /* Auth page specific dark mode improvements */
-    --auth-heading: 0 0% 100%;
-    --auth-description: 210 30% 80%;
-    --auth-label: 0 0% 95%;
+    --auth-heading: 210 40% 85%;
+    --auth-description: 210 30% 70%;
+    --auth-label: 210 40% 85%;
   }
 }
 
@@ -120,12 +121,12 @@
   
   /* iOS-like scroll effect (bounce) */
   .ios-scroll {
-    @apply overscroll-y-contain md:overscroll-y-auto;
+    @apply overscroll-y-auto;
   }
   
   /* Android-like overscroll glow */
   .android-scroll {
-    @apply overscroll-behavior-y-auto;
+    @apply overscroll-y-auto;
   }
   
   /* Pull to refresh container */

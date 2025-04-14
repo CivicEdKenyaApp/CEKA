@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Search, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-sm">
+        <nav className="hidden md:flex items-center gap-10 text-sm">
           {navLinks.map((link) => (
             <Link 
               key={link.path} 
@@ -68,9 +68,9 @@ const Navbar = () => {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {!isMobile && (
-            <div className="relative w-40 lg:w-64 mr-2">
+            <div className="relative w-40 lg:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder={translate("Search...", language)} className="pl-8" />
             </div>
@@ -87,7 +87,7 @@ const Navbar = () => {
                         <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuItem onClick={() => setLanguage(language === 'en' ? 'sw' : 'en')}>
                         <Languages className="h-4 w-4 mr-2" />
                         {translate("Change Language", language)}
