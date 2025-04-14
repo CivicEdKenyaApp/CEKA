@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,6 +65,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Auth page specific dark mode improvements */
+    --auth-heading: 0 0% 100%;
+    --auth-description: 210 30% 80%;
+    --auth-label: 0 0% 95%;
   }
 }
 
@@ -119,19 +123,38 @@
     @apply overscroll-y-contain md:overscroll-y-auto;
   }
   
-  /* Animation for home button when already on home */
-  .home-btn-active {
-    animation: pulse 0.5s ease-in-out;
+  /* Android-like overscroll glow */
+  .android-scroll {
+    @apply overscroll-behavior-y-auto;
   }
   
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+  /* Pull to refresh container */
+  .pull-to-refresh {
+    @apply relative pt-6;
+  }
+  
+  .pull-to-refresh-indicator {
+    @apply absolute top-0 left-1/2 -translate-x-1/2 flex items-center justify-center h-6 pointer-events-none opacity-0 transition-opacity;
+  }
+  
+  .pull-to-refresh-active .pull-to-refresh-indicator {
+    @apply opacity-100;
+  }
+  
+  /* Auth page specific styles */
+  .auth-heading {
+    @apply text-[hsl(var(--auth-heading))];
+  }
+  
+  .auth-description {
+    @apply text-[hsl(var(--auth-description))];
+  }
+  
+  .auth-label {
+    @apply text-[hsl(var(--auth-label))];
   }
 }
 
-/* Add support for dark mode in existing animations */
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;

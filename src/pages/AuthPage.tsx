@@ -132,33 +132,33 @@ const AuthPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container max-w-md py-16 relative"
+        className="container max-w-md py-16 relative android-scroll"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-[#006600]/10 via-[#141414]/5 to-[#BB1600]/10 -z-10 rounded-2xl"></div>
         
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">{translate("Welcome to CEKA", language)}</h1>
-          <p className="text-muted-foreground">{translate("Join our community of active citizens", language)}</p>
+          <h1 className="text-3xl font-bold mb-2 auth-heading">{translate("Welcome to CEKA", language)}</h1>
+          <p className="auth-description">{translate("Join our community of active citizens", language)}</p>
         </div>
         
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-white/30">
+          <TabsList className="grid w-full grid-cols-2 bg-white/30 dark:bg-black/30">
             <TabsTrigger value="signin">{translate("Sign In", language)}</TabsTrigger>
             <TabsTrigger value="signup">{translate("Sign Up", language)}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
-            <Card className="border-primary/10 shadow-lg bg-white/80 backdrop-blur-sm">
+            <Card className="border-primary/10 shadow-lg bg-white/80 dark:bg-black/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>{translate("Sign In", language)}</CardTitle>
-                <CardDescription>
+                <CardTitle className="auth-heading">{translate("Sign In", language)}</CardTitle>
+                <CardDescription className="auth-description">
                   {translate("Enter your credentials to access your account", language)}
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleSignIn}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">{translate("Email", language)}</label>
+                    <label htmlFor="email" className="text-sm font-medium auth-label">{translate("Email", language)}</label>
                     <Input
                       id="email"
                       type="email"
@@ -170,7 +170,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="password" className="text-sm font-medium">{translate("Password", language)}</label>
+                    <label htmlFor="password" className="text-sm font-medium auth-label">{translate("Password", language)}</label>
                     <Input 
                       id="password"
                       type="password"
@@ -244,17 +244,17 @@ const AuthPage = () => {
           </TabsContent>
           
           <TabsContent value="signup">
-            <Card className="border-primary/10 shadow-lg bg-white/80 backdrop-blur-sm">
+            <Card className="border-primary/10 shadow-lg bg-white/80 dark:bg-black/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>{translate("Create Account", language)}</CardTitle>
-                <CardDescription>
+                <CardTitle className="auth-heading">{translate("Create Account", language)}</CardTitle>
+                <CardDescription className="auth-description">
                   {translate("Join our community of active citizens", language)}
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleSignUp}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="fullName" className="text-sm font-medium">{translate("Full Name", language)}</label>
+                    <label htmlFor="fullName" className="text-sm font-medium auth-label">{translate("Full Name", language)}</label>
                     <Input
                       id="fullName"
                       placeholder="John Doe"
@@ -265,7 +265,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="username" className="text-sm font-medium">{translate("Username", language)}</label>
+                    <label htmlFor="username" className="text-sm font-medium auth-label">{translate("Username", language)}</label>
                     <Input
                       id="username"
                       placeholder="johndoe"
@@ -276,7 +276,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="signupEmail" className="text-sm font-medium">{translate("Email", language)}</label>
+                    <label htmlFor="signupEmail" className="text-sm font-medium auth-label">{translate("Email", language)}</label>
                     <Input
                       id="signupEmail"
                       type="email"
@@ -288,7 +288,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="signupPassword" className="text-sm font-medium">{translate("Password", language)}</label>
+                    <label htmlFor="signupPassword" className="text-sm font-medium auth-label">{translate("Password", language)}</label>
                     <Input 
                       id="signupPassword"
                       type="password"

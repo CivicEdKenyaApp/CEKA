@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,8 +25,10 @@ import Notifications from "./pages/Notifications";
 import ConstitutionPage from "./pages/ConstitutionPage";
 import JoinCommunity from "./pages/JoinCommunity";
 import VolunteerApplication from "./pages/VolunteerApplication";
+import Settings from "./pages/Settings";
 import ScrollToTop from "./components/ScrollToTop";
 import LoadingScreen from "./components/LoadingScreen";
+import PullToRefresh from "./components/PullToRefresh";
 
 const queryClient = new QueryClient();
 
@@ -88,25 +91,28 @@ const App = () => {
                 <BackButtonHandler>
                   <ScrollToTop />
                   <LoadingScreen />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                    <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                    <Route path="/resources" element={<ResourceHub />} />
-                    <Route path="/resources/:id" element={<ResourceDetail />} />
-                    <Route path="/resources/upload" element={<ResourceUpload />} />
-                    <Route path="/resources/pending" element={<PendingResources />} />
-                    <Route path="/resources/type/:type" element={<ResourceHub />} />
-                    <Route path="/constitution" element={<ConstitutionPage />} />
-                    <Route path="/community" element={<CommunityPortal />} />
-                    <Route path="/volunteer" element={<Volunteer />} />
-                    <Route path="/community/join" element={<JoinCommunity />} />
-                    <Route path="/volunteer/apply/:role" element={<VolunteerApplication />} />
-                    <Route path="/profile" element={<UserProfile />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <PullToRefresh>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+                      <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
+                      <Route path="/resources" element={<ResourceHub />} />
+                      <Route path="/resources/:id" element={<ResourceDetail />} />
+                      <Route path="/resources/upload" element={<ResourceUpload />} />
+                      <Route path="/resources/pending" element={<PendingResources />} />
+                      <Route path="/resources/type/:type" element={<ResourceHub />} />
+                      <Route path="/constitution" element={<ConstitutionPage />} />
+                      <Route path="/community" element={<CommunityPortal />} />
+                      <Route path="/volunteer" element={<Volunteer />} />
+                      <Route path="/community/join" element={<JoinCommunity />} />
+                      <Route path="/volunteer/apply/:role" element={<VolunteerApplication />} />
+                      <Route path="/profile" element={<UserProfile />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </PullToRefresh>
                 </BackButtonHandler>
               </BrowserRouter>
             </TooltipProvider>

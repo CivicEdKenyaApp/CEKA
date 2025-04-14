@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, User, Upload, Languages, HandHelping } from 'lucide-react';
+import { Menu, Search, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,12 +18,15 @@ import { useAuth } from '@/App';
 import Logo from '@/components/ui/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const Navbar = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const { session } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -41,11 +45,13 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <Logo variant={isMobile ? 'icon-only' : 'full'} />
+          <Link to="/">
+            <Logo variant={isMobile ? 'icon-only' : 'full'} />
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6 text-sm">
+        <nav className="hidden md:flex items-center gap-8 text-sm">
           {navLinks.map((link) => (
             <Link 
               key={link.path} 
@@ -64,39 +70,55 @@ const Navbar = () => {
 
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <div className="relative w-40 lg:w-64">
+            <div className="relative w-40 lg:w-64 mr-2">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder={translate("Search...", language)} className="pl-8" />
             </div>
           )}
           
-          {/* Language Selector */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Languages className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setLanguage('en')}>
-                      {translate("English", language)}
-                      {language === 'en' && <span className="ml-2">✓</span>}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setLanguage('sw')}>
-                      {translate("Swahili", language)}
-                      {language === 'sw' && <span className="ml-2">✓</span>}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipTrigger>
-              <TooltipContent>
-                {translate("Change Language", language)}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {/* More Options Menu (Desktop) */}
+          {!isMobile && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setLanguage(language === 'en' ? 'sw' : 'en')}>
+                        <Languages className="h-4 w-4 mr-2" />
+                        {translate("Change Language", language)}
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem onClick={toggleTheme}>
+                        {theme === 'light' ? (
+                          <Moon className="h-4 w-4 mr-2" />
+                        ) : (
+                          <Sun className="h-4 w-4 mr-2" />
+                        )}
+                        {translate("Toggle Theme", language)}
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings">
+                          <Settings className="h-4 w-4 mr-2" />
+                          {translate("Settings", language)}
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {translate("More Options", language)}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           
           {isResourcesSection && !isMobile && (
             <TooltipProvider>
@@ -159,8 +181,15 @@ const Navbar = () => {
                     </Link>
                   ))}
                   
-                  {/* Language selector for mobile */}
                   <div className="border-t my-2"></div>
+                  
+                  {/* Theme Toggle for mobile */}
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-muted-foreground">{translate("Theme", language)}</span>
+                    <ThemeToggle />
+                  </div>
+                  
+                  {/* Language selector for mobile */}
                   <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Languages", language)}</h3>
                   <button 
                     onClick={() => setLanguage('en')} 
@@ -176,6 +205,11 @@ const Navbar = () => {
                     {translate("Swahili", language)}
                     {language === 'sw' && <span>✓</span>}
                   </button>
+                  
+                  <Link to="/settings" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
+                    <Settings className="h-4 w-4 mr-2" />
+                    {translate("Settings", language)}
+                  </Link>
                   
                   {isResourcesSection && (
                     <>
