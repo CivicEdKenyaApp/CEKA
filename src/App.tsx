@@ -3,11 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./integrations/supabase/client";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LegislativeTracker from "./pages/LegislativeTracker";
@@ -37,6 +38,26 @@ export const AuthContext = createContext<{
 
 export const useAuth = () => useContext(AuthContext);
 
+// Browser back button handler component
+const BackButtonHandler = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Handle hardware back button for mobile devices
+    window.addEventListener('popstate', (e) => {
+      e.preventDefault();
+      navigate(-1);
+    });
+
+    return () => {
+      window.removeEventListener('popstate', () => {});
+    };
+  }, [navigate]);
+
+  return <>{children}</>;
+};
+
 const App = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,72 +82,76 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={{ session, loading }}>
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                <Route path="/resources" element={
-                  <ProtectedRoute>
-                    <ResourceHub />
-                  </ProtectedRoute>
-                } />
-                <Route path="/resources/:id" element={
-                  <ProtectedRoute>
-                    <ResourceDetail />
-                  </ProtectedRoute>
-                } />
-                <Route path="/resources/upload" element={
-                  <ProtectedRoute>
-                    <ResourceUpload />
-                  </ProtectedRoute>
-                } />
-                <Route path="/resources/pending" element={
-                  <ProtectedRoute>
-                    <PendingResources />
-                  </ProtectedRoute>
-                } />
-                <Route path="/resources/type/:type" element={
-                  <ProtectedRoute>
-                    <ResourceHub />
-                  </ProtectedRoute>
-                } />
-                <Route path="/constitution" element={
-                  <ProtectedRoute>
-                    <ConstitutionPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/community" element={
-                  <ProtectedRoute>
-                    <CommunityPortal />
-                  </ProtectedRoute>
-                } />
-                <Route path="/volunteer" element={
-                  <ProtectedRoute>
-                    <Volunteer />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <UserProfile />
-                  </ProtectedRoute>
-                } />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/notifications" element={
-                  <ProtectedRoute>
-                    <Notifications />
-                  </ProtectedRoute>
-                } />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <BackButtonHandler>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+                    <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
+                    <Route path="/resources" element={
+                      <ProtectedRoute>
+                        <ResourceHub />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/resources/:id" element={
+                      <ProtectedRoute>
+                        <ResourceDetail />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/resources/upload" element={
+                      <ProtectedRoute>
+                        <ResourceUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/resources/pending" element={
+                      <ProtectedRoute>
+                        <PendingResources />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/resources/type/:type" element={
+                      <ProtectedRoute>
+                        <ResourceHub />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/constitution" element={
+                      <ProtectedRoute>
+                        <ConstitutionPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/community" element={
+                      <ProtectedRoute>
+                        <CommunityPortal />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/volunteer" element={
+                      <ProtectedRoute>
+                        <Volunteer />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <UserProfile />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/notifications" element={
+                      <ProtectedRoute>
+                        <Notifications />
+                      </ProtectedRoute>
+                    } />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BackButtonHandler>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </AuthContext.Provider>
     </QueryClientProvider>
   );

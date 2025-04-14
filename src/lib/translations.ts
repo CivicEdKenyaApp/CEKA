@@ -1,4 +1,3 @@
-
 import { Language } from "@/contexts/LanguageContext"
 
 const translations: Record<string, Record<Language, string>> = {
@@ -25,6 +24,7 @@ const translations: Record<string, Record<Language, string>> = {
   'Warning': { en: 'Warning', sw: 'Onyo' },
   'Info': { en: 'Info', sw: 'Habari' },
   'Or': { en: 'Or', sw: 'Au' },
+  'Toggle theme': { en: 'Toggle theme', sw: 'Badilisha mandhari' },
   
   // Navigation
   'Home': { en: 'Home', sw: 'Nyumbani' },
@@ -32,6 +32,7 @@ const translations: Record<string, Record<Language, string>> = {
   'Community': { en: 'Community', sw: 'Jamii' },
   'Notifications': { en: 'Notifications', sw: 'Arifa' },
   'Profile': { en: 'Profile', sw: 'Wasifu' },
+  'Upload': { en: 'Upload', sw: 'Pakia' },
   'Legislative Tracker': { en: 'Legislative Tracker', sw: 'Kifuatiliaji cha Sheria' },
   'Resource Hub': { en: 'Resource Hub', sw: 'Kituo cha Rasilimali' },
   'Volunteer': { en: 'Volunteer', sw: 'Kujitolea' },
@@ -156,7 +157,18 @@ const translations: Record<string, Record<Language, string>> = {
   'My Contributions': { en: 'My Contributions', sw: 'Michango Yangu' },
   'Saved Resources': { en: 'Saved Resources', sw: 'Rasilimali Zilizohifadhiwa' },
   'Volunteer History': { en: 'Volunteer History', sw: 'Historia ya Kujitolea' },
-  'Notifications Settings': { en: 'Notifications Settings', sw: 'Mipangilio ya Arifa' }
+  'Notifications Settings': { en: 'Notifications Settings', sw: 'Mipangilio ya Arifa' },
+
+  // Resource Highlights
+  'View PDF': { en: 'View PDF', sw: 'Tazama PDF' },
+  'View Video': { en: 'View Video', sw: 'Tazama Video' },
+  'View Infographic': { en: 'View Infographic', sw: 'Tazama Infografiki' },
+  'A comprehensive guide to the Kenyan Constitution': { en: 'A comprehensive guide to the Kenyan Constitution', sw: 'Mwongozo kamili wa Katiba ya Kenya' },
+  'How laws are made in Kenya': { en: 'How laws are made in Kenya', sw: 'Jinsi sheria zinavyotengenezwa nchini Kenya' },
+  'Your rights as a Kenyan citizen': { en: 'Your rights as a Kenyan citizen', sw: 'Haki zako kama raia wa Kenya' },
+  'constitution': { en: 'Constitution', sw: 'Katiba' },
+  'lawmaking': { en: 'Lawmaking', sw: 'Uundaji wa Sheria' },
+  'rights': { en: 'Rights', sw: 'Haki' },
 };
 
 export function translate(text: string, language: Language): string {

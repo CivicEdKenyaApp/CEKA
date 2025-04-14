@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Users, Bell, User, HandHelping } from 'lucide-react';
+import { Home, FileText, Upload, Bell, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
@@ -22,14 +22,14 @@ const BottomNavbar = () => {
       icon: <FileText className="h-5 w-5" />
     },
     {
-      name: 'Community',
-      path: '/community',
-      icon: <Users className="h-5 w-5" />
+      name: 'Upload',
+      path: '/resources/upload',
+      icon: <Upload className="h-5 w-5" />
     },
     {
-      name: 'Volunteer',
-      path: '/volunteer',
-      icon: <HandHelping className="h-5 w-5" />
+      name: 'Notifications',
+      path: '/notifications',
+      icon: <Bell className="h-5 w-5" />
     },
     {
       name: 'Profile',
@@ -51,7 +51,7 @@ const BottomNavbar = () => {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full",
+                "flex flex-col items-center justify-center w-full h-full transition-all duration-300",
                 isActive 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-primary transition-colors"
