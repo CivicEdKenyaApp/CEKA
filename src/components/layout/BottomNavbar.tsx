@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Upload, Bell, User } from 'lucide-react';
+import { Home, FileText, Upload, Users, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
@@ -27,9 +27,9 @@ const BottomNavbar = () => {
       icon: <Upload className="h-5 w-5" />
     },
     {
-      name: 'Notifications',
-      path: '/notifications',
-      icon: <Bell className="h-5 w-5" />
+      name: 'Community',
+      path: '/community',
+      icon: <Users className="h-5 w-5" />
     },
     {
       name: 'Profile',
