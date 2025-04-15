@@ -64,14 +64,14 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between flex-wrap min-w-0">
         <div className="flex items-center gap-2">
           <Link to="/">
             <Logo variant={isMobile ? 'icon-only' : 'full'} />
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-10 text-sm">
+        <nav className="hidden md:flex items-center gap-4 max-w-full overflow-x-auto text-sm">
           {navLinks.map((link) => (
             <Link 
               key={link.path} 
