@@ -54,7 +54,7 @@ const Footer = () => {
         <div>
           <h4 className="font-medium text-base mb-3">{translate('Resources', language)}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/resources/type/constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
+            <li><Link to="/constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
             <li><Link to="/resources/type/infographic" className="hover:text-kenya-green">{translate('Infographic', language)}</Link></li>
             <li><Link to="/resources/type/video" className="hover:text-kenya-green">{translate('Videos', language)}</Link></li>
             <li><Link to="/resources/type/document" className="hover:text-kenya-green">{translate('Documents', language)}</Link></li>
