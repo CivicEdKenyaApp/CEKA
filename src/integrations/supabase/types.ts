@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      advocacy_toolkit: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string | null
+          description: string | null
+          document_ids: string[] | null
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_ids?: string[] | null
+          id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_ids?: string[] | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bill_follows: {
         Row: {
           bill_id: string
@@ -166,6 +199,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      documents: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_type: Database["public"]["Enums"]["document_type"]
+          file_url: string
+          id: string
+          is_approved: boolean | null
+          mime_type: string
+          size_bytes: number
+          title: string
+          updated_at: string | null
+          user_id: string
+          virus_scan_result: string | null
+          virus_scanned: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_type: Database["public"]["Enums"]["document_type"]
+          file_url: string
+          id?: string
+          is_approved?: boolean | null
+          mime_type: string
+          size_bytes: number
+          title: string
+          updated_at?: string | null
+          user_id: string
+          virus_scan_result?: string | null
+          virus_scanned?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_type?: Database["public"]["Enums"]["document_type"]
+          file_url?: string
+          id?: string
+          is_approved?: boolean | null
+          mime_type?: string
+          size_bytes?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          virus_scan_result?: string | null
+          virus_scanned?: boolean | null
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          message: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -378,7 +489,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      document_type: "pdf" | "video" | "image" | "text" | "doc" | "docx"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -493,6 +604,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      document_type: ["pdf", "video", "image", "text", "doc", "docx"],
+    },
   },
 } as const
