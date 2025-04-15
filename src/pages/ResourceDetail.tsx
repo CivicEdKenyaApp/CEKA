@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -10,6 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { ChevronLeft, Download, FileText, Video, Image, Share2, ThumbsUp, Eye } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
+import DocumentViewer from '@/components/documents/DocumentViewer';
+import { useDocument } from '@/hooks/use-document';
 
 type Resource = Tables<'resources'>;
 
@@ -19,6 +20,11 @@ const ResourceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [viewCount, setViewCount] = useState(0);
   const { toast } = useToast();
+
+  const { isLoading: isDocumentLoading, error: documentError, documentUrl } = useDocument({
+    url: resource?.url || '',
+    type: resource?.type || '',
+  });
 
   useEffect(() => {
     const fetchResource = async () => {
@@ -34,7 +40,6 @@ const ResourceDetail = () => {
         if (error) throw error;
         
         setResource(data);
-        // Increment view count - in a real app, this would be tracked in the database
         setViewCount(Math.floor(Math.random() * 100) + 20); // Placeholder
       } catch (error) {
         console.error('Error fetching resource:', error);
@@ -141,24 +146,12 @@ const ResourceDetail = () => {
               <CardContent className="p-6">
                 <p className="text-lg mb-6">{resource.description}</p>
                 
-                {resource.type?.toLowerCase() === 'pdf' && (
-                  <div className="bg-muted rounded-lg p-4 text-center mb-4">
-                    <FileText className="h-16 w-16 mx-auto mb-2 text-kenya-green" />
-                    <p>Preview PDF document</p>
-                  </div>
-                )}
-                
-                {resource.type?.toLowerCase() === 'video' && (
-                  <div className="bg-black rounded-lg aspect-video flex items-center justify-center mb-4">
-                    <Video className="h-16 w-16 text-white opacity-50" />
-                  </div>
-                )}
-                
-                {resource.type?.toLowerCase() === 'infographic' && (
-                  <div className="bg-muted rounded-lg p-4 text-center mb-4 aspect-[4/3]">
-                    <Image className="h-16 w-16 mx-auto mb-2 text-kenya-green" />
-                    <p>Preview infographic</p>
-                  </div>
+                {resource && (
+                  <DocumentViewer
+                    url={resource.url}
+                    type={resource.type}
+                    title={resource.title}
+                  />
                 )}
                 
                 <Separator className="my-6" />
