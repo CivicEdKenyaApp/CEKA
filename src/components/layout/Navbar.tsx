@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, Search, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import cn from 'classnames';
+import classNames from 'classnames';
 
 const Navbar = () => {
   const [menuScrolled, setMenuScrolled] = useState(false);
@@ -70,7 +70,6 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-10 text-sm">
           {navLinks.map((link) => (
             <Link 
@@ -96,7 +95,6 @@ const Navbar = () => {
             </div>
           )}
           
-          {/* More Options Menu (Desktop) */}
           {!isMobile && (
             <TooltipProvider>
               <Tooltip>
@@ -169,15 +167,16 @@ const Navbar = () => {
             </Button>
           </Link>
 
-          {/* Mobile Navigation */}
           {isMobile && (
             <Sheet>
               <SheetContent side="left" className="w-[85%] p-0">
                 <div className="flex flex-col h-full">
-                  <div className={cn(
-                    "sticky top-0 z-10 bg-background p-4 border-b transition-shadow",
-                    menuScrolled && "shadow-md"
-                  )}>
+                  <div 
+                    className={classNames(
+                      "sticky top-0 z-10 bg-background p-4 border-b transition-shadow", 
+                      menuScrolled && "shadow-md"
+                    )}
+                  >
                     <Logo variant="full" className="mb-4" />
                     <div className="relative w-full">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -206,13 +205,11 @@ const Navbar = () => {
                     
                     <div className="border-t my-2" />
                     
-                    {/* Theme and Language Settings */}
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm text-muted-foreground">{translate("Theme", language)}</span>
                       <ThemeToggle />
                     </div>
                     
-                    {/* Language selector for mobile */}
                     <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Languages", language)}</h3>
                     <button 
                       onClick={() => setLanguage('en')} 
@@ -250,7 +247,6 @@ const Navbar = () => {
                       {translate("Notifications", language)}
                     </Link>
                     
-                    {/* Feedback Section */}
                     <Link 
                       to="/feedback"
                       className="flex items-center gap-2 py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors"
