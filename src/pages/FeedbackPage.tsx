@@ -1,89 +1,238 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { HandHelping, Send } from 'lucide-react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
-import { useAuth } from '@/App';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-
-interface FeedbackForm {
-  message: string;
-}
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/App';
+import { HandHelping, Heart, Send, MessageSquare, ThumbsUp } from 'lucide-react';
 
 const FeedbackPage = () => {
-  const { register, handleSubmit, reset } = useForm<FeedbackForm>();
+  const [message, setMessage] = useState('');
+  const [category, setCategory] = useState('general');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
 
-  const onSubmit = async (data: FeedbackForm) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!message.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please enter a message before submitting feedback.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to submit feedback.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
       const { error } = await supabase
         .from('feedback')
-        .insert([
-          {
-            message: data.message,
-            user_id: session?.user.id,
-          }
-        ]);
-
+        .insert({
+          user_id: session.user.id,
+          message: message.trim(),
+          category,
+        });
+      
       if (error) throw error;
-
+      
       toast({
-        title: "Thank you for your feedback!",
-        description: "Your message has been sent successfully.",
+        title: "Feedback Submitted",
+        description: "Thank you for your feedback! The developer will review it soon.",
       });
-
-      reset();
+      
+      setMessage('');
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       toast({
-        title: "Error",
-        description: "Failed to send feedback. Please try again.",
-        variant: "destructive",
+        title: "Submission Failed",
+        description: "There was an error submitting your feedback. Please try again later.",
+        variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Layout>
       <div className="container py-8 md:py-12">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <HandHelping className="h-12 w-12 mx-auto mb-4 text-kenya-green" />
-            <h1 className="text-3xl font-bold mb-4">Write to Developer</h1>
-            <p className="text-muted-foreground">Your feedback helps us improve the app and better serve our community.</p>
+        <div className="flex flex-col justify-between items-start gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Write to Developer</h1>
+            <p className="text-muted-foreground">
+              Share your feedback, report issues, or suggest new features for the CEKA platform
+            </p>
           </div>
-
-          <Card className="p-6">
-            <div className="prose dark:prose-invert max-w-none mb-8">
-              <h2>Developer's Note</h2>
-              <p>
-                Thank you for taking the time to explore CEKA. This app represents our commitment 
-                to making civic education accessible to all Kenyans. Your engagement and feedback 
-                are invaluable in shaping this platform to better serve our community's needs.
-              </p>
-              <p>
-                Together, we're building more than just an app – we're creating a tool that 
-                empowers citizens with knowledge and facilitates meaningful participation in 
-                our democracy. Your insights and suggestions help us improve and grow.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Textarea
-                placeholder="Share your thoughts, suggestions, or report any issues..."
-                className="min-h-[200px]"
-                {...register('message', { required: true })}
-              />
-              <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90">
-                <Send className="mr-2 h-4 w-4" />
-                Send Feedback
-              </Button>
-            </form>
-          </Card>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Send Feedback</CardTitle>
+                <CardDescription>
+                  Your thoughts help improve the platform for everyone
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={category}
+                      onValueChange={setCategory}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General Feedback</SelectItem>
+                        <SelectItem value="bug">Report a Bug</SelectItem>
+                        <SelectItem value="feature">Feature Request</SelectItem>
+                        <SelectItem value="content">Content Suggestion</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Your Message</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Share your thoughts, ideas, or report issues..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={6}
+                      className="resize-none"
+                    />
+                  </div>
+                  
+                  <Button
+                    type="submit"
+                    className="w-full bg-kenya-green hover:bg-kenya-green/90"
+                    disabled={isSubmitting || !session}
+                  >
+                    {isSubmitting ? (
+                      "Submitting..."
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit Feedback
+                      </>
+                    )}
+                  </Button>
+                  
+                  {!session && (
+                    <p className="text-sm text-muted-foreground text-center mt-2">
+                      Please sign in to submit feedback
+                    </p>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Developer's Note</CardTitle>
+              </CardHeader>
+              <CardContent className="prose dark:prose-invert">
+                <p>
+                  Hello there! Thank you for taking the time to visit the CEKA platform. This civic engagement platform has been a labor of love, built with the goal of empowering Kenyan citizens to actively participate in their democracy.
+                </p>
+                
+                <p>
+                  The vision behind CEKA is to create a bridge between ordinary citizens and the legislative process, making governance more transparent, accessible, and participatory. By tracking bills, providing educational resources, and building community spaces for discussion, we hope to nurture a more engaged citizenry.
+                </p>
+                
+                <p>
+                  Your feedback is incredibly valuable in shaping the future of this platform. Every suggestion, bug report, or feature request helps us improve the experience for everyone. This is a platform built for the people, by the people.
+                </p>
+                
+                <p>
+                  Some exciting features we're working on:
+                </p>
+                
+                <ul>
+                  <li>A comprehensive legislative tracking system that provides real-time updates on bills</li>
+                  <li>Community-driven discussions that foster meaningful civic dialogue</li>
+                  <li>Educational resources that make complex legislative processes understandable</li>
+                  <li>Tools for organizing advocacy campaigns and volunteer efforts</li>
+                </ul>
+                
+                <p>
+                  Thank you for being part of this journey to strengthen democracy in Kenya. Together, we can create a more informed, engaged, and empowered society.
+                </p>
+                
+                <p className="font-medium">
+                  With gratitude,<br />
+                  The CEKA Development Team
+                </p>
+              </CardContent>
+              <CardFooter className="flex justify-center border-t pt-6">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-red-500" />
+                  Support This Project
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ThumbsUp className="h-5 w-5 text-kenya-green" />
+                  How Your Feedback Helps
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <div className="rounded-full bg-blue-100 p-1 mt-0.5">
+                      <MessageSquare className="h-3 w-3 text-blue-600" />
+                    </div>
+                    <span className="text-sm">Identifies bugs and usability issues</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="rounded-full bg-green-100 p-1 mt-0.5">
+                      <MessageSquare className="h-3 w-3 text-green-600" />
+                    </div>
+                    <span className="text-sm">Shapes the roadmap for new features</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="rounded-full bg-purple-100 p-1 mt-0.5">
+                      <MessageSquare className="h-3 w-3 text-purple-600" />
+                    </div>
+                    <span className="text-sm">Improves content and educational resources</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="rounded-full bg-amber-100 p-1 mt-0.5">
+                      <MessageSquare className="h-3 w-3 text-amber-600" />
+                    </div>
+                    <span className="text-sm">Helps prioritize development efforts</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </Layout>

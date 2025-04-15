@@ -29,6 +29,9 @@ import Settings from "./pages/Settings";
 import ScrollToTop from "./components/utils/ScrollToTop";
 import LoadingScreen from "./components/utils/LoadingScreen";
 import PullToRefresh from "./components/PullToRefresh";
+import AdvocacyToolkit from "./pages/AdvocacyToolkit";
+import AdvocacyToolkitDetail from "./pages/AdvocacyToolkitDetail";
+import FeedbackPage from "./pages/FeedbackPage";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +113,9 @@ const App = () => {
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
+                      <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
+                      <Route path="/feedback" element={<FeedbackPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </PullToRefresh>
