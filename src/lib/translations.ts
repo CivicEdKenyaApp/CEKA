@@ -169,11 +169,26 @@ const translations: Record<string, Record<Language, string>> = {
   'constitution': { en: 'Constitution', sw: 'Katiba' },
   'lawmaking': { en: 'Lawmaking', sw: 'Uundaji wa Sheria' },
   'rights': { en: 'Rights', sw: 'Haki' },
+  
+  // PullToRefresh translations
+  'Refreshing': { 
+    en: 'Refreshing', 
+    sw: 'Inabadilisha', 
+    ksl: 'Refreshing', 
+    br: '⠗⠑⠋⠗⠑⠎⠓⠊⠝⠛' 
+  },
+  'Updating content...': { 
+    en: 'Updating content...', 
+    sw: 'Inasasisha maudhui...', 
+    ksl: 'Updating content...', 
+    br: '⠥⠏⠙⠁⠞⠊⠝⠛ ⠉⠕⠝⠞⠑⠝⠞...' 
+  }
 };
 
 export function translate(text: string, language: Language): string {
-  if (translations[text] && translations[text][language]) {
-    return translations[text][language]
+  if (!translations[text]) {
+    return text;
   }
-  return text
+
+  return translations[text][language] || text;
 }
