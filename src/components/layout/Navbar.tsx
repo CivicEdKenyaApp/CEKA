@@ -226,109 +226,119 @@ const Navbar = () => {
                     ref={menuRef} 
                     className="flex-1 overflow-y-auto p-4 space-y-6"
                   >
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.path}
-                        to={link.path}
-                        className={`py-3 px-2 block rounded-md hover:bg-accent hover:text-foreground transition-all duration-200 ${
-                          (location.pathname === link.path) || 
-                          (link.path !== '/' && location.pathname.includes(link.path))
-                            ? 'text-foreground font-medium bg-accent/30' 
-                            : 'text-foreground/60'
-                        }`}
-                      >
-                        {translate(link.name, language)}
-                      </Link>
-                    ))}
+                    {/* Main Navigation */}
+                    <div className="space-y-1">
+                      {navLinks.map((link) => (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          className={`py-3 px-4 block rounded-md hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${
+                            (location.pathname === link.path) || 
+                            (link.path !== '/' && location.pathname.includes(link.path))
+                              ? 'text-foreground font-medium bg-accent/30' 
+                              : 'text-foreground/60'
+                          }`}
+                        >
+                          {translate(link.name, language)}
+                        </Link>
+                      ))}
+                    </div>
                     
                     <div className="border-t my-4" />
                     
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Theme", language)}</h3>
-                        <div className="flex items-center justify-between py-2">
-                          <span className="text-sm text-foreground">{translate("Dark Mode", language)}</span>
-                          <ThemeToggle />
-                        </div>
+                    {/* Theme Toggle */}
+                    <div className="space-y-2">
+                      <h3 className="text-base font-medium text-foreground px-4">{translate("Theme", language)}</h3>
+                      <div className="flex items-center justify-between py-2 px-4 rounded-md hover:bg-accent transition-colors duration-200">
+                        <span className="text-sm">{translate("Dark Mode", language)}</span>
+                        <ThemeToggle />
                       </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Languages", language)}</h3>
-                        <div className="space-y-2">
-                          <button 
-                            onClick={() => setLanguage('en')} 
-                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'en' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
-                          >
-                            {translate("English", language)}
-                            {language === 'en' && <span>✓</span>}
-                          </button>
-                          <button 
-                            onClick={() => setLanguage('sw')} 
-                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'sw' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
-                          >
-                            {translate("Swahili", language)}
-                            {language === 'sw' && <span>✓</span>}
-                          </button>
-                          <button 
-                            onClick={() => setLanguage('ksl')} 
-                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'ksl' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
-                          >
-                            {translate("Kenya Sign Language", language)}
-                            {language === 'ksl' && <span>✓</span>}
-                          </button>
-                          <button 
-                            onClick={() => setLanguage('br')} 
-                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'br' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
-                          >
-                            {translate("Braille", language)}
-                            {language === 'br' && <span>✓</span>}
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Settings", language)}</h3>
-                        <div className="space-y-2">
-                          <Link to="/settings/account" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
-                            {translate("Account", language)}
-                          </Link>
-                          <Link to="/settings/notifications" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
-                            {translate("Notifications", language)}
-                          </Link>
-                          <Link to="/settings/privacy" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
-                            {translate("Privacy", language)}
-                          </Link>
-                        </div>
-                      </div>
+                    </div>
                     
-                      {isResourcesSection && (
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Resources", language)}</h3>
-                          <Link to="/resources/upload" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground flex items-center">
-                            <Upload className="h-4 w-4 mr-2" />
-                            {translate("Upload Resource", language)}
-                          </Link>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <Link to="/notifications" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground flex items-center">
-                          <Bell className="h-4 w-4 mr-2" />
+                    {/* Languages */}
+                    <div className="space-y-2">
+                      <h3 className="text-base font-medium text-foreground px-4">{translate("Languages", language)}</h3>
+                      <div className="rounded-md overflow-hidden border border-border">
+                        <button 
+                          onClick={() => setLanguage('en')} 
+                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'en' ? 'bg-accent/50 font-medium' : ''}`}
+                        >
+                          {translate("English", language)}
+                          {language === 'en' && <span>✓</span>}
+                        </button>
+                        <div className="border-t border-border"></div>
+                        <button 
+                          onClick={() => setLanguage('sw')} 
+                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'sw' ? 'bg-accent/50 font-medium' : ''}`}
+                        >
+                          {translate("Swahili", language)}
+                          {language === 'sw' && <span>✓</span>}
+                        </button>
+                        <div className="border-t border-border"></div>
+                        <button 
+                          onClick={() => setLanguage('ksl')} 
+                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'ksl' ? 'bg-accent/50 font-medium' : ''}`}
+                        >
+                          {translate("Kenya Sign Language", language)}
+                          {language === 'ksl' && <span>✓</span>}
+                        </button>
+                        <div className="border-t border-border"></div>
+                        <button 
+                          onClick={() => setLanguage('br')} 
+                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'br' ? 'bg-accent/50 font-medium' : ''}`}
+                        >
+                          {translate("Braille", language)}
+                          {language === 'br' && <span>✓</span>}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Settings */}
+                    <div className="space-y-2">
+                      <h3 className="text-base font-medium text-foreground px-4">{translate("Settings", language)}</h3>
+                      <div className="space-y-1">
+                        <Link to="/settings/account" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
+                          {translate("Account", language)}
+                        </Link>
+                        <Link to="/settings/notifications" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
                           {translate("Notifications", language)}
                         </Link>
-                      </div>
-                      
-                      <div className="border-t my-4"></div>
-                      
-                      <div>
-                        <Link 
-                          to="/feedback"
-                          className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent transition-colors text-muted-foreground"
-                        >
-                          <HandHelping className="h-4 w-4" />
-                          {translate("Write to Developer", language)}
+                        <Link to="/settings/privacy" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
+                          {translate("Privacy", language)}
                         </Link>
                       </div>
+                    </div>
+                    
+                    {/* Resource Upload (conditionally shown) */}
+                    {isResourcesSection && (
+                      <div className="space-y-2">
+                        <h3 className="text-base font-medium text-foreground px-4">{translate("Resources", language)}</h3>
+                        <Link to="/resources/upload" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200 flex items-center">
+                          <Upload className="h-4 w-4 mr-2" />
+                          {translate("Upload Resource", language)}
+                        </Link>
+                      </div>
+                    )}
+                    
+                    {/* Notifications */}
+                    <div className="space-y-2">
+                      <Link to="/notifications" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200 flex items-center">
+                        <Bell className="h-4 w-4 mr-2" />
+                        {translate("Notifications", language)}
+                      </Link>
+                    </div>
+                    
+                    <div className="border-t my-4"></div>
+                    
+                    {/* Write to Developer (lighter color) */}
+                    <div className="space-y-2">
+                      <Link 
+                        to="/feedback"
+                        className="flex items-center gap-2 py-3 px-4 rounded-md hover:bg-accent/50 transition-colors dark:text-gray-400 text-gray-500 hover:text-foreground"
+                      >
+                        <HandHelping className="h-4 w-4" />
+                        {translate("Write to Developer", language)}
+                      </Link>
                     </div>
                   </div>
                 </div>

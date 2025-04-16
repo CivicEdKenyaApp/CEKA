@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import Index from './pages/Index';
@@ -23,7 +24,7 @@ import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
 import FeedbackPage from './pages/FeedbackPage';
 import NotFound from './pages/NotFound';
-import PullToRefresh from './components/ui/PullToRefresh';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 // Add these imports for settings pages:
 import SettingsLayout from "./pages/settings/SettingsLayout";
