@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // Define available languages
-export type Language = 'en' | 'sw';
+export type Language = 'en' | 'sw' | 'ksl' | 'br';
 
 // Define the context shape
 type LanguageContextType = {
@@ -23,7 +23,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Initialize state from localStorage or default to English
   const [language, setLanguageState] = useState<Language>(() => {
     const savedLanguage = localStorage.getItem('language');
-    return (savedLanguage === 'en' || savedLanguage === 'sw') ? savedLanguage : 'en';
+    return (savedLanguage === 'en' || savedLanguage === 'sw' || savedLanguage === 'ksl' || savedLanguage === 'br') 
+      ? savedLanguage as Language 
+      : 'en';
   });
 
   // Update language and save to localStorage

@@ -12,6 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/App';
@@ -20,7 +25,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import classNames from 'classnames';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const [menuScrolled, setMenuScrolled] = useState(false);
@@ -107,10 +112,20 @@ const Navbar = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onClick={() => setLanguage(language === 'en' ? 'sw' : 'en')}>
-                        <Languages className="h-4 w-4 mr-2" />
-                        {translate("Change Language", language)}
-                      </DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Languages className="h-4 w-4 mr-2" />
+                          {translate("Languages", language)}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-56">
+                          <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw' | 'ksl' | 'br')}>
+                            <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="sw">Swahili</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="ksl">Kenya Sign Language</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="br">Braille</DropdownMenuRadioItem>
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
                       
                       <DropdownMenuItem onClick={toggleTheme}>
                         {theme === 'light' ? (
@@ -123,12 +138,29 @@ const Navbar = () => {
                       
                       <DropdownMenuSeparator />
                       
-                      <DropdownMenuItem asChild>
-                        <Link to="/settings">
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
                           <Settings className="h-4 w-4 mr-2" />
                           {translate("Settings", language)}
-                        </Link>
-                      </DropdownMenuItem>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings/account">
+                              {translate("Account", language)}
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings/notifications">
+                              {translate("Notifications", language)}
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings/privacy">
+                              {translate("Privacy", language)}
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TooltipTrigger>
@@ -178,7 +210,7 @@ const Navbar = () => {
               <SheetContent side="left" className="w-[85%] p-0">
                 <div className="flex flex-col h-full">
                   <div 
-                    className={classNames(
+                    className={cn(
                       "sticky top-0 z-10 bg-background p-4 border-b transition-shadow", 
                       menuScrolled && "shadow-md"
                     )}
@@ -192,16 +224,16 @@ const Navbar = () => {
                   
                   <div 
                     ref={menuRef} 
-                    className="flex-1 overflow-y-auto p-4 space-y-4"
+                    className="flex-1 overflow-y-auto p-4 space-y-6"
                   >
                     {navLinks.map((link) => (
                       <Link
                         key={link.path}
                         to={link.path}
-                        className={`py-2 hover:text-foreground transition-colors ${
+                        className={`py-3 px-2 block rounded-md hover:bg-accent hover:text-foreground transition-all duration-200 ${
                           (location.pathname === link.path) || 
                           (link.path !== '/' && location.pathname.includes(link.path))
-                            ? 'text-foreground font-medium' 
+                            ? 'text-foreground font-medium bg-accent/30' 
                             : 'text-foreground/60'
                         }`}
                       >
@@ -209,57 +241,95 @@ const Navbar = () => {
                       </Link>
                     ))}
                     
-                    <div className="border-t my-2" />
+                    <div className="border-t my-4" />
                     
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-muted-foreground">{translate("Theme", language)}</span>
-                      <ThemeToggle />
-                    </div>
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Theme", language)}</h3>
+                        <div className="flex items-center justify-between py-2">
+                          <span className="text-sm text-foreground">{translate("Dark Mode", language)}</span>
+                          <ThemeToggle />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Languages", language)}</h3>
+                        <div className="space-y-2">
+                          <button 
+                            onClick={() => setLanguage('en')} 
+                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'en' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
+                          >
+                            {translate("English", language)}
+                            {language === 'en' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={() => setLanguage('sw')} 
+                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'sw' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
+                          >
+                            {translate("Swahili", language)}
+                            {language === 'sw' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={() => setLanguage('ksl')} 
+                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'ksl' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
+                          >
+                            {translate("Kenya Sign Language", language)}
+                            {language === 'ksl' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={() => setLanguage('br')} 
+                            className={`py-2 px-3 w-full text-left rounded-md hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'br' ? 'bg-accent/50 font-medium text-foreground' : 'text-foreground'}`}
+                          >
+                            {translate("Braille", language)}
+                            {language === 'br' && <span>✓</span>}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Settings", language)}</h3>
+                        <div className="space-y-2">
+                          <Link to="/settings/account" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
+                            {translate("Account", language)}
+                          </Link>
+                          <Link to="/settings/notifications" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
+                            {translate("Notifications", language)}
+                          </Link>
+                          <Link to="/settings/privacy" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground">
+                            {translate("Privacy", language)}
+                          </Link>
+                        </div>
+                      </div>
                     
-                    <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Languages", language)}</h3>
-                    <button 
-                      onClick={() => setLanguage('en')} 
-                      className={`py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center justify-between ${language === 'en' ? 'font-medium text-foreground' : ''}`}
-                    >
-                      {translate("English", language)}
-                      {language === 'en' && <span>✓</span>}
-                    </button>
-                    <button 
-                      onClick={() => setLanguage('sw')} 
-                      className={`py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center justify-between ${language === 'sw' ? 'font-medium text-foreground' : ''}`}
-                    >
-                      {translate("Swahili", language)}
-                      {language === 'sw' && <span>✓</span>}
-                    </button>
-                    
-                    <Link to="/settings" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
-                      <Settings className="h-4 w-4 mr-2" />
-                      {translate("Settings", language)}
-                    </Link>
-                    
-                    {isResourcesSection && (
-                      <>
-                        <div className="border-t my-2"></div>
-                        <h3 className="font-medium text-sm text-muted-foreground mb-2">{translate("Resources", language)}</h3>
-                        <Link to="/resources/upload" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
-                          <Upload className="h-4 w-4 mr-2" />
-                          {translate("Upload Resource", language)}
+                      {isResourcesSection && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground mb-2">{translate("Resources", language)}</h3>
+                          <Link to="/resources/upload" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground flex items-center">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {translate("Upload Resource", language)}
+                          </Link>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <Link to="/notifications" className="py-2 px-3 block rounded-md hover:bg-accent transition-colors text-foreground flex items-center">
+                          <Bell className="h-4 w-4 mr-2" />
+                          {translate("Notifications", language)}
                         </Link>
-                      </>
-                    )}
-                    
-                    <Link to="/notifications" className="py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors flex items-center">
-                      <Bell className="h-4 w-4 mr-2" />
-                      {translate("Notifications", language)}
-                    </Link>
-                    
-                    <Link 
-                      to="/feedback"
-                      className="flex items-center gap-2 py-2 pl-2 text-foreground/60 hover:text-foreground transition-colors"
-                    >
-                      <HandHelping className="h-4 w-4" />
-                      {translate("Write to Developer", language)}
-                    </Link>
+                      </div>
+                      
+                      <div className="border-t my-4"></div>
+                      
+                      <div>
+                        <Link 
+                          to="/feedback"
+                          className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent transition-colors text-muted-foreground"
+                        >
+                          <HandHelping className="h-4 w-4" />
+                          {translate("Write to Developer", language)}
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </SheetContent>

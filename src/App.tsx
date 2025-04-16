@@ -1,132 +1,111 @@
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from '@/components/ui/toaster';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import Index from './pages/Index';
+import AuthPage from './pages/AuthPage';
+import LegislativeTracker from './pages/LegislativeTracker';
+import LegislativeTrackerDetail from './pages/LegislativeTrackerDetail';
+import ResourceHub from './pages/ResourceHub';
+import ResourceDetail from './pages/ResourceDetail';
+import ResourceUpload from './pages/ResourceUpload';
+import PendingResources from './pages/PendingResources';
+import CommunityPortal from './pages/CommunityPortal';
+import JoinCommunity from './pages/JoinCommunity';
+import Volunteer from './pages/Volunteer';
+import VolunteerApplication from './pages/VolunteerApplication';
+import AdvocacyToolkit from './pages/AdvocacyToolkit';
+import AdvocacyToolkitDetail from './pages/AdvocacyToolkitDetail';
+import ConstitutionPage from './pages/ConstitutionPage';
+import Notifications from './pages/Notifications';
+import UserProfile from './pages/UserProfile';
+import FeedbackPage from './pages/FeedbackPage';
+import NotFound from './pages/NotFound';
+import PullToRefresh from './components/ui/PullToRefresh';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { createContext, useContext, useEffect, useState } from "react";
-import { Session } from "@supabase/supabase-js";
-import { supabase } from "./integrations/supabase/client";
-import { LanguageProvider } from "./contexts/LanguageContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import LegislativeTracker from "./pages/LegislativeTracker";
-import LegislativeTrackerDetail from "./pages/LegislativeTrackerDetail";
-import ResourceHub from "./pages/ResourceHub";
-import ResourceDetail from "./pages/ResourceDetail";
-import ResourceUpload from "./pages/ResourceUpload";
-import PendingResources from "./pages/PendingResources";
-import CommunityPortal from "./pages/CommunityPortal";
-import Volunteer from "./pages/Volunteer";
-import UserProfile from "./pages/UserProfile";
-import AuthPage from "./pages/AuthPage";
-import Notifications from "./pages/Notifications";
-import ConstitutionPage from "./pages/ConstitutionPage";
-import JoinCommunity from "./pages/JoinCommunity";
-import VolunteerApplication from "./pages/VolunteerApplication";
-import Settings from "./pages/Settings";
-import ScrollToTop from "./components/utils/ScrollToTop";
-import LoadingScreen from "./components/utils/LoadingScreen";
-import PullToRefresh from "./components/PullToRefresh";
-import AdvocacyToolkit from "./pages/AdvocacyToolkit";
-import AdvocacyToolkitDetail from "./pages/AdvocacyToolkitDetail";
-import FeedbackPage from "./pages/FeedbackPage";
+// Add these imports for settings pages:
+import SettingsLayout from "./pages/settings/SettingsLayout";
+import AccountSettings from "./pages/settings/AccountSettings";
+import NotificationSettings from "./pages/settings/NotificationSettings";
+import PrivacySettings from "./pages/settings/PrivacySettings";
 
 const queryClient = new QueryClient();
 
-export const AuthContext = createContext<{
-  session: Session | null;
-  loading: boolean;
-}>({
-  session: null,
-  loading: true
-});
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext<any>(null);
 
-const BackButtonHandler = ({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    window.addEventListener('popstate', (e) => {
-      e.preventDefault();
-      navigate(-1);
-    });
-
-    return () => {
-      window.removeEventListener('popstate', () => {});
-    };
-  }, [navigate]);
-
-  return <>{children}</>;
-};
+const useAuth = () => useContext(AuthContext);
 
 const App = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
+      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
   }, []);
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+  
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={{ session, loading }}>
-        <ThemeProvider>
-          <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <BackButtonHandler>
-                  <ScrollToTop />
-                  <LoadingScreen />
-                  <PullToRefresh>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                      <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                      <Route path="/resources" element={<ResourceHub />} />
-                      <Route path="/resources/:id" element={<ResourceDetail />} />
-                      <Route path="/resources/upload" element={<ResourceUpload />} />
-                      <Route path="/resources/pending" element={<PendingResources />} />
-                      <Route path="/resources/type/:type" element={<ResourceHub />} />
-                      <Route path="/constitution" element={<ConstitutionPage />} />
-                      <Route path="/community" element={<CommunityPortal />} />
-                      <Route path="/volunteer" element={<Volunteer />} />
-                      <Route path="/community/join" element={<JoinCommunity />} />
-                      <Route path="/volunteer/apply/:role" element={<VolunteerApplication />} />
-                      <Route path="/profile" element={<UserProfile />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
-                      <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
-                      <Route path="/feedback" element={<FeedbackPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </PullToRefresh>
-                </BackButtonHandler>
-              </BrowserRouter>
-            </TooltipProvider>
-          </LanguageProvider>
-        </ThemeProvider>
-      </AuthContext.Provider>
+      <div className="dark:text-white">
+        {isLoading ? (
+          <LoadingScreen />
+        ) : (
+          <AuthContext.Provider value={{ session, signOut }}>
+            <Toaster />
+            <PullToRefresh>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+                <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
+                <Route path="/resources" element={<ResourceHub />} />
+                <Route path="/resources/:id" element={<ResourceDetail />} />
+                <Route path="/resources/upload" element={<ResourceUpload />} />
+                <Route path="/resources/pending" element={<PendingResources />} />
+                <Route path="/community" element={<CommunityPortal />} />
+                <Route path="/community/join" element={<JoinCommunity />} />
+                <Route path="/volunteer" element={<Volunteer />} />
+                <Route path="/volunteer/apply" element={<VolunteerApplication />} />
+                <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
+                <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
+                <Route path="/constitution" element={<ConstitutionPage />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/feedback" element={<FeedbackPage />} />
+                
+                {/* New settings routes */}
+                <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+                <Route path="/settings" element={<SettingsLayout />}>
+                  <Route path="account" element={<AccountSettings />} />
+                  <Route path="notifications" element={<NotificationSettings />} />
+                  <Route path="privacy" element={<PrivacySettings />} />
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PullToRefresh>
+          </AuthContext.Provider>
+        )}
+      </div>
     </QueryClientProvider>
   );
 };
 
 export default App;
+export { useAuth };
