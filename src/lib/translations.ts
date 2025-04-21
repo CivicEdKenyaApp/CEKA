@@ -338,6 +338,3 @@ export function getTranslation(key: string, language: Language): string {
   return translations[key]?.en || key
     return text;
   }
-
-  return translations[text][language] || text;
-}
