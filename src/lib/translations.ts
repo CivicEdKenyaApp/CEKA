@@ -330,8 +330,12 @@ const translations: Record<string, Record<Language, string>> = {
   },
 };
 
-export function translate(text: string, language: Language): string {
-  if (!translations[text]) {
+export function getTranslation(key: string, language: Language): string {
+  if (translations[key] && translations[key][language]) {
+    return translations[key][language]
+  }
+  // Fallback to English if translation not found
+  return translations[key]?.en || key
     return text;
   }
 
