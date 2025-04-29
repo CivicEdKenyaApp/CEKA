@@ -335,6 +335,5 @@ export function getTranslation(key: string, language: Language): string {
     return translations[key][language]
   }
   // Fallback to English if translation not found
-  return translations[key]?.en || key
-    return text;
+  return translations[key]?.en || key;
   }
