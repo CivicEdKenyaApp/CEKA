@@ -90,9 +90,9 @@ const App = () => {
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/feedback" element={<FeedbackPage />} />
                 
-                {/* New settings routes */}
-                <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+                {/* New settings routes v2 */}
                 <Route path="/settings" element={<SettingsLayout />}>
+                  <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<AccountSettings />} />
                   <Route path="notifications" element={<NotificationSettings />} />
                   <Route path="privacy" element={<PrivacySettings />} />
