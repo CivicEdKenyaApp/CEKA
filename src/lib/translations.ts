@@ -1,6 +1,6 @@
 import { Language } from "@/contexts/LanguageContext"
 
-const translations: Record<string, Record<Language, string>> = {
+export const translations: Record<string, Record<Language, string>> = {
   // General
   'Loading...': { en: 'Loading...', sw: 'Upe muda...', ksl: 'Loading...', br: '⠇⠕⠁⠙⠊⠝⠛...' },
   'Search...': { en: 'Search...', sw: 'Pekua...', ksl: 'Search...', br: '⠎⠑⠁⠗⠉⠓...' },
