@@ -8,6 +8,191 @@ import ResourceCard from '@/components/resources/ResourceCard';
 import ResourceTypeFilter from '@/components/resources/ResourceTypeFilter';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/App';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+
+const mockResources = [
+  {
+    id: "1",
+    title: "Understanding the Constitution of Kenya",
+    type: "Constitution",
+    category: "Constitution",
+    description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
+    url: "https://example.com/constitution-guide.pdf",
+    downloadUrl: "https://example.com/constitution-guide.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Civic Education Kenya",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "2",
+    title: "Blood Parliament: BBC Africa Eye Documentary",
+    type: "Video",
+    category: "Governance",
+    description: "How the Kenyan Government handled the Kenyan youth rose up against economic injustice",
+    url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
+    videoUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
+    downloadUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5?download=1",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Civic Education Kenya",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "3",
+    title: "Your Rights as a Kenyan Citizen",
+    type: "Infographic",
+    category: "Rights",
+    description: "Visual representation of fundamental rights guaranteed by the Constitution.",
+    url: "https://example.com/rights-infographic.png",
+    downloadUrl: "https://example.com/rights-infographic.png",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Civic Education Kenya",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "4",
+    title: "County Governments Explained",
+    type: "Document",
+    category: "Governance",
+    description: "Detailed explanation of how county governments work and their responsibilities.",
+    url: "https://example.com/county-gov.pdf",
+    downloadUrl: "https://example.com/county-gov.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Ministry of Devolution",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "5",
+    title: "Introduction to Public Participation",
+    type: "Document",
+    category: "Participation",
+    description: "Guide on how citizens can participate in governance and decision-making processes.",
+    url: "https://example.com/participation.pdf",
+    downloadUrl: "https://example.com/participation.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Office of the Ombudsman",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "6",
+    title: "Kenya's Electoral System",
+    type: "Video",
+    category: "Elections",
+    description: "Explains how elections work in Kenya, from voter registration to results announcement.",
+    url: "https://example.com/elections-video.mp4",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    downloadUrl: "https://example.com/elections-video.mp4",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "IEBC",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "7",
+    title: "Understanding the Judiciary",
+    type: "Infographic",
+    category: "Judiciary",
+    description: "Visual guide to Kenya's court system and how the judiciary functions.",
+    url: "https://example.com/judiciary.png",
+    downloadUrl: "https://example.com/judiciary.png",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Judicial Service Commission",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "8",
+    title: "Civic Education for Youth",
+    type: "Document",
+    category: "Education",
+    description: "Resources specifically designed for young Kenyans to learn about civic participation.",
+    url: "https://example.com/youth-civic.pdf",
+    downloadUrl: "https://example.com/youth-civic.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Ministry of Education",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "9",
+    title: "National Civic Education Framework",
+    type: "Document",
+    category: "Framework",
+    description: "Official framework outlining civic education implementation at County and National levels.",
+    url: "https://example.com/ncef-document.pdf",
+    downloadUrl: "https://example.com/ncef-document.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Ministry of Education",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "10",
+    title: "Guide to Devolved Government",
+    type: "Document",
+    category: "Governance",
+    description: "Comprehensive document explaining Kenya's devolved system of government.",
+    url: "https://example.com/devolution-guide.pdf",
+    downloadUrl: "https://example.com/devolution-guide.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Council of Governors",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "11",
+    title: "Civil Society Engagement Handbook",
+    type: "Document",
+    category: "Participation",
+    description: "A handbook for civil society organizations on effective engagement with government.",
+    url: "https://example.com/cso-handbook.pdf",
+    downloadUrl: "https://example.com/cso-handbook.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "Civil Society Reference Group",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "12",
+    title: "Public Finance Management Guide",
+    type: "Document",
+    category: "Finance",
+    description: "Document explaining public finance management processes in Kenya.",
+    url: "https://example.com/pfm-guide.pdf",
+    downloadUrl: "https://example.com/pfm-guide.pdf",
+    is_downloadable: true,
+    uploadDate: new Date().toISOString(),
+    uploadedBy: "National Treasury",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import Layout from '@/components/layout/Layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, Download, Upload, ArrowDown } from 'lucide-react';
+import ResourceCard from '@/components/resources/ResourceCard';
+import ResourceTypeFilter from '@/components/resources/ResourceTypeFilter';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/App';
 
 const mockResources = [
   {
