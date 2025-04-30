@@ -227,22 +227,46 @@ const ResourceHub = () => {
         }, 500);
         
         // Actual Supabase implementation would look like this:
-        /*
-        let query = supabase
-          .from('resources')
-          .select('*')
-          .eq('status', 'approved');
-          
-        if (type) {
-          query = query.eq('type', type);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        setResources(data || []);
-        */
+const fetchResources = async () => {
+  try {
+    setLoading(true);
+    
+    let query = supabase
+      .from('resources')
+      .select('*')
+      .eq('status', 'approved');
+      
+    if (type) {
+      query = query.or(`type.ilike.${type},category.ilike.${type}`);
+    }
+    
+    if (searchQuery) {
+      query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    }
+    
+    if (activeCategory) {
+      query = query.eq('category', activeCategory);
+    }
+    
+    // Add sorting
+    query = query.order('created_at', { ascending: false });
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    setResources(data || []);
+  } catch (error) {
+    console.error('Error fetching resources:', error);
+    toast({
+      title: "Error",
+      description: "Could not load resources. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
       } catch (error) {
         console.error('Error fetching resources:', error);
         toast({
