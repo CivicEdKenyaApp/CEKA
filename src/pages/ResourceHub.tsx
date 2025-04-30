@@ -32,7 +32,7 @@ const mockResources = [
     category: "Governance",
     description: "How the Kenyan Government handled the Kenyan youth rose up against economic injustice",
     url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
-    videoUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
+    videoUrl: "https://youtu.be/qz0f1yyf_eA?si=TaqMBGWD10xZEaGu",
     downloadUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5?download=1",
     is_downloadable: true,
     uploadDate: new Date().toISOString(),
