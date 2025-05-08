@@ -30,6 +30,7 @@ interface AuthModalProps {
 const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // <-- ADDED
   const { toast } = useToast();
   const { language } = useLanguage();
   const [email, setEmail] = useState('');
@@ -37,6 +38,25 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const isAuthRoute = location.pathname === '/auth'; // <-- ADDED
+
+  // 💡 Auto-close modal if user is signed in (but not on /auth)
+  useEffect(() => {
+    if (session && open && !isAuthRoute) {
+      sessionStorage.setItem('authModalSignedIn', 'true');
+      onOpenChange(false);
+    }
+  }, [session, open, onOpenChange, isAuthRoute]);
+
+  // 💡 Auto-dismiss if already dismissed or signed in before (but not on /auth)
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem('authModalDismissed');
+    const signedIn = sessionStorage.getItem('authModalSignedIn');
+    if ((dismissed || signedIn) && open && !isAuthRoute) {
+      onOpenChange(false);
+    }
+  }, [open, onOpenChange, isAuthRoute]);
 
   // 💡 Auto-close modal if user is signed in
   useEffect(() => {
