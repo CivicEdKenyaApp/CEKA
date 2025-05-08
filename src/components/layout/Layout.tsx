@@ -22,8 +22,8 @@ const Layout = ({ children }: LayoutProps) => {
             <main className="flex-1 pb-16 md:pb-0">{children}</main>
             <Footer />
             <BackButton />
-            <BottomNavbar />
           </div>
+          <BottomNavbar />
         </ScrollListener>
       </ThemeProvider>
     </LanguageProvider>
