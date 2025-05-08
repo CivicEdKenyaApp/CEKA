@@ -1,15 +1,21 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import AuthModal from '@/components/auth/AuthModal';
 
 const AuthPage = () => {
-  const [isOpen, setIsOpen] = useState(true); // Or false, depending on initial behavior
+  const navigate = useNavigate();
 
   return (
     <Layout>
-      <div className="flex items-start justify-center min-h-[calc(100vh-16rem)] py-8 px-4 overflow-y-auto">
-        <AuthModal open={isOpen} onOpenChange={setIsOpen} />
+      <div className="container py-8 md:py-12 h-full">
+        <div className="max-w-md mx-auto">
+          <AuthModal 
+            open={true}
+            onOpenChange={() => navigate('/')}
+          />
+        </div>
       </div>
     </Layout>
   );

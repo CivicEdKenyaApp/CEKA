@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Download, BookOpen } from 'lucide-react';
+import { ExternalLink, Download, BookOpen, MapPin } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 interface ResourceCardProps {
   resource: {
@@ -19,6 +20,8 @@ interface ResourceCardProps {
     videoUrl?: string;
     status?: 'pending' | 'approved' | 'rejected';
     category?: string;
+    billObjective?: string; // Added for bill objective alignment
+    county?: string; // Added for county-specific content
   };
   downloadable?: boolean;
   id?: string;
@@ -106,7 +109,7 @@ const ResourceCard = ({ resource, downloadable }: ResourceCardProps) => {
   
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Badge variant="outline" className={`${getBadgeColor(resource.type)} font-normal`}>
             {resource.type}
@@ -119,23 +122,44 @@ const ResourceCard = ({ resource, downloadable }: ResourceCardProps) => {
         </div>
         <div className="mt-3">
           <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
-            <h3 className="font-semibold text-lg">{resource.title}</h3>
+            <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
           </Link>
-          <p className="text-muted-foreground text-sm mt-1">{resource.description}</p>
+          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{resource.description}</p>
         </div>
       </CardHeader>
-      <CardContent className="grow">
-        <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-4">
+      <CardContent className="grow pt-2">
+        <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-3">
           {getResourceThumbnail(resource)}
         </div>
+        
+        {/* New: Bill objective and county info */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {resource.billObjective && (
+            <Badge variant="secondary" className="text-xs">
+              {resource.billObjective}
+            </Badge>
+          )}
+          {resource.county && (
+            <Badge variant="outline" className="text-xs flex items-center">
+              <MapPin className="h-3 w-3 mr-1" />
+              {resource.county.split(', ').length > 1 
+                ? `${resource.county.split(', ')[0]} +${resource.county.split(', ').length - 1}` 
+                : resource.county}
+            </Badge>
+          )}
+        </div>
+        
         {resource.uploadDate && (
-          <div className="mt-4 text-sm text-muted-foreground">
-            <p>Uploaded: {formatDate(resource.uploadDate)}</p>
-            {resource.uploadedBy && <p className="mt-1">By: {resource.uploadedBy}</p>}
+          <div className="text-xs text-muted-foreground">
+            <div className="space-y-0.5">
+              <p>Uploaded: {formatDate(resource.uploadDate)}</p>
+              {resource.uploadedBy && <p>By: {resource.uploadedBy}</p>}
+            </div>
           </div>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
+      <Separator />
+      <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
         <Button variant="outline" size="sm" asChild>
           <Link to={`/resources/${resource.id}`}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" />

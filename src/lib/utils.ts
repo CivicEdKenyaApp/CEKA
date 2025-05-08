@@ -24,3 +24,5 @@ export function translate(text: string, language: Language): string {
 
   return translations[text][language] || text;
 }
+
+export { translations }
