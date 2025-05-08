@@ -36,8 +36,6 @@ const mockResources = [
     type: "pdf",
     category: "Constitution",
     imageUrl: "/placeholder.svg",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-kenya-2010.pdf",
-    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-kenya-2010.pdf?download=1",
   },
   {
     id: 2,
@@ -88,9 +86,7 @@ const heroResources = [
     description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
     imageUrl: "/placeholder.svg",
     type: "pdf",
-    category: "Constitution",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-kenya-2010.pdf",
-    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-kenya-2010.pdf?download=1"
+    category: "Constitution"
   },
   {
     id: "2",
@@ -178,18 +174,9 @@ const ResourceHub = () => {
                 </CardContent>
                 <CardFooter>
                   <Button asChild>
-                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                      {translate(
-                `View ${
-                  resource.type === "pdf"
-                  ? "PDF"
-                  : resource.type === "video"
-                  ? "Video"
-                  : "Infographic"
-                }`,
-                language
-              )}
-                    </a>
+                    <Link to={`/resource/${resource.id}`}>
+                      {translate(`View ${resource.type === "pdf" ? "PDF" : resource.type === "video" ? "Video" : "Infographic"}`, language)}
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
