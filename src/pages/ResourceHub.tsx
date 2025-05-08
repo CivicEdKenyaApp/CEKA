@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -790,14 +789,16 @@ const ResourceHub = () => {
             
             <div className="mt-12 p-6 bg-kenya-green/10 rounded-lg">
               <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-2xl font-bold mb-4">Download Resources for Offline Access</h2>
+                <h2 className="text-2xl font-bold mb-4">Complete Resource Library</h2>
                 <p className="mb-6 text-muted-foreground">
-                  Save resources to your device for access even when you're offline. 
-                  Perfect for areas with limited connectivity.
+                  Access our comprehensive collection of resources including all uploaded documents,
+                  videos, infographics, and more. Perfect for offline access and deep research.
                 </p>
-                <Button className="bg-kenya-green hover:bg-kenya-green/90">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Selected Resources
+                <Button className="bg-kenya-green hover:bg-kenya-green/90" asChild>
+                  <Link to="/resource-library">
+                    <Download className="mr-2 h-4 w-4" />
+                    Browse Complete Resource Library
+                  </Link>
                 </Button>
               </div>
             </div>

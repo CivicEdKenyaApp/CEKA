@@ -17,9 +17,9 @@ const AuthPage = () => {
   }, [location.pathname]);
 
   // Handle Modal Close logic, allowing for specific exit conditions
-  const handleModalClose = (forceClose: boolean) => {
-    // Close modal only if forced (e.g., tapping outside or emergency closure)
-    if (forceClose || !authPageActive) {
+  const handleModalClose = (open: boolean) => {
+    // Only navigate away if not active on auth page or explicitly closing
+    if (!open && authPageActive) {
       navigate('/');
     }
   };

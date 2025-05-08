@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -20,8 +19,8 @@ interface ResourceCardProps {
     videoUrl?: string;
     status?: 'pending' | 'approved' | 'rejected';
     category?: string;
-    billObjective?: string; // Added for bill objective alignment
-    county?: string; // Added for county-specific content
+    billObjective?: string;
+    county?: string;
   };
   downloadable?: boolean;
   id?: string;
@@ -121,7 +120,8 @@ const ResourceCard = ({ resource, downloadable }: ResourceCardProps) => {
           )}
         </div>
         <div className="mt-3">
-          <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
+          {/* Updated link to use the new document viewer page */}
+          <Link to={`/resource/${resource.id}`} className="hover:text-kenya-green transition-colors">
             <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
           </Link>
           <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{resource.description}</p>
@@ -160,8 +160,9 @@ const ResourceCard = ({ resource, downloadable }: ResourceCardProps) => {
       </CardContent>
       <Separator />
       <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
+        {/* Updated link to use the new document viewer page */}
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/resources/${resource.id}`}>
+          <Link to={`/resource/${resource.id}`}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
             View Details
           </Link>

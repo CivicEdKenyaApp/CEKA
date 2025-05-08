@@ -11,6 +11,8 @@ import LegislativeTracker from './pages/LegislativeTracker';
 import LegislativeTrackerDetail from './pages/LegislativeTrackerDetail';
 import ResourceHub from './pages/ResourceHub';
 import ResourceDetail from './pages/ResourceDetail';
+import DocumentViewerPage from './pages/DocumentViewerPage';
+import ResourceLibrary from './pages/ResourceLibrary';
 import ResourceUpload from './pages/ResourceUpload';
 import PendingResources from './pages/PendingResources';
 import CommunityPortal from './pages/CommunityPortal';
@@ -77,6 +79,8 @@ const App = () => {
                 <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
                 <Route path="/resources" element={<ResourceHub />} />
                 <Route path="/resources/:id" element={<ResourceDetail />} />
+                <Route path="/resource/:id" element={<DocumentViewerPage />} />
+                <Route path="/resource-library" element={<ResourceLibrary />} />
                 <Route path="/resources/upload" element={<ResourceUpload />} />
                 <Route path="/resources/pending" element={<PendingResources />} />
                 <Route path="/community" element={<CommunityPortal />} />
@@ -90,7 +94,7 @@ const App = () => {
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/feedback" element={<FeedbackPage />} />
                 
-                {/* Settings routes v2 */}
+                {/* Settings routes */}
                 <Route path="/settings" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<AccountSettings />} />
