@@ -90,7 +90,7 @@ const App = () => {
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/feedback" element={<FeedbackPage />} />
                 
-                {/* New settings routes v2 */}
+                {/* Settings routes v2 */}
                 <Route path="/settings" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<AccountSettings />} />
