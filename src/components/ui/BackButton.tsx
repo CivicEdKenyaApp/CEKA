@@ -14,14 +14,18 @@ export function BackButton() {
   const { toast } = useToast();
   const { language } = useLanguage();
   
+  // State variables
   const [isVisible, setIsVisible] = useState(true);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [lastTap, setLastTap] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [colorProgress, setColorProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   
+  // Constants
   const isHomePage = location.pathname === '/';
-
+  
   // Kenyan flag colors
   const kenyaColors = {
     green: "#006600",
@@ -30,7 +34,61 @@ export function BackButton() {
     white: "#EEEEEE"
   };
   
-  // Function to calculate the current blended color
+  // Event Handlers
+  const handleInteraction = () => {
+    setIsVisible(true);
+    setLastInteraction(Date.now());
+  };
+  
+  const handleBackClick = (e) => {
+    // Prevent default behavior and stop propagation
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isHomePage) {
+      const now = Date.now();
+      if (now - lastTap < 500) { // Double tap detected (within 500ms)
+        // In a real app, this would exit the app
+        toast({
+          title: translate("Exiting app", language),
+          description: translate("App would close now", language),
+        });
+      } else {
+        setLastTap(now);
+        toast({
+          title: translate("Tap again to exit app", language),
+          description: translate("Double tap to close the application", language),
+        });
+      }
+    } else {
+      navigate(-1);
+    }
+  };
+  
+  const handleDragStart = (event, info) => {
+    setIsDragging(true);
+    setDragStartPos({ x: info.point.x, y: info.point.y });
+  };
+  
+  const handleDragEnd = (event, info) => {
+    // Calculate distance dragged
+    const distance = Math.sqrt(
+      Math.pow(info.point.x - dragStartPos.x, 2) + 
+      Math.pow(info.point.y - dragStartPos.y, 2)
+    );
+    
+    // If dragged less than 5px, consider it a click
+    if (distance < 5) {
+      handleBackClick(event);
+    }
+    
+    // Reset drag state after a short delay
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 50);
+  };
+  
+  // Color Calculation Functions
   const getCurrentColor = (progress) => {
     // Create a cycle through: green -> black -> red -> white -> green
     const cycle = 4; // 4 colors
@@ -62,7 +120,11 @@ export function BackButton() {
         color2 = kenyaColors.black;
     }
     
-    // Blend the colors
+    return blendColors(color1, color2, remainder);
+  };
+  
+  const blendColors = (color1, color2, ratio) => {
+    // Parse hex colors to RGB
     const r1 = parseInt(color1.substring(1, 3), 16);
     const g1 = parseInt(color1.substring(3, 5), 16);
     const b1 = parseInt(color1.substring(5, 7), 16);
@@ -71,14 +133,16 @@ export function BackButton() {
     const g2 = parseInt(color2.substring(3, 5), 16);
     const b2 = parseInt(color2.substring(5, 7), 16);
     
-    const r = Math.round(r1 + (r2 - r1) * remainder);
-    const g = Math.round(g1 + (g2 - g1) * remainder);
-    const b = Math.round(b1 + (b2 - b1) * remainder);
+    // Blend the colors
+    const r = Math.round(r1 + (r2 - r1) * ratio);
+    const g = Math.round(g1 + (g2 - g1) * ratio);
+    const b = Math.round(b1 + (b2 - b1) * ratio);
     
+    // Convert back to hex
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
 
-  // Handle color animation and mobile detection
+  // Effects
   useEffect(() => {
     // Check if the device is mobile based on screen width
     const checkMobile = () => {
@@ -88,14 +152,13 @@ export function BackButton() {
     // Initial check
     checkMobile();
     
-    // Set up inactivity timer
+    // Set up timers
     const visibilityTimer = setInterval(() => {
       if (Date.now() - lastInteraction > 5000) {
         setIsVisible(false);
       }
     }, 1000);
     
-    // Set up color animation - very slow and gradual
     const colorTimer = setInterval(() => {
       setColorProgress(prev => (prev + 0.1) % 100); // Very slow progression
     }, 100); // Update every 100ms for smooth animation
@@ -103,6 +166,7 @@ export function BackButton() {
     // Add event listeners
     window.addEventListener('resize', checkMobile);
     
+    // Cleanup
     return () => {
       clearInterval(visibilityTimer);
       clearInterval(colorTimer);
@@ -110,35 +174,7 @@ export function BackButton() {
     };
   }, [lastInteraction]);
 
-  const handleInteraction = () => {
-    setIsVisible(true);
-    setLastInteraction(Date.now());
-  };
-
-  const handleBackClick = () => {
-    if (isHomePage) {
-      const now = Date.now();
-      if (now - lastTap < 500) { // Double tap detected (within 500ms)
-        // In a real app, this would exit the app
-        toast({
-          title: translate("Exiting app", language),
-          description: translate("App would close now", language),
-        });
-      } else {
-        setLastTap(now);
-        toast({
-          title: translate("Tap again to exit app", language),
-          description: translate("Double tap to close the application", language),
-        });
-      }
-    } else {
-      navigate(-1);
-    }
-  };
-
-  // Only render on mobile devices (optional - currently always rendered)
-  // if (!isMobile) return null;
-
+  // Render
   return (
     <AnimatePresence>
       <motion.button
@@ -152,18 +188,13 @@ export function BackButton() {
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
         }}
         initial={{ opacity: 1 }}
-        animate={{ 
-          opacity: isVisible ? 1 : 0.1,
-        }}
-        transition={{ 
-          duration: 0.3 
-        }}
+        animate={{ opacity: isVisible ? 1 : 0.1 }}
+        transition={{ duration: 0.3 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onMouseEnter={handleInteraction}
         onMouseMove={handleInteraction}
         onTouchStart={handleInteraction}
-        onClick={handleBackClick}
         drag
         dragConstraints={{
           top: window.innerHeight / 2, // Restrict to bottom half
@@ -172,6 +203,8 @@ export function BackButton() {
           left: 0
         }}
         dragElastic={0.1} // Light elasticity
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         <ChevronLeft className="h-6 w-6 text-white" />
       </motion.button>
