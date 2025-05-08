@@ -149,10 +149,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-hidden z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-hidden z-50">
         {/* Kenya-themed color gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#006600]/10 via-[#EEEEEE]/5 to-[#BB1600]/10 pointer-events-none z-0"></div>
-        
+
         <DialogHeader className="relative z-10">
           <DialogTitle className="text-2xl font-bold text-center">
             {translate("Welcome to CEKA 🇰🇪", language)}
