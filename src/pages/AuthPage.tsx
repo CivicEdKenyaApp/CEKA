@@ -20,7 +20,7 @@ const AuthPage = () => {
   const handleModalClose = (open: boolean) => {
     // Only navigate away if not active on auth page or explicitly closing
     if (!open && authPageActive) {
-      navigate('/');
+      navigate('/auth');
     }
   };
 
