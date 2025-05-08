@@ -272,4 +272,4 @@ className="transition-all focus\:ring-2 focus\:ring-primary/30 bg-white/70"
 );
 };
 
-export default AuthModal;)
+export default AuthModal;
