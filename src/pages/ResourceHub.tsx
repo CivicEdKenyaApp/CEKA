@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -244,35 +245,36 @@ type Resource = {
   county?: string; // Added for county-specific content
 };
 
-// Enhance mock resources with bill objectives and counties
-const enhancedMockResources = React.useMemo(() => {
-  return mockResources.map(resource => {
-    // Assign random bill objectives
-    const objectives = [
-      'Constitutional Implementation', 'Devolved Government', 
-      'Constitutionalism', 'Political System', 'Electoral Knowledge',
-      'Bill of Rights', 'Service Delivery', 'County Issues', 'National Cohesion'
-    ];
-    
-    // Assign random counties (1-3 per resource)
-    const countyCount = Math.floor(Math.random() * 3) + 1;
-    const resourceCounties = [];
-    for (let i = 0; i < countyCount; i++) {
-      const randomCounty = counties[Math.floor(Math.random() * (counties.length - 1)) + 1];
-      if (!resourceCounties.includes(randomCounty)) {
-        resourceCounties.push(randomCounty);
-      }
-    }
-    
-    return {
-      ...resource,
-      billObjective: objectives[Math.floor(Math.random() * objectives.length)],
-      county: resourceCounties.join(', ')
-    };
-  });
-}, []);
-
+// Fix: Moving the enhancedMockResources inside the component
 const ResourceHub = () => {
+  // Fix: Move enhancedMockResources inside the component as a useMemo hook
+  const enhancedMockResources = React.useMemo(() => {
+    return mockResources.map(resource => {
+      // Assign random bill objectives
+      const objectives = [
+        'Constitutional Implementation', 'Devolved Government', 
+        'Constitutionalism', 'Political System', 'Electoral Knowledge',
+        'Bill of Rights', 'Service Delivery', 'County Issues', 'National Cohesion'
+      ];
+      
+      // Assign random counties (1-3 per resource)
+      const countyCount = Math.floor(Math.random() * 3) + 1;
+      const resourceCounties = [];
+      for (let i = 0; i < countyCount; i++) {
+        const randomCounty = counties[Math.floor(Math.random() * (counties.length - 1)) + 1];
+        if (!resourceCounties.includes(randomCounty)) {
+          resourceCounties.push(randomCounty);
+        }
+      }
+      
+      return {
+        ...resource,
+        billObjective: objectives[Math.floor(Math.random() * objectives.length)],
+        county: resourceCounties.join(', ')
+      };
+    });
+  }, []);
+  
   const [resources, setResources] = useState<Resource[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
