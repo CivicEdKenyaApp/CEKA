@@ -94,9 +94,9 @@ const Navbar = () => {
           ))}
         </nav>
 
-        <div className="relative w-full px-4 py-2 z-20 bg-background">
+        <div className="flex items-center gap-3">
+          {/* Floating Search Component */}
           <FloatingSearch />
-        </div>
           
           {!isMobile && (
             <TooltipProvider>
@@ -204,7 +204,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85%] p-0 pt-4 px-4">
+              <SheetContent side="right" className="w-[85%] p-0">
                 <div className="flex flex-col h-full">
                   <div 
                     className={cn(
@@ -213,7 +213,7 @@ const Navbar = () => {
                     )}
                   >
                     <Logo variant="full" className="mb-4" />
-                    <div className="relative w-full h-12 border border-dashed border-red-500">
+                    <div className="relative w-full">
                       <FloatingSearch />
                     </div>
                   </div>
