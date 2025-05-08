@@ -32,11 +32,11 @@ const { session } = useAuth();
 const navigate = useNavigate();
 const { toast } = useToast();
 const { language } = useLanguage();
-const \[email, setEmail] = useState('');
-const \[password, setPassword] = useState('');
-const \[fullName, setFullName] = useState('');
-const \[username, setUsername] = useState('');
-const \[loading, setLoading] = useState(false);
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [fullName, setFullName] = useState('');
+const [username, setUsername] = useState('');
+const [loading, setLoading] = useState(false);
 
 // 💡 Auto-close modal if user is signed in
 useEffect(() => {
