@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -47,6 +47,7 @@ const useAuth = () => useContext(AuthContext);
 const App = () => {
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -57,6 +58,19 @@ const App = () => {
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
+    
+    // Handle back button navigation
+    const handleBackButton = (e: PopStateEvent) => {
+      // Handle the back button navigation event here
+      // This prevents default navigation and allows our BackButton component to handle it
+      e.preventDefault();
+    };
+    
+    window.addEventListener('popstate', handleBackButton);
+    
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
   }, []);
 
   const signOut = async () => {

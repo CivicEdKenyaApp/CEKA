@@ -17,7 +17,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
@@ -41,24 +42,9 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   // 💡 Auto-close modal if user is signed in
   useEffect(() => {
     if (session && open) {
-      sessionStorage.setItem('authModalSignedIn', 'true');
       onOpenChange(false);
     }
   }, [session, open, onOpenChange]);
-
-  // 💡 On first load, check if user dismissed modal or already signed in
-  useEffect(() => {
-    const dismissed = sessionStorage.getItem('authModalDismissed');
-    const signedIn = sessionStorage.getItem('authModalSignedIn');
-    if ((dismissed || signedIn) && open) {
-      onOpenChange(false);
-    }
-  }, [open, onOpenChange]);
-
-  const handleDismiss = () => {
-    sessionStorage.setItem('authModalDismissed', 'true');
-    onOpenChange(false);
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +83,6 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      sessionStorage.setItem('authModalSignedIn', 'true');
       onOpenChange(false);
     } catch (error: any) {
       toast({
@@ -149,9 +134,14 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-hidden z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-auto max-h-[90vh] z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         {/* Kenya-themed color gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#006600]/10 via-[#EEEEEE]/5 to-[#BB1600]/10 pointer-events-none z-0"></div>
+        
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         
         <DialogHeader className="relative z-10">
           <DialogTitle className="text-2xl font-bold text-center">
@@ -231,9 +221,9 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           </Tabs>
         </div>
 
-        {/* Optional "Skip for now" dismiss button */}
+        {/* Skip for now button */}
         <DialogFooter className="justify-center mt-4 relative z-10">
-          <button onClick={handleDismiss} className="text-sm text-gray-500 hover:underline">
+          <button onClick={() => onOpenChange(false)} className="text-sm text-gray-500 hover:underline">
             {translate("Skip for now", language)}
           </button>
         </DialogFooter>

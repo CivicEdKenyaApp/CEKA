@@ -1,729 +1,805 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+
+import React, { useState, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  Search, Filter, Download, Book, FileText, Video, Image as ImageIcon, 
+  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen 
+} from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Search, Filter, BookOpen, FileText, Video, Image as ImageIcon, ChevronLeft } from 'lucide-react';
-import ResourceCard from '@/components/resources/ResourceCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
+import { useAuth } from '@/App';
+import { motion } from 'framer-motion';
 
-// Sample data for categories and counties (would come from API in real implementation)
-const categories = [
-  'All Categories',
-  'Constitution',
-  'Rights',
-  'Governance',
-  'Participation',
-  'Elections',
-  'Judiciary',
-  'Education',
-  'Framework',
-  'Finance'
-];
+// Resource type definition
+interface Resource {
+  id: string;
+  title: string;
+  description: string;
+  type: 'pdf' | 'video' | 'image' | 'audio' | 'link';
+  category: string;
+  url: string;
+  thumbnail?: string;
+  dateAdded: string;
+  author?: string;
+  views: number;
+  downloads: number;
+  tags: string[];
+  featured?: boolean;
+  county?: string;
+}
 
-const counties = [
-  'All Counties', 'Nairobi', 'Mombasa', 'Kwale', 'Kilifi', 'Tana River', 'Lamu', 'Taita-Taveta', 
-  'Garissa', 'Wajir', 'Mandera', 'Marsabit', 'Isiolo', 'Meru', 'Tharaka-Nithi', 'Embu', 'Kitui', 
-  'Machakos', 'Makueni', 'Nyandarua', 'Nyeri', 'Kirinyaga', 'Murang\'a', 'Kiambu', 'Turkana', 
-  'West Pokot', 'Samburu', 'Trans Nzoia', 'Uasin Gishu', 'Elgeyo-Marakwet', 'Nandi', 'Baringo', 
-  'Laikipia', 'Nakuru', 'Narok', 'Kajiado', 'Kericho', 'Bomet', 'Kakamega', 'Vihiga', 'Bungoma', 
-  'Busia', 'Siaya', 'Kisumu', 'Homa Bay', 'Migori', 'Kisii', 'Nyamira'
-];
-
-// Mock resources data
-const mockResources = [
+// Mock data with expanded resource collection
+const mockResources: Resource[] = [
   {
     id: "1",
-    title: "Understanding the Constitution of Kenya",
-    type: "Constitution",
-    category: "Constitution",
+    title: "Understanding the Kenyan Constitution",
     description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
-    url: "https://example.com/constitution.pdf",
-    downloadUrl: "https://example.com/constitution.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Civic Education Kenya",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Constitutional Implementation",
-    county: "National"
+    type: "pdf",
+    category: "Constitution",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf",
+    thumbnail: "/assets/constitution-thumbnail.jpg",
+    dateAdded: "2023-05-15",
+    author: "Civic Education Kenya",
+    views: 1245,
+    downloads: 521,
+    tags: ["constitution", "governance", "rights"],
+    featured: true
   },
   {
     id: "2",
     title: "Blood Parliament: BBC Africa Eye Documentary",
-    type: "Video",
-    category: "Governance",
     description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
+    type: "video",
+    category: "Governance",
     url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
-    downloadUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5?download=1",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Civic Education Kenya",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Political System",
-    county: "National"
+    thumbnail: "/assets/video-thumbnail.jpg",
+    dateAdded: "2023-06-22",
+    author: "BBC Africa",
+    views: 890,
+    downloads: 152,
+    tags: ["democracy", "protest", "youth", "politics"],
+    featured: true
   },
   {
     id: "3",
     title: "Your Rights as a Kenyan Citizen",
-    type: "Infographic",
-    category: "Rights",
     description: "Visual representation of fundamental rights guaranteed by the Constitution.",
-    url: "https://example.com/rights-infographic.png",
-    downloadUrl: "https://example.com/rights-infographic.png",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Civic Education Kenya",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Bill of Rights",
-    county: "Nairobi, Mombasa"
+    type: "image",
+    category: "Rights",
+    url: "/assets/rights-infographic.png",
+    thumbnail: "/assets/rights-thumbnail.jpg",
+    dateAdded: "2023-07-03",
+    author: "Civic Education Kenya",
+    views: 732,
+    downloads: 198,
+    tags: ["rights", "citizenship", "infographic"],
+    featured: true
   },
   {
     id: "4",
-    title: "County Governments Explained",
-    type: "Document",
-    category: "Governance",
-    description: "Detailed explanation of how county governments work and their responsibilities.",
-    url: "https://example.com/county-gov.pdf",
-    downloadUrl: "https://example.com/county-gov.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Ministry of Devolution",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Devolved Government",
-    county: "All Counties"
+    title: "The Legislative Process in Kenya",
+    description: "A detailed explanation of how laws are made in Kenya, from drafting to presidential assent.",
+    type: "pdf",
+    category: "Lawmaking",
+    url: "/documents/legislative-process.pdf",
+    dateAdded: "2023-04-18",
+    author: "Kenya Law Reform Commission",
+    views: 612,
+    downloads: 287,
+    tags: ["lawmaking", "parliament", "bills", "legislation"]
   },
   {
     id: "5",
-    title: "Introduction to Public Participation",
-    type: "Document",
-    category: "Participation",
-    description: "Guide on how citizens can participate in governance and decision-making processes.",
-    url: "https://example.com/participation.pdf",
-    downloadUrl: "https://example.com/participation.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Office of the Ombudsman",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Service Delivery",
-    county: "National"
-  },
-  {
-    id: "6",
-    title: "Kenya's Electoral System",
-    type: "Video",
-    category: "Elections",
-    description: "Explains how elections work in Kenya, from voter registration to results announcement.",
-    url: "https://example.com/elections-video.mp4",
-    downloadUrl: "https://example.com/elections-video.mp4",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "IEBC",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Electoral Knowledge",
-    county: "National"
-  },
-  {
-    id: "7",
-    title: "Understanding the Judiciary",
-    type: "Infographic",
-    category: "Judiciary",
-    description: "Visual guide to Kenya's court system and how the judiciary functions.",
-    url: "https://example.com/judiciary.png",
-    downloadUrl: "https://example.com/judiciary.png",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Judicial Service Commission",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Constitutionalism",
-    county: "National"
-  },
-  {
-    id: "8",
-    title: "Civic Education for Youth",
-    type: "Document",
-    category: "Education",
-    description: "Resources specifically designed for young Kenyans to learn about civic participation.",
-    url: "https://example.com/youth-civic.pdf",
-    downloadUrl: "https://example.com/youth-civic.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Ministry of Education",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Constitutional Implementation",
-    county: "National"
-  },
-  {
-    id: "9",
-    title: "National Civic Education Framework",
-    type: "Document",
-    category: "Framework",
-    description: "Official framework outlining civic education implementation at County and National levels.",
-    url: "https://example.com/ncef-document.pdf",
-    downloadUrl: "https://example.com/ncef-document.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Ministry of Education",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Constitutional Implementation",
-    county: "National"
-  },
-  {
-    id: "10",
-    title: "Guide to Devolved Government",
-    type: "Document",
-    category: "Governance",
-    description: "Comprehensive document explaining Kenya's devolved system of government.",
-    url: "https://example.com/devolution-guide.pdf",
-    downloadUrl: "https://example.com/devolution-guide.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Council of Governors",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Devolved Government",
+    title: "County Governments Explained",
+    description: "Structure, functions, and responsibilities of county governments under devolution.",
+    type: "video",
+    category: "Devolution",
+    url: "/videos/county-governments.mp4",
+    dateAdded: "2023-08-09",
+    author: "Council of Governors",
+    views: 543,
+    downloads: 122,
+    tags: ["devolution", "counties", "governance", "local government"],
     county: "All Counties"
   },
   {
+    id: "6",
+    title: "How to Participate in Public Forums",
+    description: "A citizen's guide to effective participation in public participation forums.",
+    type: "pdf",
+    category: "Public Participation",
+    url: "/documents/public-participation.pdf",
+    dateAdded: "2023-09-12",
+    author: "Transparency International Kenya",
+    views: 398,
+    downloads: 203,
+    tags: ["public participation", "citizen engagement", "democracy"]
+  },
+  {
+    id: "7",
+    title: "Understanding Tax Obligations",
+    description: "A simple guide to understanding your tax obligations as a Kenyan citizen or business.",
+    type: "pdf",
+    category: "Taxation",
+    url: "/documents/tax-guide.pdf",
+    dateAdded: "2023-05-22",
+    author: "Kenya Revenue Authority",
+    views: 876,
+    downloads: 342,
+    tags: ["taxation", "finance", "compliance"]
+  },
+  {
+    id: "8",
+    title: "Elections in Kenya: Process and Procedures",
+    description: "Comprehensive guide to electoral processes and procedures in Kenya.",
+    type: "video",
+    category: "Elections",
+    url: "/videos/election-process.mp4",
+    dateAdded: "2023-02-14",
+    author: "Independent Electoral and Boundaries Commission",
+    views: 1122,
+    downloads: 276,
+    tags: ["elections", "democracy", "voting", "IEBC"]
+  },
+  {
+    id: "9",
+    title: "Kenya's Foreign Policy Framework",
+    description: "Overview of Kenya's foreign policy principles, objectives and implementation strategies.",
+    type: "pdf",
+    category: "Foreign Policy",
+    url: "/documents/foreign-policy.pdf",
+    dateAdded: "2023-07-18",
+    author: "Ministry of Foreign Affairs",
+    views: 321,
+    downloads: 145,
+    tags: ["foreign policy", "international relations", "diplomacy"]
+  },
+  {
+    id: "10",
+    title: "Understanding Land Rights in Kenya",
+    description: "Guide to land ownership, registration, and dispute resolution in Kenya.",
+    type: "pdf",
+    category: "Land Rights",
+    url: "/documents/land-rights.pdf",
+    dateAdded: "2023-06-05",
+    author: "Kenya Land Alliance",
+    views: 892,
+    downloads: 433,
+    tags: ["land", "property", "rights", "ownership"]
+  },
+  {
     id: "11",
-    title: "Civil Society Engagement Handbook",
-    type: "Document",
-    category: "Participation",
-    description: "A handbook for civil society organizations on effective engagement with government.",
-    url: "https://example.com/cso-handbook.pdf",
-    downloadUrl: "https://example.com/cso-handbook.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "Civil Society Reference Group",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Service Delivery",
-    county: "National"
+    title: "Kenya's National Values and Principles",
+    description: "Visual guide to the national values and principles of governance in the Constitution.",
+    type: "image",
+    category: "National Values",
+    url: "/images/national-values.png",
+    dateAdded: "2023-08-24",
+    author: "National Cohesion and Integration Commission",
+    views: 456,
+    downloads: 219,
+    tags: ["values", "principles", "patriotism", "unity"]
   },
   {
     id: "12",
-    title: "Public Finance Management Guide",
-    type: "Document",
-    category: "Finance",
-    description: "Document explaining public finance management processes in Kenya.",
-    url: "https://example.com/pfm-guide.pdf",
-    downloadUrl: "https://example.com/pfm-guide.pdf",
-    is_downloadable: true,
-    uploadDate: new Date().toISOString(),
-    uploadedBy: "National Treasury",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    billObjective: "Constitutional Implementation",
-    county: "National"
+    title: "Introduction to Kenya's Judicial System",
+    description: "Structure, functions, and processes of Kenya's judiciary system explained.",
+    type: "video",
+    category: "Judiciary",
+    url: "/videos/judiciary-explainer.mp4",
+    dateAdded: "2023-06-30",
+    author: "Judiciary of Kenya",
+    views: 678,
+    downloads: 234,
+    tags: ["judiciary", "courts", "justice", "legal system"]
+  },
+  {
+    id: "13",
+    title: "Climate Change Policies in Kenya",
+    description: "Overview of Kenya's climate change policies, strategies, and action plans.",
+    type: "pdf",
+    category: "Environment",
+    url: "/documents/climate-policies.pdf",
+    dateAdded: "2023-04-22",
+    author: "Ministry of Environment and Forestry",
+    views: 412,
+    downloads: 189,
+    tags: ["climate change", "environment", "policy", "sustainability"]
+  },
+  {
+    id: "14",
+    title: "Women's Political Representation in Kenya",
+    description: "Analysis of women's representation in political and decision-making processes in Kenya.",
+    type: "pdf",
+    category: "Gender & Inclusion",
+    url: "/documents/women-representation.pdf",
+    dateAdded: "2023-03-08",
+    author: "UN Women Kenya",
+    views: 532,
+    downloads: 267,
+    tags: ["gender", "women", "representation", "politics"]
+  },
+  {
+    id: "15",
+    title: "Youth Participation in Governance",
+    description: "Guide to opportunities and challenges for youth participation in governance.",
+    type: "video",
+    category: "Youth",
+    url: "/videos/youth-governance.mp4",
+    dateAdded: "2023-07-29",
+    author: "Youth Senate Kenya",
+    views: 789,
+    downloads: 312,
+    tags: ["youth", "governance", "participation", "empowerment"]
   }
 ];
 
-// This would be expanded with more mock data in a real implementation
+// Extract unique categories for filtering
+const allCategories = Array.from(new Set(mockResources.map(resource => resource.category)));
+const allTypes = Array.from(new Set(mockResources.map(resource => resource.type)));
 
 const ResourceLibrary = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [selectedCounty, setSelectedCounty] = useState('All Counties');
-  const [selectedType, setSelectedType] = useState('All Types');
-  const [resources, setResources] = useState(mockResources);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { session } = useAuth();
+  const { language } = useLanguage();
 
-  useEffect(() => {
-    // Simulate API call to fetch resources
-    const fetchResources = async () => {
-      try {
-        setLoading(true);
-        // In a real implementation, this would be a Supabase query
-        // For now, we're using the mock data
-        
-        // Simulate loading time
-        setTimeout(() => {
-          setResources(mockResources);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Error fetching resources:', error);
-        setLoading(false);
-      }
-    };
+  // State for filters and search
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'date' | 'popularity' | 'alphabetical'>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
 
-    fetchResources();
-  }, []);
-
-  // Filter resources based on search query and selected filters
-  const filteredResources = resources.filter(resource => {
-    const matchesSearch = searchQuery === '' || 
-      resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resource.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    const matchesCategory = selectedCategory === 'All Categories' || 
-      resource.category === selectedCategory;
-      
-    const matchesCounty = selectedCounty === 'All Counties' || 
-      resource.county?.includes(selectedCounty);
-      
-    const matchesType = selectedType === 'All Types' || 
-      resource.type === selectedType;
+  // Filter and sort resources based on current state
+  const filteredResources = useMemo(() => {
+    let filtered = mockResources;
     
-    return matchesSearch && matchesCategory && matchesCounty && matchesType;
-  });
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(resource => 
+        resource.title.toLowerCase().includes(term) || 
+        resource.description.toLowerCase().includes(term) ||
+        (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(term)))
+      );
+    }
+    
+    // Apply category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(resource => selectedCategories.includes(resource.category));
+    }
+    
+    // Apply type filter
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter(resource => selectedTypes.includes(resource.type));
+    }
+    
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      if (sortBy === 'date') {
+        return sortDirection === 'asc' 
+          ? new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime()
+          : new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+      } else if (sortBy === 'popularity') {
+        const aPopularity = a.views + a.downloads;
+        const bPopularity = b.views + b.downloads;
+        return sortDirection === 'asc' 
+          ? aPopularity - bPopularity
+          : bPopularity - aPopularity;
+      } else { // alphabetical
+        return sortDirection === 'asc'
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title);
+      }
+    });
+  }, [mockResources, searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
 
-  // Group resources by type for the tabs
-  const constitutionResources = filteredResources.filter(r => r.type === 'Constitution');
-  const documentResources = filteredResources.filter(r => r.type === 'Document' || r.type === 'PDF');
-  const videoResources = filteredResources.filter(r => r.type === 'Video');
-  const infographicResources = filteredResources.filter(r => r.type === 'Infographic');
+  // Group resources by category for the tabbed interface
+  const resourcesByCategory = useMemo(() => {
+    const grouped: Record<string, Resource[]> = {};
+    allCategories.forEach(category => {
+      grouped[category] = filteredResources.filter(resource => resource.category === category);
+    });
+    return grouped;
+  }, [filteredResources, allCategories]);
+
+  // Function to toggle resource selection
+  const toggleResourceSelection = (resourceId: string) => {
+    if (selectedResources.includes(resourceId)) {
+      setSelectedResources(selectedResources.filter(id => id !== resourceId));
+    } else {
+      setSelectedResources([...selectedResources, resourceId]);
+    }
+  };
+
+  // Function to download selected resources
+  const downloadSelectedResources = () => {
+    if (selectedResources.length === 0) {
+      toast({
+        description: "Please select resources to download.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!session) {
+      toast({
+        title: "Login Required",
+        description: "Please sign in to download resources.",
+      });
+      navigate('/auth');
+      return;
+    }
+
+    toast({
+      title: "Download Started",
+      description: `Downloading ${selectedResources.length} resources.`,
+    });
+
+    // In a real application, this would initiate actual downloads
+    console.log("Downloading resources:", selectedResources);
+  };
+
+  // Get type icon based on resource type
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'pdf':
+        return <FileText className="w-5 h-5" />;
+      case 'video':
+        return <Video className="w-5 h-5" />;
+      case 'image':
+        return <ImageIcon className="w-5 h-5" />;
+      case 'audio':
+        return <BookOpen className="w-5 h-5" />;
+      default:
+        return <Book className="w-5 h-5" />;
+    }
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedCategories([]);
+    setSelectedTypes([]);
+    setSortBy('date');
+    setSortDirection('desc');
+  };
+
+  // Render resource card based on view mode
+  const renderResourceCard = (resource: Resource) => {
+    const isSelected = selectedResources.includes(resource.id);
+    
+    if (viewMode === 'grid') {
+      return (
+        <motion.div
+          key={resource.id}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full"
+          layout
+        >
+          <Card className={`h-full transition-shadow hover:shadow-md overflow-hidden ${isSelected ? 'border-primary' : ''}`}>
+            <div className="relative">
+              <div className="absolute top-2 right-2 z-10">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
+                  onClick={() => toggleResourceSelection(resource.id)}
+                >
+                  {isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
+                </Button>
+              </div>
+              <div className="bg-muted aspect-video relative flex items-center justify-center">
+                {resource.thumbnail ? (
+                  <img 
+                    src={resource.thumbnail} 
+                    alt={resource.title} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full w-full">
+                    {getTypeIcon(resource.type)}
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+                  <Badge variant="outline" className="bg-background/80">
+                    <div className="flex items-center gap-1">
+                      {getTypeIcon(resource.type)}
+                      {resource.type.toUpperCase()}
+                    </div>
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <CardHeader className="p-4 pb-2">
+              <Link to={`/resource/${resource.id}`}>
+                <CardTitle className="text-lg leading-tight hover:underline line-clamp-2">{resource.title}</CardTitle>
+              </Link>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <p className="text-muted-foreground text-sm line-clamp-2">{resource.description}</p>
+            </CardContent>
+            <CardFooter className="px-4 py-3 border-t flex justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
+                <span className="text-xs text-muted-foreground">{resource.views} views</span>
+              </div>
+              <Button size="sm" variant="secondary" asChild>
+                <Link to={`/resource/${resource.id}`}>
+                  {translate("View Details", language)}
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      );
+    } else {
+      // List view
+      return (
+        <motion.div
+          key={resource.id}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          layout
+        >
+          <Card className={`transition-shadow hover:shadow-md ${isSelected ? 'border-primary' : ''}`}>
+            <div className="flex items-start p-4">
+              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
+                {resource.thumbnail ? (
+                  <img 
+                    src={resource.thumbnail} 
+                    alt={resource.title} 
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full w-full">
+                    {getTypeIcon(resource.type)}
+                  </div>
+                )}
+              </div>
+              <div className="flex-grow min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className="bg-background/80">
+                    <div className="flex items-center gap-1">
+                      {getTypeIcon(resource.type)}
+                      {resource.type.toUpperCase()}
+                    </div>
+                  </Badge>
+                  <Badge variant="secondary">{resource.category}</Badge>
+                </div>
+                <Link to={`/resource/${resource.id}`}>
+                  <h3 className="font-semibold hover:underline line-clamp-1">{resource.title}</h3>
+                </Link>
+                <p className="text-muted-foreground text-sm line-clamp-1">{resource.description}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
+                    <span className="text-xs text-muted-foreground">{resource.views} views</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => toggleResourceSelection(resource.id)}>
+                      {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+                      {isSelected ? "Selected" : "Select"}
+                    </Button>
+                    <Button size="sm" variant="secondary" asChild>
+                      <Link to={`/resource/${resource.id}`}>
+                        {translate("View Details", language)}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+  };
 
   return (
     <Layout>
-      <div className="container py-8 md:py-12">
-        <Button variant="ghost" className="mb-6" asChild>
-          <Link to="/resources" className="flex items-center">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Resource Hub
-          </Link>
-        </Button>
-
+      <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Resource Library</h1>
-            <p className="text-muted-foreground">
-              Comprehensive collection of civic education resources
+            <h1 className="text-3xl font-bold">{translate("Resource Library", language)}</h1>
+            <p className="text-muted-foreground mt-1">
+              {translate("Browse and download educational resources on civic education", language)}
             </p>
           </div>
           
-          <div className="mt-4 md:mt-0 flex gap-2">
-            <Button 
-              variant={view === 'grid' ? "default" : "outline"} 
-              size="sm"
-              onClick={() => setView('grid')}
-              className="hidden sm:flex"
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'} 
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className="h-8 w-8"
             >
-              Grid View
+              <Grid3X3 className="h-4 w-4" />
             </Button>
-            <Button 
-              variant={view === 'list' ? "default" : "outline"} 
-              size="sm"
-              onClick={() => setView('list')}
-              className="hidden sm:flex"
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'} 
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className="h-8 w-8"
             >
-              List View
+              <List className="h-4 w-4" />
             </Button>
           </div>
         </div>
         
-        {/* Advanced Search & Filter Section */}
-        <Card className="p-4 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label htmlFor="search" className="block text-sm font-medium mb-1">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by title, description, keywords..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="w-full md:w-48">
-              <label htmlFor="category-select" className="block text-sm font-medium mb-1">Category</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger id="category-select">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-full md:w-48">
-              <label htmlFor="county-select" className="block text-sm font-medium mb-1">County</label>
-              <Select value={selectedCounty} onValueChange={setSelectedCounty}>
-                <SelectTrigger id="county-select">
-                  <SelectValue placeholder="Select county" />
-                </SelectTrigger>
-                <SelectContent>
-                  {counties.map((county) => (
-                    <SelectItem key={county} value={county}>
-                      {county}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-full md:w-48">
-              <label htmlFor="type-select" className="block text-sm font-medium mb-1">Type</label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger id="type-select">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All Types">All Types</SelectItem>
-                  <SelectItem value="Constitution">Constitution</SelectItem>
-                  <SelectItem value="Document">Document</SelectItem>
-                  <SelectItem value="Video">Video</SelectItem>
-                  <SelectItem value="Infographic">Infographic</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-full md:w-32 self-end">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All Categories');
-                  setSelectedCounty('All Counties');
-                  setSelectedType('All Types');
-                }}
-              >
-                Reset
-              </Button>
-            </div>
-          </div>
-          
-          {/* Active Filters */}
-          {(searchQuery || selectedCategory !== 'All Categories' || selectedCounty !== 'All Counties' || selectedType !== 'All Types') && (
-            <div className="mt-4 flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
-              {searchQuery && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  Search: {searchQuery}
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {selectedCategory !== 'All Categories' && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  Category: {selectedCategory}
-                  <button 
-                    onClick={() => setSelectedCategory('All Categories')}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {selectedCounty !== 'All Counties' && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  County: {selectedCounty}
-                  <button 
-                    onClick={() => setSelectedCounty('All Counties')}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {selectedType !== 'All Types' && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  Type: {selectedType}
-                  <button 
-                    onClick={() => setSelectedType('All Types')}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredResources.length} resources
-          </p>
-        </div>
-        
-        <Tabs defaultValue="all" className="space-y-6">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span>All Resources</span>
-              <Badge variant="secondary" className="ml-1">{filteredResources.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="constitution" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              <span>Constitution</span>
-              <Badge variant="secondary" className="ml-1">{constitutionResources.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span>Documents</span>
-              <Badge variant="secondary" className="ml-1">{documentResources.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="flex items-center gap-2">
-              <Video className="h-4 w-4" />
-              <span>Videos</span>
-              <Badge variant="secondary" className="ml-1">{videoResources.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="infographics" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              <span>Infographics</span>
-              <Badge variant="secondary" className="ml-1">{infographicResources.length}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all">
-            {loading ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <Card key={i} className="p-4">
-                    <div className="animate-pulse">
-                      <div className="h-40 bg-muted rounded-md mb-4"></div>
-                      <div className="h-4 bg-muted rounded w-1/4 mb-2"></div>
-                      <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-muted rounded w-full mb-4"></div>
-                      <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredResources.length > 0 ? (
-              view === 'grid' ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredResources.map(resource => (
-                    <ResourceCard
-                      key={resource.id}
-                      resource={{
-                        id: resource.id,
-                        title: resource.title,
-                        description: resource.description,
-                        type: resource.type,
-                        uploadDate: resource.uploadDate,
-                        uploadedBy: resource.uploadedBy,
-                        downloadUrl: resource.downloadUrl,
-                        status: undefined,
-                        category: resource.category,
-                        billObjective: resource.billObjective,
-                        county: resource.county
-                      }}
-                      downloadable={resource.is_downloadable}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar with filters */}
+          <div className="lg:w-1/4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">{translate("Filter Resources", language)}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder={translate("Search resources...", language)}
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                  ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredResources.map(resource => (
-                    <Card key={resource.id} className="p-4 hover:bg-muted/30 transition-colors">
-                      <div className="flex gap-4">
-                        <div className="flex flex-col">
-                          <Badge className="self-start mb-1">{resource.type}</Badge>
-                          <Link to={`/resource/${resource.id}`} className="hover:text-primary transition-colors">
-                            <h3 className="font-semibold text-lg">{resource.title}</h3>
-                          </Link>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{resource.description}</p>
-                          
-                          <div className="flex gap-2 mt-3">
-                            <Button variant="default" size="sm" asChild>
-                              <Link to={`/resources/${resource.id}`}>View Details</Link>
-                            </Button>
-                            {resource.is_downloadable && (
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={resource.downloadUrl} target="_blank" rel="noopener noreferrer">
-                                  Download
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">{translate("Categories", language)}</h4>
+                  <div className="space-y-2">
+                    {allCategories.map((category) => (
+                      <div key={category} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`category-${category}`}
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => {
+                            if (selectedCategories.includes(category)) {
+                              setSelectedCategories(selectedCategories.filter(c => c !== category));
+                            } else {
+                              setSelectedCategories([...selectedCategories, category]);
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`category-${category}`} className="text-sm">
+                          {category}
+                        </label>
                       </div>
-                    </Card>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              )
-            ) : (
-              <div className="text-center py-12">
-                <div className="h-12 w-12 mx-auto text-muted-foreground mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                
+                <div>
+                  <h4 className="font-medium mb-2">{translate("Resource Types", language)}</h4>
+                  <div className="space-y-2">
+                    {allTypes.map((type) => (
+                      <div key={type} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`type-${type}`}
+                          checked={selectedTypes.includes(type)}
+                          onChange={() => {
+                            if (selectedTypes.includes(type)) {
+                              setSelectedTypes(selectedTypes.filter(t => t !== type));
+                            } else {
+                              setSelectedTypes([...selectedTypes, type]);
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`type-${type}`} className="flex items-center text-sm">
+                          <span className="mr-1">{getTypeIcon(type)}</span>
+                          {type.toUpperCase()}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">No resources found</h2>
-                <p className="text-muted-foreground mb-6">
-                  No resources match your search criteria. Try adjusting your filters.
-                </p>
-              </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">{translate("Sort By", language)}</h4>
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      variant={sortBy === 'date' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => {
+                        setSortBy('date');
+                        if (sortBy === 'date') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setSortDirection('desc');
+                        }
+                      }}
+                      className="justify-between"
+                    >
+                      {translate("Date Added", language)}
+                      {sortBy === 'date' && (
+                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      variant={sortBy === 'popularity' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => {
+                        setSortBy('popularity');
+                        if (sortBy === 'popularity') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setSortDirection('desc');
+                        }
+                      }}
+                      className="justify-between"
+                    >
+                      {translate("Popularity", language)}
+                      {sortBy === 'popularity' && (
+                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => {
+                        setSortBy('alphabetical');
+                        if (sortBy === 'alphabetical') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setSortDirection('asc');
+                        }
+                      }}
+                      className="justify-between"
+                    >
+                      {translate("Alphabetical", language)}
+                      {sortBy === 'alphabetical' && (
+                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                <Button variant="outline" onClick={resetFilters} className="w-full">
+                  <X className="h-4 w-4 mr-2" />
+                  {translate("Clear filters", language)}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Download selection panel */}
+            {selectedResources.length > 0 && (
+              <Card className="mt-4 border-primary">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-lg">{translate("Selected Resources", language)}</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <p className="text-sm font-medium">{selectedResources.length} {selectedResources.length === 1 ? 'resource' : 'resources'} selected</p>
+                </CardContent>
+                <CardFooter className="pt-2 pb-3">
+                  <div className="flex gap-2 w-full">
+                    <Button variant="outline" className="flex-1" onClick={() => setSelectedResources([])}>
+                      {translate("Clear", language)}
+                    </Button>
+                    <Button className="flex-1" onClick={downloadSelectedResources}>
+                      <Download className="h-4 w-4 mr-2" />
+                      {translate("Download", language)}
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
             )}
-          </TabsContent>
+          </div>
           
-          <TabsContent value="constitution">
-            {loading ? (
-              <div className="animate-pulse space-y-4">
-                <div className="h-40 bg-muted rounded"></div>
-                <div className="h-10 bg-muted rounded w-1/3"></div>
-              </div>
-            ) : constitutionResources.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {constitutionResources.map(resource => (
-                  <ResourceCard
-                    key={resource.id}
-                    resource={{
-                      id: resource.id,
-                      title: resource.title,
-                      description: resource.description,
-                      type: resource.type,
-                      uploadDate: resource.uploadDate,
-                      uploadedBy: resource.uploadedBy,
-                      downloadUrl: resource.downloadUrl,
-                      status: undefined,
-                      category: resource.category,
-                      billObjective: resource.billObjective,
-                      county: resource.county
-                    }}
-                    downloadable={resource.is_downloadable}
-                  />
+          {/* Main content */}
+          <div className="lg:w-3/4">
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="mb-4 flex w-full h-auto flex-wrap">
+                <TabsTrigger value="all" className="flex-1">
+                  {translate("All Resources", language)} ({filteredResources.length})
+                </TabsTrigger>
+                {allCategories.slice(0, 3).map((category) => (
+                  <TabsTrigger key={category} value={category} className="flex-1">
+                    {category} ({resourcesByCategory[category]?.length || 0})
+                  </TabsTrigger>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-2">No constitution resources found</h2>
-                <p className="text-muted-foreground mb-6">
-                  No constitution resources match your search criteria.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Similar TabsContent for other tabs (documents, videos, infographics) */}
-          <TabsContent value="documents">
-            {documentResources.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {documentResources.map(resource => (
-                  <ResourceCard
-                    key={resource.id}
-                    resource={{
-                      id: resource.id,
-                      title: resource.title,
-                      description: resource.description,
-                      type: resource.type,
-                      uploadDate: resource.uploadDate,
-                      uploadedBy: resource.uploadedBy,
-                      downloadUrl: resource.downloadUrl,
-                      status: undefined,
-                      category: resource.category,
-                      billObjective: resource.billObjective,
-                      county: resource.county
-                    }}
-                    downloadable={resource.is_downloadable}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-2">No document resources found</h2>
-                <p className="text-muted-foreground mb-6">
-                  No document resources match your search criteria.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="videos">
-            {videoResources.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {videoResources.map(resource => (
-                  <ResourceCard
-                    key={resource.id}
-                    resource={{
-                      id: resource.id,
-                      title: resource.title,
-                      description: resource.description,
-                      type: resource.type,
-                      uploadDate: resource.uploadDate,
-                      uploadedBy: resource.uploadedBy,
-                      downloadUrl: resource.downloadUrl,
-                      status: undefined,
-                      category: resource.category,
-                      billObjective: resource.billObjective,
-                      county: resource.county
-                    }}
-                    downloadable={resource.is_downloadable}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-2">No video resources found</h2>
-                <p className="text-muted-foreground mb-6">
-                  No video resources match your search criteria.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="infographics">
-            {infographicResources.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {infographicResources.map(resource => (
-                  <ResourceCard
-                    key={resource.id}
-                    resource={{
-                      id: resource.id,
-                      title: resource.title,
-                      description: resource.description,
-                      type: resource.type,
-                      uploadDate: resource.uploadDate,
-                      uploadedBy: resource.uploadedBy,
-                      downloadUrl: resource.downloadUrl,
-                      status: undefined,
-                      category: resource.category,
-                      billObjective: resource.billObjective,
-                      county: resource.county
-                    }}
-                    downloadable={resource.is_downloadable}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-2">No infographic resources found</h2>
-                <p className="text-muted-foreground mb-6">
-                  No infographic resources match your search criteria.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+                {allCategories.length > 3 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {translate("More", language)}
+                        <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuLabel>{translate("Categories", language)}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {allCategories.slice(3).map((category) => (
+                        <DropdownMenuCheckboxItem
+                          key={category}
+                          checked={selectedCategories.includes(category)}
+                          onCheckedChange={() => {
+                            if (selectedCategories.includes(category)) {
+                              setSelectedCategories(selectedCategories.filter(c => c !== category));
+                            } else {
+                              setSelectedCategories([...selectedCategories, category]);
+                            }
+                          }}
+                        >
+                          {category} ({resourcesByCategory[category]?.length || 0})
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </TabsList>
+              
+              <TabsContent value="all" className="mt-0">
+                {filteredResources.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-medium">No resources match your filters</h3>
+                    <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
+                    <Button variant="outline" onClick={resetFilters} className="mt-4">
+                      <X className="h-4 w-4 mr-2" />
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : (
+                  <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
+                    {filteredResources.map(resource => renderResourceCard(resource))}
+                  </div>
+                )}
+              </TabsContent>
+              
+              {allCategories.map((category) => (
+                <TabsContent key={category} value={category} className="mt-0">
+                  {resourcesByCategory[category]?.length === 0 ? (
+                    <div className="text-center py-12">
+                      <h3 className="text-lg font-medium">No {category} resources match your filters</h3>
+                      <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
+                      <Button variant="outline" onClick={resetFilters} className="mt-4">
+                        <X className="h-4 w-4 mr-2" />
+                        Clear filters
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
+                      {resourcesByCategory[category]?.map(resource => renderResourceCard(resource))}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </div>
       </div>
     </Layout>
   );

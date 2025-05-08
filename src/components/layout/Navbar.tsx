@@ -1,9 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -26,6 +25,8 @@ import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
+import { FloatingSearch } from '@/components/ui/FloatingSearch';
+import { motion } from 'framer-motion';
 
 const Navbar = () => {
   const [menuScrolled, setMenuScrolled] = useState(false);
@@ -94,12 +95,8 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          {!isMobile && (
-            <div className="relative w-40 lg:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder={translate("Search...", language)} className="pl-8" />
-            </div>
-          )}
+          {/* Floating Search Component */}
+          <FloatingSearch />
           
           {!isMobile && (
             <TooltipProvider>
@@ -207,7 +204,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85%] p-0">
+              <SheetContent side="right" className="w-[85%] p-0">
                 <div className="flex flex-col h-full">
                   <div 
                     className={cn(
@@ -217,8 +214,7 @@ const Navbar = () => {
                   >
                     <Logo variant="full" className="mb-4" />
                     <div className="relative w-full">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder={translate("Search...", language)} className="pl-8" />
+                      <FloatingSearch />
                     </div>
                   </div>
                   
