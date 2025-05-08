@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { motion, AnimatePresence, useSpring } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
@@ -13,90 +14,101 @@ export function BackButton() {
   const { toast } = useToast();
   const { language } = useLanguage();
   
-  // App color cycle
-  const appColors = ["#e63946", "#2a9d8f", "#212121"]; // Red, Green, Black hex codes
-  const [colorIndex, setColorIndex] = useState(0);
-  
   const [isVisible, setIsVisible] = useState(true);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [isDragging, setIsDragging] = useState(false);
   const [lastTap, setLastTap] = useState(0);
-  
-  // Home position in the bottom left area
-  const homePosition = { x: 20, y: window.innerHeight - 100 };
-  const [position, setPosition] = useState(homePosition);
   const [isMobile, setIsMobile] = useState(false);
-  
-  // Track if button should return home
-  const [shouldReturnHome, setShouldReturnHome] = useState(false);
-  
-  // Animation spring references
-  const springX = useSpring(homePosition.x, { stiffness: 300, damping: 20 });
-  const springY = useSpring(homePosition.y, { stiffness: 300, damping: 20 });
+  const [colorProgress, setColorProgress] = useState(0);
   
   const isHomePage = location.pathname === '/';
 
-  // Check for mobile and set visibility based on inactivity
+  // Kenyan flag colors
+  const kenyaColors = {
+    green: "#006600",
+    black: "#141414",
+    red: "#BB1600",
+    white: "#EEEEEE"
+  };
+  
+  // Function to calculate the current blended color
+  const getCurrentColor = (progress) => {
+    // Create a cycle through: green -> black -> red -> white -> green
+    const cycle = 4; // 4 colors
+    const normalizedProgress = (progress % 100) / 100 * cycle;
+    const colorIndex = Math.floor(normalizedProgress);
+    const remainder = normalizedProgress - colorIndex;
+    
+    // Determine which colors to blend between
+    let color1, color2;
+    switch (colorIndex) {
+      case 0:
+        color1 = kenyaColors.green;
+        color2 = kenyaColors.black;
+        break;
+      case 1:
+        color1 = kenyaColors.black;
+        color2 = kenyaColors.red;
+        break;
+      case 2:
+        color1 = kenyaColors.red;
+        color2 = kenyaColors.white;
+        break;
+      case 3:
+        color1 = kenyaColors.white;
+        color2 = kenyaColors.green;
+        break;
+      default:
+        color1 = kenyaColors.green;
+        color2 = kenyaColors.black;
+    }
+    
+    // Blend the colors
+    const r1 = parseInt(color1.substring(1, 3), 16);
+    const g1 = parseInt(color1.substring(3, 5), 16);
+    const b1 = parseInt(color1.substring(5, 7), 16);
+    
+    const r2 = parseInt(color2.substring(1, 3), 16);
+    const g2 = parseInt(color2.substring(3, 5), 16);
+    const b2 = parseInt(color2.substring(5, 7), 16);
+    
+    const r = Math.round(r1 + (r2 - r1) * remainder);
+    const g = Math.round(g1 + (g2 - g1) * remainder);
+    const b = Math.round(b1 + (b2 - b1) * remainder);
+    
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
+  // Handle color animation and mobile detection
   useEffect(() => {
     // Check if the device is mobile based on screen width
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      // Update home position when screen size changes
-      const newHomePosition = { x: 20, y: window.innerHeight - 100 };
-      springX.set(newHomePosition.x);
-      springY.set(newHomePosition.y);
-      setPosition(newHomePosition);
     };
     
     // Initial check
     checkMobile();
     
     // Set up inactivity timer
-    const timer = setInterval(() => {
+    const visibilityTimer = setInterval(() => {
       if (Date.now() - lastInteraction > 5000) {
         setIsVisible(false);
       }
     }, 1000);
     
-    // Set up color cycling
+    // Set up color animation - very slow and gradual
     const colorTimer = setInterval(() => {
-      setColorIndex((prevIndex) => (prevIndex + 1) % appColors.length);
-    }, 10000); // Cycle colors every 10 seconds
+      setColorProgress(prev => (prev + 0.1) % 100); // Very slow progression
+    }, 100); // Update every 100ms for smooth animation
     
     // Add event listeners
     window.addEventListener('resize', checkMobile);
-    window.addEventListener('mousemove', handleInteraction);
-    window.addEventListener('touchstart', handleInteraction);
     
     return () => {
-      clearInterval(timer);
+      clearInterval(visibilityTimer);
       clearInterval(colorTimer);
       window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('mousemove', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
     };
   }, [lastInteraction]);
-  
-  // Handle spring animation for returning home
-  useEffect(() => {
-    if (shouldReturnHome) {
-      springX.set(homePosition.x);
-      springY.set(homePosition.y);
-      
-      const unsubscribeX = springX.onChange(x => {
-        setPosition(pos => ({ ...pos, x }));
-      });
-      
-      const unsubscribeY = springY.onChange(y => {
-        setPosition(pos => ({ ...pos, y }));
-      });
-      
-      return () => {
-        unsubscribeX();
-        unsubscribeY();
-      };
-    }
-  }, [shouldReturnHome, homePosition.x, homePosition.y]);
 
   const handleInteraction = () => {
     setIsVisible(true);
@@ -124,88 +136,45 @@ export function BackButton() {
     }
   };
 
-  const handleDrag = (event, info) => {
-    setIsDragging(true);
-    setShouldReturnHome(false);
-    
-    // Calculate new position, constrained to screen edges
-    const newY = Math.min(Math.max(position.y + info.delta.y, 0), window.innerHeight - 80);
-    const newX = Math.min(Math.max(position.x + info.delta.x, 0), window.innerWidth - 70);
-    setPosition({ x: newX, y: newY });
-  };
-
-  const handleDragEnd = () => {
-    // Check if button is outside bottom-left zone
-    const isOutsideHomeZone = 
-      position.x > window.innerWidth / 2 || 
-      position.y < window.innerHeight / 2;
-    
-    if (isOutsideHomeZone) {
-      // Trigger rubber band return effect
-      setShouldReturnHome(true);
-      
-      // Apply spring physics to animate return
-      springX.set(homePosition.x);
-      springY.set(homePosition.y);
-    }
-    
-    // Short delay to distinguish between drag and click
-    setTimeout(() => setIsDragging(false), 100);
-  };
-
-  // If we want to hide on desktop, uncomment this
+  // Only render on mobile devices (optional - currently always rendered)
   // if (!isMobile) return null;
-
-  // Only allow dragging within bottom half of screen
-  const dragConstraints = {
-    top: window.innerHeight / 2, // Restrict to bottom half
-    left: 0,
-    right: window.innerWidth / 2, // Restrict to left half
-    bottom: window.innerHeight - 80,
-  };
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed z-50"
-        initial={{ x: homePosition.x, y: homePosition.y, opacity: 1 }}
+      <motion.button
+        className={cn(
+          "fixed bottom-24 left-4 z-50 p-3 rounded-full shadow-lg",
+          "transition-colors duration-200",
+          "touch-none cursor-pointer"
+        )}
+        style={{ 
+          backgroundColor: getCurrentColor(colorProgress),
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+        }}
+        initial={{ opacity: 1 }}
         animate={{ 
-          x: position.x, 
-          y: position.y,
           opacity: isVisible ? 1 : 0.1,
-          scale: isDragging ? 1.1 : 1 
         }}
         transition={{ 
-          type: "spring", 
-          stiffness: 400, 
-          damping: 25, 
-          opacity: { duration: 0.3 } 
+          duration: 0.3 
         }}
-        drag
-        dragConstraints={dragConstraints}
-        dragElastic={0.2} // Add elasticity for rubber band effect
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onMouseEnter={handleInteraction}
         onMouseMove={handleInteraction}
         onTouchStart={handleInteraction}
+        onClick={handleBackClick}
+        drag
+        dragConstraints={{
+          top: window.innerHeight / 2, // Restrict to bottom half
+          right: window.innerWidth / 2, // Restrict to left half
+          bottom: 20,
+          left: 0
+        }}
+        dragElastic={0.1} // Light elasticity
       >
-        <button
-          style={{ backgroundColor: appColors[colorIndex] }}
-          className={cn(
-            "p-3 rounded-full shadow-lg touch-none transition-all duration-500",
-            "hover:brightness-110 transition-colors duration-200",
-            isDragging ? "cursor-grabbing" : "cursor-grab"
-          )}
-          onClick={() => {
-            if (!isDragging) handleBackClick();
-          }}
-        >
-          <ChevronLeft className="h-6 w-6 text-white" />
-        </button>
-      </motion.div>
+        <ChevronLeft className="h-6 w-6 text-white" />
+      </motion.button>
     </AnimatePresence>
   );
 }
