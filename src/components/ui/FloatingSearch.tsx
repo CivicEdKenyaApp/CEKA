@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,8 @@ export const FloatingSearch = () => {
               <Input
                 type="text"
                 placeholder={translate("Search...", language)}
-                className="pr-10 bg-background/80 backdrop-blur border border-input rounded-full"
+                className="pr-10 bg-background/80 backdrop-blur border border-input rounded-full
+                           dark:bg-zinc-900/80 dark:border-zinc-700 dark:text-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
