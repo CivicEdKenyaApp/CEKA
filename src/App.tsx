@@ -29,6 +29,7 @@ import NotFound from './pages/NotFound';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import ScrollToTop from './components/ScrollToTop.tsx';
 import BottomNavbar from './components/layout/BottomNavbar.tsx';
+import { useLocation } from 'react-router-dom';
 
 
 // Add these imports for settings pages:
@@ -61,6 +62,10 @@ const App = () => {
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
+    
+    const hideBottomNav = ['/auth'].some(path =>
+    location.pathname.startsWith(path)
+  );
     
     // Handle back button navigation
     const handleBackButton = (e: PopStateEvent) => {
@@ -122,7 +127,7 @@ const App = () => {
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              {!hideBottomNav && <BottomNavbar />} 
+              {!hideBottomNav &&<BottomNavbar />} 
             </PullToRefresh>
           </AuthContext.Provider>
         )}
