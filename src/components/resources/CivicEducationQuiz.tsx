@@ -12,8 +12,7 @@ type QuizCategory =
   | 'Devolved Government' 
   | 'Electoral Knowledge' 
   | 'Bill of Rights' 
-  | 'National Cohesion'
-  | 'Patriotism';
+  | 'National Cohesion';
 
 interface Question {
   id: number;
@@ -86,47 +85,7 @@ const sampleQuestions: Question[] = [
     correctAnswer: 2,
     explanation: "The National Cohesion and Integration Commission (NCIC) is mandated to promote national unity and advise the government on all matters affecting ethnic relations.",
     category: "National Cohesion"
-  },
-  {
-    id: 8,
-    text: "Who was Kenya’s first President?",
-    options: ["Jaramogi Oginga Odinga", "Jomo Kenyatta", "Daniel arap Moi", "Mwai Kibaki"],
-    correctAnswer: 1,
-    explanation: "The first president of the republic of Kenya, post-independence, was Jomo Kenyatta.",
-    category: "Electoral Knowledge"
-  },
-{
-    id: 9,
-    text: "In which language were the original lyrics of Kenya’s national anthem written?",
-    options: ["English", "Giriama", "Swahili", "Mijikenda"],
-    correctAnswer: 2,
-    explanation: "The Kenya National Anthem was originally written in Swahili, based on a traditional tune sung by Pokomo mothers to their children.",
-    category: "Patriotism"
-  },
-{
-    id: 10,
-    text: "On what date was the constitutional referendum approving the 2010 Constitution held?",
-    options: ["4 August 2010", "27 August 2010", "6 May 2010", "1 April 2010"],
-    correctAnswer: 0,
-    explanation: "The constitution was presented to the Attorney General of Kenya on 7 April 2010, officially published on 6 May 2010, and was subjected to a referendum on 4 August 2010.",
-    category: "Constitutional Implementation"
-  },
-{
-    id: 11,
-    text: "In what year was Kenya restored to a multi-party system by repealing Section 2A of the constitution?",
-    options: ["1982", "1991", "2005", "2010"],
-    correctAnswer: 1,
-    explanation: "In December 1991, President Daniel Arap Moi allowed for the restoration of multiparty government by repealing article 2A of the Constitution.",
-    category: "Electoral Knowledge"
-  },
-{
-    id: 12,
-    text: "On the Kenyan flag, what does the white fimbriation (narrow border) between the stripes symbolize in terms of national cohesion?",
-    options: ["The people of Kenya", "The blood shed for freedom", "The land’s fertility", "Peace and unity"],
-    correctAnswer: 3,
-    explanation: "The colours symbolize the Kenyan people, blood shed for independence and the vast natural wealth. On independence the white fimbriations were added, symbolizing peace.",
-    category: "Patriotism"
-  },
+  }
 ];
 
 const CivicEducationQuiz: React.FC<CivicEducationQuizProps> = ({ category, onComplete }) => {
