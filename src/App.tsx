@@ -6,23 +6,26 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { Toaster } from '@/components/ui/toaster';
-import HomePage from './pages/HomePage';
-import CommunityPortalPage from './pages/CommunityPortalPage';
-import ResourceHubPage from './pages/ResourceHubPage';
-import LegislativeTrackerPage from './pages/LegislativeTrackerPage';
-import VolunteerPage from './pages/VolunteerPage';
+import Layout from './components/layout/Layout';
 import AuthPage from './pages/AuthPage';
 import FeedbackPage from './pages/FeedbackPage';
-import NotificationsPage from './pages/NotificationsPage';
-import ProfilePage from './pages/ProfilePage';
 import AccountSettings from './pages/settings/AccountSettings';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import PrivacySettings from './pages/settings/PrivacySettings';
-import ResourceUploadPage from './pages/ResourceUploadPage';
 import SettingsLayout from './pages/settings/SettingsLayout';
 import DocumentViewerPage from './pages/DocumentViewerPage';
 import SearchResults from './pages/SearchResults';
-import Layout from './components/layout/Layout';
+import NotFound from './pages/NotFound';
+
+// Import renamed files or create necessary aliases
+import Index from './pages/Index'; // For HomePage
+import CommunityPortal from './pages/CommunityPortal'; // For CommunityPortalPage
+import ResourceHub from './pages/ResourceLibrary'; // For ResourceHubPage, using ResourceLibrary
+import LegislativeTracker from './pages/LegislativeTracker'; // For LegislativeTrackerPage
+import JoinCommunity from './pages/JoinCommunity'; // For VolunteerPage or similar
+import Notifications from './pages/Notifications'; // Assuming correct path
+import UserProfile from './pages/UserProfile'; // Assuming this is the correct file
+import ResourceUpload from './pages/ResourceUpload'; // Assuming correct path
 
 // Create and export auth context
 interface AuthContextType {
@@ -137,21 +140,21 @@ function App() {
       <LanguageProvider>
         <AuthContext.Provider value={authValue}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/community" element={<CommunityPortalPage />} />
-            <Route path="/resources" element={<ResourceHubPage />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/community" element={<CommunityPortal />} />
+            <Route path="/resources" element={<ResourceHub />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
-            <Route path="/resources/upload" element={<ResourceUploadPage />} />
-            <Route path="/legislative-tracker" element={<LegislativeTrackerPage />} />
-            <Route path="/volunteer" element={<VolunteerPage />} />
+            <Route path="/resources/upload" element={<ResourceUpload />} />
+            <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+            <Route path="/volunteer" element={<JoinCommunity />} />
             <Route path="/auth" element={
               <Layout>
                 <AuthPage />
               </Layout>
             } />
             <Route path="/feedback" element={<FeedbackPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile" element={<UserProfile />} />
             <Route path="/search" element={<SearchResults />} />
             
             <Route path="/settings" element={<SettingsLayout />}>
@@ -161,7 +164,7 @@ function App() {
               <Route path="privacy" element={<PrivacySettings />} />
             </Route>
             
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
         </AuthContext.Provider>
