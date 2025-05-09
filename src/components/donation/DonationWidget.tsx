@@ -54,12 +54,13 @@ const DonationWidget = () => {
       {isVisible && (
         <motion.div
           initial={{ bottom: "-100%", opacity: 0 }}
-          animate={{ 
-            bottom: isExpanded ? "50%" : "20px", 
+          animate={{
+            top: isExpanded ? "60%" : undefined,
+            bottom: isExpanded ? undefined : "20px",
             opacity: 1,
-            y: isExpanded ? "-50%" : 0,
-            x: isExpanded ? "-50%" : 0
-          }}
+            x: "-50%", // always center horizontally
+            y: "-50%", // always center vertically from 60% height
+}}
           exit={{ bottom: "-100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
           className={`fixed ${isExpanded ? 'left-1/2 transform -translate-x-1/2' : 'right-5'} z-40 shadow-lg rounded-lg
