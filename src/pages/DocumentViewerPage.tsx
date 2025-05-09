@@ -36,6 +36,7 @@ const DocumentViewerPage = () => {
   const [resource, setResource] = useState<ResourceDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewCount, setViewCount] = useState(0);
+  const [relatedResources, setRelatedResources] = useState<ResourceDetails[]>([]);
 
   useEffect(() => {
     const fetchResourceDetails = async () => {
@@ -106,6 +107,11 @@ const DocumentViewerPage = () => {
         }
         
         setResource(resource);
+        
+        // Set related resources (excluding current resource)
+        const related = mockResources.filter(item => item.id !== id);
+        setRelatedResources(related);
+        
         setViewCount(Math.floor(Math.random() * 100) + 20); // Placeholder for view count
       } catch (error) {
         console.error('Error fetching resource details:', error);
@@ -301,12 +307,13 @@ const DocumentViewerPage = () => {
                 <div>
                   <h3 className="font-semibold mb-3">Related Resources</h3>
                   <div className="space-y-2">
-                    <Button variant="link" className="w-full justify-start p-0 h-auto" asChild>
-                      <Link to="/resources/2">Blood Parliament: BBC Africa Eye Documentary</Link>
-                    </Button>
-                    <Button variant="link" className="w-full justify-start p-0 h-auto" asChild>
-                      <Link to="/resources/3">Your Rights as a Kenyan Citizen</Link>
-                    </Button>
+                    {relatedResources.map(related => (
+                      <Button key={related.id} variant="link" className="w-full justify-start p-0 h-auto" asChild>
+                        <Link to={`/resources/${related.id}`}>
+                          {related.title}
+                        </Link>
+                      </Button>
+                    ))}
                   </div>
                 </div>
                 

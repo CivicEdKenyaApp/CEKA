@@ -8,9 +8,11 @@ import ScrollListener from '../auth/ScrollListener';
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideBottomNav?: boolean;
+  hideBackButton?: boolean;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
   return (
     <div className="flex min-h-screen flex-col relative">
       <Navbar />

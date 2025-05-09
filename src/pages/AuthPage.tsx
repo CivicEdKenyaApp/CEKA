@@ -8,18 +8,16 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Layout hideBottomNav hideBackButton>
-      <div className="container py-8 md:py-12 h-full">
-        <div className="max-w-md mx-auto">
-          <AuthModal
-            open={true}
-            onOpenChange={(open) => {
-              if (!open) navigate('/');
-            }}
-          />
-        </div>
+    <div className="container py-8 md:py-12 h-full">
+      <div className="max-w-md mx-auto">
+        <AuthModal
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) navigate('/');
+          }}
+        />
       </div>
-    </Layout>
+    </div>
   );
 };
 

@@ -108,7 +108,7 @@ const Navbar = () => {
                         <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-56 z-[60]">
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
                           <Languages className="h-4 w-4 mr-2" />
@@ -204,7 +204,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85%] p-0">
+              <SheetContent side="right" className="w-[85%] p-0 z-[60]">
                 <div className="flex flex-col h-full">
                   <div 
                     className={cn(

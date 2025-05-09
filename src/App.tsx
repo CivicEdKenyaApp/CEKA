@@ -1,134 +1,173 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 import { Toaster } from '@/components/ui/toaster';
-import LoadingScreen from '@/components/ui/LoadingScreen';
-import Index from './pages/Index';
+import HomePage from './pages/HomePage';
+import CommunityPortalPage from './pages/CommunityPortalPage';
+import ResourceHubPage from './pages/ResourceHubPage';
+import LegislativeTrackerPage from './pages/LegislativeTrackerPage';
+import VolunteerPage from './pages/VolunteerPage';
 import AuthPage from './pages/AuthPage';
-import LegislativeTracker from './pages/LegislativeTracker';
-import LegislativeTrackerDetail from './pages/LegislativeTrackerDetail';
-import ResourceHub from './pages/ResourceHub';
-import ResourceDetail from './pages/ResourceDetail';
-import DocumentViewerPage from './pages/DocumentViewerPage';
-import ResourceLibrary from './pages/ResourceLibrary';
-import ResourceUpload from './pages/ResourceUpload';
-import PendingResources from './pages/PendingResources';
-import CommunityPortal from './pages/CommunityPortal';
-import JoinCommunity from './pages/JoinCommunity';
-import Volunteer from './pages/Volunteer';
-import VolunteerApplication from './pages/VolunteerApplication';
-import AdvocacyToolkit from './pages/AdvocacyToolkit';
-import AdvocacyToolkitDetail from './pages/AdvocacyToolkitDetail';
-import ConstitutionPage from './pages/ConstitutionPage';
-import Notifications from './pages/Notifications';
-import UserProfile from './pages/UserProfile';
 import FeedbackPage from './pages/FeedbackPage';
-import NotFound from './pages/NotFound';
-import PullToRefresh from '@/components/ui/PullToRefresh';
-import ScrollToTop from './components/ScrollToTop.tsx';
-import BottomNavbar from './components/layout/BottomNavbar.tsx';
+import NotificationsPage from './pages/NotificationsPage';
+import ProfilePage from './pages/ProfilePage';
+import AccountSettings from './pages/settings/AccountSettings';
+import NotificationSettings from './pages/settings/NotificationSettings';
+import PrivacySettings from './pages/settings/PrivacySettings';
+import ResourceUploadPage from './pages/ResourceUploadPage';
+import SettingsLayout from './pages/settings/SettingsLayout';
+import DocumentViewerPage from './pages/DocumentViewerPage';
+import SearchResults from './pages/SearchResults';
+import Layout from './components/layout/Layout';
 
-// Add these imports for settings pages:
-import SettingsLayout from "./pages/settings/SettingsLayout";
-import AccountSettings from "./pages/settings/AccountSettings";
-import NotificationSettings from "./pages/settings/NotificationSettings";
-import PrivacySettings from "./pages/settings/PrivacySettings";
+// Create and export auth context
+interface AuthContextType {
+  session: Session | null;
+  user: any;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, metadata: any) => Promise<any>;
+  signOut: () => Promise<void>;
+  loading: boolean;
+  error: string | null;
+}
 
-const queryClient = new QueryClient();
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-const AuthContext = createContext<any>(null);
-
-const useAuth = () => useContext(AuthContext);
-
-const App = () => {
-  const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    
-    // Handle back button navigation
-    const handleBackButton = (e: PopStateEvent) => {
-      // Handle the back button navigation event here
-      // This prevents default navigation and allows our BackButton component to handle it
-      e.preventDefault();
+    const getSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        setSession(data.session);
+        setUser(data.session?.user || null);
+      } catch (error: any) {
+        console.error('Error retrieving session:', error.message);
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    window.addEventListener('popstate', handleBackButton);
-    
+
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user || null);
+        setLoading(false);
+      }
+    );
+
     return () => {
-      window.removeEventListener('popstate', handleBackButton);
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signIn = async (email: string, password: string) => {
+    try {
+      setError(null);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
   };
-  
+
+  const signUp = async (email: string, password: string, metadata: any) => {
+    try {
+      setError(null);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata,
+        },
+      });
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
+  };
+
+  const authValue = {
+    session,
+    user,
+    signIn,
+    signUp,
+    signOut,
+    loading,
+    error,
+  };
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="dark:text-white">
-        {isLoading ? (
-          <LoadingScreen />
-        ) : (
-          <AuthContext.Provider value={{ session, signOut }}>
-            <Toaster />
-            <PullToRefresh>
-              <ScrollToTop />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                <Route path="/resources" element={<ResourceHub />} />
-                <Route path="/resources/:id" element={<ResourceDetail />} />
-                <Route path="/resource/:id" element={<DocumentViewerPage />} />
-                <Route path="/resource-library" element={<ResourceLibrary />} />
-                <Route path="/resources/upload" element={<ResourceUpload />} />
-                <Route path="/resources/pending" element={<PendingResources />} />
-                <Route path="/community" element={<CommunityPortal />} />
-                <Route path="/community/join" element={<JoinCommunity />} />
-                <Route path="/volunteer" element={<Volunteer />} />
-                <Route path="/volunteer/apply" element={<VolunteerApplication />} />
-                <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
-                <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
-                <Route path="/constitution" element={<ConstitutionPage />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/feedback" element={<FeedbackPage />} />
-                
-                {/* Settings routes */}
-                <Route path="/settings" element={<SettingsLayout />}>
-                  <Route index element={<Navigate to="account" replace />} />
-                  <Route path="account" element={<AccountSettings />} />
-                  <Route path="notifications" element={<NotificationSettings />} />
-                  <Route path="privacy" element={<PrivacySettings />} />
-                </Route>
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <BottomNavbar /> 
-            </PullToRefresh>
-          </AuthContext.Provider>
-        )}
-      </div>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthContext.Provider value={authValue}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/community" element={<CommunityPortalPage />} />
+            <Route path="/resources" element={<ResourceHubPage />} />
+            <Route path="/resources/:id" element={<DocumentViewerPage />} />
+            <Route path="/resources/upload" element={<ResourceUploadPage />} />
+            <Route path="/legislative-tracker" element={<LegislativeTrackerPage />} />
+            <Route path="/volunteer" element={<VolunteerPage />} />
+            <Route path="/auth" element={
+              <Layout>
+                <AuthPage />
+              </Layout>
+            } />
+            <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/search" element={<SearchResults />} />
+            
+            <Route path="/settings" element={<SettingsLayout />}>
+              <Route index element={<Navigate to="/settings/account" replace />} />
+              <Route path="account" element={<AccountSettings />} />
+              <Route path="notifications" element={<NotificationSettings />} />
+              <Route path="privacy" element={<PrivacySettings />} />
+            </Route>
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <Toaster />
+        </AuthContext.Provider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
-};
+}
 
 export default App;
-export { useAuth };
