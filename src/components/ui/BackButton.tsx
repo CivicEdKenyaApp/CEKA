@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,63 +16,14 @@ export function BackButton() {
   
   const [isVisible, setIsVisible] = useState(true);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [isDragging, setIsDragging] = useState(false);
   const [lastTap, setLastTap] = useState(0);
+  const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 80 });
   const [isMobile, setIsMobile] = useState(false);
-  const [colorProgress, setColorProgress] = useState(0);
   
   const isHomePage = location.pathname === '/';
-  
-  // Kenyan flag colors
-  const kenyaColors = {
-    green: "#006600",
-    black: "#141414",
-    red: "#BB1600",
-    white: "#EEEEEE"
-  };
-  
-  // Calculate smooth color transition
-  const getCurrentColor = () => {
-    // Create an array of colors to transition between
-    const colors = [kenyaColors.green, kenyaColors.black, kenyaColors.red, kenyaColors.white];
-    const totalSegments = colors.length;
-    const segmentSize = 1 / totalSegments;
-    
-    // Determine which segment of the transition we're in
-    const segmentIndex = Math.floor(colorProgress * totalSegments) % totalSegments;
-    const nextSegmentIndex = (segmentIndex + 1) % totalSegments;
-    
-    // Calculate how far we are through the current segment (0-1)
-    const segmentProgress = (colorProgress * totalSegments) % 1;
-    
-    // Get the two colors we're transitioning between
-    const color1 = colors[segmentIndex];
-    const color2 = colors[nextSegmentIndex];
-    
-    // Helper function to interpolate between two hex color values
-    const interpolateColor = (color1, color2, factor) => {
-      // Convert hex to RGB
-      const r1 = parseInt(color1.substring(1, 3), 16);
-      const g1 = parseInt(color1.substring(3, 5), 16);
-      const b1 = parseInt(color1.substring(5, 7), 16);
-      
-      const r2 = parseInt(color2.substring(1, 3), 16);
-      const g2 = parseInt(color2.substring(3, 5), 16);
-      const b2 = parseInt(color2.substring(5, 7), 16);
-      
-      // Interpolate RGB values
-      const r = Math.round(r1 + (r2 - r1) * factor);
-      const g = Math.round(g1 + (g2 - g1) * factor);
-      const b = Math.round(b1 + (b2 - b1) * factor);
-      
-      // Convert back to hex
-      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    };
-    
-    // Return the interpolated color
-    return interpolateColor(color1, color2, segmentProgress);
-  };
-  
-  // Check for mobile and manage visibility/color cycling
+
+  // Check for mobile and set visibility based on inactivity
   useEffect(() => {
     // Check if the device is mobile based on screen width
     const checkMobile = () => {
@@ -83,32 +34,30 @@ export function BackButton() {
     checkMobile();
     
     // Set up inactivity timer
-    const visibilityTimer = setInterval(() => {
+    const timer = setInterval(() => {
       if (Date.now() - lastInteraction > 5000) {
         setIsVisible(false);
       }
     }, 1000);
     
-    // Set up slow color cycling (full cycle takes 2 minutes)
-    const colorTimer = setInterval(() => {
-      setColorProgress(prev => (prev + 0.0005) % 1);
-    }, 100);
-    
     // Add event listeners
     window.addEventListener('resize', checkMobile);
+    window.addEventListener('mousemove', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
     
     return () => {
-      clearInterval(visibilityTimer);
-      clearInterval(colorTimer);
+      clearInterval(timer);
       window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('mousemove', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
     };
   }, [lastInteraction]);
-  
+
   const handleInteraction = () => {
     setIsVisible(true);
     setLastInteraction(Date.now());
   };
-  
+
   const handleBackClick = () => {
     if (isHomePage) {
       const now = Date.now();
@@ -129,38 +78,67 @@ export function BackButton() {
       navigate(-1);
     }
   };
-  
-  // Only render on mobile devices
-  if (!isMobile) return null;
-  
+
+  const handleDrag = (event, info) => {
+    setIsDragging(true);
+    // Calculate new position, constrained to screen
+    const newY = Math.min(Math.max(position.y + info.delta.y, 0), window.innerHeight - 80);
+    const newX = Math.min(Math.max(position.x + info.delta.x, 0), window.innerWidth - 70);
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handleDragEnd = () => {
+    // Short delay to distinguish between drag and click
+    setTimeout(() => setIsDragging(false), 100);
+  };
+
+  // If we want to hide on desktop, uncomment this
+  // if (!isMobile) return null;
+
   return (
     <AnimatePresence>
-      <motion.button
-        className={cn(
-          "fixed bottom-24 left-4 z-40 p-3 rounded-full shadow-lg",
-          "transition-colors duration-200",
-          "touch-none cursor-pointer"
-        )}
-        style={{
-          backgroundColor: getCurrentColor()
+      <motion.div
+        className="fixed z-50"
+        initial={{ x: position.x, y: position.y, opacity: 1 }}
+        animate={{ 
+          x: position.x, 
+          y: position.y,
+          opacity: isVisible ? 1 : 0.1,
+          scale: isDragging ? 1.1 : 1 
         }}
-        initial={{ opacity: 1 }}
-        animate={{ opacity: isVisible ? 1 : 0.1 }}
-        transition={{ duration: 0.3 }}
-        onMouseEnter={handleInteraction}
-        onMouseMove={handleInteraction}
-        onTouchStart={handleInteraction}
-        onClick={handleBackClick}
+        transition={{ 
+          type: "spring", 
+          damping: 20, 
+          opacity: { duration: 0.3 } 
+        }}
         drag
         dragConstraints={{
           top: 0,
-          right: 20,
-          bottom: 20,
-          left: 0
+          left: 0,
+          right: window.innerWidth - 70,
+          bottom: window.innerHeight - 80,
         }}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onMouseEnter={handleInteraction}
+        onMouseMove={handleInteraction}
+        onTouchStart={handleInteraction}
       >
-        <ChevronLeft className="h-6 w-6 text-white" />
-      </motion.button>
+        <button
+          className={cn(
+            "p-3 rounded-full shadow-lg bg-primary/90 touch-none",
+            "hover:bg-primary/100 transition-colors duration-200",
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          )}
+          onClick={() => {
+            if (!isDragging) handleBackClick();
+          }}
+        >
+          <ChevronLeft className="h-6 w-6 text-primary-foreground" />
+        </button>
+      </motion.div>
     </AnimatePresence>
   );
 }
