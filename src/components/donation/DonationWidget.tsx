@@ -200,7 +200,7 @@ const DonationWidget = () => {
                 className="flex justify-between items-center mb-3"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
                 <h3 className="font-bold text-lg flex items-center">
                   <Gift className="h-5 w-5 mr-2 text-kenya-green" />
