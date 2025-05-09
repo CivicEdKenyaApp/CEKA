@@ -116,7 +116,7 @@ const DonationWidget = () => {
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      repeatType: "reverse" as const,
+      repeatType: "reverse" as const
     }
   };
 
