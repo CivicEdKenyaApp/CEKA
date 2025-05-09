@@ -242,7 +242,7 @@ const DonationWidget = () => {
                     <div className="flex items-center">
                       <motion.div 
                         className="text-xl mr-3"
-                        whileHover={{ rotate: [0, -10, 10, -5, 0], transition: { duration: 0.5 } }}
+                        whileHover={{ rotate: [0, -10, 10, -5, 0], transition: { duration: 0.2 } }}
                       >
                         {option.icon}
                       </motion.div>
@@ -308,7 +308,7 @@ const DonationWidget = () => {
                 onClick={() => setIsExpanded(false)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.3 }}
+                transition={{ delay: 0.6, duration: 0.2 }}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(34, 197, 94, 0.8)'
@@ -318,14 +318,14 @@ const DonationWidget = () => {
                 <motion.div className="relative h-5 overflow-hidden">
                   <motion.div
                     initial={{ y: 0 }}
-                    whileHover={{ y: -20 }}
+                    whileHover={{ y: -30 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Maybe Later', language)}
                   </motion.div>
                   <motion.div
                     className="absolute w-full text-center"
-                    initial={{ y: 20 }}
+                    initial={{ y: 30 }}
                     whileHover={{ y: 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
