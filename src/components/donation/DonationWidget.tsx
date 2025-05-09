@@ -231,7 +231,7 @@ const DonationWidget = () => {
                     key={option.name}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}  
+                    transition={{ delay: 0.1 + index * 0.1, duration: 0.3 }}  
                     className={`p-3 rounded-lg flex items-center justify-between 
                       ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}
                     whileHover={{ 
