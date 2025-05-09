@@ -319,14 +319,14 @@ const DonationWidget = () => {
                   <motion.div
                     initial={{ y: 0 }}
                     whileHover={{ y: -10 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 40 }}
                   >
                     {translate('Maybe Later', language)}
                   </motion.div>
                   <motion.div
                     className="absolute w-full text-center"
                     initial={{ y: 30 }}
-                    whileHover={{ y: 5 }}
+                    whileHover={{ y: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Thank You', language)}
