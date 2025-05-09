@@ -13,7 +13,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex min-h-screen flex-col relative">
-    </Navbar>
+      <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
     </div>
