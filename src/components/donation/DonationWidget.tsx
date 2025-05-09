@@ -318,7 +318,7 @@ const DonationWidget = () => {
                 <motion.div className="relative h-5 overflow-hidden">
                   <motion.div
                     initial={{ y: 0 }}
-                    whileHover={{ y: -30 }}
+                    whileHover={{ y: -10 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Maybe Later', language)}
@@ -326,7 +326,7 @@ const DonationWidget = () => {
                   <motion.div
                     className="absolute w-full text-center"
                     initial={{ y: 30 }}
-                    whileHover={{ y: 0 }}
+                    whileHover={{ y: 5 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Thank You', language)}
