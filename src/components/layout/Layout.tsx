@@ -10,17 +10,15 @@ import BackButton from '../ui/BackButton';
 
 interface LayoutProps {
   children: React.ReactNode;
-  hideBottomNav?: boolean;
-  hideBackButton?: boolean;
 }
 
-const Layout = ({ children, hideBottomNav = false, hideBackButton = false }: LayoutProps) => {
+const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex min-h-screen flex-col relative">
       <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
-      {!hideBackButton && <BackButton />}
-      {!hideBottomNav && <BottomNavbar />}
+      <BackButton />
+      <BottomNavbar />
       <Footer />
     </div>
   );
