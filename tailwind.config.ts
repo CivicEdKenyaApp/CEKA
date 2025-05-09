@@ -1,6 +1,5 @@
 
 import type { Config } from "tailwindcss";
-
 export default {
 	darkMode: ["class"],
 	content: [
@@ -75,6 +74,20 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			zIndex: {
+				// Common z-index values
+				'60': '60',
+				'70': '70',
+				'80': '80',
+				'90': '90',
+				'100': '100',
+				'1000': '1000',
+				'9999': '9999',
+				'10000': '10000',
+				'100000': '100000',
+				'999999': '999999',
+				'1000000': '1000000',
 			},
 			keyframes: {
 				'accordion-down': {
