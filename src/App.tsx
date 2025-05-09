@@ -27,6 +27,8 @@ import UserProfile from './pages/UserProfile';
 import FeedbackPage from './pages/FeedbackPage';
 import NotFound from './pages/NotFound';
 import PullToRefresh from '@/components/ui/PullToRefresh';
+import ScrollToTop from './components/ScrollToTop.tsx';
+import BottomNavbar from './components/layout/BottomNavbar.tsx';
 
 // Add these imports for settings pages:
 import SettingsLayout from "./pages/settings/SettingsLayout";
@@ -86,6 +88,7 @@ const App = () => {
           <AuthContext.Provider value={{ session, signOut }}>
             <Toaster />
             <PullToRefresh>
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<AuthPage />} />
@@ -118,6 +121,7 @@ const App = () => {
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <BottomNavbar /> 
             </PullToRefresh>
           </AuthContext.Provider>
         )}
