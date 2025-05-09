@@ -308,7 +308,7 @@ const DonationWidget = () => {
                 onClick={() => setIsExpanded(false)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.2 }}
+                transition={{ delay: 0.1, duration: 0.2 }}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(34, 197, 94, 0.8)'
