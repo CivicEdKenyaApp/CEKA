@@ -29,8 +29,6 @@ import NotFound from './pages/NotFound';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import ScrollToTop from './components/ScrollToTop.tsx';
 import BottomNavbar from './components/layout/BottomNavbar.tsx';
-import { useLocation } from 'react-router-dom';
-
 
 // Add these imports for settings pages:
 import SettingsLayout from "./pages/settings/SettingsLayout";
@@ -127,7 +125,7 @@ const App = () => {
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              {!hideBottomNav &&<BottomNavbar />} 
+              <BottomNavbar /> 
             </PullToRefresh>
           </AuthContext.Provider>
         )}
