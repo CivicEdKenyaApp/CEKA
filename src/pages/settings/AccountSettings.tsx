@@ -8,19 +8,25 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/App';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
+import { Navigate } from 'react-router-dom';
 
 const AccountSettings = () => {
   const { session } = useAuth();
   const { language } = useLanguage();
   
+  // Redirect if not signed in
+  if (!session) {
+    return <Navigate to="/auth" replace />;
+  }
+  
   return (
-    <div className="container py-10">
-      <div className="mb-8">
+    <div>
+      <div className="mb-4">
         <h1 className="text-3xl font-bold mb-2">{translate("Account Settings", language)}</h1>
         <p className="text-muted-foreground">{translate("Manage your account preferences and personal information", language)}</p>
       </div>
       
-      <div className="grid gap-8">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>{translate("Profile Information", language)}</CardTitle>

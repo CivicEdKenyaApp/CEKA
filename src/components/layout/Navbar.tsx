@@ -26,7 +26,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
 import { FloatingSearch } from '@/components/ui/FloatingSearch';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
   const [menuScrolled, setMenuScrolled] = useState(false);
@@ -36,6 +36,10 @@ const Navbar = () => {
   const { session } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  
+  // State for mobile menu dropdowns
+  const [languagesOpen, setLanguagesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -69,7 +73,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between flex-wrap min-w-0">
         <div className="flex items-center gap-2">
           <Link to="/">
@@ -108,13 +112,13 @@ const Navbar = () => {
                         <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 z-[60]">
+                    <DropdownMenuContent align="end" className="w-56 z-50">
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
                           <Languages className="h-4 w-4 mr-2" />
                           {translate("Languages", language)}
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-56">
+                        <DropdownMenuSubContent className="w-56 z-50">
                           <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw' | 'ksl' | 'br')}>
                             <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
                             <DropdownMenuRadioItem value="sw">Swahili</DropdownMenuRadioItem>
@@ -140,7 +144,7 @@ const Navbar = () => {
                           <Settings className="h-4 w-4 mr-2" />
                           {translate("Settings", language)}
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
+                        <DropdownMenuSubContent className="z-50">
                           <DropdownMenuItem asChild>
                             <Link to="/settings/account">
                               {translate("Account", language)}
@@ -168,7 +172,7 @@ const Navbar = () => {
             </TooltipProvider>
           )}
           
-          {isResourcesSection && !isMobile && (
+          {isResourcesSection && session && !isMobile && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -204,7 +208,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85%] p-0 z-[60]">
+              <SheetContent side="right" className="w-[85%] p-0 z-50">
                 <div className="flex flex-col h-full">
                   <div 
                     className={cn(
@@ -253,60 +257,110 @@ const Navbar = () => {
                     
                     {/* Languages */}
                     <div className="space-y-2">
-                      <h3 className="text-base font-medium text-foreground px-4">{translate("Languages", language)}</h3>
-                      <div className="rounded-md overflow-hidden border border-border">
-                        <button 
-                          onClick={() => setLanguage('en')} 
-                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'en' ? 'bg-accent/50 font-medium' : ''}`}
+                      <button 
+                        onClick={() => setLanguagesOpen(!languagesOpen)} 
+                        className="flex items-center justify-between w-full text-base font-medium text-foreground px-4 py-2 rounded-md hover:bg-accent/50 transition-colors"
+                      >
+                        <span>{translate("Languages", language)}</span>
+                        <motion.div
+                          animate={{ rotate: languagesOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          {translate("English", language)}
-                          {language === 'en' && <span>✓</span>}
-                        </button>
-                        <div className="border-t border-border"></div>
-                        <button 
-                          onClick={() => setLanguage('sw')} 
-                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'sw' ? 'bg-accent/50 font-medium' : ''}`}
-                        >
-                          {translate("Swahili", language)}
-                          {language === 'sw' && <span>✓</span>}
-                        </button>
-                        <div className="border-t border-border"></div>
-                        <button 
-                          onClick={() => setLanguage('ksl')} 
-                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'ksl' ? 'bg-accent/50 font-medium' : ''}`}
-                        >
-                          {translate("Kenya Sign Language", language)}
-                          {language === 'ksl' && <span>✓</span>}
-                        </button>
-                        <div className="border-t border-border"></div>
-                        <button 
-                          onClick={() => setLanguage('br')} 
-                          className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'br' ? 'bg-accent/50 font-medium' : ''}`}
-                        >
-                          {translate("Braille", language)}
-                          {language === 'br' && <span>✓</span>}
-                        </button>
-                      </div>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </motion.div>
+                      </button>
+                      
+                      <AnimatePresence>
+                        {languagesOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="rounded-md overflow-hidden border border-border ml-4">
+                              <button 
+                                onClick={() => setLanguage('en')} 
+                                className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'en' ? 'bg-accent/50 font-medium' : ''}`}
+                              >
+                                {translate("English", language)}
+                                {language === 'en' && <span>✓</span>}
+                              </button>
+                              <div className="border-t border-border"></div>
+                              <button 
+                                onClick={() => setLanguage('sw')} 
+                                className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'sw' ? 'bg-accent/50 font-medium' : ''}`}
+                              >
+                                {translate("Swahili", language)}
+                                {language === 'sw' && <span>✓</span>}
+                              </button>
+                              <div className="border-t border-border"></div>
+                              <button 
+                                onClick={() => setLanguage('ksl')} 
+                                className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'ksl' ? 'bg-accent/50 font-medium' : ''}`}
+                              >
+                                {translate("Kenya Sign Language", language)}
+                                {language === 'ksl' && <span>✓</span>}
+                              </button>
+                              <div className="border-t border-border"></div>
+                              <button 
+                                onClick={() => setLanguage('br')} 
+                                className={`py-3 px-4 w-full text-left hover:bg-accent transition-colors duration-200 flex items-center justify-between ${language === 'br' ? 'bg-accent/50 font-medium' : ''}`}
+                              >
+                                {translate("Braille", language)}
+                                {language === 'br' && <span>✓</span>}
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                     
                     {/* Settings */}
                     <div className="space-y-2">
-                      <h3 className="text-base font-medium text-foreground px-4">{translate("Settings", language)}</h3>
-                      <div className="space-y-1">
-                        <Link to="/settings/account" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
-                          {translate("Account", language)}
-                        </Link>
-                        <Link to="/settings/notifications" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
-                          {translate("Notifications", language)}
-                        </Link>
-                        <Link to="/settings/privacy" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
-                          {translate("Privacy", language)}
-                        </Link>
-                      </div>
+                      <button 
+                        onClick={() => setSettingsOpen(!settingsOpen)} 
+                        className="flex items-center justify-between w-full text-base font-medium text-foreground px-4 py-2 rounded-md hover:bg-accent/50 transition-colors"
+                      >
+                        <span>{translate("Settings", language)}</span>
+                        <motion.div
+                          animate={{ rotate: settingsOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </motion.div>
+                      </button>
+                      
+                      <AnimatePresence>
+                        {settingsOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden ml-4 space-y-1"
+                          >
+                            <Link to="/settings/account" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
+                              {translate("Account", language)}
+                            </Link>
+                            <Link to="/settings/notifications" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
+                              {translate("Notifications", language)}
+                            </Link>
+                            <Link to="/settings/privacy" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200">
+                              {translate("Privacy", language)}
+                            </Link>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                     
                     {/* Resource Upload (conditionally shown) */}
-                    {isResourcesSection && (
+                    {isResourcesSection && session && (
                       <div className="space-y-2">
                         <h3 className="text-base font-medium text-foreground px-4">{translate("Resources", language)}</h3>
                         <Link to="/resources/upload" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200 flex items-center">

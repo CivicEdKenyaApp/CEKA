@@ -12,13 +12,13 @@ const PrivacySettings = () => {
   const { language } = useLanguage();
   
   return (
-    <div className="container py-10">
-      <div className="mb-8">
+    <div>
+      <div className="mb-4">
         <h1 className="text-3xl font-bold mb-2">{translate("Privacy Settings", language)}</h1>
         <p className="text-muted-foreground">{translate("Manage your privacy preferences and data", language)}</p>
       </div>
       
-      <div className="grid gap-8">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>{translate("Profile Visibility", language)}</CardTitle>

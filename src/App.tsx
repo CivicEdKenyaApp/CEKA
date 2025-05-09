@@ -26,6 +26,7 @@ import JoinCommunity from './pages/JoinCommunity'; // For VolunteerPage or simil
 import Notifications from './pages/Notifications'; // Assuming correct path
 import UserProfile from './pages/UserProfile'; // Assuming this is the correct file
 import ResourceUpload from './pages/ResourceUpload'; // Assuming correct path
+import SplashScreen from './components/SplashScreen';
 
 // Create and export auth context
 interface AuthContextType {
@@ -53,7 +54,17 @@ function App() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
   const location = useLocation();
+  
+  useEffect(() => {
+    // Hide splash screen after 3 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const getSession = async () => {
@@ -135,6 +146,19 @@ function App() {
     error,
   };
 
+  // Protected route component
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!session) {
+      // Redirect to login if not authenticated
+      return <Navigate to="/auth" replace />;
+    }
+    return <>{children}</>;
+  };
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
   return (
     <ThemeProvider>
       <LanguageProvider>
@@ -144,7 +168,14 @@ function App() {
             <Route path="/community" element={<CommunityPortal />} />
             <Route path="/resources" element={<ResourceHub />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
-            <Route path="/resources/upload" element={<ResourceUpload />} />
+            <Route 
+              path="/resources/upload" 
+              element={
+                <ProtectedRoute>
+                  <ResourceUpload />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
             <Route path="/volunteer" element={<JoinCommunity />} />
             <Route path="/auth" element={
@@ -153,13 +184,34 @@ function App() {
               </Layout>
             } />
             <Route path="/feedback" element={<FeedbackPage />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<UserProfile />} />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/search" element={<SearchResults />} />
             
             <Route path="/settings" element={<SettingsLayout />}>
               <Route index element={<Navigate to="/settings/account" replace />} />
-              <Route path="account" element={<AccountSettings />} />
+              <Route 
+                path="account" 
+                element={
+                  <ProtectedRoute>
+                    <AccountSettings />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="notifications" element={<NotificationSettings />} />
               <Route path="privacy" element={<PrivacySettings />} />
             </Route>

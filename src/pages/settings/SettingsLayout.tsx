@@ -13,13 +13,13 @@ const SettingsLayout = () => {
   
   return (
     <Layout>
-      <div className="container py-10">
-        <div className="mb-8">
+      <div className="container py-6 md:py-8 px-4">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{translate("Settings", language)}</h1>
           <p className="text-muted-foreground">{translate("Manage your account and preferences", language)}</p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-6">
           <div className="w-full md:w-64 shrink-0">
             <div className="sticky top-20 space-y-1">
               <Link
