@@ -100,7 +100,7 @@ const DonationWidget = () => {
               animate={showPulse ? {
                 scale: [1, 1.05, 1],
                 transition: {
-                  duration: del2,
+                  duration: l2,
                   repeat: Infinity,
                   repeatType: "reverse"
                 }
