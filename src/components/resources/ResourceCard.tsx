@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -7,9 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Download, BookOpen, MapPin } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
 
-export interface ResourceCardProps {
+interface ResourceCardProps {
   resource: {
     id: string | number;
     title: string;
@@ -23,11 +21,10 @@ export interface ResourceCardProps {
     category?: string;
     billObjective?: string;
     county?: string;
-    isSelected?: boolean;
   };
   downloadable?: boolean;
   id?: string;
-  onToggleSelect?: () => void;
+  onToggleSelect: () => void; // <-- add this line
 }
 
 const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardProps) => {
@@ -111,7 +108,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
   const isConstitutionResource = resource.type.toLowerCase() === 'constitution';
   
   return (
-    <Card className="h-full flex flex-col group">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Badge variant="outline" className={`${getBadgeColor(resource.type)} font-normal`}>
@@ -122,18 +119,9 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
               Pending Approval
             </Badge>
           )}
-          {onToggleSelect && (
-            <div className="ml-auto">
-              <Checkbox 
-                checked={resource.isSelected} 
-                onCheckedChange={onToggleSelect}
-                className="data-[state=checked]:bg-kenya-green"
-              />
-            </div>
-          )}
         </div>
         <div className="mt-3">
-          {/* Link to resource detail page */}
+          {/* Updated link to use the new document viewer page */}
           <Link to={`/resource/${resource.id}`} className="hover:text-kenya-green transition-colors">
             <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
           </Link>
@@ -141,15 +129,8 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
         </div>
       </CardHeader>
       <CardContent className="grow pt-2">
-        <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-          <Link to={`/resource/${resource.id}`}>
-            {getResourceThumbnail(resource)}
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="bg-background/80 rounded-full p-2">
-                <ExternalLink className="h-5 w-5" />
-              </div>
-            </div>
-          </Link>
+        <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-3">
+          {getResourceThumbnail(resource)}
         </div>
         
         {/* New: Bill objective and county info */}
@@ -180,7 +161,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
       </CardContent>
       <Separator />
       <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
-        {/* Link to resource detail page */}
+        {/* Updated link to use the new document viewer page */}
         <Button variant="outline" size="sm" asChild>
           <Link to={`/resource/${resource.id}`}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" />

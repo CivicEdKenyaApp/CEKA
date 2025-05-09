@@ -137,7 +137,7 @@ export function BackButton() {
     <AnimatePresence>
       <motion.button
         className={cn(
-          "fixed bottom-24 left-4 z-100 p-3 w-12 h-12 rounded-full shadow-lg",
+          "sticky bottom-24 left-4 z-40 p-3 w-12 h-12 rounded-full shadow-lg",
           "transition-colors duration-200",
           "touch-none cursor-pointer"
         )}

@@ -3,9 +3,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { FileText, Video, Image, Book, FileQuestion } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/utils';
 
 const resourceTypes = [
   { 
@@ -42,7 +39,6 @@ const resourceTypes = [
 
 const ResourceTypeFilter = () => {
   const location = useLocation();
-  const { language } = useLanguage();
   
   return (
     <div className="flex overflow-x-auto pb-2 md:pb-0 no-scrollbar">
@@ -56,26 +52,17 @@ const ResourceTypeFilter = () => {
             <Link
               key={type.id}
               to={type.path}
-              className="relative"
-            >
-              <div className={cn(
-                "flex items-center px-4 py-2.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors",
+              className={cn(
+                "flex items-center px-3 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors",
                 isActive 
                   ? "bg-kenya-green text-white" 
-                  : "bg-muted/50 hover:bg-muted text-foreground"
-              )}>
-                <span className={cn("mr-2", isActive ? "text-white" : "text-muted-foreground")}>
-                  {type.icon}
-                </span>
-                {translate(type.name, language)}
-              </div>
-              {isActive && (
-                <motion.div 
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-kenya-green" 
-                  layoutId="activeResourceFilter"
-                  initial={false}
-                />
+                  : "bg-muted hover:bg-muted/80 text-foreground"
               )}
+            >
+              <span className={cn("mr-1.5", isActive ? "text-white" : "text-muted-foreground")}>
+                {type.icon}
+              </span>
+              {type.name}
             </Link>
           );
         })}
