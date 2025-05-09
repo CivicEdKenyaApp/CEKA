@@ -319,7 +319,7 @@ const DonationWidget = () => {
                   <motion.div
                     initial={{ y: -2 }}
                     whileHover={{ y: -8 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 40 }}
                   >
                     {translate('Maybe Later', language)}
                   </motion.div>
