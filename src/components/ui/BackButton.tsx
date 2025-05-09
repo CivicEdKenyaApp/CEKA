@@ -4,59 +4,43 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
-export function BackButton() {
+export const BackButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { language } = useLanguage();
-  
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [opacity, setOpacity] = useState(1);
+  const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 80 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastTap, setLastTap] = useState(0);
-  const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 80 });
-  const [isMobile, setIsMobile] = useState(false);
-  
   const isHomePage = location.pathname === '/';
 
-  // Check for mobile and set visibility based on inactivity
+  // Handle opacity change after inactivity
   useEffect(() => {
-    // Check if the device is mobile based on screen width
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    let timeout: NodeJS.Timeout;
+    
+    const resetTimeout = () => {
+      clearTimeout(timeout);
+      setOpacity(1);
+      timeout = setTimeout(() => setOpacity(0.1), 5000);
     };
     
-    // Initial check
-    checkMobile();
+    resetTimeout();
     
-    // Set up inactivity timer
-    const timer = setInterval(() => {
-      if (Date.now() - lastInteraction > 5000) {
-        setIsVisible(false);
-      }
-    }, 1000);
-    
-    // Add event listeners
-    window.addEventListener('resize', checkMobile);
-    window.addEventListener('mousemove', handleInteraction);
-    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('mousemove', resetTimeout);
+    window.addEventListener('touchstart', resetTimeout);
     
     return () => {
-      clearInterval(timer);
-      window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('mousemove', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
+      clearTimeout(timeout);
+      window.removeEventListener('mousemove', resetTimeout);
+      window.removeEventListener('touchstart', resetTimeout);
     };
-  }, [lastInteraction]);
-
-  const handleInteraction = () => {
-    setIsVisible(true);
-    setLastInteraction(Date.now());
-  };
+  }, []);
 
   const handleBackClick = () => {
     if (isHomePage) {
@@ -79,11 +63,13 @@ export function BackButton() {
     }
   };
 
-  const handleDrag = (event, info) => {
+  const handleDrag = (event: any, info: any) => {
     setIsDragging(true);
-    // Calculate new position, constrained to screen
-    const newY = Math.min(Math.max(position.y + info.delta.y, 0), window.innerHeight - 80);
-    const newX = Math.min(Math.max(position.x + info.delta.x, 0), window.innerWidth - 70);
+    
+    // Calculate new position, constrained to bottom half of screen
+    const newY = Math.min(Math.max(position.y + info.delta.y, window.innerHeight / 2), window.innerHeight - 80);
+    const newX = Math.min(Math.max(position.x + info.delta.x, 20), window.innerWidth - 70);
+    
     setPosition({ x: newX, y: newY });
   };
 
@@ -91,9 +77,6 @@ export function BackButton() {
     // Short delay to distinguish between drag and click
     setTimeout(() => setIsDragging(false), 100);
   };
-
-  // If we want to hide on desktop, uncomment this
-  // if (!isMobile) return null;
 
   return (
     <AnimatePresence>
@@ -103,18 +86,18 @@ export function BackButton() {
         animate={{ 
           x: position.x, 
           y: position.y,
-          opacity: isVisible ? 1 : 0.1,
-          scale: isDragging ? 1.1 : 1 
+          opacity: opacity,
+          scale: isDragging ? 1.1 : 1
         }}
         transition={{ 
           type: "spring", 
           damping: 20, 
-          opacity: { duration: 0.3 } 
+          opacity: { duration: 0.5 } 
         }}
         drag
         dragConstraints={{
-          top: 0,
-          left: 0,
+          top: window.innerHeight / 2,
+          left: 20,
           right: window.innerWidth - 70,
           bottom: window.innerHeight - 80,
         }}
@@ -122,25 +105,23 @@ export function BackButton() {
         onDragEnd={handleDragEnd}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onMouseEnter={handleInteraction}
-        onMouseMove={handleInteraction}
-        onTouchStart={handleInteraction}
       >
-        <button
+        <Button 
+          variant="secondary"
+          size="icon"
           className={cn(
-            "p-3 rounded-full shadow-lg bg-primary/90 touch-none",
-            "hover:bg-primary/100 transition-colors duration-200",
+            "rounded-full shadow-lg bg-background/80 backdrop-blur hover:bg-background w-12 h-12",
             isDragging ? "cursor-grabbing" : "cursor-grab"
           )}
           onClick={() => {
             if (!isDragging) handleBackClick();
           }}
         >
-          <ChevronLeft className="h-6 w-6 text-primary-foreground" />
-        </button>
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
       </motion.div>
     </AnimatePresence>
   );
-}
+};
 
 export default BackButton;

@@ -24,10 +24,9 @@ interface ResourceCardProps {
   };
   downloadable?: boolean;
   id?: string;
-  onToggleSelect: () => void; // <-- add this line
 }
 
-const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardProps) => {
+const ResourceCard = ({ resource, downloadable }: ResourceCardProps) => {
   const getBadgeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'constitution':
