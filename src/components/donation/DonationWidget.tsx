@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, X, ArrowRight, Gift } from 'lucide-react';
+import { Heart, X, ArrowRight, Gift, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from '@/hooks/use-toast';
 
 const DONATION_OPTIONS = [
   {
@@ -34,6 +35,7 @@ const DonationWidget = () => {
   const [showPulse, setShowPulse] = useState(false);
   const { language } = useLanguage();
   const { theme } = useTheme();
+  const { toast } = useToast();
   
   // Show widget after delay
   useEffect(() => {
@@ -61,31 +63,83 @@ const DonationWidget = () => {
 
   const handleMpesa = () => {
     navigator.clipboard.writeText('+254798903373');
-    alert('M-Pesa number copied to clipboard: +254798903373');
+    toast({
+      title: "M-Pesa number copied",
+      description: "+254798903373 copied to clipboard",
+      duration: 3000,
+    });
   };
   
   const darkMode = theme === 'dark';
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { 
+      opacity: 0, 
+      scale: 0.8,
+      bottom: "20px", 
+      right: "20px" 
+    },
+    visible: (expanded) => ({ 
+      opacity: 1, 
+      scale: 1,
+      bottom: expanded ? "50%" : "20px",
+      right: expanded ? "50%" : "20px",
+      x: expanded ? "50%" : 0,
+      y: expanded ? "50%" : 0,
+      transition: {
+        type: "spring",
+        stiffness: 380,
+        damping: 30,
+        mass: 1
+      }
+    }),
+    exit: { 
+      opacity: 0, 
+      scale: 0.8,
+      transition: { duration: 0.3 }
+    }
+  };
+
+  const pulseAnimation = {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 2, 
+      repeat: Infinity,
+      repeatType: "reverse"
+    }
+  };
+
+  const dotPulseAnimation = {
+    scale: [1, 1.5, 1],
+    opacity: [0.7, 1, 0.7],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      repeatType: "reverse"
+    }
+  };
+
+  const heartAnimation = {
+    opacity: [0, 1, 0],
+    scale: [0.3, 1],
+    y: [0, -40],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      repeatDelay: 3
+    }
+  };
   
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, bottom: "20px", right: "20px" }}
-          animate={{ 
-            opacity: 1, 
-            scale: 1,
-            bottom: isExpanded ? "50%" : "20px",
-            right: isExpanded ? "50%" : "20px",
-            x: isExpanded ? "50%" : 0,
-            y: isExpanded ? "50%" : 0
-          }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{
-            type: "spring",
-            stiffness: 380,
-            damping: 30,
-            mass: 1
-          }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          custom={isExpanded}
           className={`fixed z-40 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
@@ -97,26 +151,11 @@ const DonationWidget = () => {
               onClick={() => setIsExpanded(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              animate={showPulse ? {
-                scale: [1, 1.05, 1],
-                transition: {
-                  duration: 2, // Fixed: Changed l2 to a numeric value (2 seconds)
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }
-              } : {}}
+              animate={showPulse ? pulseAnimation : {}}
             >
               <motion.div
                 className="absolute -top-1 -right-1 w-3 h-3 bg-kenya-red rounded-full"
-                animate={{ 
-                  scale: [1, 1.5, 1],
-                  opacity: [0.7, 1, 0.7]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
+                animate={dotPulseAnimation}
               />
               <div className="relative">
                 <Heart className="h-6 w-6 text-kenya-red mr-2" />
@@ -154,12 +193,13 @@ const DonationWidget = () => {
               className="w-80 p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
               <motion.div 
                 className="flex justify-between items-center mb-3"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
               >
                 <h3 className="font-bold text-lg flex items-center">
                   <Gift className="h-5 w-5 mr-2 text-kenya-green" />
@@ -179,7 +219,7 @@ const DonationWidget = () => {
                 className="text-sm text-muted-foreground mb-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
                 {translate('Your support helps us continue our mission of civic education in Kenya.', language)}
               </motion.p>
@@ -190,7 +230,7 @@ const DonationWidget = () => {
                     key={option.name}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}  
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}  
                     className={`p-3 rounded-lg flex items-center justify-between 
                       ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}
                     whileHover={{ 
@@ -229,7 +269,7 @@ const DonationWidget = () => {
                           whileHover={{ opacity: 1, x: 0 }}
                           className="ml-1"
                         >
-                          📋
+                          <Copy className="h-3 w-3" />
                         </motion.span>
                       </motion.button>
                     ) : (
@@ -241,13 +281,18 @@ const DonationWidget = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ArrowRight className="h-4 w-4" />
+                        <motion.span
+                          initial={{ x: 0 }}
+                          whileHover={{ x: -5 }}
+                        >
+                          {translate('Visit', language)}
+                        </motion.span>
                         <motion.span
                           initial={{ opacity: 0, x: -5 }}
                           whileHover={{ opacity: 1, x: 0 }}
                           className="ml-1"
                         >
-                          {translate('Visit', language)}
+                          <ExternalLink className="h-3 w-3" />
                         </motion.span>
                       </motion.a>
                     )}
@@ -262,7 +307,7 @@ const DonationWidget = () => {
                 onClick={() => setIsExpanded(false)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.6, duration: 0.3 }}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(34, 197, 94, 0.8)'

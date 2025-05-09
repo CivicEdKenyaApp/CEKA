@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -20,6 +19,7 @@ import CampaignDetail from './pages/CampaignDetail';
 import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
+import DonationWidget from './components/donation/DonationWidget';
 
 // Import renamed files or create necessary aliases
 import Index from './pages/Index'; // For HomePage
@@ -233,6 +233,10 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
+          
+          {/* Donation Widget - visible on all pages */}
+          <DonationWidget />
+          
           <Toaster />
         </AuthContext.Provider>
       </LanguageProvider>
