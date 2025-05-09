@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -123,7 +122,7 @@ const legislationDetails = {
         avatar: 'PM'
       },
       date: '2024-03-05',
-      content: 'I'm concerned about the implementation costs. Has there been an economic impact assessment?'
+      content: 'I\'m concerned about the implementation costs. Has there been an economic impact assessment?'
     }
   ],
   relatedLegislation: [
