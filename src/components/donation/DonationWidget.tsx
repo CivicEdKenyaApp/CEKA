@@ -317,8 +317,8 @@ const DonationWidget = () => {
               >
                 <motion.div className="relative h-5 overflow-hidden">
                   <motion.div
-                    initial={{ y: 0 }}
-                    whileHover={{ y: -10 }}
+                    initial={{ y: 1 }}
+                    whileHover={{ y: -8 }}
                     transition={{ type: "spring", stiffness: 100, damping: 40 }}
                   >
                     {translate('Maybe Later', language)}
