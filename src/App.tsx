@@ -61,10 +61,6 @@ const App = () => {
       setSession(session);
     });
     
-    const hideBottomNav = ['/auth'].some(path =>
-    location.pathname.startsWith(path)
-  );
-    
     // Handle back button navigation
     const handleBackButton = (e: PopStateEvent) => {
       // Handle the back button navigation event here
