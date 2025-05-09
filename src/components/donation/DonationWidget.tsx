@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, ArrowRight, Gift } from 'lucide-react';
@@ -26,80 +27,6 @@ const DONATION_OPTIONS = [
     icon: '📱'
   }
 ];
-
-// Animation variants
-const containerVariants = {
-  collapsed: {
-    opacity: 1,
-    right: "20px",
-    bottom: "20px",
-    scale: 1,
-    rotate: 0,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 30,
-      mass: 1.2
-    }
-  },
-  expanded: {
-    opacity: 1,
-    right: "50%",
-    bottom: "50%",
-    x: "50%",
-    y: "50%",
-    scale: 1,
-    rotate: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 25,
-      mass: 1,
-      when: "beforeChildren",
-      staggerChildren: 0.07
-    }
-  },
-  exit: {
-    opacity: 0, 
-    scale: 0.8,
-    transition: { 
-      duration: 0.3,
-      ease: "easeOut"
-    }
-  },
-  initial: {
-    opacity: 0,
-    scale: 0.8, 
-    rotate: -10,
-    right: "20px",
-    bottom: "0px",
-    transition: {
-      type: "spring"
-    }
-  }
-};
-
-const optionVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 15
-    }
-  }
-};
-
-const pulseAnimation = {
-  scale: [1, 1.05, 1],
-  transition: {
-    duration: 2,
-    repeat: Infinity,
-    repeatType: "reverse"
-  }
-};
 
 const DonationWidget = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -137,49 +64,47 @@ const DonationWidget = () => {
     alert('M-Pesa number copied to clipboard: +254798903373');
   };
   
-  // Floating heart animation
-  const floatingHearts = Array(3).fill(null).map((_, i) => (
-    <motion.div
-      key={i}
-      className="absolute pointer-events-none"
-      initial={{ opacity: 0, scale: 0, bottom: "30%", left: "50%" }}
-      animate={{ 
-        opacity: [0, 1, 0],
-        scale: [0.3, 1],
-        bottom: ["30%", "80%"],
-        left: [`${45 + i * 10}%`, `${40 + i * 20}%`]
-      }}
-      transition={{
-        duration: 2,
-        delay: i * 0.8,
-        repeat: Infinity,
-        repeatDelay: 3
-      }}
-    >
-      <Heart className="h-4 w-4 text-kenya-red fill-kenya-red" />
-    </motion.div>
-  ));
-
+  const darkMode = theme === 'dark';
+  
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial="initial"
-          animate={isExpanded ? "expanded" : "collapsed"}
-          exit="exit"
-          variants={containerVariants}
-          className={`fixed z-40 shadow-lg rounded-lg overflow-hidden
-            ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+          initial={{ opacity: 0, scale: 0.8, bottom: "20px", right: "20px" }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            bottom: isExpanded ? "50%" : "20px",
+            right: isExpanded ? "50%" : "20px",
+            x: isExpanded ? "50%" : 0,
+            y: isExpanded ? "50%" : 0
+          }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{
+            type: "spring",
+            stiffness: 380,
+            damping: 30,
+            mass: 1
+          }}
+          className={`fixed z-40 shadow-lg rounded-lg
+            ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
           {!isExpanded ? (
             // Collapsed state (floating button)
             <motion.button
               className={`flex items-center justify-center p-3 rounded-lg relative
-                ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md`}
+                ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}
               onClick={() => setIsExpanded(true)}
-              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              animate={showPulse ? pulseAnimation : {}}
+              animate={showPulse ? {
+                scale: [1, 1.05, 1],
+                transition: {
+                  duration: del2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }
+              } : {}}
             >
               <motion.div
                 className="absolute -top-1 -right-1 w-3 h-3 bg-kenya-red rounded-full"
@@ -195,7 +120,31 @@ const DonationWidget = () => {
               />
               <div className="relative">
                 <Heart className="h-6 w-6 text-kenya-red mr-2" />
-                {floatingHearts}
+                
+                {/* Floating hearts animation */}
+                <AnimatePresence>
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute pointer-events-none"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ 
+                        opacity: [0, 1, 0],
+                        scale: [0.3, 1],
+                        y: [0, -40],
+                        x: [0, i === 0 ? -10 : i === 2 ? 10 : 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: i * 0.8,
+                        repeat: Infinity,
+                        repeatDelay: 3
+                      }}
+                    >
+                      <Heart className="h-4 w-4 text-kenya-red fill-kenya-red" />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
               <span className="text-sm font-medium">{translate('Support Us', language)}</span>
             </motion.button>
@@ -205,7 +154,6 @@ const DonationWidget = () => {
               className="w-80 p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
             >
               <motion.div 
                 className="flex justify-between items-center mb-3"
@@ -217,14 +165,14 @@ const DonationWidget = () => {
                   <Gift className="h-5 w-5 mr-2 text-kenya-green" />
                   {translate('Support Our Work', language)}
                 </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                <motion.button
+                  className={`rounded-full p-1 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                   onClick={() => setIsExpanded(false)}
+                  whileHover={{ rotate: 45, scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </motion.button>
               </motion.div>
               
               <motion.p 
@@ -240,15 +188,14 @@ const DonationWidget = () => {
                 {DONATION_OPTIONS.map((option, index) => (
                   <motion.div 
                     key={option.name}
-                    variants={optionVariants}
-                    initial="hidden"
-                    animate="visible"
-                    transition={{ delay: 0.3 + index * 0.1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}  
                     className={`p-3 rounded-lg flex items-center justify-between 
-                      ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}
+                      ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}
                     whileHover={{ 
-                      scale: 1.03, 
-                      boxShadow: theme === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.1)' 
+                      scale: 1.02, 
+                      boxShadow: darkMode ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.1)' 
                     }}
                   >
                     <div className="flex items-center">
@@ -265,87 +212,81 @@ const DonationWidget = () => {
                     </div>
                     
                     {option.name === 'M-Pesa' ? (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <motion.button
                         onClick={handleMpesa}
-                        className="relative overflow-hidden group"
+                        className={`px-3 py-1 text-sm rounded-md flex items-center ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         <motion.span
                           initial={{ x: 0 }}
-                          whileHover={{ x: -30 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          whileHover={{ x: -5 }}
                         >
                           {translate('Copy', language)}
                         </motion.span>
                         <motion.span
-                          className="absolute right-2"
-                          initial={{ x: 30, opacity: 0 }}
-                          whileHover={{ x: 0, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          initial={{ opacity: 0, x: -5 }}
+                          whileHover={{ opacity: 1, x: 0 }}
+                          className="ml-1"
                         >
                           📋
                         </motion.span>
-                      </Button>
+                      </motion.button>
                     ) : (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="relative overflow-hidden group"
-                        asChild
+                      <motion.a
+                        href={option.url}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`px-3 py-1 text-sm rounded-md flex items-center ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <a href={option.url} target="_blank" rel="noopener noreferrer">
-                          <motion.span
-                            initial={{ x: 0 }}
-                            whileHover={{ x: -20 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </motion.span>
-                          <motion.span
-                            className="absolute right-2"
-                            initial={{ x: 20, opacity: 0 }}
-                            whileHover={{ x: 0, opacity: 1 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          >
-                            →
-                          </motion.span>
-                        </a>
-                      </Button>
+                        <ArrowRight className="h-4 w-4" />
+                        <motion.span
+                          initial={{ opacity: 0, x: -5 }}
+                          whileHover={{ opacity: 1, x: 0 }}
+                          className="ml-1"
+                        >
+                          {translate('Visit', language)}
+                        </motion.span>
+                      </motion.a>
                     )}
                   </motion.div>
                 ))}
               </div>
               
-              <motion.div
+              <motion.button
+                className={`w-full mt-4 py-2 rounded-md font-medium ${darkMode ? 
+                  'bg-kenya-green hover:bg-kenya-green/90 text-white' : 
+                  'bg-kenya-green hover:bg-kenya-green/90 text-white'}`}
+                onClick={() => setIsExpanded(false)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, type: "spring" }}
+                transition={{ delay: 0.6 }}
+                whileHover={{
+                  scale: 1.03,
+                  backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(34, 197, 94, 0.8)'
+                }}
+                whileTap={{ scale: 0.97 }}
               >
-                <Button
-                  className="w-full mt-4 bg-kenya-green hover:bg-kenya-green/90 relative overflow-hidden group"
-                  onClick={() => setIsExpanded(false)}
-                  size="sm"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <motion.span
+                <motion.div className="relative h-5 overflow-hidden">
+                  <motion.div
                     initial={{ y: 0 }}
                     whileHover={{ y: -20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Maybe Later', language)}
-                  </motion.span>
-                  <motion.span
-                    className="absolute"
-                    initial={{ y: 20, opacity: 0 }}
-                    whileHover={{ y: 0, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  </motion.div>
+                  <motion.div
+                    className="absolute w-full text-center"
+                    initial={{ y: 20 }}
+                    whileHover={{ y: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     {translate('Thank You', language)}
-                  </motion.span>
-                </Button>
-              </motion.div>
+                  </motion.div>
+                </motion.div>
+              </motion.button>
             </motion.div>
           )}
         </motion.div>
