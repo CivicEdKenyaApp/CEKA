@@ -21,10 +21,10 @@ const Layout = ({ children }: LayoutProps) => {
             <Navbar />
             <main className="flex-1 pb-16 md:pb-0">{children}</main>
             <Footer />
+            <BackButton />
+            <BottomNavbar />
           </div>
           </ScrollListener>
-          <BackButton />
-          <BottomNavbar />
       </ThemeProvider>
     </LanguageProvider>
   );
