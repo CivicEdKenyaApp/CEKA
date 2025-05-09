@@ -37,7 +37,7 @@ const SplashScreen = () => {
         >
           <h1 className="text-3xl font-bold text-primary">CEKA</h1>
           <p className="text-lg text-muted-foreground max-w-sm">
-            Civic Education Kenya Association
+            Civic Education Kenya App
           </p>
         </motion.div>
         
@@ -63,7 +63,7 @@ const SplashScreen = () => {
           }}
           className="mt-8 text-sm text-muted-foreground"
         >
-          Empowering Citizens through Knowledge
+          "Tumetoka Analogue, Tunaenda Digital"
         </motion.div>
       </div>
       
