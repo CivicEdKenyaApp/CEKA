@@ -8,7 +8,7 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Layout>
+    <Layout hideBottomNav hideBackButton>
       <div className="container py-8 md:py-12 h-full">
         <div className="max-w-md mx-auto">
           <AuthModal

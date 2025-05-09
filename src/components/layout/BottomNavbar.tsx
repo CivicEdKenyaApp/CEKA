@@ -61,7 +61,7 @@ const BottomNavbar = () => {
   };
 
   return (
-    <div className="md:hidden sticky bottom-0 left-0 right-0 z-100 bg-background border-t shadow-lg w-full max-w-full overflow-x-hidden">
+    <div className="md:hidden sticky bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg w-full max-w-full overflow-x-hidden">
       <nav className="flex justify-between items-center h-16 px-1 sm:px-2">
         {navItems.map((item) => {
           const isActive = 
