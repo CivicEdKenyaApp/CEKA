@@ -16,6 +16,10 @@ import SettingsLayout from './pages/settings/SettingsLayout';
 import DocumentViewerPage from './pages/DocumentViewerPage';
 import SearchResults from './pages/SearchResults';
 import NotFound from './pages/NotFound';
+import CampaignDetail from './pages/CampaignDetail';
+import DiscussionDetail from './pages/DiscussionDetail';
+import LegislationDetail from './pages/LegislationDetail';
+import LegalPage from './pages/LegalPage';
 
 // Import renamed files or create necessary aliases
 import Index from './pages/Index'; // For HomePage
@@ -165,7 +169,13 @@ function App() {
         <AuthContext.Provider value={authValue}>
           <Routes>
             <Route path="/" element={<Index />} />
+            
+            {/* Community routes */}
             <Route path="/community" element={<CommunityPortal />} />
+            <Route path="/community/discussions/:id" element={<DiscussionDetail />} />
+            <Route path="/community/campaigns/:id" element={<CampaignDetail />} />
+            
+            {/* Resources routes */}
             <Route path="/resources" element={<ResourceHub />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
             <Route 
@@ -176,13 +186,13 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Legislative tracker routes */}
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+            <Route path="/legislative-tracker/:id" element={<LegislationDetail />} />
+            
             <Route path="/volunteer" element={<JoinCommunity />} />
-            <Route path="/auth" element={
-              <Layout>
-                <AuthPage />
-              </Layout>
-            } />
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route 
               path="/notifications" 
@@ -202,6 +212,11 @@ function App() {
             />
             <Route path="/search" element={<SearchResults />} />
             
+            {/* Legal pages */}
+            <Route path="/privacy" element={<LegalPage />} />
+            <Route path="/terms" element={<LegalPage />} />
+            
+            {/* Settings routes */}
             <Route path="/settings" element={<SettingsLayout />}>
               <Route index element={<Navigate to="/settings/account" replace />} />
               <Route 

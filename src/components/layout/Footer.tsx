@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
@@ -7,6 +8,9 @@ import { translate } from '@/lib/utils';
 
 const Footer = () => {
   const { language } = useLanguage();
+
+  // Nairobi Kenya Google Maps URL
+  const nairobiMapUrl = "https://www.google.com/maps/place/Nairobi,+Kenya/@-1.2833099,36.8085756,12z";
 
   return (
     <footer className="bg-muted py-8 mt-12">
@@ -66,7 +70,9 @@ const Footer = () => {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <span>civiceducationkenya@gmail.com</span>
+              <a href="mailto:civiceducationkenya@gmail.com" className="hover:text-kenya-green">
+                Email Us Here
+              </a>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -74,7 +80,14 @@ const Footer = () => {
             </li>
             <li className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span>Nairobi, Kenya</span>
+              <a 
+                href={nairobiMapUrl}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-kenya-green"
+              >
+                Nairobi, Kenya
+              </a>
             </li>
           </ul>
         </div>
