@@ -62,7 +62,7 @@ const DonationWidget = () => {
           }}
           exit={{ bottom: "-100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={`fixed ${isExpanded ? 'left-1/2' : 'right-5'} z-40 shadow-lg rounded-lg
+          className={`fixed ${isExpanded ? 'left-1/2 transform -translate-x-1/2' : 'right-5'} z-40 shadow-lg rounded-lg
             ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
           {!isExpanded ? (
