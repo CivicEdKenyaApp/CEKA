@@ -25,7 +25,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Import renamed files or create necessary aliases
 import Index from './pages/Index';
 import CommunityPortal from './pages/CommunityPortal';
-import ResourceHub from './pages/ResourceLibrary';
+import ResourceHub from './pages/ResourceHub';
 import LegislativeTracker from './pages/LegislativeTracker';
 import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
