@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/App';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { translate } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +34,14 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language } = useLanguage();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const isDarkMode = theme === 'dark';
 
   // 💡 Auto-close modal if user is signed in
   useEffect(() => {
@@ -134,9 +138,18 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/90 shadow-lg border border-primary/10 relative overflow-auto max-h-[90vh] z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        {/* Kenya-themed color gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#006600]/10 via-[#EEEEEE]/5 to-[#BB1600]/10 pointer-events-none z-0"></div>
+      <DialogContent 
+        className={`sm:max-w-md backdrop-blur-lg shadow-lg border border-primary/10 relative overflow-auto max-h-[90vh] z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+          ${isDarkMode ? 
+            'bg-gray-800/90 text-white border-gray-700' : 
+            'bg-white/90 text-gray-900 border-gray-200'}`}
+      >
+        {/* Kenya-themed color gradient overlay - adjusted for dark mode */}
+        <div className={`absolute inset-0 ${
+          isDarkMode ? 
+            'bg-gradient-to-br from-[#006600]/20 via-[#1A1A1A]/10 to-[#BB1600]/20' : 
+            'bg-gradient-to-br from-[#006600]/10 via-[#EEEEEE]/5 to-[#BB1600]/10'
+        } pointer-events-none z-0`}></div>
         
         <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="h-4 w-4" />
@@ -144,10 +157,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         </DialogClose>
         
         <DialogHeader className="relative z-10">
-          <DialogTitle className="text-2xl font-bold text-center">
+          <DialogTitle className={`text-2xl font-bold text-center ${isDarkMode ? 'text-white' : ''}`}>
             {translate("Welcome to CEKA 🇰🇪", language)}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className={`text-center ${isDarkMode ? 'text-gray-300' : ''}`}>
             {translate("Sign in to save your progress and access civic tools.", language)}
           </DialogDescription>
         </DialogHeader>
@@ -156,7 +169,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           {/* Social Login Buttons */}
           <div className="flex flex-col gap-3">
             <motion.button
-              className="flex items-center justify-center gap-2 w-full p-3 rounded-md bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 transition-colors"
+              className={`flex items-center justify-center gap-2 w-full p-3 rounded-md border transition-colors ${
+                isDarkMode ? 
+                'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 
+                'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'
+              }`}
               onClick={handleGoogleSignIn}
               variants={socialButtonVariants}
               whileHover="hover"
@@ -184,24 +201,51 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
           {/* Divider */}
           <div className="relative">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="absolute inset-0 flex items-center">
+              <span className={`w-full ${isDarkMode ? 'border-t border-gray-600' : 'border-t border-gray-300'}`} />
+            </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white/80 px-2 text-foreground">{translate("Or", language)}</span>
+              <span className={`px-2 ${isDarkMode ? 'bg-gray-800/80 text-gray-300' : 'bg-white/80 text-foreground'}`}>
+                {translate("Or", language)}
+              </span>
             </div>
           </div>
 
           {/* Tabbed Forms */}
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/50 relative z-20">
-              <TabsTrigger value="signin">{translate("Sign In", language)}</TabsTrigger>
-              <TabsTrigger value="signup">{translate("Sign Up", language)}</TabsTrigger>
+            <TabsList className={`grid w-full grid-cols-2 relative z-20 ${isDarkMode ? 'bg-gray-700/50' : 'bg-white/50'}`}>
+              <TabsTrigger value="signin" className={isDarkMode ? 'data-[state=active]:bg-gray-600' : ''}>
+                {translate("Sign In", language)}
+              </TabsTrigger>
+              <TabsTrigger value="signup" className={isDarkMode ? 'data-[state=active]:bg-gray-600' : ''}>
+                {translate("Sign Up", language)}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
-                <InputField label="Email" value={email} onChange={setEmail} id="email" />
-                <InputField label="Password" value={password} onChange={setPassword} id="password" type="password" />
-                <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90" disabled={loading}>
+                <InputField 
+                  label="Email" 
+                  value={email} 
+                  onChange={setEmail} 
+                  id="email"
+                  isDarkMode={isDarkMode}
+                />
+                <InputField 
+                  label="Password" 
+                  value={password} 
+                  onChange={setPassword} 
+                  id="password" 
+                  type="password"
+                  isDarkMode={isDarkMode}
+                />
+                <Button 
+                  type="submit" 
+                  className={`w-full ${isDarkMode ? 
+                    'bg-kenya-green hover:bg-kenya-green/80 text-white' : 
+                    'bg-kenya-green hover:bg-kenya-green/90'}`} 
+                  disabled={loading}
+                >
                   {loading ? translate("Signing in...", language) : translate("Sign In", language)}
                 </Button>
               </form>
@@ -209,11 +253,42 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <InputField label="Full Name" value={fullName} onChange={setFullName} id="fullName" />
-                <InputField label="Username" value={username} onChange={setUsername} id="username" />
-                <InputField label="Email" value={email} onChange={setEmail} id="signupEmail" />
-                <InputField label="Password" value={password} onChange={setPassword} id="signupPassword" type="password" />
-                <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90" disabled={loading}>
+                <InputField 
+                  label="Full Name" 
+                  value={fullName} 
+                  onChange={setFullName} 
+                  id="fullName"
+                  isDarkMode={isDarkMode}
+                />
+                <InputField 
+                  label="Username" 
+                  value={username} 
+                  onChange={setUsername} 
+                  id="username"
+                  isDarkMode={isDarkMode}
+                />
+                <InputField 
+                  label="Email" 
+                  value={email} 
+                  onChange={setEmail} 
+                  id="signupEmail"
+                  isDarkMode={isDarkMode}
+                />
+                <InputField 
+                  label="Password" 
+                  value={password} 
+                  onChange={setPassword} 
+                  id="signupPassword" 
+                  type="password"
+                  isDarkMode={isDarkMode}
+                />
+                <Button 
+                  type="submit" 
+                  className={`w-full ${isDarkMode ? 
+                    'bg-kenya-green hover:bg-kenya-green/80 text-white' : 
+                    'bg-kenya-green hover:bg-kenya-green/90'}`} 
+                  disabled={loading}
+                >
                   {loading ? translate("Creating account...", language) : translate("Create Account", language)}
                 </Button>
               </form>
@@ -223,7 +298,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
         {/* Skip for now button */}
         <DialogFooter className="justify-center mt-4 relative z-10">
-          <button onClick={() => onOpenChange(false)} className="text-sm text-gray-500 hover:underline">
+          <button 
+            onClick={() => onOpenChange(false)} 
+            className={`text-sm hover:underline ${isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500'}`}
+          >
             {translate("Skip for now", language)}
           </button>
         </DialogFooter>
@@ -232,23 +310,30 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   );
 };
 
-// 🔁 Reusable input field helper
+// 🔁 Reusable input field helper with dark mode support
 const InputField = ({
   label,
   value,
   onChange,
   id,
-  type = 'text'
+  type = 'text',
+  isDarkMode = false
 }: {
   label: string;
   value: string;
   onChange: (val: string) => void;
   id: string;
   type?: string;
+  isDarkMode?: boolean;
 }) => {
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="text-sm font-medium">{label}</label>
+      <label 
+        htmlFor={id} 
+        className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : ''}`}
+      >
+        {label}
+      </label>
       <Input
         id={id}
         type={type}
@@ -256,7 +341,11 @@ const InputField = ({
         onChange={(e) => onChange(e.target.value)}
         required
         autoComplete={type === 'password' ? 'current-password' : 'email'}
-        className="transition-all focus:ring-2 focus:ring-primary/30 bg-white/70"
+        className={`transition-all focus:ring-2 focus:ring-primary/30 ${
+          isDarkMode ? 
+          'bg-gray-700/70 border-gray-600 text-white placeholder:text-gray-400' : 
+          'bg-white/70'
+        }`}
       />
     </div>
   );

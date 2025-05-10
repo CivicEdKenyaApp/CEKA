@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Bell, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon, Heart, User } from 'lucide-react';
@@ -105,7 +106,7 @@ const Navbar = ({ supportUsVisible = false, onSupportUsClick, showProfileIcon = 
           {/* ThemeToggle */}
           <ThemeToggle />
           
-          {/* Bell icon */}
+          {/* Bell icon - Fixed to link to notifications page */}
           <Button variant="ghost" size="icon" asChild>
             <Link to="/notifications">
               <Bell className="h-5 w-5" />

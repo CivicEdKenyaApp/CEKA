@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -19,6 +20,7 @@ import CampaignDetail from './pages/CampaignDetail';
 import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
+import ScrollToTop from './components/ScrollToTop';
 
 // Import renamed files or create necessary aliases
 import Index from './pages/Index';
@@ -50,6 +52,17 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+// ScrollToTopWrapper component to ensure all routes scroll to top when navigated
+const ScrollToTopWrapper = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
 };
 
 function App() {
@@ -166,6 +179,9 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AuthContext.Provider value={authValue}>
+          {/* Global ScrollToTop to ensure pages always start at the top */}
+          <ScrollToTopWrapper />
+          
           <Routes>
             <Route path="/" element={<Index />} />
             
@@ -177,7 +193,7 @@ function App() {
             {/* Resources routes */}
             <Route path="/resources" element={<ResourceHub />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
-            <Route path="/resources/upload" element={<ResourceUpload />} /> {/* Changed to be accessible to all */}
+            <Route path="/resources/upload" element={<ResourceUpload />} />
             
             {/* Legislative tracker routes */}
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
@@ -186,22 +202,12 @@ function App() {
             <Route path="/volunteer" element={<JoinCommunity />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
-            <Route 
-              path="/notifications" 
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            } />
             <Route path="/search" element={<SearchResults />} />
             
             {/* Legal pages */}
@@ -211,14 +217,11 @@ function App() {
             {/* Settings routes */}
             <Route path="/settings" element={<SettingsLayout />}>
               <Route index element={<Navigate to="/settings/account" replace />} />
-              <Route 
-                path="account" 
-                element={
-                  <ProtectedRoute>
-                    <AccountSettings />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="account" element={
+                <ProtectedRoute>
+                  <AccountSettings />
+                </ProtectedRoute>
+              } />
               <Route path="notifications" element={<NotificationSettings />} />
               <Route path="privacy" element={<PrivacySettings />} />
             </Route>
