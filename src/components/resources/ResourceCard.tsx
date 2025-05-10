@@ -133,8 +133,8 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           )}
         </div>
         <div className="mt-3">
-          {/* Link to resource detail page */}
-          <Link to={`/resource/${resource.id}`} className="hover:text-kenya-green transition-colors">
+          {/* Link to resource detail page - Updated path */}
+          <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
             <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
           </Link>
           <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{resource.description}</p>
@@ -142,7 +142,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
       </CardHeader>
       <CardContent className="grow pt-2">
         <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-          <Link to={`/resource/${resource.id}`}>
+          <Link to={`/resources/${resource.id}`}>
             {getResourceThumbnail(resource)}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <div className="bg-background/80 rounded-full p-2">
@@ -180,9 +180,9 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
       </CardContent>
       <Separator />
       <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
-        {/* Link to resource detail page */}
+        {/* Link to resource detail page - Updated path */}
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/resource/${resource.id}`}>
+          <Link to={`/resources/${resource.id}`}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
             View Details
           </Link>
