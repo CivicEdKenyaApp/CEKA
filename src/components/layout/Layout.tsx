@@ -5,8 +5,7 @@ import Footer from './Footer';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ScrollListener from '../auth/ScrollListener';
-import DonationWidget from '../donation/DonationWidget';
-import BottomNavbar from '../layout/BottomNavbar';
+import BottomNavbar from './BottomNavbar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,8 +19,7 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
       <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
-      <DonationWidget />
-      <BottomNavbar/>
+      {!hideBottomNav && <BottomNavbar />}
     </div>
   );
 };

@@ -318,6 +318,7 @@ export type Database = {
           title: string
           type: string
           updated_at: string
+          uploadedBy: string | null
           url: string
         }
         Insert: {
@@ -329,6 +330,7 @@ export type Database = {
           title: string
           type: string
           updated_at?: string
+          uploadedBy?: string | null
           url: string
         }
         Update: {
@@ -340,6 +342,7 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+          uploadedBy?: string | null
           url?: string
         }
         Relationships: []
@@ -478,6 +481,48 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      youtube_videos: {
+        Row: {
+          bill_objective: string | null
+          county: string | null
+          created_at: string
+          description: string | null
+          download_url: string | null
+          id: string
+          is_downloadable: boolean | null
+          title: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+          url: string | null
+        }
+        Insert: {
+          bill_objective?: string | null
+          county?: string | null
+          created_at?: string
+          description?: string | null
+          download_url?: string | null
+          id?: string
+          is_downloadable?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+          url?: string | null
+        }
+        Update: {
+          bill_objective?: string | null
+          county?: string | null
+          created_at?: string
+          description?: string | null
+          download_url?: string | null
+          id?: string
+          is_downloadable?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+          url?: string | null
         }
         Relationships: []
       }

@@ -102,6 +102,36 @@ const Navbar = () => {
           {/* Floating Search Component */}
           <FloatingSearch />
           
+          {isResourcesSection && session && !isMobile && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/resources/upload">
+                      <Upload className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {translate("Upload Resource", language)}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/notifications">
+              <Bell className="h-5 w-5" />
+            </Link>
+          </Button>
+
+          <Link to={session ? "/profile" : "/auth"}>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </Link>
+          
+          {/* More options dropdown - now at the end */}
           {!isMobile && (
             <TooltipProvider>
               <Tooltip>
@@ -171,35 +201,6 @@ const Navbar = () => {
               </Tooltip>
             </TooltipProvider>
           )}
-          
-          {isResourcesSection && session && !isMobile && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/resources/upload">
-                      <Upload className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {translate("Upload Resource", language)}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/notifications">
-              <Bell className="h-5 w-5" />
-            </Link>
-          </Button>
-
-          <Link to={session ? "/profile" : "/auth"}>
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
 
           {isMobile && (
             <Sheet>

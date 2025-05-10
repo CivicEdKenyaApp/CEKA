@@ -33,6 +33,8 @@ const DonationWidget = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const { language } = useLanguage();
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -48,18 +50,31 @@ const DonationWidget = () => {
       if (!isExpanded) setShowPulse(true);
     }, 12000); // 12 seconds
     
+    // Set idle state after 30 seconds of no interaction
+    const idleTimer = setTimeout(() => {
+      if (!isExpanded && !isHovering) {
+        setIsIdle(true);
+      }
+    }, 30000); // 30 seconds
+    
     return () => {
       clearTimeout(visibilityTimer);
       clearTimeout(pulseTimer);
+      clearTimeout(idleTimer);
     };
-  }, []);
+  }, [isExpanded, isHovering]);
   
-  // Stop pulse animation when expanded
+  // Stop pulse animation when expanded or hovering
   useEffect(() => {
     if (isExpanded) {
       setShowPulse(false);
+      setIsIdle(false);
     }
-  }, [isExpanded]);
+    
+    if (isHovering) {
+      setIsIdle(false);
+    }
+  }, [isExpanded, isHovering]);
 
   const handleMpesa = () => {
     navigator.clipboard.writeText('+254798903373');
@@ -81,7 +96,7 @@ const DonationWidget = () => {
       right: "20px" 
     },
     visible: (expanded) => ({ 
-      opacity: 1, 
+      opacity: expanded ? 1 : isIdle ? 0.7 : 1, 
       scale: 1,
       bottom: expanded ? "50%" : "20px",
       right: expanded ? "50%" : "20px",
@@ -101,14 +116,14 @@ const DonationWidget = () => {
     }
   };
 
-  const pulseAnimation = {
+  const pulseAnimation = showPulse ? {
     scale: [1, 1.05, 1],
     transition: {
       duration: 2, 
       repeat: Infinity,
-      repeatType: "reverse" as const,
+      repeatType: "reverse"
     }
-  };
+  } : {};
 
   const dotPulseAnimation = {
     scale: [1, 1.5, 1],
@@ -116,22 +131,10 @@ const DonationWidget = () => {
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      repeatType: "reverse" as const,
+      repeatType: "reverse"
     }
   };
 
-  const heartAnimation = {
-    opacity: [0, 1, 0],
-    scale: [0.3, 1],
-    y: [0, -40],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      repeatDelay: 3,
-      repeatType: "reverse" as const
-    }
-  };
-  
   return (
     <AnimatePresence>
       {isVisible && (
@@ -141,7 +144,7 @@ const DonationWidget = () => {
           animate="visible"
           exit="exit"
           custom={isExpanded}
-          className={`fixed z-40 shadow-lg rounded-lg
+          className={`fixed z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
           {!isExpanded ? (
@@ -150,9 +153,17 @@ const DonationWidget = () => {
               className={`flex items-center justify-center p-3 rounded-lg relative
                 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}
               onClick={() => setIsExpanded(true)}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, opacity: 1 }}
               whileTap={{ scale: 0.95 }}
-              animate={showPulse ? pulseAnimation : {}}
+              animate={pulseAnimation}
+              onMouseEnter={() => {
+                setIsHovering(true);
+                setIsIdle(false);
+              }}
+              onMouseLeave={() => {
+                setIsHovering(false);
+                // Don't immediately set idle - let the timer handle it
+              }}
             >
               <motion.div
                 className="absolute -top-1 -right-1 w-3 h-3 bg-kenya-red rounded-full"
@@ -163,7 +174,7 @@ const DonationWidget = () => {
                 
                 {/* Floating hearts animation */}
                 <AnimatePresence>
-                  {[0, 1, 2].map((i) => (
+                  {(!isIdle || isHovering) && [0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
                       className="absolute pointer-events-none"
