@@ -223,7 +223,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                         opacity: [0, 1, 0],
                         scale: [0.3, 1],
                         y: [0, -40],
-                        x: [0, i === 0 ? -10 : i === 2 ? 10 : 0]
+                        x: i === 0 ? -10 : i === 2 ? 10 : 0
                       }}
                       transition={{
                         duration: 2,
@@ -293,7 +293,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                     <div className="flex items-center">
                       <motion.div 
                         className="text-xl mr-3"
-                        whileHover={{ rotate: [0, -10, 10, -5, 0], transition: { duration: 0.2 } }}
+                        whileHover={{ rotate: [-5, 5, 0], transition: { duration: 0.2 } }}
                       >
                         {option.icon}
                       </motion.div>

@@ -90,7 +90,7 @@ const Hero = () => {
                     whileHover={{ 
                       scale: getAnimationScale('community'), 
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                      rotate: [0, 1, -1, 0] 
+                      rotate: 1
                     }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -128,7 +128,7 @@ const Hero = () => {
                     whileHover={{ 
                       scale: getAnimationScale('volunteer'), 
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                      x: [0, 2, -2, 0] 
+                      x: 2
                     }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
