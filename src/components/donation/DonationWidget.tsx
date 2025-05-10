@@ -46,7 +46,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
-  // Show widget after delay with a smoother transition
+  // Show widget after delay
   useEffect(() => {
     const visibilityTimer = setTimeout(() => {
       setIsVisible(true);
@@ -123,40 +123,32 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
   
   const darkMode = theme === 'dark';
   
-  // Enhanced animation variants with smoother transitions
+  // Animation variants
   const containerVariants = {
     hidden: { 
       opacity: 0, 
       scale: 0.8,
-      y: 20,
-      bottom: isMobile ? "100px" : "20px", // Position above BottomNavbar on mobile
+      bottom: isMobile ? "80px" : "20px", // Position above BottomNavbar on mobile
       right: "20px" 
     },
     visible: (expanded) => ({ 
       opacity: expanded ? 1 : isIdle ? 0.7 : 1, 
       scale: 1,
-      y: 0,
-      bottom: expanded ? "50%" : isMobile ? "100px" : "30%", // Positioned at 30% from bottom on desktop
+      bottom: expanded ? "50%" : isMobile ? "80px" : "30%", // Positioned at 30% from bottom on desktop
       right: expanded ? "50%" : "20px",
       x: expanded ? "50%" : 0,
-      // Fixed the duplicate y property below - removed it as it was already defined above
-      transform: expanded ? "translate(-50%, 50%)" : "translate(0, 0)",
+      y: expanded ? "50%" : 0,
       transition: {
         type: "spring",
-        stiffness: 280, // Reduced stiffness for smoother animation
-        damping: 25,   // Increased damping for smoother motion
-        mass: 1.2,     // Slight increase in mass for more natural movement
-        duration: 0.7  // Longer duration for smoother appearance
+        stiffness: 380,
+        damping: 30,
+        mass: 1
       }
     }),
     exit: { 
       opacity: 0, 
       scale: 0.8,
-      y: 10,
-      transition: { 
-        duration: 0.5,
-        ease: "easeInOut"
-      }
+      transition: { duration: 0.3 }
     }
   };
 
@@ -165,19 +157,17 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
     transition: {
       duration: 2, 
       repeat: Infinity,
-      repeatType: "mirror" as const,
-      ease: "easeInOut" // Smoother pulse
+      repeatType: "mirror" as const
     }
   } : {};
 
   const dotPulseAnimation = {
-    scale: [1, 1.3, 1],
+    scale: [1, 1.5, 1],
     opacity: [0.7, 1, 0.7],
     transition: {
-      duration: 2,
+      duration: 1.5,
       repeat: Infinity,
-      repeatType: "mirror" as const,
-      ease: "easeInOut" // Smoother dot pulse
+      repeatType: "mirror" as const
     }
   };
 
@@ -195,6 +185,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
           custom={isExpanded}
           className={`fixed z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+          style={{ zIndex: 999 }} // Ensure it's above everything else
         >
           {!isExpanded ? (
             // Collapsed state (floating button)
@@ -221,25 +212,24 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
               <div className="relative">
                 <Heart className="h-6 w-6 text-kenya-red mr-2" />
                 
-                {/* Floating hearts animation - simplified keyframes for compatibility */}
+                {/* Floating hearts animation */}
                 <AnimatePresence>
                   {(!isIdle || isHovering) && [0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
                       className="absolute pointer-events-none"
-                      initial={{ opacity: 0, scale: 0, y: 0 }}
+                      initial={{ opacity: 0, scale: 0 }}
                       animate={{ 
                         opacity: [0, 1, 0],
                         scale: [0.3, 1],
-                        y: -40,
+                        y: [0, -40],
                         x: i === 0 ? -10 : i === 2 ? 10 : 0
                       }}
                       transition={{
                         duration: 2,
                         delay: i * 0.8,
                         repeat: Infinity,
-                        repeatDelay: 3,
-                        ease: "easeInOut" // Smoother heart animation
+                        repeatDelay: 3
                       }}
                     >
                       <Heart className="h-4 w-4 text-kenya-red fill-kenya-red" />
@@ -255,13 +245,13 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
               className="w-80 p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.3 }}
             >
               <motion.div 
                 className="flex justify-between items-center mb-3"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
                 <h3 className="font-bold text-lg flex items-center">
                   <Gift className="h-5 w-5 mr-2 text-kenya-green" />
@@ -270,9 +260,8 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                 <motion.button
                   className={`rounded-full p-1 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                   onClick={() => setIsExpanded(false)}
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ rotate: 45, scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 >
                   <X className="h-4 w-4" />
                 </motion.button>
@@ -282,7 +271,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                 className="text-sm text-muted-foreground mb-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
                 {translate('Your support helps us continue our mission of civic education in Kenya.', language)}
               </motion.p>
@@ -293,7 +282,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                     key={option.name}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + index * 0.1, duration: 0.4, ease: "easeOut" }}  
+                    transition={{ delay: 0.1 + index * 0.1, duration: 0.3 }}  
                     className={`p-3 rounded-lg flex items-center justify-between 
                       ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}
                     whileHover={{ 
@@ -370,7 +359,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
                 onClick={() => setIsExpanded(false)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
+                transition={{ delay: 0.1, duration: 0.2 }}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(34, 197, 94, 0.8)'
