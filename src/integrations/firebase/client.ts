@@ -14,7 +14,8 @@ const firebaseConfig = {
   projectId: "ceka-app",
   storageBucket: "ceka-app.appspot.com",
   messagingSenderId: "710537315921",
-  appId: "1:710537315921:android:47847d8ad67fcc4b9fda70"
+  appId: "1:710537315921:android:47847d8ad67fcc4b9fda70",
+  measurementId: "G-9GG838RTV0"
 };
 
 // Initialize Firebase
