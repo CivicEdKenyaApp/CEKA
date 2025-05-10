@@ -20,6 +20,7 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
       <DonationWidget />
+      <BottomNavbar/>
     </div>
   );
 };
