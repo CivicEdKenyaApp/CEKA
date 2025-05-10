@@ -32,11 +32,11 @@ const mockResources = [
   {
     id: "1",
     title: "Understanding the Constitution of Kenya",
-    type: "Constitution",
+    type: "Document",
     category: "Constitution",
     description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8",
-    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8?download=1",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-guide.pdf",
+    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/constitution-guide.pdf?download=1",
     is_downloadable: true,
     uploadDate: new Date().toISOString(),
     uploadedBy: "Civic Education Kenya",
@@ -49,9 +49,9 @@ const mockResources = [
     type: "Video",
     category: "Governance",
     description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
-    url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
-    videoUrl: "https://youtu.be/qz0f1yyf_eA?si=hUgTjphxGbnpDeck",
-    downloadUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5?download=1",
+    url: "https://youtu.be/qz0f1yyf_eA?si=WQ-HLQalin_eJ-Ll",
+    videoUrl: "https://youtu.be/qz0f1yyf_eA?si=WQ-HLQalin_eJ-Ll",
+    downloadUrl: "https://youtu.be/qz0f1yyf_eA?si=WQ-HLQalin_eJ-Ll?download=1",
     is_downloadable: true,
     uploadDate: new Date().toISOString(),
     uploadedBy: "Civic Education Kenya",
@@ -64,8 +64,8 @@ const mockResources = [
     type: "Infographic",
     category: "Rights",
     description: "Visual representation of fundamental rights guaranteed by the Constitution.",
-    url: "https://example.com/rights-infographic.png",
-    downloadUrl: "https://example.com/rights-infographic.png",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Rights/citizenship-rights.pdf",
+    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Rights/citizenship-rights.pdf?download=1",
     is_downloadable: true,
     uploadDate: new Date().toISOString(),
     uploadedBy: "Civic Education Kenya",
@@ -795,7 +795,7 @@ const ResourceHub = () => {
                   videos, infographics, and more. Perfect for offline access and deep research.
                 </p>
                 <Button className="bg-kenya-green hover:bg-kenya-green/90" asChild>
-                  <Link to="/resource-library">
+                  <Link to="/ResourceLibrary">
                     <Download className="mr-2 h-4 w-4" />
                     Browse Complete Resource Library
                   </Link>
