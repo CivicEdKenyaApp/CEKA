@@ -21,6 +21,7 @@ import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
+import ResourcesList from './ResourcesList';
 
 // Import renamed files or create necessary aliases
 import Index from './pages/Index';
@@ -181,6 +182,7 @@ function App() {
         <AuthContext.Provider value={authValue}>
           {/* Global ScrollToTop to ensure pages always start at the top */}
           <ScrollToTopWrapper />
+          <div className="App">
           
           <Routes>
             <Route path="/" element={<Index />} />
@@ -228,7 +230,8 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
-          
+           <ResourcesList />
+            </div>
           <Toaster />
         </AuthContext.Provider>
       </LanguageProvider>
