@@ -1,10 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Bell, User, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +24,14 @@ import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
-import { FloatingSearch } from '@/components/ui/FloatingSearch';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Navbar = () => {
+interface NavbarProps {
+  supportUsVisible: boolean;
+  onSupportUsClick?: () => void;
+}
+
+const Navbar = ({ supportUsVisible = false, onSupportUsClick }: NavbarProps) => {
   const [menuScrolled, setMenuScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -99,24 +102,15 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Floating Search Component */}
-          <FloatingSearch />
+          {/* ThemeToggle placed before bell icon */}
+          <ThemeToggle />
           
-          {isResourcesSection && session && !isMobile && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/resources/upload">
-                      <Upload className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {translate("Upload Resource", language)}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          {isResourcesSection && !isMobile && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/resources/upload">
+                <Upload className="h-5 w-5" />
+              </Link>
+            </Button>
           )}
           
           <Button variant="ghost" size="icon" asChild>
@@ -125,81 +119,62 @@ const Navbar = () => {
             </Link>
           </Button>
 
-          <Link to={session ? "/profile" : "/auth"}>
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
-          
           {/* More options dropdown - now at the end */}
           {!isMobile && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 z-50">
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <Languages className="h-4 w-4 mr-2" />
-                          {translate("Languages", language)}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-56 z-50">
-                          <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw' | 'ksl' | 'br')}>
-                            <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="sw">Swahili</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="ksl">Kenya Sign Language</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="br">Braille</DropdownMenuRadioItem>
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                      
-                      <DropdownMenuItem onClick={toggleTheme}>
-                        {theme === 'light' ? (
-                          <Moon className="h-4 w-4 mr-2" />
-                        ) : (
-                          <Sun className="h-4 w-4 mr-2" />
-                        )}
-                        {translate("Toggle Theme", language)}
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <Settings className="h-4 w-4 mr-2" />
-                          {translate("Settings", language)}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="z-50">
-                          <DropdownMenuItem asChild>
-                            <Link to="/settings/account">
-                              {translate("Account", language)}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/settings/notifications">
-                              {translate("Notifications", language)}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/settings/privacy">
-                              {translate("Privacy", language)}
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {translate("More Options", language)}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 z-50">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Languages className="h-4 w-4 mr-2" />
+                    {translate("Languages", language)}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-56 z-50">
+                    <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw' | 'ksl' | 'br')}>
+                      <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="sw">Swahili</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="ksl">Kenya Sign Language</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="br">Braille</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                
+                {supportUsVisible && onSupportUsClick && (
+                  <DropdownMenuItem onClick={onSupportUsClick}>
+                    <Heart className="h-4 w-4 mr-2 text-kenya-red" />
+                    {translate("Support Us", language)}
+                  </DropdownMenuItem>
+                )}
+                
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Settings className="h-4 w-4 mr-2" />
+                    {translate("Settings", language)}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="z-50">
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings/account">
+                        {translate("Account", language)}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings/notifications">
+                        {translate("Notifications", language)}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings/privacy">
+                        {translate("Privacy", language)}
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {isMobile && (
@@ -219,7 +194,18 @@ const Navbar = () => {
                   >
                     <Logo variant="full" className="mb-4" />
                     <div className="relative w-full">
-                      <FloatingSearch />
+                      <div className="relative w-full bg-muted/30 rounded-md">
+                        <input 
+                          type="text" 
+                          placeholder={translate("Search...", language)}
+                          className="w-full py-2 px-3 pr-10 bg-transparent border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
                   </div>
                   
@@ -247,14 +233,18 @@ const Navbar = () => {
                     
                     <div className="border-t my-4" />
                     
-                    {/* Theme Toggle */}
-                    <div className="space-y-2">
-                      <h3 className="text-base font-medium text-foreground px-4">{translate("Theme", language)}</h3>
-                      <div className="flex items-center justify-between py-2 px-4 rounded-md hover:bg-accent transition-colors duration-200">
-                        <span className="text-sm">{translate("Dark Mode", language)}</span>
-                        <ThemeToggle />
+                    {/* Support Us option - conditionally shown */}
+                    {supportUsVisible && onSupportUsClick && (
+                      <div className="space-y-1">
+                        <button
+                          onClick={onSupportUsClick}
+                          className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200 w-full text-left flex items-center"
+                        >
+                          <Heart className="h-4 w-4 mr-2 text-kenya-red" />
+                          {translate("Support Us", language)}
+                        </button>
                       </div>
-                    </div>
+                    )}
                     
                     {/* Languages */}
                     <div className="space-y-2">
@@ -361,7 +351,7 @@ const Navbar = () => {
                     </div>
                     
                     {/* Resource Upload (conditionally shown) */}
-                    {isResourcesSection && session && (
+                    {isResourcesSection && (
                       <div className="space-y-2">
                         <h3 className="text-base font-medium text-foreground px-4">{translate("Resources", language)}</h3>
                         <Link to="/resources/upload" className="py-3 px-4 block rounded-md hover:bg-accent transition-colors duration-200 flex items-center">

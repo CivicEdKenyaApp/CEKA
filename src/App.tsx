@@ -19,17 +19,16 @@ import CampaignDetail from './pages/CampaignDetail';
 import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
-import DonationWidget from './components/donation/DonationWidget';
 
 // Import renamed files or create necessary aliases
-import Index from './pages/Index'; // For HomePage
-import CommunityPortal from './pages/CommunityPortal'; // For CommunityPortalPage
-import ResourceHub from './pages/ResourceLibrary'; // For ResourceHubPage, using ResourceLibrary
-import LegislativeTracker from './pages/LegislativeTracker'; // For LegislativeTrackerPage
-import JoinCommunity from './pages/JoinCommunity'; // For VolunteerPage or similar
-import Notifications from './pages/Notifications'; // Assuming correct path
-import UserProfile from './pages/UserProfile'; // Assuming this is the correct file
-import ResourceUpload from './pages/ResourceUpload'; // Assuming correct path
+import Index from './pages/Index';
+import CommunityPortal from './pages/CommunityPortal';
+import ResourceHub from './pages/ResourceLibrary';
+import LegislativeTracker from './pages/LegislativeTracker';
+import JoinCommunity from './pages/JoinCommunity';
+import Notifications from './pages/Notifications';
+import UserProfile from './pages/UserProfile';
+import ResourceUpload from './pages/ResourceUpload';
 import SplashScreen from './components/SplashScreen';
 
 // Create and export auth context
@@ -178,14 +177,7 @@ function App() {
             {/* Resources routes */}
             <Route path="/resources" element={<ResourceHub />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
-            <Route 
-              path="/resources/upload" 
-              element={
-                <ProtectedRoute>
-                  <ResourceUpload />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/resources/upload" element={<ResourceUpload />} /> {/* Changed to be accessible to all */}
             
             {/* Legislative tracker routes */}
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
@@ -233,9 +225,6 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
-          
-          {/* Donation Widget - visible on all pages */}
-          <DonationWidget />
           
           <Toaster />
         </AuthContext.Provider>

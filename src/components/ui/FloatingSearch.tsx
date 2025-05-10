@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,14 +7,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// This component is no longer used in the navbar
+// Keeping the file for potential future use
 export const FloatingSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showInput, setShowInput] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const searchButtonRef = useRef<HTMLButtonElement>(null);
-  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
   const navigate = useNavigate();
-  const location = useLocation();
   const { language } = useLanguage();
 
   const handleSearch = () => {
@@ -34,27 +32,11 @@ export const FloatingSearch = () => {
     }
   };
 
-  // Calculate the position of the search button for animation origin
-  const updateButtonPosition = () => {
-    if (searchButtonRef.current) {
-      const rect = searchButtonRef.current.getBoundingClientRect();
-      setButtonPosition({
-        top: rect.top + rect.height,
-        left: rect.left + rect.width / 2
-      });
-    }
-  };
-
   useEffect(() => {
     if (showInput && inputRef.current) {
       inputRef.current.focus();
     }
   }, [showInput]);
-
-  useEffect(() => {
-    setShowInput(false);
-    setSearchQuery('');
-  }, [location.pathname]);
 
   return (
     <div className="relative">
@@ -67,13 +49,9 @@ export const FloatingSearch = () => {
             transition={{ duration: 0.2 }}
           >
             <Button
-              ref={searchButtonRef}
               variant="ghost"
               size="icon"
-              onClick={() => {
-                updateButtonPosition();
-                setShowInput(true);
-              }}
+              onClick={() => setShowInput(true)}
               className="rounded-full"
             >
               <Search className="h-5 w-5" />
@@ -82,29 +60,10 @@ export const FloatingSearch = () => {
         ) : (
           <motion.div 
             className="flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full border shadow-md"
-            initial={{ 
-              width: 40, 
-              opacity: 0,
-              y: -10,
-              x: buttonPosition.left - 100 // Adjust based on your layout
-            }}
-            animate={{ 
-              width: 200, 
-              opacity: 1,
-              y: 0,
-              x: 0
-            }}
-            exit={{ 
-              width: 40, 
-              opacity: 0,
-              y: -10,
-              x: buttonPosition.left - 100
-            }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 500, 
-              damping: 30 
-            }}
+            initial={{ width: 40, opacity: 0 }}
+            animate={{ width: 200, opacity: 1 }}
+            exit={{ width: 40, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
           >
             <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Input

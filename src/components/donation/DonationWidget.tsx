@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, ArrowRight, Gift, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DONATION_OPTIONS = [
   {
@@ -29,15 +30,21 @@ const DONATION_OPTIONS = [
   }
 ];
 
-const DonationWidget = () => {
+// Maximum time to show the donation widget in milliseconds (5 minutes)
+const MAX_WIDGET_DISPLAY_TIME = 5 * 60 * 1000;
+
+const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const widgetMountTimeRef = useRef<number>(Date.now());
   const { language } = useLanguage();
   const { theme } = useTheme();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Show widget after delay
   useEffect(() => {
@@ -57,12 +64,22 @@ const DonationWidget = () => {
       }
     }, 30000); // 30 seconds
     
+    // Set timeout timer to hide widget after 5 minutes
+    const timeoutTimer = setTimeout(() => {
+      if (!isExpanded) {
+        setIsVisible(false);
+        setHasTimedOut(true);
+        if (onTimedOut) onTimedOut();
+      }
+    }, MAX_WIDGET_DISPLAY_TIME);
+    
     return () => {
       clearTimeout(visibilityTimer);
       clearTimeout(pulseTimer);
       clearTimeout(idleTimer);
+      clearTimeout(timeoutTimer);
     };
-  }, [isExpanded, isHovering]);
+  }, [isExpanded, isHovering, onTimedOut]);
   
   // Stop pulse animation when expanded or hovering
   useEffect(() => {
@@ -75,6 +92,25 @@ const DonationWidget = () => {
       setIsIdle(false);
     }
   }, [isExpanded, isHovering]);
+
+  // Calculate remaining time and check if widget should be hidden
+  useEffect(() => {
+    if (hasTimedOut) return;
+    
+    const checkRemainingTime = () => {
+      const elapsedTime = Date.now() - widgetMountTimeRef.current;
+      
+      if (elapsedTime >= MAX_WIDGET_DISPLAY_TIME && !isExpanded) {
+        setIsVisible(false);
+        setHasTimedOut(true);
+        if (onTimedOut) onTimedOut();
+      }
+    };
+    
+    const interval = setInterval(checkRemainingTime, 10000); // Check every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, [isExpanded, hasTimedOut, onTimedOut]);
 
   const handleMpesa = () => {
     navigator.clipboard.writeText('+254798903373');
@@ -92,13 +128,13 @@ const DonationWidget = () => {
     hidden: { 
       opacity: 0, 
       scale: 0.8,
-      bottom: "20px", 
+      bottom: isMobile ? "80px" : "20px", // Adjusted to appear above BottomNavbar on mobile
       right: "20px" 
     },
     visible: (expanded) => ({ 
       opacity: expanded ? 1 : isIdle ? 0.7 : 1, 
       scale: 1,
-      bottom: expanded ? "50%" : "20px",
+      bottom: expanded ? "50%" : isMobile ? "80px" : "30%", // Positioned at 30% from bottom on desktop
       right: expanded ? "50%" : "20px",
       x: expanded ? "50%" : 0,
       y: expanded ? "50%" : 0,
@@ -121,7 +157,7 @@ const DonationWidget = () => {
     transition: {
       duration: 2, 
       repeat: Infinity,
-      repeatType: "reverse"
+      repeatType: "mirror" as const
     }
   } : {};
 
@@ -131,9 +167,12 @@ const DonationWidget = () => {
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      repeatType: "reverse"
+      repeatType: "mirror" as const
     }
   };
+
+  // Don't render if timed out
+  if (hasTimedOut) return null;
 
   return (
     <AnimatePresence>
@@ -144,7 +183,7 @@ const DonationWidget = () => {
           animate="visible"
           exit="exit"
           custom={isExpanded}
-          className={`fixed bottom-24 right-6 z-50 shadow-lg rounded-lg
+          className={`fixed z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
           {!isExpanded ? (
