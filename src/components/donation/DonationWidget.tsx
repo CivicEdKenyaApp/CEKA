@@ -128,7 +128,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
     hidden: { 
       opacity: 0, 
       scale: 0.8,
-      bottom: isMobile ? "80px" : "20px", // Adjusted to appear above BottomNavbar on mobile
+      bottom: isMobile ? "80px" : "20px", // Position above BottomNavbar on mobile
       right: "20px" 
     },
     visible: (expanded) => ({ 
@@ -185,6 +185,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
           custom={isExpanded}
           className={`fixed z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+          style={{ zIndex: 999 }} // Ensure it's above everything else
         >
           {!isExpanded ? (
             // Collapsed state (floating button)

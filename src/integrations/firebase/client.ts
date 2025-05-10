@@ -1,5 +1,6 @@
+
 // Import the functions you need from the SDKs you need
-import { initializeApp, FirebaseApp } from "firebase/app";
+import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
@@ -26,18 +27,6 @@ let analytics: Analytics | null = null;
 // Initialize Firebase only on the client side
 if (typeof window !== 'undefined') {
   // Initialize Firebase
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  
-  // Analytics only works in the browser
-  if (process.env.NODE_ENV === 'production') {
-    analytics = getAnalytics(app);
-  }
-} else {
-  // For server-side, we need to ensure these are initialized to avoid errors
-  // This is a common pattern for Firebase with Next.js
   try {
     if (!getApps().length) {
       app = initializeApp(firebaseConfig);
@@ -45,14 +34,20 @@ if (typeof window !== 'undefined') {
       app = getApps()[0];
     }
     
-    app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    
+    // Analytics only works in the browser
+    if (process.env.NODE_ENV === 'production') {
+      analytics = getAnalytics(app);
+    }
   } catch (error) {
-    // Ignore errors - they'll be related to re-initialization
     console.error('Firebase initialization error:', error);
   }
+} else {
+  // Server-side initialization will be handled differently
+  console.warn('Firebase is not initialized server-side');
 }
 
 export { app, auth, db, storage, analytics };

@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,23 +15,64 @@ import { useDocument } from '@/hooks/use-document';
 
 type Resource = Tables<'resources'>;
 
+const mockResources = [
+  {
+    id: "1",
+    title: "Understanding the Constitution of Kenya",
+    type: "pdf",
+    category: "Constitution",
+    description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    title: "Blood Parliament: BBC Africa Eye Documentary",
+    type: "video",
+    category: "Governance",
+    description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
+    url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "3",
+    title: "Your Rights as a Kenyan Citizen",
+    type: "image",
+    category: "Rights",
+    description: "Visual representation of fundamental rights guaranteed by the Constitution.",
+    url: "https://ohchr.org/sites/default/files/Documents/Publications/Compilation1.1en.pdf",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+];
+
 const ResourceDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewCount, setViewCount] = useState(0);
   const { toast } = useToast();
 
-  const { isLoading: isDocumentLoading, error: documentError, documentUrl } = useDocument({
-    url: resource?.url || '',
-    type: resource?.type || '',
-  });
-
+  // Use mock resources when running in development
   useEffect(() => {
     const fetchResource = async () => {
       try {
         if (!id) return;
         
+        // First check mock resources
+        const mockResource = mockResources.find(r => r.id === id);
+        
+        if (mockResource) {
+          setResource(mockResource as unknown as Resource);
+          setViewCount(Math.floor(Math.random() * 100) + 20);
+          setLoading(false);
+          return;
+        }
+        
+        // If not found in mock, try Supabase
         const { data, error } = await supabase
           .from('resources')
           .select('*')
@@ -48,13 +90,19 @@ const ResourceDetail = () => {
           description: "Could not load the resource. Please try again.",
           variant: "destructive",
         });
+        navigate('/resources');
       } finally {
         setLoading(false);
       }
     };
 
     fetchResource();
-  }, [id, toast]);
+  }, [id, toast, navigate]);
+
+  const { isLoading: isDocumentLoading, error: documentError, documentUrl } = useDocument({
+    url: resource?.url || '',
+    type: resource?.type || '',
+  });
 
   const getResourceIcon = (type: string) => {
     switch (type?.toLowerCase()) {
@@ -62,6 +110,7 @@ const ResourceDetail = () => {
         return <FileText className="h-10 w-10" />;
       case 'video':
         return <Video className="h-10 w-10" />;
+      case 'image':
       case 'infographic':
         return <Image className="h-10 w-10" />;
       default:
@@ -70,13 +119,11 @@ const ResourceDetail = () => {
   };
 
   const handleDownload = () => {
-    // In a real app, this would initiate a download from the URL
     toast({
       title: "Download started",
       description: "Your download has begun.",
     });
     
-    // Mock download - in a real app, use the resource.url
     if (resource) {
       window.open(resource.url, '_blank');
     }
@@ -89,6 +136,9 @@ const ResourceDetail = () => {
       description: "Resource link copied to clipboard",
     });
   };
+
+  // Related resources (excluding current one)
+  const relatedResources = mockResources.filter(r => r.id !== id);
 
   if (loading) {
     return (
@@ -146,13 +196,11 @@ const ResourceDetail = () => {
               <CardContent className="p-6">
                 <p className="text-lg mb-6">{resource.description}</p>
                 
-                {resource && (
-                  <DocumentViewer
-                    url={resource.url}
-                    type={resource.type}
-                    title={resource.title}
-                  />
-                )}
+                <DocumentViewer
+                  url={resource.url}
+                  type={resource.type}
+                  title={resource.title}
+                />
                 
                 <Separator className="my-6" />
                 
@@ -210,18 +258,16 @@ const ResourceDetail = () => {
                 <h3 className="font-semibold mb-4">Related Resources</h3>
                 
                 <div className="space-y-3">
-                  <Link to="/resources/2" className="flex items-center p-2 hover:bg-muted rounded-md transition-colors">
-                    <FileText className="h-4 w-4 mr-2 text-kenya-green" />
-                    <span>How Laws Are Made in Kenya</span>
-                  </Link>
-                  <Link to="/resources/5" className="flex items-center p-2 hover:bg-muted rounded-md transition-colors">
-                    <FileText className="h-4 w-4 mr-2 text-kenya-green" />
-                    <span>Introduction to Public Participation</span>
-                  </Link>
-                  <Link to="/resources/7" className="flex items-center p-2 hover:bg-muted rounded-md transition-colors">
-                    <Image className="h-4 w-4 mr-2 text-kenya-green" />
-                    <span>Understanding the Judiciary</span>
-                  </Link>
+                  {relatedResources.map(related => (
+                    <Link 
+                      key={related.id} 
+                      to={`/resources/${related.id}`} 
+                      className="flex items-center p-2 hover:bg-muted rounded-md transition-colors"
+                    >
+                      {getResourceIcon(related.type)}
+                      <span className="ml-2 text-sm">{related.title}</span>
+                    </Link>
+                  ))}
                 </div>
               </CardContent>
             </Card>

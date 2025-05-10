@@ -34,7 +34,7 @@ const BottomNavbar = () => {
     },
     {
       name: 'Upload',
-      path: '/resources/upload', // Now accessible to all users
+      path: '/resources/upload', // Allow access to all users
       icon: <Upload className="h-5 w-5" />
     },
     {

@@ -6,6 +6,7 @@ import { translate } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Book, Video, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ResourcesType {
   constitution: {
@@ -34,6 +35,22 @@ const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
     pdf: <Book className="h-5 w-5 text-kenya-green" />,
     video: <Video className="h-5 w-5 text-kenya-red" />,
     infographic: <FileText className="h-5 w-5 text-blue-500" />
+  };
+
+  // Map resources to resource IDs for direct linking
+  const resourceMap = {
+    constitution: {
+      pdf: "1",
+      video: "2"
+    },
+    lawmaking: {
+      infographic: "3",
+      video: "2"
+    },
+    rights: {
+      infographic: "3",
+      video: "2"
+    }
   };
   
   return (
@@ -75,19 +92,22 @@ const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <ul className="space-y-3">
-                    {Object.entries(resource).map(([type, link]) => (
-                      <li key={type} className="flex items-center gap-2">
-                        {resourceIcons[type as keyof typeof resourceIcons]}
-                        <a 
-                          href={link as string} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-primary hover:underline transition-colors flex-1"
-                        >
-                          {translate(`View ${type.charAt(0).toUpperCase() + type.slice(1)}`, language)}
-                        </a>
-                      </li>
-                    ))}
+                    {Object.entries(resource).map(([type, link]) => {
+                      // Get the corresponding resource ID for direct linking
+                      const resourceId = resourceMap[key as keyof typeof resourceMap]?.[type as keyof (typeof resourceMap)[keyof typeof resourceMap]];
+                      
+                      return (
+                        <li key={type} className="flex items-center gap-2">
+                          {resourceIcons[type as keyof typeof resourceIcons]}
+                          <Link 
+                            to={`/resources/${resourceId}`} 
+                            className="text-primary hover:underline transition-colors flex-1"
+                          >
+                            {translate(`View ${type.charAt(0).toUpperCase() + type.slice(1)}`, language)}
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </CardContent>
               </Card>

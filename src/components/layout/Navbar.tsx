@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Bell, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon, Heart } from 'lucide-react';
+import { Menu, Bell, Upload, Languages, HandHelping, MoreVertical, Settings, Sun, Moon, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -29,9 +28,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface NavbarProps {
   supportUsVisible: boolean;
   onSupportUsClick?: () => void;
+  showProfileIcon?: boolean;
 }
 
-const Navbar = ({ supportUsVisible = false, onSupportUsClick }: NavbarProps) => {
+const Navbar = ({ supportUsVisible = false, onSupportUsClick, showProfileIcon = true }: NavbarProps) => {
   const [menuScrolled, setMenuScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -102,24 +102,26 @@ const Navbar = ({ supportUsVisible = false, onSupportUsClick }: NavbarProps) => 
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* ThemeToggle placed before bell icon */}
+          {/* ThemeToggle */}
           <ThemeToggle />
           
-          {isResourcesSection && !isMobile && (
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/resources/upload">
-                <Upload className="h-5 w-5" />
-              </Link>
-            </Button>
-          )}
-          
+          {/* Bell icon */}
           <Button variant="ghost" size="icon" asChild>
             <Link to="/notifications">
               <Bell className="h-5 w-5" />
             </Link>
           </Button>
+          
+          {/* Profile icon - only on desktop */}
+          {!isMobile && showProfileIcon && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/profile">
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
 
-          {/* More options dropdown - now at the end */}
+          {/* More options dropdown - always at the end */}
           {!isMobile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
