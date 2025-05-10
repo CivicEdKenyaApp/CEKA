@@ -139,7 +139,8 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
       bottom: expanded ? "50%" : isMobile ? "100px" : "30%", // Positioned at 30% from bottom on desktop
       right: expanded ? "50%" : "20px",
       x: expanded ? "50%" : 0,
-      y: expanded ? "50%" : 0,
+      // Fixed the duplicate y property below - removed it as it was already defined above
+      transform: expanded ? "translate(-50%, 50%)" : "translate(0, 0)",
       transition: {
         type: "spring",
         stiffness: 280, // Reduced stiffness for smoother animation
