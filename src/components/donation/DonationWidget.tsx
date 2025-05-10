@@ -144,7 +144,7 @@ const DonationWidget = () => {
           animate="visible"
           exit="exit"
           custom={isExpanded}
-          className={`fixed z-50 shadow-lg rounded-lg
+          className={`fixed bottom-20 right-6 z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
         >
           {!isExpanded ? (
