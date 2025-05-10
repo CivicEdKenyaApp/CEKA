@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ScrollListener from '../auth/ScrollListener';
 import DonationWidget from '../donation/DonationWidget';
+import BottomNavbar from '../layout/BottomNavbar';
 
 interface LayoutProps {
   children: React.ReactNode;
