@@ -7,7 +7,7 @@ function ResourcesList() {
   useEffect(() => {
     async function fetchResources() {
       const { data, error } = await supabase
-        .from('resources') // Replace with your actual table name
+        .from('bills') // Replace with your actual table name
         .select('*');
       
       if (error) {
