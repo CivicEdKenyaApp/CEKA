@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Search, Filter, Download, Book, FileText, Video, Image as ImageIcon, 
@@ -30,6 +29,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useAuth } from '@/App';
 import { motion } from 'framer-motion';
+import BillsList from '@/components/bills/BillsList';
 
 // Resource type definition
 interface Resource {
@@ -258,6 +258,7 @@ const mockResources: Resource[] = [
 // Extract unique categories for filtering
 const allCategories = Array.from(new Set(mockResources.map(resource => resource.category)));
 const allTypes = Array.from(new Set(mockResources.map(resource => resource.type)));
+const TABS_TO_SHOW = 3; // Number of main category tabs before "More" dropdown
 
 const ResourceLibrary = () => {
   const navigate = useNavigate();
@@ -273,6 +274,7 @@ const ResourceLibrary = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("all-resources");
 
   // Filter and sort resources based on current state
   const filteredResources = useMemo(() => {
@@ -316,7 +318,7 @@ const ResourceLibrary = () => {
           : b.title.localeCompare(a.title);
       }
     });
-  }, [mockResources, searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
+  }, [searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
 
   // Group resources by category for the tabbed interface
   const resourcesByCategory = useMemo(() => {
@@ -325,7 +327,7 @@ const ResourceLibrary = () => {
       grouped[category] = filteredResources.filter(resource => resource.category === category);
     });
     return grouped;
-  }, [filteredResources, allCategories]);
+  }, [filteredResources]);
 
   // Function to toggle resource selection
   const toggleResourceSelection = (resourceId: string) => {
@@ -362,6 +364,7 @@ const ResourceLibrary = () => {
 
     // In a real application, this would initiate actual downloads
     console.log("Downloading resources:", selectedResources);
+    setSelectedResources([]); // Clear selection after initiating download
   };
 
   // Get type icon based on resource type
@@ -387,6 +390,15 @@ const ResourceLibrary = () => {
     setSelectedTypes([]);
     setSortBy('date');
     setSortDirection('desc');
+  };
+
+  const handleCategoryTabChange = (categoryValue: string) => {
+    setActiveTab(categoryValue);
+    if (allCategories.includes(categoryValue)) {
+      setSelectedCategories([categoryValue]);
+    } else if (categoryValue === "all-resources" || categoryValue === "bills-tracker") {
+      setSelectedCategories([]); // Clear category filter for "All" or "Bills"
+    }
   };
 
   // Render resource card based on view mode
@@ -422,12 +434,12 @@ const ResourceLibrary = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full w-full">
+                  <div className="flex items-center justify-center h-full w-full text-muted-foreground">
                     {getTypeIcon(resource.type)}
                   </div>
                 )}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
-                  <Badge variant="outline" className="bg-background/80">
+                  <Badge variant="outline" className="bg-background/80 text-xs">
                     <div className="flex items-center gap-1">
                       {getTypeIcon(resource.type)}
                       {resource.type.toUpperCase()}
@@ -444,7 +456,7 @@ const ResourceLibrary = () => {
             <CardContent className="p-4 pt-2">
               <p className="text-muted-foreground text-sm line-clamp-2">{resource.description}</p>
             </CardContent>
-            <CardFooter className="px-4 py-3 border-t flex justify-between">
+            <CardFooter className="px-4 py-3 border-t flex justify-between items-center">
               <div className="flex flex-col">
                 <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
                 <span className="text-xs text-muted-foreground">{resource.views} views</span>
@@ -468,8 +480,8 @@ const ResourceLibrary = () => {
           layout
         >
           <Card className={`transition-shadow hover:shadow-md ${isSelected ? 'border-primary' : ''}`}>
-            <div className="flex items-start p-4">
-              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
+            <div className="flex items-start p-4 gap-4">
+              <div className="hidden sm:block mr-0 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
                 {resource.thumbnail ? (
                   <img 
                     src={resource.thumbnail} 
@@ -477,34 +489,34 @@ const ResourceLibrary = () => {
                     className="w-full h-full object-cover rounded-md"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full w-full">
+                  <div className="flex items-center justify-center h-full w-full text-muted-foreground">
                     {getTypeIcon(resource.type)}
                   </div>
                 )}
               </div>
               <div className="flex-grow min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="bg-background/80">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <Badge variant="outline" className="text-xs">
                     <div className="flex items-center gap-1">
                       {getTypeIcon(resource.type)}
                       {resource.type.toUpperCase()}
                     </div>
                   </Badge>
-                  <Badge variant="secondary">{resource.category}</Badge>
+                  <Badge variant="secondary" className="text-xs">{resource.category}</Badge>
                 </div>
                 <Link to={`/resources/${resource.id}`}>
-                  <h3 className="font-semibold hover:underline line-clamp-1">{resource.title}</h3>
+                  <h3 className="font-semibold hover:underline line-clamp-1 text-base">{resource.title}</h3>
                 </Link>
-                <p className="text-muted-foreground text-sm line-clamp-1">{resource.description}</p>
+                <p className="text-muted-foreground text-sm line-clamp-1 mt-1">{resource.description}</p>
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
                     <span className="text-xs text-muted-foreground">{resource.views} views</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     <Button size="sm" variant="ghost" onClick={() => toggleResourceSelection(resource.id)}>
                       {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-                      {isSelected ? "Selected" : "Select"}
+                      {isSelected ? translate("Selected", language) : translate("Select", language)}
                     </Button>
                     <Button size="sm" variant="secondary" asChild>
                       <Link to={`/resources/${resource.id}`}>
@@ -523,12 +535,12 @@ const ResourceLibrary = () => {
 
   return (
     <Layout>
-      <div className="container py-8">
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">{translate("Resource Library", language)}</h1>
             <p className="text-muted-foreground mt-1">
-              {translate("Browse and download educational resources on civic education", language)}
+              {translate("Browse and download educational resources, and track legislative bills.", language)}
             </p>
           </div>
           
@@ -537,7 +549,8 @@ const ResourceLibrary = () => {
               variant={viewMode === 'grid' ? 'default' : 'outline'} 
               size="icon"
               onClick={() => setViewMode('grid')}
-              className="h-8 w-8"
+              aria-label="Grid view"
+              className="h-9 w-9 sm:h-8 sm:w-8" // Adjusted size
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
@@ -545,7 +558,8 @@ const ResourceLibrary = () => {
               variant={viewMode === 'list' ? 'default' : 'outline'} 
               size="icon"
               onClick={() => setViewMode('list')}
-              className="h-8 w-8"
+              aria-label="List view"
+              className="h-9 w-9 sm:h-8 sm:w-8" // Adjusted size
             >
               <List className="h-4 w-4" />
             </Button>
@@ -554,7 +568,7 @@ const ResourceLibrary = () => {
         
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar with filters */}
-          <div className="lg:w-1/4">
+          <aside className="lg:w-1/4 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">{translate("Filter Resources", language)}</CardTitle>
@@ -562,7 +576,7 @@ const ResourceLibrary = () => {
               <CardContent className="space-y-4">
                 <div>
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder={translate("Search resources...", language)}
@@ -574,8 +588,8 @@ const ResourceLibrary = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">{translate("Categories", language)}</h4>
-                  <div className="space-y-2">
+                  <h4 className="font-medium mb-2 text-sm">{translate("Categories", language)}</h4>
+                  <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
                     {allCategories.map((category) => (
                       <div key={category} className="flex items-center">
                         <input
@@ -583,15 +597,14 @@ const ResourceLibrary = () => {
                           id={`category-${category}`}
                           checked={selectedCategories.includes(category)}
                           onChange={() => {
-                            if (selectedCategories.includes(category)) {
-                              setSelectedCategories(selectedCategories.filter(c => c !== category));
-                            } else {
-                              setSelectedCategories([...selectedCategories, category]);
-                            }
+                            setActiveTab("all-resources"); // Reset tab to all if filters change
+                            setSelectedCategories(prev => 
+                              prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+                            );
                           }}
-                          className="mr-2"
+                          className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
-                        <label htmlFor={`category-${category}`} className="text-sm">
+                        <label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
                           {category}
                         </label>
                       </div>
@@ -600,8 +613,8 @@ const ResourceLibrary = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">{translate("Resource Types", language)}</h4>
-                  <div className="space-y-2">
+                  <h4 className="font-medium mb-2 text-sm">{translate("Resource Types", language)}</h4>
+                  <div className="space-y-1">
                     {allTypes.map((type) => (
                       <div key={type} className="flex items-center">
                         <input
@@ -609,15 +622,13 @@ const ResourceLibrary = () => {
                           id={`type-${type}`}
                           checked={selectedTypes.includes(type)}
                           onChange={() => {
-                            if (selectedTypes.includes(type)) {
-                              setSelectedTypes(selectedTypes.filter(t => t !== type));
-                            } else {
-                              setSelectedTypes([...selectedTypes, type]);
-                            }
+                            setSelectedTypes(prev => 
+                              prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+                            );
                           }}
-                          className="mr-2"
+                          className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
-                        <label htmlFor={`type-${type}`} className="flex items-center text-sm">
+                        <label htmlFor={`type-${type}`} className="flex items-center text-sm cursor-pointer">
                           <span className="mr-1">{getTypeIcon(type)}</span>
                           {type.toUpperCase()}
                         </label>
@@ -627,153 +638,133 @@ const ResourceLibrary = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">{translate("Sort By", language)}</h4>
+                  <h4 className="font-medium mb-2 text-sm">{translate("Sort By", language)}</h4>
                   <div className="flex flex-col gap-2">
-                    <Button 
-                      variant={sortBy === 'date' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('date');
-                        if (sortBy === 'date') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('desc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Date Added", language)}
-                      {sortBy === 'date' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
-                    
-                    <Button 
-                      variant={sortBy === 'popularity' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('popularity');
-                        if (sortBy === 'popularity') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('desc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Popularity", language)}
-                      {sortBy === 'popularity' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
-                    
-                    <Button 
-                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('alphabetical');
-                        if (sortBy === 'alphabetical') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('asc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Alphabetical", language)}
-                      {sortBy === 'alphabetical' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
+                    {(['date', 'popularity', 'alphabetical'] as const).map(sortOption => (
+                        <Button 
+                          key={sortOption}
+                          variant={sortBy === sortOption ? 'default' : 'outline'} 
+                          size="sm"
+                          onClick={() => {
+                            if (sortBy === sortOption) {
+                              setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortBy(sortOption);
+                              setSortDirection(sortOption === 'alphabetical' ? 'asc' : 'desc');
+                            }
+                          }}
+                          className="justify-between w-full"
+                        >
+                          {translate(sortOption.charAt(0).toUpperCase() + sortOption.slice(1) as string, language)}
+                          {sortBy === sortOption && (
+                            sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                          )}
+                        </Button>
+                    ))}
                   </div>
                 </div>
                 
-                <Button variant="outline" onClick={resetFilters} className="w-full">
+                <Button variant="outline" onClick={resetFilters} className="w-full mt-4">
                   <X className="h-4 w-4 mr-2" />
                   {translate("Clear filters", language)}
                 </Button>
               </CardContent>
             </Card>
             
-            {/* Download selection panel */}
             {selectedResources.length > 0 && (
-              <Card className="mt-4 border-primary">
+              <Card className="mt-4 border-primary sticky top-20">
                 <CardHeader className="py-3">
-                  <CardTitle className="text-lg">{translate("Selected Resources", language)}</CardTitle>
+                  <CardTitle className="text-base">{translate("Selected for Download", language)}</CardTitle>
                 </CardHeader>
                 <CardContent className="py-2">
-                  <p className="text-sm font-medium">{selectedResources.length} {selectedResources.length === 1 ? 'resource' : 'resources'} selected</p>
+                  <p className="text-sm font-medium">
+                    {selectedResources.length} {selectedResources.length === 1 ? translate('resource', language) : translate('resources', language)} {translate('selected', language)}
+                  </p>
                 </CardContent>
                 <CardFooter className="pt-2 pb-3">
                   <div className="flex gap-2 w-full">
-                    <Button variant="outline" className="flex-1" onClick={() => setSelectedResources([])}>
+                    <Button variant="outline" className="flex-1 text-xs" onClick={() => setSelectedResources([])}>
                       {translate("Clear", language)}
                     </Button>
-                    <Button className="flex-1" onClick={downloadSelectedResources}>
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button className="flex-1 text-xs" onClick={downloadSelectedResources}>
+                      <Download className="h-4 w-4 mr-1" />
                       {translate("Download", language)}
                     </Button>
                   </div>
                 </CardFooter>
               </Card>
             )}
-          </div>
+          </aside>
           
           {/* Main content */}
-          <div className="lg:w-3/4">
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="mb-4 flex w-full h-auto flex-wrap">
-                <TabsTrigger value="all" className="flex-1">
-                  {translate("All Resources", language)} ({filteredResources.length})
-                </TabsTrigger>
-                {allCategories.slice(0, 3).map((category) => (
-                  <TabsTrigger key={category} value={category} className="flex-1">
-                    {category} ({resourcesByCategory[category]?.length || 0})
+          <main className="lg:w-3/4">
+            <Tabs value={activeTab} onValueChange={handleCategoryTabChange} className="w-full">
+              <div className="overflow-x-auto pb-2">
+                <TabsList className="mb-4 flex w-max sm:w-full h-auto flex-wrap sm:flex-nowrap">
+                  <TabsTrigger value="all-resources" className="flex-1 whitespace-nowrap">
+                    {translate("All Resources", language)} ({filteredResources.length})
                   </TabsTrigger>
-                ))}
-                {allCategories.length > 3 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        {translate("More", language)}
-                        <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuLabel>{translate("Categories", language)}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {allCategories.slice(3).map((category) => (
-                        <DropdownMenuCheckboxItem
-                          key={category}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => {
-                            if (selectedCategories.includes(category)) {
-                              setSelectedCategories(selectedCategories.filter(c => c !== category));
-                            } else {
-                              setSelectedCategories([...selectedCategories, category]);
-                            }
-                          }}
-                        >
-                          {category} ({resourcesByCategory[category]?.length || 0})
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </TabsList>
+                  {allCategories.slice(0, TABS_TO_SHOW).map((category) => (
+                    <TabsTrigger key={category} value={category} className="flex-1 whitespace-nowrap">
+                      {category} ({resourcesByCategory[category]?.length || 0})
+                    </TabsTrigger>
+                  ))}
+                  {allCategories.length > TABS_TO_SHOW && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="whitespace-nowrap">
+                          {translate("More Categories", language)}
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuLabel>{translate("Other Categories", language)}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {allCategories.slice(TABS_TO_SHOW).map((category) => (
+                          <DropdownMenuCheckboxItem
+                            key={category}
+                            checked={selectedCategories.includes(category) && activeTab === category}
+                            onCheckedChange={() => {
+                              // This logic is now handled by onValueChange of Tabs and filter checkboxes
+                              // We can simplify this or make it directly set the tab
+                              handleCategoryTabChange(category);
+                            }}
+                          >
+                            {category} ({resourcesByCategory[category]?.length || 0})
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                   <TabsTrigger value="bills-tracker" className="flex-1 whitespace-nowrap">
+                    {translate("Bills Tracker", language)}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
               
-              <TabsContent value="all" className="mt-0">
-                {filteredResources.length === 0 ? (
+              <TabsContent value="all-resources" className="mt-0">
+                {filteredResources.length === 0 && !searchTerm && selectedCategories.length === 0 && selectedTypes.length === 0 ? (
+                     <div className="text-center py-12">
+                        <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-lg font-medium">{translate("No Resources Available Yet", language)}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {translate("Check back soon or try adjusting your search if you're looking for something specific.", language)}
+                        </p>
+                      </div>
+                ) : filteredResources.length === 0 ? (
                   <div className="text-center py-12">
-                    <h3 className="text-lg font-medium">No resources match your filters</h3>
-                    <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
+                    <Search className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium">{translate("No resources match your criteria", language)}</h3>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      {translate("Try adjusting your filters or search term.", language)}
+                    </p>
                     <Button variant="outline" onClick={resetFilters} className="mt-4">
                       <X className="h-4 w-4 mr-2" />
-                      Clear filters
+                      {translate("Clear filters", language)}
                     </Button>
                   </div>
                 ) : (
-                  <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
+                  <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}`}>
                     {filteredResources.map(resource => renderResourceCard(resource))}
                   </div>
                 )}
@@ -783,22 +774,30 @@ const ResourceLibrary = () => {
                 <TabsContent key={category} value={category} className="mt-0">
                   {resourcesByCategory[category]?.length === 0 ? (
                     <div className="text-center py-12">
-                      <h3 className="text-lg font-medium">No {category} resources match your filters</h3>
-                      <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
+                      <Search className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <h3 className="mt-4 text-lg font-medium">
+                        {translate("No", language)} {category} {translate("resources match your filters", language)}
+                      </h3>
+                      <p className="text-muted-foreground mt-2 text-sm">
+                        {translate("Try adjusting your filters or search term.", language)}
+                      </p>
                       <Button variant="outline" onClick={resetFilters} className="mt-4">
                         <X className="h-4 w-4 mr-2" />
-                        Clear filters
+                        {translate("Clear filters", language)}
                       </Button>
                     </div>
                   ) : (
-                    <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
+                    <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}`}>
                       {resourcesByCategory[category]?.map(resource => renderResourceCard(resource))}
                     </div>
                   )}
                 </TabsContent>
               ))}
+              <TabsContent value="bills-tracker" className="mt-0">
+                <BillsList />
+              </TabsContent>
             </Tabs>
-          </div>
+          </main>
         </div>
       </div>
     </Layout>
