@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -14,61 +14,68 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle } from 'lucide-react';
+import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client'; // Import Supabase client
 
-// Mock data for bills
-const bills = [
-  {
-    id: 1,
-    title: "Education Amendment Bill",
-    summary: "Enhances access to quality education for all Kenyan citizens through policy reforms and funding provisions.",
-    status: "First Reading",
-    category: "Education",
-    date: "2025-03-15"
-  },
-  {
-    id: 2,
-    title: "Healthcare Access Act",
-    summary: "Aims to provide universal healthcare coverage to all Kenyans through expanded health insurance schemes.",
-    status: "Public Feedback",
-    category: "Health",
-    date: "2025-03-20"
-  },
-  {
-    id: 3,
-    title: "Digital Rights and Freedom Bill",
-    summary: "Establishes fundamental rights and protections for Kenyan citizens in the digital environment.",
-    status: "Committee Review",
-    category: "Technology",
-    date: "2025-03-10"
-  },
-  {
-    id: 4,
-    title: "Environmental Protection Amendment",
-    summary: "Strengthens regulations on industrial pollution and enhances penalties for environmental violations.",
-    status: "Second Reading",
-    category: "Environment",
-    date: "2025-03-05"
-  },
-  {
-    id: 5,
-    title: "Agricultural Development Fund Bill",
-    summary: "Creates a dedicated fund to support small-scale farmers and agricultural innovation.",
-    status: "First Reading",
-    category: "Agriculture",
-    date: "2025-03-18"
-  },
-  {
-    id: 6,
-    title: "Public Transportation Reform Act",
-    summary: "Modernizes the public transportation system with focus on safety, efficiency, and accessibility.",
-    status: "Committee Review",
-    category: "Infrastructure",
-    date: "2025-03-12"
-  }
-];
+interface Bill {
+  id: string; // Assuming id is string (UUID from Supabase)
+  title: string;
+  summary: string | null;
+  status: string | null;
+  category: string | null;
+  date: string | null; // Supabase timestamp, will be string
+  url?: string | null; // Optional URL for the full bill
+  // created_at and updated_at are likely present but not explicitly used in cards
+}
 
 const LegislativeTracker = () => {
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // States for filters - you can implement their logic later
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+
+  useEffect(() => {
+    async function fetchBills() {
+      setLoading(true);
+      setError(null);
+      // Adjust table name if different in your Supabase schema, e.g., 'bills'
+      const { data, error: supabaseError } = await supabase
+        .from('bills') // Ensure this is your actual table name
+        .select('*') // Select all columns, or specify ones you need
+        .order('date', { ascending: false }); // Order by date, newest first
+
+      if (supabaseError) {
+        console.error('Error fetching bills:', supabaseError);
+        setError(supabaseError.message);
+      } else {
+        // Cast data to Bill[] - ensure Supabase table columns match Bill interface
+        setBills(data as Bill[]); 
+      }
+      setLoading(false);
+    }
+
+    fetchBills();
+  }, []);
+
+  // TODO: Implement filtering logic based on searchTerm, selectedCategory, selectedStatus
+  const filteredBills = bills.filter(bill => {
+    const matchesSearch = searchTerm === '' || 
+                          bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (bill.summary && bill.summary.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || bill.category === selectedCategory;
+    const matchesStatus = selectedStatus === 'all' || bill.status === selectedStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+  
+  // Unique categories and statuses from fetched bills for filter dropdowns
+  const uniqueCategories = Array.from(new Set(bills.map(bill => bill.category).filter(Boolean))) as string[];
+  const uniqueStatuses = Array.from(new Set(bills.map(bill => bill.status).filter(Boolean))) as string[];
+
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
@@ -87,52 +94,54 @@ const LegislativeTracker = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Search</label>
+                  <label htmlFor="billSearch" className="text-sm font-medium mb-1.5 block">Search</label>
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search bills..." className="pl-8" />
+                    <Input 
+                      id="billSearch" 
+                      placeholder="Search bills..." 
+                      className="pl-8" 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Category</label>
-                  <Select>
-                    <SelectTrigger>
+                  <label htmlFor="billCategory" className="text-sm font-medium mb-1.5 block">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger id="billCategory">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="environment">Environment</SelectItem>
-                      <SelectItem value="agriculture">Agriculture</SelectItem>
-                      <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                      {uniqueCategories.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Status</label>
-                  <Select>
-                    <SelectTrigger>
+                  <label htmlFor="billStatus" className="text-sm font-medium mb-1.5 block">Status</label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger id="billStatus">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="first-reading">First Reading</SelectItem>
-                      <SelectItem value="public-feedback">Public Feedback</SelectItem>
-                      <SelectItem value="committee-review">Committee Review</SelectItem>
-                      <SelectItem value="second-reading">Second Reading</SelectItem>
-                      <SelectItem value="passed">Passed</SelectItem>
+                       {uniqueStatuses.map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
-                <Button variant="outline" className="w-full">
+                {/* Apply Filters button can be removed if filters apply on change, or implement its logic */}
+                {/* <Button variant="outline" className="w-full">
                   <Filter className="mr-2 h-4 w-4" />
                   Apply Filters
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
           </div>
@@ -142,83 +151,102 @@ const LegislativeTracker = () => {
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
                   <TabsTrigger value="all">All Bills</TabsTrigger>
-                  <TabsTrigger value="new">New</TabsTrigger>
-                  <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger>
-                  <TabsTrigger value="followed">Following</TabsTrigger>
+                  {/* Placeholder tabs, functionality can be built out */}
+                  {/* <TabsTrigger value="new">New</TabsTrigger> */}
+                  {/* <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger> */}
+                  {/* <TabsTrigger value="followed">Following</TabsTrigger> */}
                 </TabsList>
               </div>
               
               <TabsContent value="all" className="space-y-4 mt-0">
-                {bills.map((bill) => (
-                  <Card key={bill.id} className="overflow-hidden">
-                    <div className="flex flex-col md:flex-row">
-                      <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 p-5 md:p-6">
-                        <div className="flex flex-col md:flex-row justify-between md:items-center">
-                          <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                            {bill.category}
-                          </Badge>
-                          <Badge 
-                            variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
-                            className={bill.status === "Public Feedback" ? "text-white w-fit" : "w-fit"}
-                          >
-                            {bill.status}
-                          </Badge>
+                {loading ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="ml-2 text-muted-foreground">Loading bills...</p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-10 px-4 bg-destructive/10 rounded-md">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+                    <h3 className="mt-2 text-lg font-medium text-destructive">Failed to load bills</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+                    <Button onClick={() => window.location.reload()} className="mt-4">
+                      Try Again
+                    </Button>
+                  </div>
+                ) : filteredBills.length === 0 ? (
+                  <div className="bg-muted rounded-md p-8 text-center">
+                    <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="font-medium">No Bills Found</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all' 
+                        ? "No bills match your current filters. Try adjusting them."
+                        : "There are currently no legislative bills to display. Please check back later or contribute."}
+                    </p>
+                  </div>
+                ) : (
+                  filteredBills.map((bill) => (
+                    <Card key={bill.id} className="overflow-hidden">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        
-                        <h3 className="text-lg font-semibold mt-2 mb-1">
-                          <Link to={`/legislative-tracker/${bill.id}`} className="hover:text-kenya-green transition-colors">
-                            {bill.title}
-                          </Link>
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-4">
-                          {bill.summary}
-                        </p>
-                        
-                        <div className="flex flex-wrap items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>Last updated: {new Date(bill.date).toLocaleDateString()}</span>
+                        <div className="flex-1 p-5 md:p-6">
+                          <div className="flex flex-col md:flex-row justify-between md:items-start">
+                            {bill.category && (
+                              <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
+                                {bill.category}
+                              </Badge>
+                            )}
+                            {bill.status && (
+                              <Badge 
+                                variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
+                                className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit mt-2 md:mt-0`}
+                              >
+                                {bill.status}
+                              </Badge>
+                            )}
                           </div>
                           
-                          <div className="flex gap-2 mt-2 md:mt-0">
-                            <Button size="sm" variant="outline">Follow</Button>
-                            <Button size="sm" variant="ghost" asChild>
-                              <Link to={`/legislative-tracker/${bill.id}`} className="flex items-center">
-                                Details
-                                <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                              </Link>
-                            </Button>
+                          <h3 className="text-lg font-semibold mt-2 mb-1">
+                            {/* Ensure your LegislationDetail page route matches */}
+                            <Link to={`/legislation-detail/${bill.id}`} className="hover:text-kenya-green transition-colors">
+                              {bill.title}
+                            </Link>
+                          </h3>
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                            {bill.summary || <em>No summary provided.</em>}
+                          </p>
+                          
+                          <div className="flex flex-wrap items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>
+                                {bill.date ? `Last updated: ${new Date(bill.date).toLocaleDateString()}` : 'Date N/A'}
+                              </span>
+                            </div>
+                            
+                            <div className="flex gap-2 mt-3 md:mt-0">
+                              {/* TODO: Implement "Follow" functionality */}
+                              <Button size="sm" variant="outline" disabled>Follow</Button>
+                              <Button size="sm" variant="ghost" asChild>
+                                <Link to={`/legislation-detail/${bill.id}`} className="flex items-center">
+                                  Details
+                                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                </Link>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))
+                )}
               </TabsContent>
               
-              <TabsContent value="new">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">New Bills</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Filter applied to show only recently introduced bills.</p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="public-feedback">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">Bills Open for Public Feedback</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Filter applied to show bills currently accepting public input.</p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="followed">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">Bills You're Following</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Sign in to view and track the bills you're following.</p>
-                </div>
-              </TabsContent>
+              {/* These TabsContent sections can be built out with specific filtering logic if needed */}
+              {/* <TabsContent value="new"> ... </TabsContent> */}
+              {/* <TabsContent value="public-feedback"> ... </TabsContent> */}
+              {/* <TabsContent value="followed"> ... </TabsContent> */}
             </Tabs>
           </div>
         </div>
@@ -233,8 +261,9 @@ const LegislativeTracker = () => {
               Have information about bills or legislative changes? Share URLs, documents, or descriptions 
               to help keep this tracker up-to-date.
             </p>
+            {/* Ensure this route exists or adjust as needed */}
             <Button asChild className="bg-kenya-green hover:bg-kenya-green/90">
-              <Link to="/legislative-tracker/contribute">
+              <Link to="/contribute"> 
                 Share Insights or URLs
               </Link>
             </Button>
@@ -246,3 +275,4 @@ const LegislativeTracker = () => {
 };
 
 export default LegislativeTracker;
+
