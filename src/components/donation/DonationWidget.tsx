@@ -125,25 +125,26 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
   
   const darkMode = theme === 'dark';
 
+  // Position for both collapsed and expanded states
   const collapsedPosition = {
     bottom: isMobile ? "80px" : "30%",
     right: "20px"
   };
   
-  // Animation variants
+  // Animation variants - modified to ensure consistent right-side positioning
   const containerVariants = {
     hidden: { 
       opacity: 0, 
       scale: 0.8,
-      ...collapsedPosition // Start from the collapsed position but invisible
+      ...collapsedPosition
     },
     visible: (expanded: boolean) => ({ 
       opacity: expanded ? 1 : (isIdle && !isHovering) ? 0.7 : 1, 
       scale: 1,
       bottom: expanded ? "50%" : collapsedPosition.bottom,
       right: expanded ? "50%" : collapsedPosition.right,
-      x: expanded ? "50%" : "0%", // Ensure x is string for framer-motion
-      y: expanded ? "50%" : "0%", // Ensure y is string for framer-motion
+      x: expanded ? "50%" : "0%",
+      y: expanded ? "50%" : "0%",
       transition: {
         type: "spring",
         stiffness: 380,
@@ -154,7 +155,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
     exit: { 
       opacity: 0, 
       scale: 0.8,
-      ...collapsedPosition, // Exit to the collapsed position then fade
+      ...collapsedPosition, // Exit to the same position where it starts
       transition: { duration: 0.3 }
     }
   };

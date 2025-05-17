@@ -9,10 +9,10 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, BookOpen, Search, SlidersHorizontal, UploadCloud, Video, FileText, Loader2, Filter } from 'lucide-react';
 import { useAuth } from '@/App'; // Assuming useAuth is exported from App.tsx
-import ResourceCard from '@/components/resources/ResourceCard'; // Re-added ResourceCard
+import ResourceCard from '@/components/resources/ResourceCard'; 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-// Removed BillsList import as it's no longer used here
+import { Language } from '@/lib/translations';
 
 interface Resource {
   id: string;
@@ -268,7 +268,10 @@ function ResourceLibrary() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedResources.map((resource) => (
-                  <ResourceCard key={resource.id} resource={resource} language={language} />
+                  <ResourceCard 
+                    key={resource.id} 
+                    resource={resource} 
+                  />
                 ))}
               </div>
             )}
