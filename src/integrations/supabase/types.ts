@@ -88,6 +88,7 @@ export type Database = {
           summary: string
           title: string
           updated_at: string
+          url: string | null
         }
         Insert: {
           category: string
@@ -98,6 +99,7 @@ export type Database = {
           summary: string
           title: string
           updated_at?: string
+          url?: string | null
         }
         Update: {
           category?: string
@@ -108,6 +110,7 @@ export type Database = {
           summary?: string
           title?: string
           updated_at?: string
+          url?: string | null
         }
         Relationships: []
       }
@@ -313,6 +316,7 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          downloadUrl: string | null
           id: string
           is_downloadable: boolean | null
           title: string
@@ -320,11 +324,13 @@ export type Database = {
           updated_at: string
           uploadedBy: string | null
           url: string
+          videoUrl: string | null
         }
         Insert: {
           category: string
           created_at?: string
           description: string
+          downloadUrl?: string | null
           id?: string
           is_downloadable?: boolean | null
           title: string
@@ -332,11 +338,13 @@ export type Database = {
           updated_at?: string
           uploadedBy?: string | null
           url: string
+          videoUrl?: string | null
         }
         Update: {
           category?: string
           created_at?: string
           description?: string
+          downloadUrl?: string | null
           id?: string
           is_downloadable?: boolean | null
           title?: string
@@ -344,6 +352,7 @@ export type Database = {
           updated_at?: string
           uploadedBy?: string | null
           url?: string
+          videoUrl?: string | null
         }
         Relationships: []
       }
