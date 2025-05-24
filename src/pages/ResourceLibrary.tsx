@@ -1,7 +1,8 @@
+
 import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/translations';
+import { translate } from '@/lib/utils'; // Changed from '@/lib/translations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
