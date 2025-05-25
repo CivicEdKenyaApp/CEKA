@@ -27,6 +27,7 @@ import LegislativeTracker from './pages/LegislativeTracker';
 import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
+import SplashScreen from '@/components/SplashScreen';
 
 // Create and export auth context
 interface AuthContextType {
