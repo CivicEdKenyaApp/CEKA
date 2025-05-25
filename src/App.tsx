@@ -192,7 +192,7 @@ function App() {
             
             {/* Resources routes */}
             <Route path="/resources" element={<ResourceHub />} />
-            <Route path="/resource-library" element={<ResourceLibrary />} />
+            <Route path="/ResourceLibrary" element={<ResourceLibrary />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
             <Route path="/resources/upload" element={<ResourceUpload />} />
             
