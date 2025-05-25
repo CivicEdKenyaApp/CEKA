@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -28,27 +28,7 @@ import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
 import SplashScreen from '@/components/SplashScreen';
-
-// Create and export auth context
-interface AuthContextType {
-  session: Session | null;
-  user: any;
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, metadata: any) => Promise<any>;
-  signOut: () => Promise<void>;
-  loading: boolean;
-  error: string | null;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+import { AuthContext, AuthContextType } from '@/contexts/AuthContext'; // Import from new location
 
 // ScrollToTopWrapper component to ensure all routes scroll to top when navigated
 const ScrollToTopWrapper = () => {
@@ -63,7 +43,7 @@ const ScrollToTopWrapper = () => {
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null); // Consider replacing 'any'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSplash, setShowSplash] = useState(true);
@@ -167,7 +147,7 @@ function App() {
     }
   };
 
-  const authValue = {
+  const authValue: AuthContextType = { // Ensure this matches the imported AuthContextType
     session,
     user,
     signIn,
