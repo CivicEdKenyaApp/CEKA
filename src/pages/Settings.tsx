@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Shield, User, Globe, Moon, Sun, Smartphone, Laptop, Eye, Share2, Save, AlertTriangle } from 'lucide-react';
-import { useAuth } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { translate } from '@/lib/utils';
