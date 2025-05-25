@@ -32,7 +32,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { useAuth } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 // Resource type definition
