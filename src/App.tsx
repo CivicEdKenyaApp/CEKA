@@ -23,6 +23,7 @@ import Index from './pages/Index';
 import CommunityPortal from './pages/CommunityPortal';
 import ResourceHub from './pages/ResourceHub';
 import ResourceUpload from './pages/ResourceUpload';
+import ResourceLibrary from './pages/ResourceLibrary';
 import LegislativeTracker from './pages/LegislativeTracker';
 import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
@@ -191,6 +192,7 @@ function App() {
             
             {/* Resources routes */}
             <Route path="/resources" element={<ResourceHub />} />
+            <Route path="/resource-library" element={<ResourceLibrary />} />
             <Route path="/resources/:id" element={<DocumentViewerPage />} />
             <Route path="/resources/upload" element={<ResourceUpload />} />
             
