@@ -9,7 +9,7 @@ import {
 import ResourceCard from '@/components/resources/ResourceCard';
 import ResourceTypeFilter from '@/components/resources/ResourceTypeFilter';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
