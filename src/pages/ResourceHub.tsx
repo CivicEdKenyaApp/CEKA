@@ -795,7 +795,7 @@ const ResourceHub = () => {
                   videos, infographics, and more. Perfect for offline access and deep research.
                 </p>
                 <Button className="bg-kenya-green hover:bg-kenya-green/90" asChild>
-                  <Link to="/resource-library">
+                  <Link to="/resources/library">
                     <Download className="mr-2 h-4 w-4" />
                     Browse Complete Resource Library
                   </Link>
