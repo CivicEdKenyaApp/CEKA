@@ -17,7 +17,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/ui/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
