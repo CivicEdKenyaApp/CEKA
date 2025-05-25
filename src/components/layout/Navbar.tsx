@@ -48,7 +48,7 @@ const Navbar = ({ supportUsVisible = false, onSupportUsClick, showProfileIcon = 
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Legislative Tracker', path: '/legislative-tracker' },
-    { name: 'Resource Hub', path: '/resources' },
+    { name: 'Resource Hub', path: '/resources/library' },
     { name: 'Community', path: '/community' },
     { name: 'Volunteer', path: '/volunteer' },
   ];
