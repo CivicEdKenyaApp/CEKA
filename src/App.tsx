@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -21,17 +20,6 @@ import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
-import ResourcesList from './ResourcesList';
-
-// Import renamed files or create necessary aliases
-import Index from './pages/Index';
-import CommunityPortal from './pages/CommunityPortal';
-import ResourceHub from './pages/ResourceHub';
-import LegislativeTracker from './pages/LegislativeTracker';
-import JoinCommunity from './pages/JoinCommunity';
-import Notifications from './pages/Notifications';
-import UserProfile from './pages/UserProfile';
-import ResourceUpload from './pages/ResourceUpload';
 import SplashScreen from './components/SplashScreen';
 
 // Create and export auth context
@@ -230,7 +218,6 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
-           <ResourcesList />
             </div>
           <Toaster />
         </AuthContext.Provider>

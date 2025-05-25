@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,61 +13,81 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle } from 'lucide-react';
+import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
-// Mock data for bills
-const bills = [
-  {
-    id: 1,
-    title: "Education Amendment Bill",
-    summary: "Enhances access to quality education for all Kenyan citizens through policy reforms and funding provisions.",
-    status: "First Reading",
-    category: "Education",
-    date: "2025-03-15"
-  },
-  {
-    id: 2,
-    title: "Healthcare Access Act",
-    summary: "Aims to provide universal healthcare coverage to all Kenyans through expanded health insurance schemes.",
-    status: "Public Feedback",
-    category: "Health",
-    date: "2025-03-20"
-  },
-  {
-    id: 3,
-    title: "Digital Rights and Freedom Bill",
-    summary: "Establishes fundamental rights and protections for Kenyan citizens in the digital environment.",
-    status: "Committee Review",
-    category: "Technology",
-    date: "2025-03-10"
-  },
-  {
-    id: 4,
-    title: "Environmental Protection Amendment",
-    summary: "Strengthens regulations on industrial pollution and enhances penalties for environmental violations.",
-    status: "Second Reading",
-    category: "Environment",
-    date: "2025-03-05"
-  },
-  {
-    id: 5,
-    title: "Agricultural Development Fund Bill",
-    summary: "Creates a dedicated fund to support small-scale farmers and agricultural innovation.",
-    status: "First Reading",
-    category: "Agriculture",
-    date: "2025-03-18"
-  },
-  {
-    id: 6,
-    title: "Public Transportation Reform Act",
-    summary: "Modernizes the public transportation system with focus on safety, efficiency, and accessibility.",
-    status: "Committee Review",
-    category: "Infrastructure",
-    date: "2025-03-12"
-  }
-];
+// Define the Bill interface based on Supabase schema
+interface Bill {
+  id: string;
+  title: string;
+  summary: string;
+  status: string;
+  category: string;
+  date: string; // ISO string from Supabase
+  url?: string | null;
+  // Add other fields if needed, like created_at, updated_at
+}
+
+// Mock data for bills - will be replaced by fetched data
+// const bills = [ ... ]; // Removed mock data
 
 const LegislativeTracker = () => {
+  const [billsData, setBillsData] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBills = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('bills')
+          .select('*')
+          .order('date', { ascending: false }); // Example: order by date
+
+        if (fetchError) {
+          throw fetchError;
+        }
+        setBillsData(data || []);
+      } catch (e: any) {
+        console.error('Error fetching bills:', e);
+        setError(e.message || 'Failed to fetch bills.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBills();
+  }, []);
+
+  const BillCardSkeleton = () => (
+    <Card className="overflow-hidden">
+      <div className="flex flex-col md:flex-row">
+        <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
+          <Skeleton className="h-8 w-8 rounded-md" />
+        </div>
+        <div className="flex-1 p-5 md:p-6 space-y-3">
+          <div className="flex flex-col md:flex-row justify-between md:items-center">
+            <Skeleton className="h-5 w-24 rounded" />
+            <Skeleton className="h-5 w-20 rounded mt-1 md:mt-0" />
+          </div>
+          <Skeleton className="h-6 w-3/4 rounded" />
+          <Skeleton className="h-4 w-full rounded" />
+          <Skeleton className="h-4 w-5/6 rounded" />
+          <div className="flex flex-wrap items-center justify-between mt-2">
+            <Skeleton className="h-4 w-32 rounded" />
+            <div className="flex gap-2 mt-2 md:mt-0">
+              <Skeleton className="h-8 w-20 rounded" />
+              <Skeleton className="h-8 w-24 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
@@ -149,54 +168,73 @@ const LegislativeTracker = () => {
               </div>
               
               <TabsContent value="all" className="space-y-4 mt-0">
-                {bills.map((bill) => (
-                  <Card key={bill.id} className="overflow-hidden">
-                    <div className="flex flex-col md:flex-row">
-                      <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 p-5 md:p-6">
-                        <div className="flex flex-col md:flex-row justify-between md:items-center">
-                          <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                            {bill.category}
-                          </Badge>
-                          <Badge 
-                            variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
-                            className={bill.status === "Public Feedback" ? "text-white w-fit" : "w-fit"}
-                          >
-                            {bill.status}
-                          </Badge>
+                {loading ? (
+                  <>
+                    <BillCardSkeleton />
+                    <BillCardSkeleton />
+                    <BillCardSkeleton />
+                  </>
+                ) : error ? (
+                  <div className="text-red-500 p-4 border border-red-500 rounded-md">
+                    <p>Error loading bills: {error}</p>
+                    <p>Please try again later.</p>
+                  </div>
+                ) : billsData.length === 0 ? (
+                   <div className="bg-muted rounded-md p-8 text-center">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="font-medium text-lg">No Bills Found</h3>
+                    <p className="text-sm text-muted-foreground mt-1">There are currently no bills to display. Check back later or try adjusting your filters.</p>
+                  </div>
+                ) : (
+                  billsData.map((bill) => (
+                    <Card key={bill.id} className="overflow-hidden">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        
-                        <h3 className="text-lg font-semibold mt-2 mb-1">
-                          <Link to={`/legislative-tracker/${bill.id}`} className="hover:text-kenya-green transition-colors">
-                            {bill.title}
-                          </Link>
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-4">
-                          {bill.summary}
-                        </p>
-                        
-                        <div className="flex flex-wrap items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>Last updated: {new Date(bill.date).toLocaleDateString()}</span>
+                        <div className="flex-1 p-5 md:p-6">
+                          <div className="flex flex-col md:flex-row justify-between md:items-center">
+                            <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
+                              {bill.category}
+                            </Badge>
+                            <Badge 
+                              variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
+                              className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit`} // Adjusted styling for Public Feedback
+                            >
+                              {bill.status}
+                            </Badge>
                           </div>
                           
-                          <div className="flex gap-2 mt-2 md:mt-0">
-                            <Button size="sm" variant="outline">Follow</Button>
-                            <Button size="sm" variant="ghost" asChild>
-                              <Link to={`/legislative-tracker/${bill.id}`} className="flex items-center">
-                                Details
-                                <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                              </Link>
-                            </Button>
+                          <h3 className="text-lg font-semibold mt-2 mb-1">
+                            <Link to={`/legislative-tracker/${bill.id}`} className="hover:text-kenya-green transition-colors">
+                              {bill.title}
+                            </Link>
+                          </h3>
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3"> {/* Added line-clamp */}
+                            {bill.summary}
+                          </p>
+                          
+                          <div className="flex flex-wrap items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>Last updated: {new Date(bill.date).toLocaleDateString()}</span>
+                            </div>
+                            
+                            <div className="flex gap-2 mt-2 md:mt-0">
+                              <Button size="sm" variant="outline">Follow</Button>
+                              <Button size="sm" variant="ghost" asChild>
+                                <Link to={`/legislative-tracker/${bill.id}`} className="flex items-center">
+                                  Details
+                                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                </Link>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))
+                )}
               </TabsContent>
               
               <TabsContent value="new">
