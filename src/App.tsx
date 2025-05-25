@@ -19,8 +19,14 @@ import CampaignDetail from './pages/CampaignDetail';
 import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
-import ScrollToTop from './components/ScrollToTop';
-import SplashScreen from './components/SplashScreen';
+import Index from './pages/Index';
+import CommunityPortal from './pages/CommunityPortal';
+import ResourceHub from './pages/ResourceHub';
+import ResourceUpload from './pages/ResourceUpload';
+import LegislativeTracker from './pages/LegislativeTracker';
+import JoinCommunity from './pages/JoinCommunity';
+import Notifications from './pages/Notifications';
+import UserProfile from './pages/UserProfile';
 
 // Create and export auth context
 interface AuthContextType {
@@ -74,12 +80,14 @@ function App() {
   useEffect(() => {
     const getSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        setLoading(true); // Ensure loading is true at the start
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
         setSession(data.session);
         setUser(data.session?.user || null);
-      } catch (error: any) {
-        console.error('Error retrieving session:', error.message);
+      } catch (e: any) {
+        console.error('Error retrieving session:', e.message);
+        // setError(e.message); // Optionally set error state
       } finally {
         setLoading(false);
       }
@@ -88,10 +96,10 @@ function App() {
     getSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (_event, newSession) => { // Make callback non-async directly
         setSession(newSession);
         setUser(newSession?.user || null);
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false after auth state changes
       }
     );
 
@@ -102,42 +110,59 @@ function App() {
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       setError(null);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) throw error;
+      if (signInError) throw signInError;
+      // setUser(data.user); // session will be updated by onAuthStateChange
+      // setSession(data.session);
       return data;
-    } catch (error: any) {
-      setError(error.message);
-      throw error;
+    } catch (e: any) {
+      setError(e.message);
+      throw e;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, metadata: any) => {
     try {
+      setLoading(true);
       setError(null);
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: metadata,
         },
       });
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+      // setUser(data.user); // session will be updated by onAuthStateChange
+      // setSession(data.session);
       return data;
-    } catch (error: any) {
-      setError(error.message);
-      throw error;
+    } catch (e: any) {
+      setError(e.message);
+      throw e;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error during sign out:', error);
+      setLoading(true);
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+      // setUser(null); // session will be updated by onAuthStateChange
+      // setSession(null);
+    } catch (e: any) {
+      console.error('Error during sign out:', e.message);
+      // setError(e.message); // Optionally set error state
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,14 +178,17 @@ function App() {
 
   // Protected route component
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (loading) { // Show loading indicator while checking session
+      return <SplashScreen />; // Or some other loading component
+    }
     if (!session) {
       // Redirect to login if not authenticated
-      return <Navigate to="/auth" replace />;
+      return <Navigate to="/auth" state={{ from: location }} replace />;
     }
     return <>{children}</>;
   };
 
-  if (showSplash) {
+  if (showSplash || (loading && !session)) { // Keep splash if showSplash or initial loading without session
     return <SplashScreen />;
   }
 
@@ -205,13 +233,13 @@ function App() {
             <Route path="/terms" element={<LegalPage />} />
             
             {/* Settings routes */}
-            <Route path="/settings" element={<SettingsLayout />}>
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <SettingsLayout />
+              </ProtectedRoute>
+            }>
               <Route index element={<Navigate to="/settings/account" replace />} />
-              <Route path="account" element={
-                <ProtectedRoute>
-                  <AccountSettings />
-                </ProtectedRoute>
-              } />
+              <Route path="account" element={<AccountSettings />} />
               <Route path="notifications" element={<NotificationSettings />} />
               <Route path="privacy" element={<PrivacySettings />} />
             </Route>
