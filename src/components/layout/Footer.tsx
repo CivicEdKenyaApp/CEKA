@@ -41,6 +41,14 @@ const Footer = () => {
               </svg>
               <span className="sr-only">Instagram</span>
             </a>
+            <a href="https://linktr.ee/civiceducationke/" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+              <span className="sr-only">Website</span>
+            </a>
           </div>
         </div>
         
@@ -74,10 +82,27 @@ const Footer = () => {
                 Email Us Here
               </a>
             </li>
-            <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              <span>+254712345678</span>
+            <li className="flex items-start gap-2">
+              <Phone className="h-4 w-4 mt-1" />
+              <div className="flex flex-col space-y-1 text-sm">
+                <a href="tel:+254798903333" className="hover:text-kenya-green" aria-label="Call +254798903333">
+                  Call: +254798903333
+                </a>
+                <a href="sms:+254798903333" className="hover:text-kenya-green" aria-label="Text +254798903333">
+                  Text Us
+                </a>
+                <a
+                  href="https://wa.me/254798903333"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-kenya-green"
+                  aria-label="Chat on WhatsApp"
+                  >
+                  WhatsApp Chat
+                </a>
+              </div>
             </li>
+            
             <li className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               <a 
