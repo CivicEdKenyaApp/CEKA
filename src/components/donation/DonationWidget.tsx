@@ -18,7 +18,7 @@ const DONATION_OPTIONS = [
   },
   {
     name: 'PayPal',
-    url: 'https://paypal.me/civiceducationkenya',
+    url: 'https://www.paypal.com/ncp/payment/5HP7FN968RTH6',
     description: 'Donate via PayPal',
     icon: '💳'
   },
