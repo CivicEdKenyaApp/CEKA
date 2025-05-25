@@ -92,7 +92,7 @@ const Footer = () => {
                   Text Us
                 </a>
                 <a
-                  href="https://wa.me/254798903333"
+                  href="https://wa.me/254798903373"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-kenya-green"
