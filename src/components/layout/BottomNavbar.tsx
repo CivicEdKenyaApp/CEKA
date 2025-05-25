@@ -44,7 +44,7 @@ const BottomNavbar = () => {
     },
     {
       name: 'Profile',
-      path: '/profile',
+      path: '/auth',
       icon: <User className="h-5 w-5" />
     }
   ];
