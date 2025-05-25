@@ -100,7 +100,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
