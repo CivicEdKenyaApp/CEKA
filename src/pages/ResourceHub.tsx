@@ -842,11 +842,11 @@ const ResourceHub = () => {
             <div className="space-y-4">
               {[
                 { 
-                  name: 'Civic Education Kenya Initiative',
+                  name: 'Civic Education Kenya App',
                   focus: ['Constitution', 'Rights'], 
                   counties: ['Nairobi', 'Kisumu', 'Mombasa'],
-                  contact: 'info@ceki.org | +254 700 123 456',
-                  website: 'https://www.ceki.org'
+                  contact: 'ceka.lovable.app/contact | +254 798 903 373',
+                  website: 'ceka.lovable.app'
                 },
                 { 
                   name: 'Kenya Human Rights Commission',
