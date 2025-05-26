@@ -10,7 +10,7 @@ import Layout from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext'; // Updated import
 import { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { translate from '@/lib/utils';
+import { translate } from '@/lib/utils';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
