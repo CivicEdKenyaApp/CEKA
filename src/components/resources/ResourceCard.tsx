@@ -24,6 +24,7 @@ export interface ResourceCardProps {
     billObjective?: string;
     county?: string;
     isSelected?: boolean;
+    is_downloadable?: boolean;
   };
   downloadable?: boolean;
   id?: string;
