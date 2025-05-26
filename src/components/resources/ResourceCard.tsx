@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -24,9 +23,9 @@ export interface ResourceCardProps {
     billObjective?: string;
     county?: string;
     isSelected?: boolean;
-    is_downloadable?: boolean;
+    is_downloadable?: boolean; // Added this line
   };
-  downloadable?: boolean;
+  downloadable?: boolean; // This can remain for backward compatibility or specific use cases
   id?: string;
   onToggleSelect?: () => void;
 }
@@ -108,9 +107,10 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
     );
   };
 
-  // Add special handling for constitution resources
   const isConstitutionResource = resource.type.toLowerCase() === 'constitution';
-  
+  // Use resource.is_downloadable if available, otherwise fallback to the top-level downloadable prop
+  const actualDownloadable = resource.is_downloadable !== undefined ? resource.is_downloadable : downloadable;
+
   return (
     <Card className="h-full flex flex-col group">
       <CardHeader className="pb-2">
@@ -125,8 +125,8 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           )}
           {onToggleSelect && (
             <div className="ml-auto">
-              <Checkbox 
-                checked={resource.isSelected} 
+              <Checkbox
+                checked={resource.isSelected}
                 onCheckedChange={onToggleSelect}
                 className="data-[state=checked]:bg-kenya-green"
               />
@@ -134,7 +134,6 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           )}
         </div>
         <div className="mt-3">
-          {/* Link to resource detail page - Updated path */}
           <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
             <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
           </Link>
@@ -153,7 +152,6 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           </Link>
         </div>
         
-        {/* New: Bill objective and county info */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {resource.billObjective && (
             <Badge variant="secondary" className="text-xs">
@@ -163,8 +161,8 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           {resource.county && (
             <Badge variant="outline" className="text-xs flex items-center">
               <MapPin className="h-3 w-3 mr-1" />
-              {resource.county.split(', ').length > 1 
-                ? `${resource.county.split(', ')[0]} +${resource.county.split(', ').length - 1}` 
+              {resource.county.split(', ').length > 1
+                ? `${resource.county.split(', ')[0]} +${resource.county.split(', ').length - 1}`
                 : resource.county}
             </Badge>
           )}
@@ -181,7 +179,6 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
       </CardContent>
       <Separator />
       <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
-        {/* Link to resource detail page - Updated path */}
         <Button variant="outline" size="sm" asChild>
           <Link to={`/resources/${resource.id}`}>
             <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
@@ -191,14 +188,14 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
         
         {isConstitutionResource && (
           <Button variant="outline" size="sm" asChild>
-            <Link to="/constitution">
+            <Link to="/constitution"> {/* This route might need to be created or verified */}
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
               Constitution Guide
             </Link>
           </Button>
         )}
         
-        {!isConstitutionResource && resource.downloadUrl && (downloadable !== false) && (
+        {!isConstitutionResource && resource.downloadUrl && (actualDownloadable !== false) && (
           <Button variant="outline" size="sm" asChild>
             <a href={resource.downloadUrl} target="_blank" rel="noopener noreferrer">
               <Download className="mr-1.5 h-3.5 w-3.5" />
