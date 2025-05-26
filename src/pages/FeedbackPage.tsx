@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Not used
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast'; // Standardized import
 import { useAuth } from '@/contexts/AuthContext';
-import { HandHelping, Heart, Send, MessageSquare, ThumbsUp } from 'lucide-react';
+import { Send, Heart, ThumbsUp, MessageSquare } from 'lucide-react'; // Kept relevant icons
 
 const FeedbackPage = () => {
   const [message, setMessage] = useState('');
@@ -49,6 +49,7 @@ const FeedbackPage = () => {
           user_id: session.user.id,
           message: message.trim(),
           category,
+          // status: 'pending' // Default is 'pending' in DB schema
         });
       
       if (error) throw error;
@@ -59,11 +60,12 @@ const FeedbackPage = () => {
       });
       
       setMessage('');
-    } catch (error) {
+      // setCategory('general'); // Optionally reset category
+    } catch (error: any) {
       console.error('Error submitting feedback:', error);
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your feedback. Please try again later.",
+        description: "There was an error submitting your feedback: " + error.message,
         variant: "destructive"
       });
     } finally {
@@ -78,7 +80,7 @@ const FeedbackPage = () => {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Write to Developer</h1>
             <p className="text-muted-foreground">
-              Share your feedback, report issues, or suggest new features for the CEKA platform
+              Share your feedback, report issues, or suggest new features for the CEKA platform.
             </p>
           </div>
         </div>
@@ -89,7 +91,7 @@ const FeedbackPage = () => {
               <CardHeader>
                 <CardTitle>Send Feedback</CardTitle>
                 <CardDescription>
-                  Your thoughts help improve the platform for everyone
+                  Your thoughts help improve the platform for everyone.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -142,7 +144,7 @@ const FeedbackPage = () => {
                   
                   {!session && (
                     <p className="text-sm text-muted-foreground text-center mt-2">
-                      Please sign in to submit feedback
+                      Please sign in to submit feedback.
                     </p>
                   )}
                 </form>
@@ -155,7 +157,7 @@ const FeedbackPage = () => {
               <CardHeader>
                 <CardTitle>Developer's Note</CardTitle>
               </CardHeader>
-              <CardContent className="prose dark:prose-invert">
+              <CardContent className="prose dark:prose-invert max-w-none"> {/* Added max-w-none to prose */}
                 <p>
                   Hello there! Thank you for taking the time to visit the CEKA platform. This civic engagement platform has been a labor of love, built with the goal of empowering Kenyan citizens to actively participate in their democracy.
                 </p>
@@ -206,26 +208,26 @@ const FeedbackPage = () => {
               <CardContent>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-blue-100 p-1 mt-0.5">
-                      <MessageSquare className="h-3 w-3 text-blue-600" />
+                    <div className="rounded-full bg-blue-100 p-1 mt-0.5 dark:bg-blue-900"> {/* Dark mode support */}
+                      <MessageSquare className="h-3 w-3 text-blue-600 dark:text-blue-300" />
                     </div>
                     <span className="text-sm">Identifies bugs and usability issues</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-green-100 p-1 mt-0.5">
-                      <MessageSquare className="h-3 w-3 text-green-600" />
+                    <div className="rounded-full bg-green-100 p-1 mt-0.5 dark:bg-green-900">
+                      <MessageSquare className="h-3 w-3 text-green-600 dark:text-green-300" />
                     </div>
                     <span className="text-sm">Shapes the roadmap for new features</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-purple-100 p-1 mt-0.5">
-                      <MessageSquare className="h-3 w-3 text-purple-600" />
+                    <div className="rounded-full bg-purple-100 p-1 mt-0.5 dark:bg-purple-900">
+                      <MessageSquare className="h-3 w-3 text-purple-600 dark:text-purple-300" />
                     </div>
                     <span className="text-sm">Improves content and educational resources</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-amber-100 p-1 mt-0.5">
-                      <MessageSquare className="h-3 w-3 text-amber-600" />
+                    <div className="rounded-full bg-amber-100 p-1 mt-0.5 dark:bg-amber-900">
+                      <MessageSquare className="h-3 w-3 text-amber-600 dark:text-amber-300" />
                     </div>
                     <span className="text-sm">Helps prioritize development efforts</span>
                   </li>

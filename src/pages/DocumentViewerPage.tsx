@@ -1,31 +1,26 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Download, ChevronLeft, Share2, Lock } from 'lucide-react';
+import { Download, ChevronLeft, Share2, Lock, Eye } from 'lucide-react'; // Added Eye icon
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import DocumentViewer from '@/components/documents/DocumentViewer';
+import DocumentViewerComponent from '@/components/documents/DocumentViewer'; // Renamed to avoid conflict with page name
+import { Tables } from '@/integrations/supabase/types'; // Import Supabase types
 
-interface ResourceDetails {
+// Define Resource type based on Supabase 'resources' table
+type Resource = Tables<'resources'>;
+
+// Interface for related resources, can be simpler if needed
+interface RelatedResourcePreview {
   id: string | number;
   title: string;
-  description: string;
   type: string;
-  category?: string;
-  url: string;
-  downloadUrl?: string;
-  is_downloadable?: boolean;
-  created_at: string;
-  updated_at: string;
-  uploadedBy?: string;
-  billObjective?: string;
-  county?: string;
 }
 
 const DocumentViewerPage = () => {
@@ -33,70 +28,32 @@ const DocumentViewerPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
-  const [resource, setResource] = useState<ResourceDetails | null>(null);
+  const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewCount, setViewCount] = useState(0);
-  const [relatedResources, setRelatedResources] = useState<ResourceDetails[]>([]);
+  const [viewCount, setViewCount] = useState(0); // Placeholder, consider implementing actual view tracking
+  const [relatedResources, setRelatedResources] = useState<RelatedResourcePreview[]>([]);
 
   useEffect(() => {
     const fetchResourceDetails = async () => {
+      if (!id) {
+        toast({ title: "Error", description: "Resource ID is missing.", variant: "destructive" });
+        navigate("/resources");
+        return;
+      }
+
       try {
         setLoading(true);
         
-        // In a real implementation, this would be a Supabase query
-        // For now, we'll use mock data
-        const mockResources = [
-          {
-            id: "1",
-            title: "Understanding the Constitution of Kenya",
-            type: "pdf",
-            category: "Constitution",
-            description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
-            url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8",
-            downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8?download=1",
-            is_downloadable: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            uploadedBy: "Civic Education Kenya",
-            billObjective: "Constitutional Implementation",
-            county: "National"
-          },
-          {
-            id: "2",
-            title: "Blood Parliament: BBC Africa Eye Documentary",
-            type: "video",
-            category: "Governance",
-            description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
-            url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
-            downloadUrl: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5?download=1",
-            is_downloadable: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            uploadedBy: "Civic Education Kenya",
-            billObjective: "Political System",
-            county: "National"
-          },
-          {
-            id: "3",
-            title: "Your Rights as a Kenyan Citizen",
-            type: "image",
-            category: "Rights",
-            description: "Visual representation of fundamental rights guaranteed by the Constitution.",
-            url: "https://example.com/rights-infographic.png",
-            downloadUrl: "https://example.com/rights-infographic.png",
-            is_downloadable: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            uploadedBy: "Civic Education Kenya",
-            billObjective: "Bill of Rights",
-            county: "Nairobi, Mombasa"
-          }
-        ];
+        // Fetch main resource
+        const { data: resourceData, error: resourceError } = await supabase
+          .from('resources')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (resourceError) throw resourceError;
         
-        const resource = mockResources.find(resource => resource.id === id);
-        
-        if (!resource) {
-          // In a real implementation, we'd query Supabase here
+        if (!resourceData) {
           toast({
             title: "Resource not found",
             description: "The requested resource could not be loaded.",
@@ -106,18 +63,32 @@ const DocumentViewerPage = () => {
           return;
         }
         
-        setResource(resource);
-        
-        // Set related resources (excluding current resource)
-        const related = mockResources.filter(item => item.id !== id);
-        setRelatedResources(related);
-        
-        setViewCount(Math.floor(Math.random() * 100) + 20); // Placeholder for view count
-      } catch (error) {
+        setResource(resourceData);
+        setViewCount(Math.floor(Math.random() * 100) + 20); // Mock view count
+
+        // Fetch related resources (e.g., 3 other resources, excluding the current one)
+        // For more sophisticated related resources, you might filter by category or tags
+        const { data: relatedData, error: relatedError } = await supabase
+          .from('resources')
+          .select('id, title, type')
+          .neq('id', id) // Exclude current resource
+          .limit(3);
+
+        if (relatedError) {
+          console.warn("Could not fetch related resources:", relatedError.message);
+        } else if (relatedData) {
+          setRelatedResources(relatedData.map(r => ({
+            id: r.id,
+            title: r.title ?? 'Untitled Resource',
+            type: r.type ?? 'document'
+          })));
+        }
+
+      } catch (error: any) {
         console.error('Error fetching resource details:', error);
         toast({
           title: "Error",
-          description: "Could not load the resource. Please try again.",
+          description: "Could not load the resource: " + error.message,
           variant: "destructive",
         });
       } finally {
@@ -132,19 +103,37 @@ const DocumentViewerPage = () => {
     if (!session) {
       toast({
         title: "Login Required",
-        description: "Please sign in to download this resource",
+        description: "Please sign in to download this resource.",
       });
-      navigate('/auth');
+      navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname));
       return;
     }
     
-    if (resource?.downloadUrl) {
+    if (resource?.is_downloadable && resource?.url) { // Assuming 'url' can be used for download if 'downloadUrl' is not present
+      const downloadLink = resource.downloadUrl || resource.url; // Prefer downloadUrl if available
+      // Append ?download=1 if not already part of the url and it's a Supabase storage URL
+      const finalDownloadLink = (downloadLink.includes('supabase.co/storage/v1/object') && !downloadLink.includes('?download=')) 
+                                ? `${downloadLink}?download=1`
+                                : downloadLink;
+
       toast({
         title: "Download started",
         description: "Your download has begun.",
       });
       
-      window.open(resource.downloadUrl, '_blank');
+      window.open(finalDownloadLink, '_blank');
+    } else if (!resource?.is_downloadable) {
+        toast({
+            title: "Not Downloadable",
+            description: "This resource is not available for download.",
+            variant: "default"
+        });
+    } else {
+        toast({
+            title: "Download Error",
+            description: "Could not initiate download. Resource URL is missing.",
+            variant: "destructive"
+        });
     }
   };
 
@@ -152,7 +141,7 @@ const DocumentViewerPage = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
       title: "Link copied",
-      description: "Resource link copied to clipboard",
+      description: "Resource link copied to clipboard.",
     });
   };
 
@@ -163,7 +152,8 @@ const DocumentViewerPage = () => {
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded w-1/3"></div>
             <div className="h-64 bg-muted rounded"></div>
-            <div className="h-8 bg-muted rounded w-1/4"></div>
+            <div className="h-4 bg-muted rounded w-1/4 mt-2"></div>
+            <div className="h-4 bg-muted rounded w-full mt-1"></div>
           </div>
         </div>
       </Layout>
@@ -198,10 +188,10 @@ const DocumentViewerPage = () => {
           <div className="md:col-span-2">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <Badge className="mb-2">{resource.type}</Badge>
+                {resource.type && <Badge className="mb-2">{resource.type}</Badge>}
                 <h1 className="text-3xl font-bold mb-2">{resource.title}</h1>
                 <div className="flex items-center text-muted-foreground text-sm mb-4">
-                  <span>{viewCount} views</span>
+                  <Eye className="h-4 w-4 mr-1" /> <span>{viewCount} views</span>
                   <span className="mx-2">•</span>
                   <span>Added {new Date(resource.created_at).toLocaleDateString()}</span>
                 </div>
@@ -212,9 +202,9 @@ const DocumentViewerPage = () => {
               <CardContent className="p-6">
                 <p className="text-lg mb-6">{resource.description}</p>
                 
-                <DocumentViewer
-                  url={resource.url}
-                  type={resource.type}
+                <DocumentViewerComponent
+                  url={resource.url} // DocumentViewer expects a `url` prop
+                  type={resource.type} // And a `type` prop
                   title={resource.title}
                 />
                 
@@ -239,6 +229,11 @@ const DocumentViewerPage = () => {
                       )}
                     </Button>
                   )}
+                   {!resource.is_downloadable && (
+                     <Button variant="outline" disabled>
+                        Not Downloadable
+                     </Button>
+                   )}
                   <Button variant="outline" onClick={handleShare}>
                     <Share2 className="mr-2 h-4 w-4" />
                     Share
@@ -249,31 +244,35 @@ const DocumentViewerPage = () => {
 
             <h2 className="text-xl font-semibold mb-4">About this Resource</h2>
             <p className="text-muted-foreground">
-              This {resource.type} provides information about {resource.category} in Kenya. 
+              This {resource.type.toLowerCase()} {resource.category ? `focuses on ${resource.category}` : ''}. 
               It is part of our civic education materials designed to help citizens understand 
               their rights and responsibilities.
             </p>
             
-            {resource.billObjective && (
+            {/* billObjective and county are not in the current 'resources' table. Display if present. */}
+            {/* {(resource as any).billObjective && (
               <div className="mt-4">
                 <h3 className="font-medium mb-2">Bill Objective Alignment</h3>
-                <Badge variant="secondary">{resource.billObjective}</Badge>
+                <Badge variant="secondary">{(resource as any).billObjective}</Badge>
               </div>
             )}
             
-            {resource.county && (
+            {(resource as any).county && (
               <div className="mt-4">
                 <h3 className="font-medium mb-2">Geographic Focus</h3>
-                <p className="text-sm">{resource.county}</p>
+                <p className="text-sm">{(resource as any).county}</p>
               </div>
-            )}
+            )} */}
           </div>
 
           <div>
             <Card>
-              <CardContent className="p-6 space-y-6">
+                <CardHeader>
+                    <CardTitle>Resource Information</CardTitle>
+                </CardHeader>
+              <CardContent className="p-6 space-y-4"> {/* Reduced spacing */}
                 <div>
-                  <h3 className="font-semibold mb-2">Resource Information</h3>
+                  {/* <h3 className="font-semibold mb-2">Resource Information</h3> */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Type:</span>
@@ -302,25 +301,27 @@ const DocumentViewerPage = () => {
                   </div>
                 </div>
                 
-                <Separator />
+                {relatedResources.length > 0 && <Separator />}
                 
-                <div>
-                  <h3 className="font-semibold mb-3">Related Resources</h3>
-                  <div className="space-y-2">
-                    {relatedResources.map(related => (
-                      <Button key={related.id} variant="link" className="w-full justify-start p-0 h-auto" asChild>
-                        <Link to={`/resources/${related.id}`}>
-                          {related.title}
-                        </Link>
-                      </Button>
-                    ))}
+                {relatedResources.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Related Resources</h3>
+                    <div className="space-y-2">
+                      {relatedResources.map(related => (
+                        <Button key={related.id} variant="link" className="w-full justify-start p-0 h-auto text-sm" asChild>
+                          <Link to={`/resources/${related.id}`}>
+                            {related.title} ({related.type})
+                          </Link>
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 
                 <Separator />
                 
                 <div>
-                  <h3 className="font-semibold mb-3">Need Help?</h3>
+                  <h3 className="font-semibold mb-2">Need Help?</h3>
                   <p className="text-sm text-muted-foreground mb-3">
                     If you have any questions about this resource or need assistance, 
                     please contact our support team.

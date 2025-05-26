@@ -1,15 +1,19 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types'; // Ensure this type import is correct
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Layout from '@/components/layout/Layout';
-import { useAuth } from '@/contexts/AuthContext'; // Updated import
-import { Database } from '@/integrations/supabase/types';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -41,13 +45,20 @@ const UserProfile = () => {
   const getProfile = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      if (!session?.user?.id) {
+        // Prevent query if user ID is not available
+        setLoading(false);
+        return;
+      }
+      const { data, error, status } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session?.user.id)
+        .eq('id', session.user.id)
         .single();
 
-      if (error) throw error;
+      if (error && status !== 406) { // 406 can mean no row found, which is fine for single()
+        throw error;
+      }
       
       if (data) {
         setProfile(data);
@@ -55,6 +66,7 @@ const UserProfile = () => {
         setFullName(data.full_name || '');
       }
     } catch (error: any) {
+      console.error("Error loading profile:", error);
       toast({
         variant: "destructive",
         title: translate("Error loading profile", language),
@@ -68,14 +80,24 @@ const UserProfile = () => {
   const updateProfile = async () => {
     try {
       setUpdating(true);
+      if (!session?.user?.id) {
+        // Prevent update if user ID is not available
+        setUpdating(false);
+        toast({
+            variant: "destructive",
+            title: translate("Error", language),
+            description: translate("User session not found.", language),
+        });
+        return;
+      }
       const { error } = await supabase
         .from('profiles')
         .update({
           username,
           full_name: fullName,
-          updated_at: new Date().toISOString(), // Convert Date to ISO string
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', session?.user.id);
+        .eq('id', session.user.id);
 
       if (error) throw error;
       
@@ -84,8 +106,9 @@ const UserProfile = () => {
         description: translate("Your profile has been updated.", language),
       });
       
-      getProfile();
+      getProfile(); // Refresh profile data
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       toast({
         variant: "destructive",
         title: translate("Error updating profile", language),
@@ -99,8 +122,9 @@ const UserProfile = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/');
+      navigate('/'); // Redirect to home or login page after sign out
     } catch (error: any) {
+      console.error("Error signing out:", error);
       toast({
         variant: "destructive",
         title: translate("Error signing out", language),
@@ -118,6 +142,18 @@ const UserProfile = () => {
       </Layout>
     );
   }
+  
+  if (!session) {
+     // This case should ideally be handled by the redirect in useEffect,
+     // but as a fallback or if navigation hasn't completed.
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          {translate("Redirecting to login...", language)}
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -126,9 +162,9 @@ const UserProfile = () => {
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || ''} />
+                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || profile?.username || 'User'} />
                 <AvatarFallback className="text-2xl">
-                  {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
+                  {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || session.user.email?.charAt(0).toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -143,8 +179,9 @@ const UserProfile = () => {
               <Input
                 id="email"
                 type="email"
-                value={profile?.email || ''}
+                value={session.user.email || ''}
                 disabled
+                className="bg-muted/50"
               />
             </div>
             <div className="space-y-2">
@@ -153,6 +190,7 @@ const UserProfile = () => {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                placeholder={translate("Enter your username", language)}
               />
             </div>
             <div className="space-y-2">
@@ -161,6 +199,7 @@ const UserProfile = () => {
                 id="fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                placeholder={translate("Enter your full name", language)}
               />
             </div>
           </CardContent>
