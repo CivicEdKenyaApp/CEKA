@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,10 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Layout from '@/components/layout/Layout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; // Updated import
 import { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/utils';
+import { translate from '@/lib/utils';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 

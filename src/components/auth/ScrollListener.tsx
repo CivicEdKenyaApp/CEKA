@@ -1,7 +1,6 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; // Updated import
 import { useToast } from '@/components/ui/use-toast';
 
 interface ScrollListenerProps {

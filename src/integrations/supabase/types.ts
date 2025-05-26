@@ -502,6 +502,7 @@ export type Database = {
           download_url: string | null
           id: string
           is_downloadable: boolean | null
+          status: string | null
           title: string | null
           updated_at: string | null
           uploaded_by: string | null
@@ -515,6 +516,7 @@ export type Database = {
           download_url?: string | null
           id?: string
           is_downloadable?: boolean | null
+          status?: string | null
           title?: string | null
           updated_at?: string | null
           uploaded_by?: string | null
@@ -528,6 +530,7 @@ export type Database = {
           download_url?: string | null
           id?: string
           is_downloadable?: boolean | null
+          status?: string | null
           title?: string | null
           updated_at?: string | null
           uploaded_by?: string | null
