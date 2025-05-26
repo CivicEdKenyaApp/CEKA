@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { Card } from '@/components/ui/card'; // Add this import
 
 // County list for Kenya - remains as is for filter UI
 const counties = [
