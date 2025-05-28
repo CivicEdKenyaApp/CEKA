@@ -13,73 +13,83 @@ import { Link } from 'react-router-dom';
 
 // Mock legislation data
 const legislationDetails = {
-  id: 'bill-123',
-  title: 'Climate Action Amendment Bill, 2023',
+  id: 'bill-finance-2025',
+  title: 'Finance Bill, 2025',
   description: 'Proposes amendments to strengthen Kenya\'s response to climate change through enhanced mitigation and adaptation measures.',
   fullDescription: `
-    <p>The Climate Action Amendment Bill, 2023 seeks to amend the Climate Change Act of 2016 to introduce more stringent measures for reducing carbon emissions and enhancing Kenya's adaptation to climate change impacts.</p>
+    <p> The Kenya Finance Bill 2025, released on April 30, 2025, proposes wide-ranging tax amendments aimed at broadening the tax base and enhancing revenue collection.</p>
     
     <p>Key provisions of the bill include:</p>
     
     <ul>
-      <li>Establishing a legally binding target to reduce greenhouse gas emissions by 50% by 2040</li>
-      <li>Creating a Climate Finance Fund to support climate adaptation projects</li>
-      <li>Mandating climate risk assessments for all major infrastructure projects</li>
-      <li>Requiring counties to develop local climate action plans</li>
-      <li>Introducing tax incentives for clean energy investments</li>
+      <li>Broaden tax base by targeting digital transactions, new withholding taxes & removing exemptions for foreign businesses.</li>
+      <li>Restructure incentives by capping tax loss carryforwards, removing industry-specific deductions & limiting capital gains relief.</li>
+      <li>Enforce compliance through mandatory e-TIMS invoicing, tighter VAT refund timelines & expanded powers for KRA enforcement.</li>
+      <li>Offer selective reliefs like higher tax-free per diems, full pension exemptions & reduced digital asset tax rate</li>
+      <li>Align tax procedures by clarifying timelines for KRA decisions, defining “related persons” more broadly & streamlining audit, appeal, and penalty rules.</li>
     </ul>
     
-    <p>The bill was introduced following Kenya's commitments under the Paris Agreement and in response to the increasing impacts of climate change across the country, including prolonged droughts, flooding, and food insecurity.</p>
+    <p>While the previous Finance Bills introduced significant changes for salaried persons, the Finance Bill 2025 has focused on changes that widen the current tax base to meet the estimated revenue.</p>
   `,
-  status: 'Committee Stage',
-  previousStatus: 'Second Reading',
-  nextStatus: 'Third Reading',
-  category: 'Environment',
-  date: '2023-09-15',
-  introducedBy: 'Hon. Sarah Mwangi, MP Kajiado North',
-  committeeAssigned: 'Committee on Environment and Natural Resources',
-  followersCount: 1245,
-  tags: ['Climate', 'Environment', 'Sustainability'],
+  status: 'First Reading',
+  previousStatus: 'Tabled In Parliament',
+  nextStatus: 'Second Reading',
+  category: 'Governance',
+  date: '2025-05-28',
+  introducedBy: 'Hon. John Mbadi, Cabinet Secretary, Finance',
+  committeeAssigned: 'Departmental Committee on Finance and National Planning',
+  followersCount: 15000,
+  tags: ['Finance', 'Governance', 'Devolution'],
   timeRemaining: '14 days',
-  document: '/placeholder.pdf',
-  progress: 65, // Percentage through legislative process
+  document: '/http://www.parliament.go.ke/sites/default/files/2025-05/THE%20FINANCE%20BILL%202025%20%28Compressed%20Copy%29.pdf',
+  progress: 17, // Percentage through legislative process
   events: [
     {
-      date: '2023-09-15',
+      date: '2025-04-30',
       title: 'Bill introduced in Parliament',
-      description: 'First tabling of the bill by Hon. Sarah Mwangi'
+      description: 'First tabling of the bill by Hon. John Mbadi'
     },
     {
-      date: '2023-10-20',
+      date: '2025-05-27',
       title: 'First Reading',
-      description: 'Bill formally introduced to the House'
+      description: 'Bill formally introduced to the Parliament'
     },
     {
-      date: '2023-12-05',
+      date: '2025-06-12',
       title: 'Second Reading',
       description: 'Debate on general merits and principles of the bill'
     },
     {
-      date: '2024-01-10',
+      date: '2025-06-14',
       title: 'Committee Stage',
-      description: 'Detailed examination by the Committee on Environment and Natural Resources'
+      description: 'The bill is referred to a relevant committee for detailed scrutiny.'
     },
     {
-      date: '2024-02-15',
-      title: 'Committee Hearings',
-      description: 'Public participation and stakeholder consultation'
+      date: '2025-06-19',
+      title: 'Report Stage',
+      description: 'The committee\'s findings are reported to the parliament, and further amendments may be considered.'
+    }
+    {
+      date: '2025-06-21',
+      title: 'Third Hearing',
+      description: 'The bill is debated for the final time, and any further amendments can be proposed.'
+    }
+    {
+      date: '2025-07-22',
+      title: 'Presidential Assent',
+      description: 'Once passed by Parliament, the bill is presented to the President for assent.'
     }
   ],
   upcomingEvents: [
     {
-      date: '2024-04-20',
-      title: 'Committee Report Presentation',
+      date: '2025-06-12',
+      title: 'Second Reading',
       description: 'Findings and recommendations from committee review'
     },
     {
       date: '2024-05-10',
-      title: 'Third Reading',
-      description: 'Final debate and vote on amended bill'
+      title: 'Committee Stage',
+      description: 'The committee may hold public hearings, gather evidence, and propose amendments.'
     }
   ],
   amendments: [
@@ -109,32 +119,32 @@ const legislationDetails = {
     {
       id: 1,
       author: {
-        name: 'Mary Ochieng',
-        avatar: 'MO'
+        name: 'Collins Thee',
+        avatar: 'CT'
       },
-      date: '2024-03-10',
-      content: 'The emission reduction targets are ambitious but necessary given Kenya\'s vulnerability to climate change.'
+      date: '2025-05-21',
+      content: 'As if we do not know these days they work for Ruto, not for Kenyans '
     },
     {
       id: 2,
       author: {
-        name: 'Peter Maina',
+        name: 'Peter Mwikali',
         avatar: 'PM'
       },
-      date: '2024-03-05',
-      content: 'I\'m concerned about the implementation costs. Has there been an economic impact assessment?'
+      date: '2025-05-18',
+      content: 'Already they have made the decisions. They are just playing with our minds/psychology.'
     }
   ],
   relatedLegislation: [
     {
-      id: 'bill-456',
-      title: 'Renewable Energy Incentives Bill, 2023',
-      status: 'First Reading'
+      id: 'bill-div-rev-2025',
+      title: 'Division of Revenue Bill, 2025',
+      status: 'Second Reading'
     },
     {
-      id: 'bill-789',
-      title: 'Environmental Protection Amendment Act, 2022',
-      status: 'Enacted'
+      id: 'bill-spo-ame-2025',
+      title: 'Sports Amendment Bill, 2024',
+      status: 'Report Stage'
     }
   ]
 };
@@ -148,6 +158,8 @@ const getStatusColor = (status: string) => {
       return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
     case 'Committee Stage':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+    case 'Report Stage':
+      return 'bg-red-100 text-red-800 dark:bg-amber-900/30 dark:text-amber-300';
     case 'Third Reading':
       return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
     case 'Presidential Assent':
