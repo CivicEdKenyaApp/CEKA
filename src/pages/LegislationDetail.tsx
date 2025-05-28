@@ -68,17 +68,17 @@ const legislationDetails = {
       date: '2025-06-19',
       title: 'Report Stage',
       description: 'The committee\'s findings are reported to the parliament, and further amendments may be considered.'
-    }
+    },
     {
       date: '2025-06-21',
       title: 'Third Hearing',
       description: 'The bill is debated for the final time, and any further amendments can be proposed.'
-    }
+    },
     {
       date: '2025-07-22',
       title: 'Presidential Assent',
       description: 'Once passed by Parliament, the bill is presented to the President for assent.'
-    }
+    },
   ],
   upcomingEvents: [
     {
