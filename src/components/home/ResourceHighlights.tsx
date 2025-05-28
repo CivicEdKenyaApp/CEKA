@@ -40,16 +40,16 @@ const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
   // Map resources to resource IDs for direct linking
   const resourceMap = {
     constitution: {
-      pdf: "1",
-      video: "2"
+      pdf: "647caa0e-6ffd-44b1-8962-4bb96ae7dfb3",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
     },
     lawmaking: {
-      infographic: "3",
-      video: "2"
+      infographic: "9e3756a7-9c6d-4352-9539-9a589e2428c9",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
     },
     rights: {
-      infographic: "3",
-      video: "2"
+      infographic: "98f0e638-115c-48a6-ae94-74c8c26e650d",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
     }
   };
   
