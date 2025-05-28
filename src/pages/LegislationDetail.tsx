@@ -15,18 +15,18 @@ import { Link } from 'react-router-dom';
 const legislationDetails = {
   id: 'bill-finance-2025',
   title: 'Finance Bill, 2025',
-  description: 'Proposes amendments to strengthen Kenya\'s response to climate change through enhanced mitigation and adaptation measures.',
+  description: 'Proposes amendments to expand the tax net; targeting digital and informal sectors, removing several tax incentives, tightening compliance measures, and giving KRA more administrative authority',
   fullDescription: `
     <p> The Kenya Finance Bill 2025, released on April 30, 2025, proposes wide-ranging tax amendments aimed at broadening the tax base and enhancing revenue collection.</p>
     
     <p>Key provisions of the bill include:</p>
     
     <ul>
-      <li>Broaden tax base by targeting digital transactions, new withholding taxes & removing exemptions for foreign businesses.</li>
-      <li>Restructure incentives by capping tax loss carryforwards, removing industry-specific deductions & limiting capital gains relief.</li>
-      <li>Enforce compliance through mandatory e-TIMS invoicing, tighter VAT refund timelines & expanded powers for KRA enforcement.</li>
-      <li>Offer selective reliefs like higher tax-free per diems, full pension exemptions & reduced digital asset tax rate</li>
-      <li>Align tax procedures by clarifying timelines for KRA decisions, defining “related persons” more broadly & streamlining audit, appeal, and penalty rules.</li>
+      <li>- Broaden tax base by targeting digital transactions, new withholding taxes & removing exemptions for foreign businesses.</li>
+      <li>- Restructure incentives by capping tax loss carryforwards, removing industry-specific deductions & limiting capital gains relief.</li>
+      <li>- Enforce compliance through mandatory e-TIMS invoicing, tighter VAT refund timelines & expanded powers for KRA enforcement.</li>
+      <li>- Offer selective reliefs like higher tax-free per diems, full pension exemptions & reduced digital asset tax rate</li>
+      <li>- Align tax procedures by clarifying timelines for KRA decisions, defining “related persons” more broadly & streamlining audit, appeal, and penalty rules.</li>
     </ul>
     
     <p>While the previous Finance Bills introduced significant changes for salaried persons, the Finance Bill 2025 has focused on changes that widen the current tax base to meet the estimated revenue.</p>
@@ -35,14 +35,14 @@ const legislationDetails = {
   previousStatus: 'Tabled In Parliament',
   nextStatus: 'Second Reading',
   category: 'Governance',
-  date: '2025-05-28',
+  date: '2025-04-30',
   introducedBy: 'Hon. John Mbadi, Cabinet Secretary, Finance',
   committeeAssigned: 'Departmental Committee on Finance and National Planning',
   followersCount: 15000,
   tags: ['Finance', 'Governance', 'Devolution'],
   timeRemaining: '11 days',
   document: '/http://www.parliament.go.ke/sites/default/files/2025-05/THE%20FINANCE%20BILL%202025%20%28Compressed%20Copy%29.pdf',
-  progress: 17, // Percentage through legislative process
+  progress: 25, // Percentage through legislative process
   events: [
     {
       date: '2025-04-30',
@@ -98,21 +98,21 @@ const legislationDetails = {
       section: 'Section 5(3)',
       proposedBy: 'Hon. David Kipkorir',
       status: 'Under Consideration',
-      description: 'Increase emission reduction target from 50% to 60% by 2040'
+      description: 'Goods/services bought under tax relief but misused become taxable'
     },
     {
       id: 'amend-2',
       section: 'Section 12',
       proposedBy: 'Hon. Alice Wanjiku',
       status: 'Accepted',
-      description: 'Include representation from youth organizations in the Climate Finance Committee'
+      description: 'Capping the carryforward of tax losses to 5 years (previously was unlimited)'
     },
     {
       id: 'amend-3',
       section: 'Section 23',
       proposedBy: 'Hon. John Muthoka',
       status: 'Rejected',
-      description: 'Remove tax incentives for renewable energy investments'
+      description: 'Upgraded tax exempt to zero rated'
     }
   ],
   discussions: [
@@ -490,7 +490,15 @@ const LegislationDetail = () => {
                   
                   <div className="flex items-center">
                     <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm">Official document available</span>
+                    <a
+                  href="https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/The%20Finance%20Bill%202025.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-kenya-green"
+                  aria-label="The Finance Bill 2025"
+                  >
+                  Official document available
+                </a>
                   </div>
                 </div>
               </CardContent>
