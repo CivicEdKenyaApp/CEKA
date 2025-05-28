@@ -457,14 +457,14 @@ const ResourceHub = () => {
             )}
             
             {/* Load More button - Placeholder, implement pagination if needed */}
-            {/* {filteredResources.length > 0 && (
+             {filteredResources.length > 0 && (
               <div className="flex justify-center mt-10">
                 <Button variant="outline" className="flex items-center gap-2">
                   Load More Resources
                   <ArrowDown className="h-4 w-4" />
                 </Button>
               </div>
-            )} */}
+            )}
             
             <div className="mt-12 p-6 bg-kenya-green/10 dark:bg-kenya-green/5 rounded-lg">
               <div className="max-w-3xl mx-auto text-center">
