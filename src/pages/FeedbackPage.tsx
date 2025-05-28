@@ -49,7 +49,7 @@ const FeedbackPage = () => {
           user_id: session.user.id,
           message: message.trim(),
           category,
-          // status: 'pending' // Default is 'pending' in DB schema
+           status: 'pending', // Default is 'pending' in DB schema //
         });
       
       if (error) throw error;
@@ -60,7 +60,7 @@ const FeedbackPage = () => {
       });
       
       setMessage('');
-      // setCategory('general'); // Optionally reset category
+       setCategory('general'); // Optionally reset category //
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
       toast({
@@ -191,12 +191,18 @@ const FeedbackPage = () => {
                 </p>
               </CardContent>
               <CardFooter className="flex justify-center border-t pt-6">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-red-500" />
-                  Support This Project
-                </Button>
+                <a
+                  href="https://ko-fi.com/civiceducationkenya"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                  >
+                  <Button variant="outline">
+                    <Heart className="h-4 w-4 text-red-500" />
+                    Support This Project 
+                  </Button>
+                </a>
               </CardFooter>
-            </Card>
             
             <Card>
               <CardHeader>
