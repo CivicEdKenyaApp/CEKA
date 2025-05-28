@@ -191,11 +191,17 @@ const LegislationDetail = () => {
   };
   
   const handleDownload = () => {
-    toast({
-      title: "Downloading document",
-      description: "The bill document is being downloaded to your device.",
-    });
-    // In a real app, trigger actual download
+  toast({
+    title: "Downloading document",
+    description: "The bill document is being downloaded to your device.",
+  });
+    
+    const link = document.createElement("a");
+    link.href = "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Documents/Constitution/The%20Finance%20Bill%202025.pdf";
+    link.download = "Finance_Bill_2025.pdf"; // Suggests a name for the downloaded file
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   const handleSubmitComment = (e: React.FormEvent) => {
