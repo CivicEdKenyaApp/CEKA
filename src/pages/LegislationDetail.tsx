@@ -40,7 +40,7 @@ const legislationDetails = {
   committeeAssigned: 'Departmental Committee on Finance and National Planning',
   followersCount: 15000,
   tags: ['Finance', 'Governance', 'Devolution'],
-  timeRemaining: '15 days',
+  timeRemaining: '11 days',
   document: '/http://www.parliament.go.ke/sites/default/files/2025-05/THE%20FINANCE%20BILL%202025%20%28Compressed%20Copy%29.pdf',
   progress: 17, // Percentage through legislative process
   events: [
