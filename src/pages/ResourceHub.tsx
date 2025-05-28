@@ -228,7 +228,7 @@ const ResourceHub = () => {
         </div>
         
         <Tabs defaultValue="browse" className="mb-8">
-          <TabsList className="inline-flex rounded-md bg-muted p-1 text-muted-foreground px-2 overflow-x-auto whitespace-nowrap scroll-smooth snap-x snap-mandatory">
+          <TabsList className="inline-flex rounded-md bg-muted p-1 text-muted-foreground px-2 overflow-x-hidden whitespace-nowrap scroll-smooth snap-x snap-mandatory">
             <TabsTrigger value="browse">Browse Resources</TabsTrigger>
             <TabsTrigger value="providers">Educational Providers</TabsTrigger>
             <TabsTrigger value="calendar">Civic Calendar</TabsTrigger>
