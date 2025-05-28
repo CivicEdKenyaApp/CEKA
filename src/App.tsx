@@ -30,6 +30,7 @@ import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
 import SplashScreen from '@/components/SplashScreen';
 import { AuthContext, AuthContextType } from '@/contexts/AuthContext'; // Import from new location
+import { Auth } from '@/contexts/AuthContext';
 
 // ScrollToTopWrapper component to ensure all routes scroll to top when navigated
 const ScrollToTopWrapper = () => {
