@@ -8,7 +8,7 @@
 
 ### 1. Clone the Repo
 
-```bash
+``bash
 git clone https://github.com/YOUR-USERNAME/ceka.git
 cd ceka
 2. Install Dependencies
