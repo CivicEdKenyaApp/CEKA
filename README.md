@@ -1,6 +1,6 @@
 # 🇰🇪 CEKA – Civic Education Kenya App
 
-**CEKA** (Civic Education Kenya App) is a community-led, open-source platform designed to bridge Kenya's civic knowledge gap. Our goal is to empower citizens—especially youth—with accessible, accurate, and relatable civic education that inspires participation and accountability.
+**CEKA** (Civic Education Kenya App) is a community-led open-source platform built to bridge the civic knowledge gap and empower Kenyan citizens with accessible, accurate, and engaging civic education.
 
 ---
 
@@ -8,109 +8,86 @@
 
 ### 1. Clone the Repo
 
-``bash
+```bash
 git clone https://github.com/YOUR-USERNAME/ceka.git
 cd ceka
-2. Install Dependencies
-bash
-Copy
-Edit
-npm install
-3. Set Up Environment Variables
-Rename the .env.example file to .env and add your Supabase credentials:
+```
 
-env
-Copy
-Edit
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+Rename the `.env.example` file to `.env` and add your Supabase credentials:
+
+```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-🔐 Important: Never commit your .env file or share credentials publicly.
+```
 
-4. Run the App Locally
-bash
-Copy
-Edit
+> 🔐 Do NOT commit your `.env` file.
+
+### 4. Run the App Locally
+
+```bash
 npm run dev
-Visit your local app at http://localhost:8080
+```
 
-🧠 Built With
-React
+Your app should be running at [http://localhost:8080](http://localhost:8080/)
 
-Vite
+---
 
-Tailwind CSS
+## 🧠 Built With
 
-Supabase
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/)
+- [TypeScript](https://www.typescriptlang.org/)
 
-TypeScript
+---
 
-🌍 Why CEKA?
-CEKA is more than just an app—it's a civic empowerment movement.
+## 🌍 Why CEKA?
 
-We aim to:
+CEKA is a civic tech project built for the people, by the people. We aim to:
+- Make civic education easy and relatable
+- Inspire civic action and awareness
+- Connect citizens with verified information
 
-Make civic education easy and engaging for every Kenyan
+---
 
-Translate complex civic topics into youth-friendly, relatable content
+## 🛠️ Contributing
 
-Enable grassroots participation through inclusive digital access
+We welcome all collaborators — developers, designers, educators, and civic advocates!
 
-Encourage open collaboration in civic tech development
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature-name`)
+3. Make your changes
+4. Commit and push (`git commit -m "Add feature"` and `git push origin feature-name`)
+5. Open a pull request
 
-Build trust through transparency by keeping our platform open-source
+---
 
-🤝 How to Contribute
-We welcome developers, designers, writers, civic educators, and supporters!
+## 📦 Deployment
 
-📌 Steps to Contribute
-Fork this repository
+You can deploy CEKA easily using spaces like [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/).
 
-Create a new branch:
-git checkout -b your-feature-name
+---
 
-Make your changes or additions
+## 💬 Contact & Support
 
-Commit and push:
-git commit -m "Describe your feature"
-git push origin your-feature-name
+Want to contribute or support CEKA?  
+Follow us on social media or send us an email at [civiceducationkenya@gmail.com](https://mail.google.com/mail/?extsrc=mailto&url=mailto%3Aciviceducationkenya%40gmail.com%3Fsubject%3DRE%3A%26body%3DDear%2520CEK%2C)
 
-Submit a Pull Request for review
+Also, we are wholly fan-supported: [Buy Me A Coffee](https://ko-fi.com/civiceducationkenya)
 
-Need help? Check out our CONTRIBUTING.md (coming soon) or open an issue labeled help wanted.
+> Please do consider! Goes a long way :)
 
-🌐 Deployment
-You can easily deploy your own instance of CEKA using platforms like:
+---
 
-Vercel
+## 📄 License
 
-Netlify
-
-Render
-
-🙌 Community & Support
-Whether you're a developer, civic educator, or citizen advocate, we’d love to have you on board.
-
-📩 Email: civiceducationkenya@gmail.com
-
-☕ Support us: Buy Me a Coffee
-Your support helps us remain independent, open, and community-driven.
-
-🌐 Social Media: Follow our civic journey —
-Handles listed soon
-
-🛡️ License & Principles
-This project is released under the MIT License.
-
-✨ We also adopt a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) license for civic education content, unless stated otherwise.
-This ensures CEKA remains free to use, adapt, and remix—non-commercially—with credit.
-
-🔒 Notes on Responsible Use
-Respect user privacy: We don’t store unnecessary personal data.
-
-Stay transparent: If you fork or remix CEKA, please credit the project and link back to this repository.
-
-Be inclusive: We built CEKA for all Kenyans. Keep it accessible and culturally respectful.
-
-🌱 Join the Movement
-CEKA is open, evolving, and made for civic impact.
-Let’s build Kenya’s future — together, in the open.
+This project is open source and available under the [MIT License](LICENSE).
