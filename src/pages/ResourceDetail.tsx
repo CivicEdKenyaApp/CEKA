@@ -28,11 +28,11 @@ const mockResources = [
   },
   {
     id: "2",
-    title: "Blood Parliament: BBC Africa Eye Documentary",
+    title: "Blood Parliament: BBC Africa Eye Documentary (Pt 1)",
     type: "video",
     category: "Governance",
     description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
-    url: "https://5dorfxxwfijb.share.zrok.io/s/JHapaymSwTHKCi5",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Videos/Governance/Blood%20Parliament%20-%20BBC%20Africa%20Eye%20Documentary%20(Pt%201).mp4",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
