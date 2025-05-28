@@ -11,15 +11,15 @@ import { translate } from '@/lib/utils';
 // Sample featured legislation data
 const featuredLegislation = [
   {
-    id: 'bill-123',
-    title: 'Climate Action Amendment Bill, 2023',
-    description: 'Proposes amendments to strengthen Kenya\'s response to climate change through enhanced mitigation and adaptation measures.',
-    status: 'Committee Stage',
-    category: 'Environment',
-    date: '2023-09-15',
-    followersCount: 1245,
-    tags: ['Climate', 'Environment', 'Sustainability'],
-    timeRemaining: '14 days'
+    id: 'bill-finance-2025',
+    title: 'Finance Bill, 2025',
+    description: 'Proposes amendments to expand the tax net; targeting digital and informal sectors, removing several tax incentives, tightening compliance measures, and giving KRA more administrative authority',
+    status: 'First Reading',
+    category: 'Governance',
+    date: '2025-04-30',
+    followersCount: 15000,
+    tags: ['Finance', 'Governance', 'Devolution'],
+    timeRemaining: '11 days'
   },
   {
     id: 'bill-456',
