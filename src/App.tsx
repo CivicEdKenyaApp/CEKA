@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -20,17 +21,15 @@ import DiscussionDetail from './pages/DiscussionDetail';
 import LegislationDetail from './pages/LegislationDetail';
 import LegalPage from './pages/LegalPage';
 import Index from './pages/Index';
-import CommunityPortal from './pages/CommunityPortal';
+import Community from './pages/Community';
 import ResourceHub from './pages/ResourceHub';
 import ResourceUpload from './pages/ResourceUpload';
 import ResourceLibrary from './pages/ResourceLibrary';
 import LegislativeTracker from './pages/LegislativeTracker';
+import RejectFinanceBill from './pages/RejectFinanceBill';
 import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
-import Blog from './pages/Blog';
-import CivicCalendar from './pages/CivicCalendar';
-import CivicEducationProviders from './pages/CivicEducationProviders';
 import ThumbnailDemoPage from './pages/ThumbnailDemoPage';
 import SplashScreen from '@/components/SplashScreen';
 import { AuthContext, AuthContextType } from '@/contexts/AuthContext';
@@ -189,8 +188,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             
-            {/* Community routes */}
-            <Route path="/community" element={<CommunityPortal />} />
+            {/* Community routes (formerly blog) */}
+            <Route path="/community" element={<Community />} />
+            <Route path="/blog" element={<Navigate to="/community" replace />} />
             <Route path="/community/discussions/:id" element={<DiscussionDetail />} />
             <Route path="/community/campaigns/:id" element={<CampaignDetail />} />
             
@@ -203,13 +203,8 @@ function App() {
             {/* Legislative tracker routes */}
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
             <Route path="/legislative-tracker/:id" element={<LegislationDetail />} />
+            <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
             
-            {/* Blog routes */}
-            <Route path="/blog" element={<Blog />} />
-            
-            {/* New civic routes */}
-            <Route path="/civic-calendar" element={<CivicCalendar />} />
-            <Route path="/civic-education-providers" element={<CivicEducationProviders />} />
             <Route path="/thumbnail-demo" element={<ThumbnailDemoPage />} />
             
             <Route path="/volunteer" element={<JoinCommunity />} />

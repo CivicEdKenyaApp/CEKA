@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell } from 'lucide-react';
+import { Menu, X, ChevronDown, Bell, User } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -39,8 +40,7 @@ const Navbar = () => {
       path: '/legislative-tracker',
       dropdown: [
         { name: 'Bill Tracker', path: '/legislative-tracker' },
-        { name: 'Civic Calendar', path: '/civic-calendar' },
-        { name: 'Education Providers', path: '/civic-education-providers' },
+        { name: 'Reject Finance Bill', path: '/reject-finance-bill' },
       ]
     },
     { name: 'Join Us', path: '/volunteer' },
@@ -122,14 +122,14 @@ const Navbar = () => {
                     </Badge>
                   )}
                 </Link>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to="/profile">Profile</Link>
-                </Button>
+                <Link to="/profile" className="p-2 rounded-md hover:bg-muted">
+                  <User className="h-5 w-5 text-foreground/80" />
+                </Link>
               </>
             ) : (
-              <Button size="sm" variant="default" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
+              <Link to="/auth" className="p-2 rounded-md hover:bg-muted">
+                <User className="h-5 w-5 text-foreground/80" />
+              </Link>
             )}
             <ThemeToggle />
 

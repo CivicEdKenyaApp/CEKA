@@ -12,7 +12,7 @@ import { PlusCircle, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BlogPost } from '@/services/blogService';
 
-const Blog = () => {
+const Community = () => {
   const { posts, loading, createPost, updatePost } = useBlog();
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
@@ -79,9 +79,9 @@ const Blog = () => {
       <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">CEKA Blog</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">CEKA Community</h1>
             <p className="text-muted-foreground">
-              Stay informed with the latest civic education insights and updates
+              Join the conversation with civic education insights, updates, and community discussions
             </p>
           </div>
           
@@ -96,7 +96,7 @@ const Blog = () => {
         <Tabs defaultValue="published" className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <TabsList>
-              <TabsTrigger value="published">Published</TabsTrigger>
+              <TabsTrigger value="published">Community Posts</TabsTrigger>
               {isAdmin && <TabsTrigger value="drafts">Drafts</TabsTrigger>}
               {isAdmin && <TabsTrigger value="all">All Posts</TabsTrigger>}
             </TabsList>
@@ -148,4 +148,4 @@ const Blog = () => {
   );
 };
 
-export default Blog;
+export default Community;
