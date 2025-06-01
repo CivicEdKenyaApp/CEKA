@@ -31,11 +31,7 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
   
   return (
     <div className="flex min-h-screen flex-col relative">
-      <Navbar 
-        supportUsVisible={donationTimedOut} 
-        onSupportUsClick={handleSupportUsClick}
-        showProfileIcon={true} // Always show profile icon on desktop
-      />
+      <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
       {!hideBottomNav && <BottomNavbar />}

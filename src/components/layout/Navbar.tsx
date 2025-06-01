@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, Bell } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
-import ThemeToggle from '@/components/ui/theme-toggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
