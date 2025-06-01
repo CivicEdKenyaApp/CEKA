@@ -113,9 +113,9 @@ const LegislativeTracker = () => {
     setFilteredBills(filtered);
   }, [billsData, searchTerm, selectedCategory, selectedStatus, sortBy]);
 
-  // Get unique categories and statuses for filters
-  const uniqueCategories = [...new Set(billsData.map(bill => bill.category))];
-  const uniqueStatuses = [...new Set(billsData.map(bill => bill.status))];
+  // Get unique categories and statuses for filters, filtering out empty strings
+  const uniqueCategories = [...new Set(billsData.map(bill => bill.category))].filter(category => category && category.trim() !== '');
+  const uniqueStatuses = [...new Set(billsData.map(bill => bill.status))].filter(status => status && status.trim() !== '');
 
   const BillCardSkeleton = () => (
     <Card className="overflow-hidden">
