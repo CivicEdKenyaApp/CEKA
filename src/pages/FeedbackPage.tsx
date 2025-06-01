@@ -3,14 +3,13 @@ import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Not used
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast'; // Standardized import
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Send, Heart, ThumbsUp, MessageSquare } from 'lucide-react'; // Kept relevant icons
+import { Send, Heart, ThumbsUp, MessageSquare } from 'lucide-react';
 
 const FeedbackPage = () => {
   const [message, setMessage] = useState('');
@@ -49,7 +48,7 @@ const FeedbackPage = () => {
           user_id: session.user.id,
           message: message.trim(),
           category,
-           status: 'pending', // Default is 'pending' in DB schema //
+          status: 'pending',
         });
       
       if (error) throw error;
@@ -60,7 +59,7 @@ const FeedbackPage = () => {
       });
       
       setMessage('');
-       setCategory('general'); // Optionally reset category //
+      setCategory('general');
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
       toast({
@@ -157,7 +156,7 @@ const FeedbackPage = () => {
               <CardHeader>
                 <CardTitle>Developer's Note</CardTitle>
               </CardHeader>
-              <CardContent className="prose dark:prose-invert max-w-none"> {/* Added max-w-none to prose */}
+              <CardContent className="prose dark:prose-invert max-w-none">
                 <p>
                   Hello there! Thank you for taking the time to visit the CEKA platform. This civic engagement platform has been a labor of love, built with the goal of empowering Kenyan citizens to actively participate in their democracy.
                 </p>
@@ -196,13 +195,14 @@ const FeedbackPage = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
-                  >
+                >
                   <Button variant="outline">
                     <Heart className="h-4 w-4 text-red-500" />
                     Support This Project 
                   </Button>
                 </a>
               </CardFooter>
+            </Card>
             
             <Card>
               <CardHeader>
@@ -214,7 +214,7 @@ const FeedbackPage = () => {
               <CardContent>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-blue-100 p-1 mt-0.5 dark:bg-blue-900"> {/* Dark mode support */}
+                    <div className="rounded-full bg-blue-100 p-1 mt-0.5 dark:bg-blue-900">
                       <MessageSquare className="h-3 w-3 text-blue-600 dark:text-blue-300" />
                     </div>
                     <span className="text-sm">Identifies bugs and usability issues</span>

@@ -82,6 +82,7 @@ export type Database = {
         Row: {
           category: string
           comments: Json | null
+          constitutional_section: string | null
           created_at: string
           date: string
           description: string | null
@@ -97,6 +98,7 @@ export type Database = {
         Insert: {
           category: string
           comments?: Json | null
+          constitutional_section?: string | null
           created_at?: string
           date?: string
           description?: string | null
@@ -112,6 +114,7 @@ export type Database = {
         Update: {
           category?: string
           comments?: Json | null
+          constitutional_section?: string | null
           created_at?: string
           date?: string
           description?: string | null
@@ -123,6 +126,48 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          slug: string
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          slug: string
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -575,6 +620,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       volunteer_applications: {
         Row: {
