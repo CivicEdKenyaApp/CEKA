@@ -81,9 +81,13 @@ export type Database = {
       bills: {
         Row: {
           category: string
+          comments: Json | null
           created_at: string
           date: string
+          description: string | null
           id: string
+          sponsor: string | null
+          stages: Json | null
           status: string
           summary: string
           title: string
@@ -92,9 +96,13 @@ export type Database = {
         }
         Insert: {
           category: string
+          comments?: Json | null
           created_at?: string
           date?: string
+          description?: string | null
           id?: string
+          sponsor?: string | null
+          stages?: Json | null
           status: string
           summary: string
           title: string
@@ -103,9 +111,13 @@ export type Database = {
         }
         Update: {
           category?: string
+          comments?: Json | null
           created_at?: string
           date?: string
+          description?: string | null
           id?: string
+          sponsor?: string | null
+          stages?: Json | null
           status?: string
           summary?: string
           title?: string
@@ -113,6 +125,114 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      civic_education_providers: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          counties_served: string[] | null
+          created_at: string | null
+          description: string | null
+          focus_areas: string[] | null
+          id: string
+          is_verified: boolean | null
+          logo_url: string | null
+          name: string
+          submitted_by_user_id: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          counties_served?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          focus_areas?: string[] | null
+          id?: string
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name: string
+          submitted_by_user_id?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          counties_served?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          focus_areas?: string[] | null
+          id?: string
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name?: string
+          submitted_by_user_id?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      civic_events: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string | null
+          event_date: string
+          id: string
+          related_bill_id: string | null
+          related_resource_id: string | null
+          start_time: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          id?: string
+          related_bill_id?: string | null
+          related_resource_id?: string | null
+          start_time?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          id?: string
+          related_bill_id?: string | null
+          related_resource_id?: string | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "civic_events_related_bill_id_fkey"
+            columns: ["related_bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "civic_events_related_resource_id_fkey"
+            columns: ["related_resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discussion_replies: {
         Row: {
@@ -281,6 +401,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string
+          related_entity_id: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message: string
+          related_entity_id?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          related_entity_id?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -319,11 +472,13 @@ export type Database = {
           downloadUrl: string | null
           id: string
           is_downloadable: boolean | null
+          thumbnail_url: string | null
           title: string
           type: string
           updated_at: string
           uploadedBy: string | null
           url: string
+          user_id: string | null
           videoUrl: string | null
         }
         Insert: {
@@ -333,11 +488,13 @@ export type Database = {
           downloadUrl?: string | null
           id?: string
           is_downloadable?: boolean | null
+          thumbnail_url?: string | null
           title: string
           type: string
           updated_at?: string
           uploadedBy?: string | null
           url: string
+          user_id?: string | null
           videoUrl?: string | null
         }
         Update: {
@@ -347,14 +504,24 @@ export type Database = {
           downloadUrl?: string | null
           id?: string
           is_downloadable?: boolean | null
+          thumbnail_url?: string | null
           title?: string
           type?: string
           updated_at?: string
           uploadedBy?: string | null
           url?: string
+          user_id?: string | null
           videoUrl?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resources_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_contributions: {
         Row: {
@@ -543,7 +710,178 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_for_volunteer_opportunity: {
+        Args: { user_id: string; opportunity_id: string; motivation: string }
+        Returns: undefined
+      }
+      create_discussion: {
+        Args: {
+          user_id: string
+          resource_id: string
+          topic: string
+          content: string
+        }
+        Returns: undefined
+      }
+      create_event: {
+        Args: {
+          title: string
+          description: string
+          event_date: string
+          start_time: string
+          end_time: string
+          category: string
+        }
+        Returns: undefined
+      }
+      delete_user_profile: {
+        Args: { user_id: string; deactivate_user?: boolean }
+        Returns: undefined
+      }
+      filter_resources_by_topic: {
+        Args: { topic: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+        }[]
+      }
+      follow_bill: {
+        Args: { user_id: string; bill_id: string }
+        Returns: undefined
+      }
+      get_advocacy_toolkit: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+        }[]
+      }
+      get_all_learning_materials: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          type: string
+        }[]
+      }
+      get_all_providers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string
+        }[]
+      }
+      get_bill_details: {
+        Args: { bill_id: string }
+        Returns: {
+          id: string
+          title: string
+          summary: string
+          followed: boolean
+        }[]
+      }
+      get_discussion_thread: {
+        Args: { d_id: string }
+        Returns: {
+          discussion_id: string
+          title: string
+          content: string
+          replies: Json
+        }[]
+      }
+      get_followed_bills: {
+        Args: Record<PropertyKey, never> | { user_id: string }
+        Returns: {
+          bill_id: number
+          bill_name: string
+        }[]
+      }
+      get_my_volunteer_applications: {
+        Args: { user_id: string }
+        Returns: {
+          opportunity_id: string
+          status: string
+          created_at: string
+        }[]
+      }
+      get_upcoming_events: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          event_date: string
+          start_time: string
+          end_time: string
+        }[]
+      }
+      get_user_profile: {
+        Args: { user_id: string }
+        Returns: {
+          id: string
+          username: string
+          full_name: string
+          avatar_url: string
+          email: string
+        }[]
+      }
+      list_open_volunteer_opportunities: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          organization: string
+          description: string
+        }[]
+      }
+      notify_users_about_bill_change: {
+        Args: { bill_id: string }
+        Returns: undefined
+      }
+      register_user_for_event: {
+        Args: { event_id: string; user_id: string }
+        Returns: undefined
+      }
+      reply_to_discussion: {
+        Args: { discussion_id: string; user_id: string; reply_content: string }
+        Returns: undefined
+      }
+      search_bills: {
+        Args: { keyword: string }
+        Returns: {
+          id: string
+          title: string
+          summary: string
+        }[]
+      }
+      search_providers_by_county_or_topic: {
+        Args: { county: string; topic: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+        }[]
+      }
+      submit_contribution: {
+        Args: { user_id: string; type: string; content: string }
+        Returns: undefined
+      }
+      submit_feedback: {
+        Args: { user_id: string; subject: string; body: string }
+        Returns: undefined
+      }
+      unfollow_bill: {
+        Args: { user_id: string; bill_id: string }
+        Returns: undefined
+      }
+      update_user_profile: {
+        Args: { user_id: string; name: string; location: string; bio: string }
+        Returns: undefined
+      }
     }
     Enums: {
       document_type: "pdf" | "video" | "image" | "text" | "doc" | "docx"

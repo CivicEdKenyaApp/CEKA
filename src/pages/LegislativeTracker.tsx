@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -13,9 +14,9 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2 } from 'lucide-react';
+import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Define the Bill interface based on Supabase schema
 interface Bill {
@@ -24,18 +25,22 @@ interface Bill {
   summary: string;
   status: string;
   category: string;
-  date: string; // ISO string from Supabase
+  date: string;
+  created_at: string;
   url?: string | null;
-  // Add other fields if needed, like created_at, updated_at
 }
 
-// Mock data for bills - will be replaced by fetched data
-// const bills = [ ... ]; // Removed mock data
+type SortOption = 'date-desc' | 'date-asc' | 'alpha-asc' | 'alpha-desc' | 'status' | 'category';
 
 const LegislativeTracker = () => {
   const [billsData, setBillsData] = useState<Bill[]>([]);
+  const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('date-desc');
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -45,7 +50,7 @@ const LegislativeTracker = () => {
         const { data, error: fetchError } = await supabase
           .from('bills')
           .select('*')
-          .order('date', { ascending: false }); // Example: order by date
+          .order('created_at', { ascending: false });
 
         if (fetchError) {
           throw fetchError;
@@ -61,6 +66,56 @@ const LegislativeTracker = () => {
 
     fetchBills();
   }, []);
+
+  // Filter and sort bills
+  useEffect(() => {
+    let filtered = billsData;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(bill =>
+        bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(bill => bill.category === selectedCategory);
+    }
+
+    // Apply status filter
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(bill => bill.status === selectedStatus);
+    }
+
+    // Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'date-asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'alpha-asc':
+          return a.title.localeCompare(b.title);
+        case 'alpha-desc':
+          return b.title.localeCompare(a.title);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'category':
+          return a.category.localeCompare(b.category);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredBills(filtered);
+  }, [billsData, searchTerm, selectedCategory, selectedStatus, sortBy]);
+
+  // Get unique categories and statuses for filters
+  const uniqueCategories = [...new Set(billsData.map(bill => bill.category))];
+  const uniqueStatuses = [...new Set(billsData.map(bill => bill.status))];
 
   const BillCardSkeleton = () => (
     <Card className="overflow-hidden">
@@ -102,55 +157,81 @@ const LegislativeTracker = () => {
           <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Filters</CardTitle>
+                <CardTitle className="text-lg">Filters & Sort</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Search</label>
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search bills..." className="pl-8" />
+                    <Input 
+                      placeholder="Search bills..." 
+                      className="pl-8" 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Sort By</label>
+                  <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date-desc">Newest First</SelectItem>
+                      <SelectItem value="date-asc">Oldest First</SelectItem>
+                      <SelectItem value="alpha-asc">A-Z</SelectItem>
+                      <SelectItem value="alpha-desc">Z-A</SelectItem>
+                      <SelectItem value="status">By Status</SelectItem>
+                      <SelectItem value="category">By Category</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Category</label>
-                  <Select>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="environment">Environment</SelectItem>
-                      <SelectItem value="agriculture">Agriculture</SelectItem>
-                      <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                      {uniqueCategories.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Status</label>
-                  <Select>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="first-reading">First Reading</SelectItem>
-                      <SelectItem value="public-feedback">Public Feedback</SelectItem>
-                      <SelectItem value="committee-review">Committee Review</SelectItem>
-                      <SelectItem value="second-reading">Second Reading</SelectItem>
-                      <SelectItem value="passed">Passed</SelectItem>
+                      {uniqueStatuses.map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                    setSelectedStatus('all');
+                    setSortBy('date-desc');
+                  }}
+                >
                   <Filter className="mr-2 h-4 w-4" />
-                  Apply Filters
+                  Clear Filters
                 </Button>
               </CardContent>
             </Card>
@@ -160,11 +241,22 @@ const LegislativeTracker = () => {
             <Tabs defaultValue="all">
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
-                  <TabsTrigger value="all">All Bills</TabsTrigger>
+                  <TabsTrigger value="all">All Bills ({filteredBills.length})</TabsTrigger>
                   <TabsTrigger value="new">New</TabsTrigger>
                   <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger>
                   <TabsTrigger value="followed">Following</TabsTrigger>
                 </TabsList>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <ArrowUpDown className="h-4 w-4" />
+                  <span>Sorted by: {
+                    sortBy === 'date-desc' ? 'Newest First' :
+                    sortBy === 'date-asc' ? 'Oldest First' :
+                    sortBy === 'alpha-asc' ? 'A-Z' :
+                    sortBy === 'alpha-desc' ? 'Z-A' :
+                    sortBy === 'status' ? 'Status' : 'Category'
+                  }</span>
+                </div>
               </div>
               
               <TabsContent value="all" className="space-y-4 mt-0">
@@ -179,14 +271,19 @@ const LegislativeTracker = () => {
                     <p>Error loading bills: {error}</p>
                     <p>Please try again later.</p>
                   </div>
-                ) : billsData.length === 0 ? (
+                ) : filteredBills.length === 0 ? (
                    <div className="bg-muted rounded-md p-8 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-medium text-lg">No Bills Found</h3>
-                    <p className="text-sm text-muted-foreground mt-1">There are currently no bills to display. Check back later or try adjusting your filters.</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {billsData.length === 0 
+                        ? 'There are currently no bills to display. Check back later.'
+                        : 'No bills match your current filters. Try adjusting your search criteria.'
+                      }
+                    </p>
                   </div>
                 ) : (
-                  billsData.map((bill) => (
+                  filteredBills.map((bill) => (
                     <Card key={bill.id} className="overflow-hidden">
                       <div className="flex flex-col md:flex-row">
                         <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
@@ -199,7 +296,7 @@ const LegislativeTracker = () => {
                             </Badge>
                             <Badge 
                               variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
-                              className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit`} // Adjusted styling for Public Feedback
+                              className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit`}
                             >
                               {bill.status}
                             </Badge>
@@ -210,14 +307,14 @@ const LegislativeTracker = () => {
                               {bill.title}
                             </Link>
                           </h3>
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3"> {/* Added line-clamp */}
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                             {bill.summary}
                           </p>
                           
                           <div className="flex flex-wrap items-center justify-between">
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <Calendar className="h-3.5 w-3.5" />
-                              <span>Last updated: {new Date(bill.date).toLocaleDateString()}</span>
+                              <span>Created: {new Date(bill.created_at).toLocaleDateString()}</span>
                             </div>
                             
                             <div className="flex gap-2 mt-2 md:mt-0">

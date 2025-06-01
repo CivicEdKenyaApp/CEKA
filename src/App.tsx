@@ -28,8 +28,9 @@ import LegislativeTracker from './pages/LegislativeTracker';
 import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
+import Blog from './pages/Blog';
 import SplashScreen from '@/components/SplashScreen';
-import { AuthContext, AuthContextType } from '@/contexts/AuthContext'; // Import from new location
+import { AuthContext, AuthContextType } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 // ScrollToTopWrapper component to ensure all routes scroll to top when navigated
@@ -200,6 +201,9 @@ function App() {
             {/* Legislative tracker routes */}
             <Route path="/legislative-tracker" element={<LegislativeTracker />} />
             <Route path="/legislative-tracker/:id" element={<LegislationDetail />} />
+            
+            {/* Blog routes */}
+            <Route path="/blog" element={<Blog />} />
             
             <Route path="/volunteer" element={<JoinCommunity />} />
             <Route path="/auth" element={<AuthPage />} />
