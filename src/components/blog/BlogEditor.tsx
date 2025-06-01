@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,9 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
   const [title, setTitle] = useState(post?.title || '');
   const [content, setContent] = useState(post?.content || '');
   const [tags, setTags] = useState<string[]>(post?.tags || []);
-  const [status, setStatus] = useState<'draft' | 'published'>(post?.status || 'draft');
+  const [status, setStatus] = useState<'draft' | 'published'>(
+    (post?.status === 'published' ? 'published' : 'draft') as 'draft' | 'published'
+  );
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
 

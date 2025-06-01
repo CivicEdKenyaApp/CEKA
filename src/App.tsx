@@ -29,9 +29,11 @@ import JoinCommunity from './pages/JoinCommunity';
 import Notifications from './pages/Notifications';
 import UserProfile from './pages/UserProfile';
 import Blog from './pages/Blog';
+import CivicCalendar from './pages/CivicCalendar';
+import CivicEducationProviders from './pages/CivicEducationProviders';
+import ThumbnailDemoPage from './pages/ThumbnailDemoPage';
 import SplashScreen from '@/components/SplashScreen';
 import { AuthContext, AuthContextType } from '@/contexts/AuthContext';
-import { useAuth } from '@/contexts/AuthContext';
 
 // ScrollToTopWrapper component to ensure all routes scroll to top when navigated
 const ScrollToTopWrapper = () => {
@@ -150,7 +152,7 @@ function App() {
     }
   };
 
-  const authValue: AuthContextType = { // Ensure this matches the imported AuthContextType
+  const authValue: AuthContextType = {
     session,
     user,
     signIn,
@@ -204,6 +206,11 @@ function App() {
             
             {/* Blog routes */}
             <Route path="/blog" element={<Blog />} />
+            
+            {/* New civic routes */}
+            <Route path="/civic-calendar" element={<CivicCalendar />} />
+            <Route path="/civic-education-providers" element={<CivicEducationProviders />} />
+            <Route path="/thumbnail-demo" element={<ThumbnailDemoPage />} />
             
             <Route path="/volunteer" element={<JoinCommunity />} />
             <Route path="/auth" element={<AuthPage />} />

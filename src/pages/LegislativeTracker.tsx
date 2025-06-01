@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BillFollowButton } from '@/components/legislative/BillFollowButton';
 
 // Define the Bill interface based on Supabase schema
 interface Bill {
@@ -318,7 +318,7 @@ const LegislativeTracker = () => {
                             </div>
                             
                             <div className="flex gap-2 mt-2 md:mt-0">
-                              <Button size="sm" variant="outline">Follow</Button>
+                              <BillFollowButton billId={bill.id} />
                               <Button size="sm" variant="ghost" asChild>
                                 <Link to={`/legislative-tracker/${bill.id}`} className="flex items-center">
                                   Details
