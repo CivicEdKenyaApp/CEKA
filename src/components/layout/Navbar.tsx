@@ -1,13 +1,26 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User } from 'lucide-react';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +28,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
+  const { language, setLanguage } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +58,13 @@ const Navbar = () => {
       ]
     },
     { name: 'Join Us', path: '/volunteer' },
+  ];
+
+  const languageOptions = [
+    { code: 'en', name: 'English' },
+    { code: 'sw', name: 'Swahili' },
+    { code: 'ksl', name: 'Kenyan Sign Language' },
+    { code: 'br', name: 'Braille' },
   ];
 
   return (
@@ -109,28 +130,86 @@ const Navbar = () => {
 
           {/* Right side items */}
           <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <Link to="/notifications" className="relative p-2 rounded-md hover:bg-muted">
+              <Bell className="h-5 w-5 text-foreground/80" />
+              {unreadCount > 0 && (
+                <Badge
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-kenya-green text-xs"
+                  variant="destructive"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Link>
+
+            {/* User Profile */}
             {user ? (
-              <>
-                <Link to="/notifications" className="relative mr-2">
-                  <Bell className="h-5 w-5 text-foreground/80" />
-                  {unreadCount > 0 && (
-                    <Badge
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-kenya-green"
-                      variant="destructive"
-                    >
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </Badge>
-                  )}
-                </Link>
-                <Link to="/profile" className="p-2 rounded-md hover:bg-muted">
-                  <User className="h-5 w-5 text-foreground/80" />
-                </Link>
-              </>
+              <Link to="/profile" className="p-2 rounded-md hover:bg-muted">
+                <User className="h-5 w-5 text-foreground/80" />
+              </Link>
             ) : (
               <Link to="/auth" className="p-2 rounded-md hover:bg-muted">
                 <User className="h-5 w-5 text-foreground/80" />
               </Link>
             )}
+
+            {/* Three-dot menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Language Options */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Globe className="mr-2 h-4 w-4" />
+                    <span>Language</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {languageOptions.map((lang) => (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code as any)}
+                        className={language === lang.code ? 'bg-muted' : ''}
+                      >
+                        {lang.name}
+                        {language === lang.code && <span className="ml-auto">✓</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSeparator />
+
+                {/* Settings Options */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {user && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings/account">Account</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings/notifications">Notifications</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings/privacy">Privacy</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ThemeToggle />
 
             {/* Mobile menu button */}
