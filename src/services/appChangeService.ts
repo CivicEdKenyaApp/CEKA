@@ -8,7 +8,7 @@ export interface AppChange {
   description: string;
   technical_details: string;
   user_friendly_message: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: string; // Changed from 'low' | 'medium' | 'high' to string to match database
   affects_users: boolean;
   created_at: string;
   processed: boolean;
