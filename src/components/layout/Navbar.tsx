@@ -128,9 +128,12 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right side items */}
+          {/* Right side items - REORDERED */}
           <div className="flex items-center gap-2">
-            {/* Notification Bell */}
+            {/* 1. Theme Toggle */}
+            <ThemeToggle />
+
+            {/* 2. Notification Bell */}
             <Link to="/notifications" className="relative p-2 rounded-md hover:bg-muted">
               <Bell className="h-5 w-5 text-foreground/80" />
               {unreadCount > 0 && (
@@ -143,7 +146,7 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* User Profile */}
+            {/* 3. User Profile Icon */}
             {user ? (
               <Link to="/profile" className="p-2 rounded-md hover:bg-muted">
                 <User className="h-5 w-5 text-foreground/80" />
@@ -154,7 +157,7 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* Three-dot menu */}
+            {/* 4. Three-dot menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -194,23 +197,21 @@ const Navbar = () => {
                     <span>Settings</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
-                    {user && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/settings/account">Account</Link>
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuItem asChild>
                       <Link to="/settings/notifications">Notifications</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/settings/privacy">Privacy</Link>
                     </DropdownMenuItem>
+                    {user && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings/account">Account</Link>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <ThemeToggle />
 
             {/* Mobile menu button */}
             <div className="md:hidden">

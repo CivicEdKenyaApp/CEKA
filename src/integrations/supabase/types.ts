@@ -42,6 +42,45 @@ export type Database = {
         }
         Relationships: []
       }
+      app_changes: {
+        Row: {
+          affects_users: boolean
+          change_type: string
+          created_at: string
+          description: string
+          id: string
+          processed: boolean
+          severity: string
+          technical_details: string
+          updated_at: string
+          user_friendly_message: string
+        }
+        Insert: {
+          affects_users?: boolean
+          change_type: string
+          created_at?: string
+          description: string
+          id?: string
+          processed?: boolean
+          severity: string
+          technical_details: string
+          updated_at?: string
+          user_friendly_message: string
+        }
+        Update: {
+          affects_users?: boolean
+          change_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          processed?: boolean
+          severity?: string
+          technical_details?: string
+          updated_at?: string
+          user_friendly_message?: string
+        }
+        Relationships: []
+      }
       bill_follows: {
         Row: {
           bill_id: string

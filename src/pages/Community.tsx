@@ -11,10 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BlogPost } from '@/services/blogService';
+import { useToast } from '@/hooks/use-toast';
 
 const Community = () => {
   const { posts, loading, createPost, updatePost } = useBlog();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,13 +37,41 @@ const Community = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const handleCreateNew = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to create a post",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsCreating(true);
+  };
+
   const handleSavePost = async (post: BlogPost) => {
-    if (editingPost) {
-      await updatePost(editingPost.id, post);
-      setEditingPost(null);
-    } else {
-      await createPost(post);
-      setIsCreating(false);
+    try {
+      if (editingPost) {
+        await updatePost(editingPost.id, post);
+        setEditingPost(null);
+        toast({
+          title: "Success",
+          description: "Post updated successfully"
+        });
+      } else {
+        await createPost(post);
+        setIsCreating(false);
+        toast({
+          title: "Success",
+          description: "Post created successfully"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save post",
+        variant: "destructive"
+      });
     }
   };
 
@@ -54,7 +84,7 @@ const Community = () => {
     return (
       <Layout>
         <div className="container py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">Loading posts...</div>
         </div>
       </Layout>
     );
@@ -85,12 +115,10 @@ const Community = () => {
             </p>
           </div>
           
-          {isAdmin && (
-            <Button onClick={() => setIsCreating(true)} className="mt-4 md:mt-0">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              New Post
-            </Button>
-          )}
+          <Button onClick={handleCreateNew} className="mt-4 md:mt-0">
+            <PlusCircle className="h-4 w-4 mr-2" />
+            New Post
+          </Button>
         </div>
 
         <Tabs defaultValue="published" className="space-y-6">
