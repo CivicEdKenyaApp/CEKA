@@ -862,8 +862,9 @@ export type Database = {
       get_followed_bills: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: {
-          bill_id: number
-          bill_name: string
+          bill_id: string
+          title: string
+          summary: string
         }[]
       }
       get_my_volunteer_applications: {
