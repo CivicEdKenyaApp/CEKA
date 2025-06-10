@@ -47,8 +47,8 @@ const CommunitySection = () => {
             <p className="text-muted-foreground">Join conversations on civic issues affecting Kenyans</p>
           </div>
           <Button asChild variant="ghost" className="mt-4 md:mt-0">
-            <Link to="/community" className="flex items-center">
-              View all discussions
+            <Link to="/blog" className="flex items-center">
+              View all posts
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -65,7 +65,7 @@ const CommunitySection = () => {
                   <span className="text-xs text-muted-foreground">{discussion.timeAgo}</span>
                 </div>
                 <h3 className="font-semibold text-lg mt-2">
-                  <Link to={`/community/discussion/${discussion.id}`} className="hover:text-kenya-green transition-colors">
+                  <Link to={`/blog`} className="hover:text-kenya-green transition-colors">
                     {discussion.title}
                   </Link>
                 </h3>
@@ -93,7 +93,7 @@ const CommunitySection = () => {
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to={`/community/discussion/${discussion.id}`}>
+                  <Link to={`/blog`}>
                     Read more
                   </Link>
                 </Button>
