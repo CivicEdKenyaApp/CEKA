@@ -38,8 +38,8 @@ const BottomNavbar = () => {
       icon: <Upload className="h-5 w-5" />
     },
     {
-      name: 'Community',
-      path: '/community',
+      name: 'Blog',
+      path: '/blog',
       icon: <Users className="h-5 w-5" />
     },
     {
