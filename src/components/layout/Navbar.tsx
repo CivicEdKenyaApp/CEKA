@@ -56,7 +56,7 @@ const Navbar = () => {
         { name: 'Reject Finance Bill', path: '/reject-finance-bill' },
       ]
     },
-    { name: 'Join Us', path: '/volunteer' },
+    { name: 'Join Us', path: '/join-community' },
   ];
 
   const languageOptions = [
