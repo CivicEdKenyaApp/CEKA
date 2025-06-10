@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 import DocumentViewerComponent from '@/components/documents/DocumentViewer'; // Renamed to avoid conflict with page name
 import { Tables } from '@/integrations/supabase/types'; // Import Supabase types
 

@@ -1,7 +1,8 @@
-
 import { useState, useEffect } from 'react';
-import { blogService, BlogPost } from '@/services/blogService';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/providers/AuthProvider';
+import { BlogPost, blogService } from '@/services/blogService';
 
 export function useBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);

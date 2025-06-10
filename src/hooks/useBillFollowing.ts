@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { billFollowingService } from '@/services/billFollowingService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function useBillFollowing(billId: string) {
   const [isFollowing, setIsFollowing] = useState(false);
@@ -67,3 +66,4 @@ export function useBillFollowing(billId: string) {
     toggleFollow
   };
 }
+

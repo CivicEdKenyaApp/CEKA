@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, User, Tag, Heart, Share2, MessageCircle } from 'lucide-react';
 import { BlogPost } from '@/services/blogService';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 
 interface BlogListProps {

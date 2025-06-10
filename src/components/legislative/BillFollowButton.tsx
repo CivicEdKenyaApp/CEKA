@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart, Users } from 'lucide-react';
 import { useBillFollowing } from '@/hooks/useBillFollowing';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
 
 interface BillFollowButtonProps {

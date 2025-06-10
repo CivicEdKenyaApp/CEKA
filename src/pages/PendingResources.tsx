@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { ChevronLeft, Clock, FileText, Video, Image, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext'; // Updated import
+import { useAuth } from '@/providers/AuthProvider';
 import { Tables } from '@/integrations/supabase/types';
 
 type UserContribution = Tables<'user_contributions'>;
