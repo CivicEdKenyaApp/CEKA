@@ -9,6 +9,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
 import ResourceHub from '@/pages/ResourceHub';
@@ -65,9 +66,11 @@ const App: React.FC = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<ResourceDetail />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/resources" element={<ResourceLibrary />} />
               <Route path="/resources/:id" element={<ResourceDetail />} />
+              <Route path="/resources/upload" element={<ResourceUpload />} />
+              <Route path="/resources/pending" element={<PendingResources />} />
               <Route path="/resource-hub" element={<ResourceHub />} />
               <Route path="/legislative-tracker" element={<LegislativeTracker />} />
               <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
@@ -87,8 +90,6 @@ const App: React.FC = () => {
               <Route path="/campaign/:id" element={<CampaignDetail />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/document/:id" element={<DocumentViewerPage />} />
-              <Route path="/resource-upload" element={<ResourceUpload />} />
-              <Route path="/pending-resources" element={<PendingResources />} />
               <Route path="/thumbnail-demo" element={<ThumbnailDemo />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<Settings />} />

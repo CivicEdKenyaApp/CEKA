@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 
-// Mock data for community discussions
+// Mock data for blog discussions
 const discussions = [
   {
     id: 1,
@@ -43,7 +43,7 @@ const CommunitySection = () => {
       <div className="container">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Community Discussions</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Blog Discussions</h2>
             <p className="text-muted-foreground">Join conversations on civic issues affecting Kenyans</p>
           </div>
           <Button asChild variant="ghost" className="mt-4 md:mt-0">
@@ -105,7 +105,7 @@ const CommunitySection = () => {
         <div className="mt-10 py-8 px-6 rounded-lg bg-gradient-to-r from-kenya-green/10 to-kenya-red/10 text-center">
           <div className="max-w-2xl mx-auto space-y-4">
             <Users className="h-12 w-12 mx-auto text-kenya-green" />
-            <h3 className="text-xl font-bold">Join Our Community</h3>
+            <h3 className="text-xl font-bold">Join Our Blog</h3>
             <p className="text-muted-foreground">
               Connect with like-minded citizens passionate about civic education and making a difference in Kenya.
             </p>
