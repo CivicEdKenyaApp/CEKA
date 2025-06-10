@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AuthModal from '@/components/auth/AuthModal';
 import Index from '@/pages/Index';
@@ -112,7 +112,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

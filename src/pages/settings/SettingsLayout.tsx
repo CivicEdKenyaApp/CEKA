@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext'; // Updated import
+import { useAuth } from '@/providers/AuthProvider';
 
 const SettingsLayout = () => {
   const { language } = useLanguage();
