@@ -22,7 +22,20 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const isAdmin = user?.email === 'admin@ceka.app'; // Adjust admin check as needed
+  // Updated admin check to include the new admin email
+  const isAdmin = user?.email === 'admin@ceka.app' || user?.email === 'civiceducationkenya@gmail.com';
+
+  // Debug logging to help track data flow
+  console.log('Blog Debug Info:', {
+    posts: posts,
+    postsCount: posts.length,
+    user: user,
+    userEmail: user?.email,
+    isAdmin: isAdmin,
+    loading: loading,
+    searchTerm: searchTerm,
+    filterStatus: filterStatus
+  });
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,6 +48,16 @@ const Blog = () => {
     if (post.status === 'draft' && !isAdmin) return false;
     
     return matchesSearch && matchesStatus;
+  });
+
+  // Additional debug for filtered posts
+  console.log('Filtered Posts Debug:', {
+    filteredPosts: filteredPosts,
+    filteredPostsCount: filteredPosts.length,
+    publishedPosts: filteredPosts.filter(post => post.status === 'published'),
+    draftPosts: filteredPosts.filter(post => post.status === 'draft'),
+    publishedCount: filteredPosts.filter(post => post.status === 'published').length,
+    draftCount: filteredPosts.filter(post => post.status === 'draft').length
   });
 
   const handleCreateNew = () => {
@@ -121,7 +144,8 @@ const Blog = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="published" className="space-y-6">
+        {/* Changed default tab to show all posts for better user experience */}
+        <Tabs defaultValue={isAdmin ? "all" : "published"} className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <TabsList>
               <TabsTrigger value="published">Published</TabsTrigger>
