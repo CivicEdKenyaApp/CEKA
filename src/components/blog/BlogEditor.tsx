@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +48,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
         excerpt: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
         tags,
         status,
-        publishedAt: status === 'published' ? new Date().toISOString() : (post?.publishedAt || new Date().toISOString())
+        published_at: status === 'published' ? new Date().toISOString() : (post?.published_at || new Date().toISOString())
       };
 
       let savedPost: BlogPost;

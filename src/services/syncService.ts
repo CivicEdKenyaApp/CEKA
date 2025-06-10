@@ -1,4 +1,3 @@
-
 import { blogService, BlogPost } from './blogService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -44,18 +43,11 @@ class SyncService {
 
         await this.syncToSupabase(post);
         
-        // Update sync status
-        await blogService.updatePost(postId, {
-          syncStatus: 'synced'
-        });
-        
-        // Remove from queue
+        // Remove from queue on successful sync
         this.removeFromSyncQueue(postId);
       } catch (error) {
         console.error('Sync failed for post:', postId, error);
-        await blogService.updatePost(postId, {
-          syncStatus: 'error'
-        });
+        // Keep the post in queue for retry later
       }
     }
     
