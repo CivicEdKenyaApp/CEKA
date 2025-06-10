@@ -28,7 +28,12 @@ class BlogService {
       return (data || []).map(post => ({
         ...post,
         published_at: post.published_at || post.created_at,
-        publishedAt: post.published_at || post.created_at // Keep both for compatibility
+        status: (post.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: post.tags || [],
+        author: post.author || 'Anonymous',
+        excerpt: post.excerpt || '',
+        created_at: post.created_at || '',
+        updated_at: post.updated_at || ''
       }));
     } catch (error) {
       console.error('Error loading posts:', error);
@@ -49,7 +54,12 @@ class BlogService {
       return data ? {
         ...data,
         published_at: data.published_at || data.created_at,
-        publishedAt: data.published_at || data.created_at
+        status: (data.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: data.tags || [],
+        author: data.author || 'Anonymous',
+        excerpt: data.excerpt || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       } : null;
     } catch (error) {
       console.error('Error loading post:', error);
@@ -70,7 +80,12 @@ class BlogService {
       return data ? {
         ...data,
         published_at: data.published_at || data.created_at,
-        publishedAt: data.published_at || data.created_at
+        status: (data.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: data.tags || [],
+        author: data.author || 'Anonymous',
+        excerpt: data.excerpt || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       } : null;
     } catch (error) {
       console.error('Error loading post:', error);
@@ -100,7 +115,12 @@ class BlogService {
       return {
         ...data,
         published_at: data.published_at || data.created_at,
-        publishedAt: data.published_at || data.created_at
+        status: (data.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: data.tags || [],
+        author: data.author || 'Anonymous',
+        excerpt: data.excerpt || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       };
     } catch (error) {
       console.error('Error creating post:', error);
@@ -128,7 +148,12 @@ class BlogService {
       return data ? {
         ...data,
         published_at: data.published_at || data.created_at,
-        publishedAt: data.published_at || data.created_at
+        status: (data.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: data.tags || [],
+        author: data.author || 'Anonymous',
+        excerpt: data.excerpt || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
       } : null;
     } catch (error) {
       console.error('Error updating post:', error);

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AuthModal from '@/components/auth/AuthModal';
 import Index from '@/pages/Index';
@@ -31,11 +32,11 @@ import DocumentViewerPage from '@/pages/DocumentViewerPage';
 import ResourceUpload from '@/pages/ResourceUpload';
 import PendingResources from '@/pages/PendingResources';
 import ThumbnailDemo from '@/pages/ThumbnailDemo';
-import SettingsLayout from '@/components/settings/SettingsLayout';
-import Settings from '@/components/settings/Settings';
-import AccountSettings from '@/components/settings/AccountSettings';
-import NotificationSettings from '@/components/settings/NotificationSettings';
-import PrivacySettings from '@/components/settings/PrivacySettings';
+import SettingsLayout from '@/pages/settings/SettingsLayout';
+import Settings from '@/pages/Settings';
+import AccountSettings from '@/pages/settings/AccountSettings';
+import NotificationSettings from '@/pages/settings/NotificationSettings';
+import PrivacySettings from '@/pages/settings/PrivacySettings';
 import NotFound from '@/pages/NotFound';
 
 const ScrollToTop = () => {
@@ -49,9 +50,9 @@ const ScrollToTop = () => {
 };
 
 const AppContent = () => {
-  const { isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <span className="loading loading-spinner text-primary"></span>
@@ -61,7 +62,10 @@ const AppContent = () => {
 
   return (
     <Router>
-      <AuthModal />
+      <AuthModal 
+        open={false} 
+        onOpenChange={() => {}} 
+      />
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Index />} />
@@ -106,11 +110,9 @@ const AppContent = () => {
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+    <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <AppContent />
       </LanguageProvider>
     </ThemeProvider>
   );
