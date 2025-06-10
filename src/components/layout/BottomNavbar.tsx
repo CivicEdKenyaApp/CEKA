@@ -4,11 +4,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, FileText, Upload, Users, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/providers/AuthProvider';
 import { translate } from '@/lib/utils';
 
 const BottomNavbar = () => {
   const location = useLocation();
   const { language } = useLanguage();
+  const { session } = useAuth();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   // Update window width on resize
@@ -43,8 +45,8 @@ const BottomNavbar = () => {
       icon: <Users className="h-5 w-5" />
     },
     {
-      name: 'Profile',
-      path: '/auth',
+      name: session ? 'Profile' : 'Sign In',
+      path: session ? '/profile/settings' : '/auth',
       icon: <User className="h-5 w-5" />
     }
   ];
@@ -66,7 +68,8 @@ const BottomNavbar = () => {
         {navItems.map((item) => {
           const isActive = 
             location.pathname === item.path || 
-            (item.path !== '/' && location.pathname.includes(item.path));
+            (item.path !== '/' && location.pathname.includes(item.path)) ||
+            (item.path === '/profile/settings' && location.pathname.startsWith('/profile'));
             
           return (
             <Link

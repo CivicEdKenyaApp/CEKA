@@ -20,15 +20,11 @@ export const useViewTracking = ({
       if (hasTracked.current || !resourceId) return;
       
       try {
-        // Track the view in the database
-        const { error } = await supabase
-          .from('resource_views')
-          .insert({
-            resource_id: resourceId,
-            resource_type: resourceType,
-            view_type: viewType,
-            viewed_at: new Date().toISOString()
-          });
+        const { error } = await supabase.rpc('track_resource_view', {
+          p_resource_id: resourceId,
+          p_resource_type: resourceType,
+          p_view_type: viewType
+        });
 
         if (error) {
           console.error('Error tracking view:', error);
@@ -51,14 +47,11 @@ export const useViewTracking = ({
 
   const trackVideoPlay = async () => {
     try {
-      const { error } = await supabase
-        .from('resource_views')
-        .insert({
-          resource_id: resourceId,
-          resource_type: resourceType,
-          view_type: 'video_play',
-          viewed_at: new Date().toISOString()
-        });
+      const { error } = await supabase.rpc('track_resource_view', {
+        p_resource_id: resourceId,
+        p_resource_type: resourceType,
+        p_view_type: 'video_play'
+      });
 
       if (error) {
         console.error('Error tracking video play:', error);

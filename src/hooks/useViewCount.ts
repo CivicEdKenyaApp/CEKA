@@ -6,20 +6,19 @@ export const useViewCount = (resourceId: string, resourceType: string) => {
   const [viewCount, setViewCount] = useState(0);
 
   useEffect(() => {
-    if (!resourceId) return;
+    if (!resourceId || !resourceType) return;
 
     const fetchViewCount = async () => {
       try {
-        const { data, error } = await supabase
-          .from('resource_views')
-          .select('id')
-          .eq('resource_id', resourceId)
-          .eq('resource_type', resourceType);
+        const { data, error } = await supabase.rpc('get_resource_view_count', {
+          p_resource_id: resourceId,
+          p_resource_type: resourceType
+        });
 
         if (error) {
           console.error('Error fetching view count:', error);
         } else {
-          setViewCount(data?.length || 0);
+          setViewCount(data || 0);
         }
       } catch (error) {
         console.error('Error fetching view count:', error);

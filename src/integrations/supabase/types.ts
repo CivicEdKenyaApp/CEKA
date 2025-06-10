@@ -548,6 +548,42 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          resource_id: string
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+          view_type: string
+          viewed_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id: string
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+          view_type?: string
+          viewed_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+          view_type?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           category: string
@@ -914,6 +950,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_resource_view_count: {
+        Args: { p_resource_id: string; p_resource_type: string }
+        Returns: number
+      }
       get_upcoming_events: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -979,6 +1019,17 @@ export type Database = {
       submit_feedback: {
         Args: { user_id: string; subject: string; body: string }
         Returns: undefined
+      }
+      track_resource_view: {
+        Args: {
+          p_resource_id: string
+          p_resource_type: string
+          p_view_type?: string
+          p_user_id?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: string
       }
       unfollow_bill: {
         Args: { user_id: string; bill_id: string }
