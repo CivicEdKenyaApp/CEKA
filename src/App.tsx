@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -11,6 +10,7 @@ import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
+import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
 import ResourceHub from '@/pages/ResourceHub';
@@ -82,6 +82,7 @@ const AppContent: React.FC = () => {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/resources" element={<ResourceLibrary />} />
         <Route path="/resources/:id" element={<ResourceDetail />} />
         <Route path="/resources/upload" element={<ResourceUpload />} />

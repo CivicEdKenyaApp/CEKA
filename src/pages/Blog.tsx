@@ -8,35 +8,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, Search, Settings } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { BlogPost } from '@/services/blogService';
+import { BlogPost, blogService } from '@/services/blogService';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import { useAdmin } from '@/hooks/useAdmin';
 
 const Blog = () => {
   const { posts, loading, createPost, updatePost } = useBlog();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  // Updated admin check to include the new admin email
-  const isAdmin = user?.email === 'admin@ceka.app' || user?.email === 'civiceducationkenya@gmail.com';
-
-  // Debug logging to help track data flow
-  console.log('Blog Debug Info:', {
-    posts: posts,
-    postsCount: posts.length,
-    user: user,
-    userEmail: user?.email,
-    isAdmin: isAdmin,
-    loading: loading,
-    searchTerm: searchTerm,
-    filterStatus: filterStatus
-  });
-
+  // Filter posts based on authentication and admin status
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,21 +33,19 @@ const Blog = () => {
     
     const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
     
-    // Show drafts only to admins
-    if (post.status === 'draft' && !isAdmin) return false;
+    // Show published posts to everyone
+    // Show drafts only to admins or the post author
+    if (post.status === 'published') {
+      return matchesSearch && matchesStatus;
+    } else if (post.status === 'draft') {
+      return isAdmin && matchesSearch && matchesStatus;
+    }
     
-    return matchesSearch && matchesStatus;
+    return false;
   });
 
-  // Additional debug for filtered posts
-  console.log('Filtered Posts Debug:', {
-    filteredPosts: filteredPosts,
-    filteredPostsCount: filteredPosts.length,
-    publishedPosts: filteredPosts.filter(post => post.status === 'published'),
-    draftPosts: filteredPosts.filter(post => post.status === 'draft'),
-    publishedCount: filteredPosts.filter(post => post.status === 'published').length,
-    draftCount: filteredPosts.filter(post => post.status === 'draft').length
-  });
+  // Separate published posts for public display
+  const publishedPosts = filteredPosts.filter(post => post.status === 'published');
 
   const handleCreateNew = () => {
     if (!user) {
@@ -86,7 +73,7 @@ const Blog = () => {
         setIsCreating(false);
         toast({
           title: "Success",
-          description: "Post created successfully"
+          description: "Post submitted for review"
         });
       }
     } catch (error) {
@@ -138,14 +125,24 @@ const Blog = () => {
             </p>
           </div>
           
-          <Button onClick={handleCreateNew} className="mt-4 md:mt-0">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            New Post
-          </Button>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button onClick={handleCreateNew} className="">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              New Post
+            </Button>
+            
+            {isAdmin && (
+              <Button variant="outline" asChild>
+                <Link to="/admin/dashboard">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Admin
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Changed default tab to show all posts for better user experience */}
-        <Tabs defaultValue={isAdmin ? "all" : "published"} className="space-y-6">
+        <Tabs defaultValue="published" className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <TabsList>
               <TabsTrigger value="published">Published</TabsTrigger>
@@ -180,7 +177,7 @@ const Blog = () => {
           </div>
 
           <TabsContent value="published">
-            <BlogList posts={filteredPosts.filter(post => post.status === 'published')} />
+            <BlogList posts={publishedPosts} />
           </TabsContent>
 
           {isAdmin && (

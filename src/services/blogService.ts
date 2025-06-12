@@ -13,6 +13,9 @@ export interface BlogPost {
   updated_at: string;
   tags: string[];
   status: 'draft' | 'published' | 'archived';
+  scheduled_at?: string;
+  rejection_reason?: string;
+  admin_notes?: string;
 }
 
 class BlogService {
@@ -37,6 +40,32 @@ class BlogService {
       }));
     } catch (error) {
       console.error('Error loading posts:', error);
+      throw error;
+    }
+  }
+
+  async getPublishedPosts(): Promise<BlogPost[]> {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+      
+      return (data || []).map(post => ({
+        ...post,
+        published_at: post.published_at || post.created_at,
+        status: (post.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: post.tags || [],
+        author: post.author || 'Anonymous',
+        excerpt: post.excerpt || '',
+        created_at: post.created_at || '',
+        updated_at: post.updated_at || ''
+      }));
+    } catch (error) {
+      console.error('Error loading published posts:', error);
       throw error;
     }
   }
@@ -95,6 +124,8 @@ class BlogService {
 
   async createPost(postData: Partial<BlogPost>): Promise<BlogPost> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .insert({
@@ -102,10 +133,10 @@ class BlogService {
           slug: postData.slug || this.generateSlug(postData.title || ''),
           content: postData.content,
           excerpt: postData.excerpt,
-          author: postData.author,
+          author: postData.author || user?.email || 'Anonymous',
           tags: postData.tags || [],
-          status: postData.status || 'draft',
-          published_at: postData.status === 'published' ? new Date().toISOString() : null
+          status: 'draft', // Always create as draft for review
+          published_at: null
         })
         .select()
         .single();

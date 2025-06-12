@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       advocacy_toolkit: {
         Row: {
           category: string
@@ -170,12 +200,15 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          admin_notes: string | null
           author: string | null
           content: string
           created_at: string | null
           excerpt: string | null
           id: string
           published_at: string | null
+          rejection_reason: string | null
+          scheduled_at: string | null
           slug: string
           status: string | null
           tags: string[] | null
@@ -183,12 +216,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_notes?: string | null
           author?: string | null
           content: string
           created_at?: string | null
           excerpt?: string | null
           id?: string
           published_at?: string | null
+          rejection_reason?: string | null
+          scheduled_at?: string | null
           slug: string
           status?: string | null
           tags?: string[] | null
@@ -196,12 +232,15 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_notes?: string | null
           author?: string | null
           content?: string
           created_at?: string | null
           excerpt?: string | null
           id?: string
           published_at?: string | null
+          rejection_reason?: string | null
+          scheduled_at?: string | null
           slug?: string
           status?: string | null
           tags?: string[] | null
@@ -974,6 +1013,10 @@ export type Database = {
           avatar_url: string
           email: string
         }[]
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       list_open_volunteer_opportunities: {
         Args: Record<PropertyKey, never>
