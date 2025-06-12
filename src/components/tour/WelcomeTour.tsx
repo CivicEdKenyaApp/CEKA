@@ -9,7 +9,6 @@ interface WelcomeTourProps {
 }
 
 const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -80,18 +79,8 @@ const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="flex gap-1">
-                {tourSteps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index <= currentStep ? 'bg-kenya-green' : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="ml-2 font-medium">
-                {currentStep + 1} of {tourSteps.length}
+              <span className="font-medium">
+                {tourSteps.length} steps
               </span>
             </div>
           </div>
@@ -103,7 +92,6 @@ const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
             onFinalStepCompleted={handleComplete}
             backButtonText="Previous"
             nextButtonText="Next"
-            onStepChange={(step) => setCurrentStep(step - 1)}
           >
             {tourSteps.map((stepData, index) => {
               const IconComponent = stepData.icon;
@@ -138,7 +126,7 @@ const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
                         <div className="w-2 h-2 bg-kenya-green rounded-full animate-bounce" />
                         <span className="text-sm text-gray-500 font-medium">
-                          {index === tourSteps.length - 1 ? "Ready to explore!" : "Swipe to continue"}
+                          {index === tourSteps.length - 1 ? "Ready to explore!" : "Continue tour"}
                         </span>
                         {index < tourSteps.length - 1 && (
                           <ArrowRight className="h-3 w-3 text-gray-400" />
