@@ -1,346 +1,381 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Bell, Calendar, CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
-import { BlogPost } from '@/services/blogService';
+import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useState } from 'react';
 
 const AdminDashboard = () => {
   const { 
     notifications, 
     draftPosts, 
     isAdmin, 
-    loading,
+    loading, 
     markNotificationAsRead,
     markAllNotificationsAsRead,
     updatePostStatus,
     schedulePost,
-    rejectPost
+    rejectPost,
+    refreshAdminData
   } = useAdmin();
   
   const { toast } = useToast();
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [adminNotes, setAdminNotes] = useState('');
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
-
-  if (!isAdmin) {
-    return (
-      <div className="container py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">You don't have permission to access the admin dashboard.</p>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <div className="text-center">Loading admin dashboard...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading admin dashboard...</div>
       </div>
     );
   }
 
-  const unreadNotifications = notifications.filter(n => !n.is_read);
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-600">Access denied. Admin privileges required.</div>
+      </div>
+    );
+  }
 
-  const handlePublishPost = async (post: BlogPost) => {
+  const unreadNotifications = notifications.filter(n => !n.is_read).length;
+
+  const handlePublishPost = async (postId: string) => {
     try {
-      await updatePostStatus(post.id, 'published', adminNotes);
+      await updatePostStatus(postId, 'published', adminNotes);
       toast({
         title: "Success",
-        description: "Post published successfully"
+        description: "Post has been published successfully.",
       });
-      setSelectedPost(null);
       setAdminNotes('');
+      await refreshAdminData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to publish post",
-        variant: "destructive"
+        description: "Failed to publish post. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleRejectPost = async (post: BlogPost) => {
+  const handleRejectPost = async (postId: string) => {
     if (!rejectionReason.trim()) {
       toast({
         title: "Error",
-        description: "Please provide a rejection reason",
-        variant: "destructive"
+        description: "Please provide a rejection reason.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
-      await rejectPost(post.id, rejectionReason);
+      await rejectPost(postId, rejectionReason);
       toast({
         title: "Success",
-        description: "Post rejected"
+        description: "Post has been rejected.",
       });
-      setSelectedPost(null);
       setRejectionReason('');
+      setSelectedPost(null);
+      await refreshAdminData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reject post",
-        variant: "destructive"
+        description: "Failed to reject post. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleSchedulePost = async (post: BlogPost) => {
+  const handleSchedulePost = async (postId: string) => {
     if (!scheduledDate) {
       toast({
         title: "Error",
-        description: "Please select a scheduled date",
-        variant: "destructive"
+        description: "Please select a scheduled date.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
-      await schedulePost(post.id, scheduledDate);
+      await schedulePost(postId, scheduledDate);
       toast({
         title: "Success",
-        description: "Post scheduled successfully"
+        description: "Post has been scheduled successfully.",
       });
-      setSelectedPost(null);
       setScheduledDate('');
+      await refreshAdminData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to schedule post",
-        variant: "destructive"
+        description: "Failed to schedule post. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Badge variant="secondary" className="flex items-center gap-2">
-          <Bell className="h-4 w-4" />
-          {unreadNotifications.length} unread
-        </Badge>
+        <Button 
+          onClick={refreshAdminData}
+          variant="outline"
+        >
+          Refresh Data
+        </Button>
       </div>
 
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="notifications">
-            Notifications ({unreadNotifications.length})
-          </TabsTrigger>
-          <TabsTrigger value="drafts">
-            Draft Posts ({draftPosts.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+            <Bell className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{unreadNotifications}</div>
+            <p className="text-xs text-muted-foreground">
+              Unread notifications
+            </p>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Notifications</CardTitle>
-              {unreadNotifications.length > 0 && (
-                <Button onClick={markAllNotificationsAsRead} variant="outline" size="sm">
-                  Mark All Read
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {notifications.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No notifications</p>
-              ) : (
-                <div className="space-y-4">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 rounded-lg border ${
-                        notification.is_read ? 'bg-muted/50' : 'bg-background border-primary/20'
-                      }`}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Draft Posts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{draftPosts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {draftPosts.filter(post => post.scheduled_at).length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Scheduled posts
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Notifications Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Recent Notifications</CardTitle>
+            {unreadNotifications > 0 && (
+              <Button 
+                onClick={markAllNotificationsAsRead}
+                variant="outline"
+                size="sm"
+              >
+                Mark All Read
+              </Button>
+            )}
+          </div>
+          <CardDescription>
+            Stay updated with system activities
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {notifications.length === 0 ? (
+            <p className="text-muted-foreground">No notifications available.</p>
+          ) : (
+            <div className="space-y-3">
+              {notifications.slice(0, 5).map((notification) => (
+                <div 
+                  key={notification.id}
+                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
+                    !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium">{notification.title}</h4>
+                    <p className="text-sm text-muted-foreground">{notification.message}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(notification.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {!notification.is_read && (
+                    <Button
+                      onClick={() => markNotificationAsRead(notification.id)}
+                      variant="ghost"
+                      size="sm"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium">{notification.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(notification.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                        {!notification.is_read && (
-                          <Button
-                            onClick={() => markNotificationAsRead(notification.id)}
-                            variant="ghost"
-                            size="sm"
-                          >
-                            Mark Read
-                          </Button>
+                      Mark Read
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Draft Posts Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Draft Posts Management</CardTitle>
+          <CardDescription>
+            Review and manage blog post submissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {draftPosts.length === 0 ? (
+            <p className="text-muted-foreground">No draft posts awaiting review.</p>
+          ) : (
+            <div className="space-y-4">
+              {draftPosts.map((post) => (
+                <div key={post.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{post.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        By {post.author} • {new Date(post.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm mb-3">{post.excerpt}</p>
+                      
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Badge variant="outline">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {post.status}
+                        </Badge>
+                        {post.scheduled_at && (
+                          <Badge variant="secondary">
+                            Scheduled for {new Date(post.scheduled_at).toLocaleDateString()}
+                          </Badge>
                         )}
                       </div>
+
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {post.tags.map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </div>
 
-        <TabsContent value="drafts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Draft Posts Awaiting Review</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {draftPosts.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No draft posts</p>
-              ) : (
-                <div className="space-y-4">
-                  {draftPosts.map((post) => (
-                    <div key={post.id} className="p-4 rounded-lg border">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium">{post.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {post.excerpt || post.content.substring(0, 150) + '...'}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>By {post.author}</span>
-                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                            {post.scheduled_at && (
-                              <Badge variant="outline" className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Scheduled: {new Date(post.scheduled_at).toLocaleDateString()}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                onClick={() => setSelectedPost(post)}
-                                variant="outline"
-                                size="sm"
-                              >
-                                Review
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Review Post: {post.title}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <h4 className="font-medium mb-2">Content Preview</h4>
-                                  <div className="p-4 bg-muted rounded-lg max-h-64 overflow-y-auto">
-                                    <div className="whitespace-pre-wrap text-sm">
-                                      {post.content}
-                                    </div>
-                                  </div>
-                                </div>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <Button
+                      onClick={() => handlePublishPost(post.id)}
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Publish
+                    </Button>
 
-                                <div className="space-y-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Admin Notes (optional)</label>
-                                    <Textarea
-                                      value={adminNotes}
-                                      onChange={(e) => setAdminNotes(e.target.value)}
-                                      placeholder="Add notes about this post..."
-                                      className="mt-1"
-                                    />
-                                  </div>
+                    <Button
+                      onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Reject
+                    </Button>
 
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={() => handlePublishPost(post)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                      Publish Now
-                                    </Button>
-                                    
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button variant="outline" className="flex items-center gap-2">
-                                          <Calendar className="h-4 w-4" />
-                                          Schedule
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Schedule Post</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4">
-                                          <div>
-                                            <label className="text-sm font-medium">Publish Date & Time</label>
-                                            <Input
-                                              type="datetime-local"
-                                              value={scheduledDate}
-                                              onChange={(e) => setScheduledDate(e.target.value)}
-                                              className="mt-1"
-                                            />
-                                          </div>
-                                          <Button onClick={() => handleSchedulePost(post)}>
-                                            Schedule Post
-                                          </Button>
-                                        </div>
-                                      </DialogContent>
-                                    </Dialog>
+                    <Button
+                      onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Calendar className="w-4 h-4 mr-1" />
+                      Schedule
+                    </Button>
+                  </div>
 
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button variant="destructive" className="flex items-center gap-2">
-                                          <XCircle className="h-4 w-4" />
-                                          Reject
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Reject Post</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4">
-                                          <div>
-                                            <label className="text-sm font-medium">Rejection Reason</label>
-                                            <Textarea
-                                              value={rejectionReason}
-                                              onChange={(e) => setRejectionReason(e.target.value)}
-                                              placeholder="Please provide a reason for rejection..."
-                                              className="mt-1"
-                                            />
-                                          </div>
-                                          <Button 
-                                            onClick={() => handleRejectPost(post)}
-                                            variant="destructive"
-                                          >
-                                            Reject Post
-                                          </Button>
-                                        </div>
-                                      </DialogContent>
-                                    </Dialog>
-                                  </div>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
+                  {selectedPost === post.id && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Admin Notes (optional)
+                        </label>
+                        <Textarea
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          placeholder="Add any notes for this post..."
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Rejection Reason
+                        </label>
+                        <Textarea
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="Please provide a reason for rejection..."
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Schedule Date
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleRejectPost(post.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          Confirm Rejection
+                        </Button>
+                        <Button
+                          onClick={() => handleSchedulePost(post.id)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Confirm Schedule
+                        </Button>
+                        <Button
+                          onClick={() => setSelectedPost(null)}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
