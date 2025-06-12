@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { BlogPost } from '@/services/blogService';
 
 export interface AdminNotification {
   id: string;
@@ -74,7 +75,7 @@ class AdminService {
     }
   }
 
-  async getDraftPosts() {
+  async getDraftPosts(): Promise<BlogPost[]> {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
@@ -83,7 +84,17 @@ class AdminService {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(post => ({
+        ...post,
+        published_at: post.published_at || post.created_at,
+        status: (post.status as 'draft' | 'published' | 'archived') || 'draft',
+        tags: post.tags || [],
+        author: post.author || 'Anonymous',
+        excerpt: post.excerpt || '',
+        created_at: post.created_at || '',
+        updated_at: post.updated_at || ''
+      }));
     } catch (error) {
       console.error('Error fetching draft posts:', error);
       throw error;
