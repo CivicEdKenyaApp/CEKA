@@ -12,7 +12,7 @@ import { PlusCircle, Search, Settings } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { BlogPost, blogService } from '@/services/blogService';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 
 const Blog = () => {
@@ -20,6 +20,7 @@ const Blog = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,13 +74,18 @@ const Blog = () => {
         setIsCreating(false);
         toast({
           title: "Success",
-          description: "Post submitted for review"
+          description: "Post submitted for review successfully! You'll be notified once it's approved."
         });
       }
+      
+      // Navigate back to the main blog page
+      setTimeout(() => {
+        navigate('/blog');
+      }, 1500);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save post",
+        description: "Failed to save post. Please try again.",
         variant: "destructive"
       });
     }

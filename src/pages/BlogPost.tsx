@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, User, ArrowLeft, Heart, Share2, MessageCircle, Bookmark, Send } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Heart, Share2, MessageCircle, Bookmark, Send, Eye } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useViewTracking } from '@/hooks/useViewTracking';
@@ -37,7 +37,10 @@ const BlogPostPage = () => {
 
   useEffect(() => {
     const loadPost = async () => {
-      if (!slug) return;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
@@ -184,7 +187,7 @@ const BlogPostPage = () => {
         <div className="container py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Post Not Found</h1>
-            <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist.</p>
+            <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist or may have been removed.</p>
             <Button asChild>
               <Link to="/blog">Back to Blog</Link>
             </Button>
@@ -234,7 +237,8 @@ const BlogPostPage = () => {
                   {new Date(post.published_at || post.created_at).toLocaleDateString()}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Eye className="h-4 w-4" />
                 {viewCount} views
               </div>
             </div>

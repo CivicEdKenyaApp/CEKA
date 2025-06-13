@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { Toaster } from '@/components/ui/toaster';
 import ScrollListener from '@/components/auth/ScrollListener';
 import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
@@ -116,6 +118,7 @@ const AppContent: React.FC = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <Toaster />
     </>
   );
 };
