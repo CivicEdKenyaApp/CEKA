@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
 
         // Show success toast for sign in
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (event === AuthChangeEvent.SIGNED_IN && session?.user) {
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in to CEKA.",
@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Show success toast for sign up
-        if (event === 'SIGNED_UP' && session?.user) {
+        if (event === AuthChangeEvent.SIGNED_UP && session?.user) {
           toast({
             title: "Account created!",
             description: "Welcome to CEKA! Your account has been created successfully.",
