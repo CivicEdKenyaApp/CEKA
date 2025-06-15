@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings } from 'lucide-react';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/providers/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -26,6 +28,7 @@ const Navbar = () => {
   const [showBg, setShowBg] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   const { unreadCount } = useNotifications();
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
@@ -59,6 +62,11 @@ const Navbar = () => {
     { name: 'Join Us', path: '/join-community' },
   ];
 
+  // Add admin item to navItems if user is admin
+  const allNavItems = user && isAdmin && !adminLoading 
+    ? [...navItems, { name: 'Admin', path: '/admin/dashboard', icon: Shield }]
+    : navItems;
+
   const languageOptions = [
     { code: 'en', name: 'English' },
     { code: 'sw', name: 'Swahili' },
@@ -81,7 +89,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1">
-            {navItems.map((item) =>
+            {allNavItems.map((item) =>
               item.dropdown ? (
                 <div key={item.name} className="relative group">
                   <button
@@ -117,10 +125,11 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-muted ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-muted flex items-center ${
                     isActive(item.path) ? 'text-primary' : 'text-foreground/80'
                   }`}
                 >
+                  {item.icon && <item.icon className="h-4 w-4 mr-1" />}
                   {item.name}
                 </Link>
               )
@@ -236,7 +245,7 @@ const Navbar = () => {
           }`}
         >
           {/* Navigation Links */}
-          {navItems.map((item) =>
+          {allNavItems.map((item) =>
             item.dropdown ? (
               <div key={item.name} className="space-y-1">
                 <div
@@ -269,12 +278,13 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                className={`block px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                   isActive(item.path)
                     ? 'bg-muted/70 text-primary'
                     : 'text-foreground/80 hover:bg-muted/50'
                 }`}
               >
+                {item.icon && <item.icon className="h-4 w-4 mr-2" />}
                 {item.name}
               </Link>
             )
