@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -49,25 +48,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
 
         // Check admin status
-        const adminStatus = checkAdminStatus(session?.user?.email);
+        checkAdminStatus(session?.user?.email);
 
         // Show success toast for sign in
         if (event === 'SIGNED_IN' && session?.user) {
-          if (adminStatus) {
-            toast({
-              title: "Admin Access Granted!",
-              description: "Welcome back, administrator. Redirecting to admin dashboard...",
-            });
-            // Auto-redirect admin to dashboard
-            setTimeout(() => {
-              window.location.href = '/admin/dashboard';
-            }, 1500);
-          } else {
-            toast({
-              title: "Welcome back!",
-              description: "You have successfully signed in to CEKA.",
-            });
-          }
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in to CEKA.",
+          });
         }
 
         // Show success toast for sign up
