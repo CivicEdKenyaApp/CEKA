@@ -23,6 +23,14 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Define proper types for navigation items
+type NavItem = {
+  name: string;
+  path: string;
+  dropdown?: { name: string; path: string; }[];
+  icon?: React.ComponentType<{ className?: string }>;
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showBg, setShowBg] = useState(false);
@@ -47,7 +55,7 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: 'Home', path: '/' },
     { name: 'Blog', path: '/blog' },
     { name: 'Resources', path: '/resources' },
@@ -63,7 +71,7 @@ const Navbar = () => {
   ];
 
   // Add admin item to navItems if user is admin
-  const allNavItems = user && isAdmin && !adminLoading 
+  const allNavItems: NavItem[] = user && isAdmin && !adminLoading 
     ? [...navItems, { name: 'Admin', path: '/admin/dashboard', icon: Shield }]
     : navItems;
 
