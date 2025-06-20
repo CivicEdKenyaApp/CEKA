@@ -8,8 +8,6 @@ import { Toaster } from '@/components/ui/toaster';
 import ScrollListener from '@/components/auth/ScrollListener';
 import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
-import SplashScreen from '@/components/SplashScreen';
-import LoadingScreen from '@/components/LoadingScreen';
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
@@ -61,9 +59,6 @@ const ScrollToTop = () => {
 const AppContent: React.FC = () => {
   const { session } = useAuth();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
-  const [showSplashScreen, setShowSplashScreen] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const location = useLocation();
 
   useEffect(() => {
     // Show welcome tour for new authenticated users
@@ -75,31 +70,14 @@ const AppContent: React.FC = () => {
     }
   }, [session]);
 
-  useEffect(() => {
-    // Show loading screen for major page transitions
-    const majorRoutes = ['/admin/dashboard', '/blog', '/resources', '/legislative-tracker'];
-    const isMajorRoute = majorRoutes.some(route => location.pathname.startsWith(route));
-    
-    if (isMajorRoute) {
-      setLoading(true);
-      const timer = setTimeout(() => setLoading(false), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname]);
-
   const handleTourComplete = () => {
     localStorage.setItem('ceka-welcome-tour-seen', 'true');
     setShowWelcomeTour(false);
   };
 
-  if (showSplashScreen) {
-    return <SplashScreen />;
-  }
-
   return (
     <>
       <ScrollToTop />
-      {loading && <LoadingScreen />}
       {showWelcomeTour && <WelcomeTour onComplete={handleTourComplete} />}
       <Routes>
         <Route path="/" element={<Index />} />

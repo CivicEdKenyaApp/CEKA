@@ -1,224 +1,373 @@
 
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, Settings, LogOut, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield } from 'lucide-react';
+import Logo from '@/components/ui/Logo';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/utils';
-import { useAuth } from '@/providers/AuthProvider';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/providers/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+// Define proper types for navigation items
+type NavItem = {
+  name: string;
+  path: string;
+  dropdown?: { name: string; path: string; }[];
+  icon?: React.ComponentType<{ className?: string }>;
+};
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
-  const { user, signOut, isAdmin } = useAuth();
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showBg, setShowBg] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { unreadCount } = useNotifications();
+  const { language, setLanguage } = useLanguage();
+  const isMobile = useIsMobile();
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBg(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const navLinks = [
-    { name: translate('Home', language), path: '/' },
-    { name: translate('Resources', language), path: '/resources' },
-    { name: translate('Legislative Tracker', language), path: '/legislative-tracker' },
-    { name: translate('Blog', language), path: '/blog' },
-    { name: translate('Volunteer', language), path: '/volunteer' },
+  useEffect(() => {
+    setIsOpen(false); // Close mobile menu on route change
+  }, [location.pathname]);
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const navItems: NavItem[] = [
+    { name: 'Home', path: '/' },
+    { name: 'Blog', path: '/blog' },
+    { name: 'Resources', path: '/resources' },
+    { 
+      name: 'Legislative', 
+      path: '/legislative-tracker',
+      dropdown: [
+        { name: 'Bill Tracker', path: '/legislative-tracker' },
+        { name: 'Reject Finance Bill', path: '/reject-finance-bill' },
+      ]
+    },
+    { name: 'Join Us', path: '/join-community' },
   ];
 
-  const isActivePath = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
+  // Add admin item to navItems if user is admin
+  const allNavItems: NavItem[] = user && isAdmin && !adminLoading 
+    ? [...navItems, { name: 'Admin', path: '/admin/dashboard', icon: Shield }]
+    : navItems;
+
+  const languageOptions = [
+    { code: 'en', name: 'English' },
+    { code: 'sw', name: 'Swahili' },
+    { code: 'ksl', name: 'Kenyan Sign Language' },
+    { code: 'br', name: 'Braille' },
+  ];
 
   return (
-    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <nav
+      className={`sticky top-0 z-30 w-full transition-all duration-200 ${
+        showBg ? 'bg-background shadow-md' : 'bg-background/80 backdrop-blur-sm'
+      }`}
+    >
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-kenya-green rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CE</span>
-            </div>
-            <span className="font-bold text-xl">CEKA</span>
+          <Link to="/" className="flex items-center">
+            <Logo className="h-8 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-sm font-medium transition-colors hover:text-kenya-green ${
-                  isActivePath(link.path) 
-                    ? 'text-kenya-green border-b-2 border-kenya-green pb-1' 
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Language Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === 'en' ? 'sw' : 'en')}
-              className="text-xs"
-            >
-              {language === 'en' ? 'SW' : 'EN'}
-            </Button>
-
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-xs"
-            >
-              {theme === 'light' ? '🌙' : '☀️'}
-            </Button>
-
-            {/* User Menu */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span className="hidden lg:inline">
-                      {user.email?.split('@')[0]}
-                    </span>
-                    {isAdmin && (
-                      <Badge variant="default" className="bg-kenya-green text-white text-xs">
-                        Admin
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button asChild size="sm">
-                <Link to="/auth">Sign In</Link>
-              </Button>
+          <div className="hidden md:flex space-x-1">
+            {allNavItems.map((item) =>
+              item.dropdown ? (
+                <div key={item.name} className="relative group">
+                  <button
+                    className={`px-3 py-2 rounded-md text-sm font-medium flex items-center hover:bg-muted ${
+                      location.pathname === item.path || 
+                      item.dropdown.some(subItem => location.pathname === subItem.path)
+                        ? 'text-primary'
+                        : 'text-foreground/80'
+                    }`}
+                  >
+                    {item.name}
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </button>
+                  <div className="absolute left-0 mt-1 w-48 origin-top-left rounded-md bg-popover shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      {item.dropdown.map((subItem) => (
+                        <Link
+                          key={subItem.name}
+                          to={subItem.path}
+                          className={`block px-4 py-2 text-sm ${
+                            location.pathname === subItem.path
+                              ? 'bg-muted/70 text-primary'
+                              : 'text-foreground/80 hover:bg-muted/50'
+                          }`}
+                        >
+                          {subItem.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-muted flex items-center ${
+                    isActive(item.path) ? 'text-primary' : 'text-foreground/80'
+                  }`}
+                >
+                  {item.icon && <item.icon className="h-4 w-4 mr-1" />}
+                  {item.name}
+                </Link>
+              )
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+          {/* Right side items */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle - always visible */}
+            <ThemeToggle />
+
+            {/* Notification Bell - always visible */}
+            <Link to="/notifications" className="relative p-2 rounded-md hover:bg-muted">
+              <Bell className="h-5 w-5 text-foreground/80" />
+              {unreadCount > 0 && (
+                <Badge
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-kenya-green text-xs"
+                  variant="destructive"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Link>
+
+            {/* Desktop only icons */}
+            {!isMobile && (
+              <>
+                {/* User Profile Icon */}
+                {user ? (
+                  <Link to="/profile" className="p-2 rounded-md hover:bg-muted">
+                    <User className="h-5 w-5 text-foreground/80" />
+                  </Link>
+                ) : (
+                  <Link to="/auth" className="p-2 rounded-md hover:bg-muted">
+                    <User className="h-5 w-5 text-foreground/80" />
+                  </Link>
+                )}
+
+                {/* Three-dot menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {/* Language Options */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Globe className="mr-2 h-4 w-4" />
+                        <span>Language</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {languageOptions.map((lang) => (
+                          <DropdownMenuItem
+                            key={lang.code}
+                            onClick={() => setLanguage(lang.code as any)}
+                            className={language === lang.code ? 'bg-muted' : ''}
+                          >
+                            {lang.name}
+                            {language === lang.code && <span className="ml-auto">✓</span>}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
+                    <DropdownMenuSeparator />
+
+                    {/* Settings Options */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem asChild>
+                          <Link to="/settings/notifications">Notifications</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/settings/privacy">Privacy</Link>
+                        </DropdownMenuItem>
+                        {user && (
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings/account">Account</Link>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-muted focus:outline-none"
+              >
+                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-4">
-            <div className="flex flex-col space-y-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`text-sm font-medium transition-colors hover:text-kenya-green ${
-                    isActivePath(link.path) ? 'text-kenya-green' : 'text-muted-foreground'
+        <div
+          className={`md:hidden pt-4 pb-3 space-y-1 ${
+            isOpen ? 'block' : 'hidden'
+          }`}
+        >
+          {/* Navigation Links */}
+          {allNavItems.map((item) =>
+            item.dropdown ? (
+              <div key={item.name} className="space-y-1">
+                <div
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === item.path ||
+                    item.dropdown.some(subItem => location.pathname === subItem.path)
+                      ? 'bg-muted/70 text-primary'
+                      : 'text-foreground/80'
                   }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link.name}
-                </Link>
-              ))}
-              
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setLanguage(language === 'en' ? 'sw' : 'en')}
-                  >
-                    {language === 'en' ? 'SW' : 'EN'}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={toggleTheme}>
-                    {theme === 'light' ? '🌙' : '☀️'}
-                  </Button>
+                  {item.name}
                 </div>
-                
-                {user ? (
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm">{user.email?.split('@')[0]}</span>
-                      {isAdmin && (
-                        <Badge variant="default" className="bg-kenya-green text-white text-xs">
-                          Admin
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => navigate('/settings')}>
-                        Settings
-                      </Button>
-                      {isAdmin && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => navigate('/admin/dashboard')}
-                        >
-                          Admin
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" onClick={handleSignOut}>
-                        Sign Out
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <Button asChild size="sm">
-                    <Link to="/auth">Sign In</Link>
-                  </Button>
-                )}
+                <div className="pl-4 space-y-1">
+                  {item.dropdown.map((subItem) => (
+                    <Link
+                      key={subItem.name}
+                      to={subItem.path}
+                      className={`block px-3 py-2 rounded-md text-sm ${
+                        location.pathname === subItem.path
+                          ? 'bg-muted/50 text-primary'
+                          : 'text-foreground/70 hover:bg-muted/30'
+                      }`}
+                    >
+                      {subItem.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
+            ) : (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`block px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                  isActive(item.path)
+                    ? 'bg-muted/70 text-primary'
+                    : 'text-foreground/80 hover:bg-muted/50'
+                }`}
+              >
+                {item.icon && <item.icon className="h-4 w-4 mr-2" />}
+                {item.name}
+              </Link>
+            )
+          )}
+
+          {/* Divider */}
+          <div className="border-t border-muted my-4"></div>
+
+          {/* User Profile for Mobile */}
+          <div className="px-3 py-2">
+            {user ? (
+              <Link to="/profile" className="flex items-center text-foreground/80 hover:text-primary">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Link>
+            ) : (
+              <Link to="/auth" className="flex items-center text-foreground/80 hover:text-primary">
+                <User className="h-4 w-4 mr-2" />
+                Sign In
+              </Link>
+            )}
+          </div>
+
+          {/* Language Options for Mobile */}
+          <div className="px-3 py-2">
+            <div className="flex items-center text-foreground/80 mb-2">
+              <Globe className="h-4 w-4 mr-2" />
+              <span className="font-medium">Language</span>
+            </div>
+            <div className="pl-6 space-y-1">
+              {languageOptions.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code as any)}
+                  className={`block w-full text-left px-2 py-1 text-sm rounded ${
+                    language === lang.code ? 'bg-muted text-primary' : 'text-foreground/70 hover:bg-muted/30'
+                  }`}
+                >
+                  {lang.name}
+                  {language === lang.code && <span className="ml-2">✓</span>}
+                </button>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* Settings Options for Mobile */}
+          <div className="px-3 py-2">
+            <div className="flex items-center text-foreground/80 mb-2">
+              <Settings className="h-4 w-4 mr-2" />
+              <span className="font-medium">Settings</span>
+            </div>
+            <div className="pl-6 space-y-1">
+              <Link
+                to="/settings/notifications"
+                className="block px-2 py-1 text-sm text-foreground/70 hover:bg-muted/30 rounded"
+              >
+                Notifications
+              </Link>
+              <Link
+                to="/settings/privacy"
+                className="block px-2 py-1 text-sm text-foreground/70 hover:bg-muted/30 rounded"
+              >
+                Privacy
+              </Link>
+              {user && (
+                <Link
+                  to="/settings/account"
+                  className="block px-2 py-1 text-sm text-foreground/70 hover:bg-muted/30 rounded"
+                >
+                  Account
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   );

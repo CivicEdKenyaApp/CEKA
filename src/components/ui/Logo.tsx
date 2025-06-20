@@ -10,11 +10,20 @@ interface LogoProps {
 
 const Logo = ({ variant = 'full', className }: LogoProps) => {
   return (
-    <Link to="/" className={cn("flex items-center space-x-2", className)}>
-      <div className="w-8 h-8 bg-kenya-green rounded-md flex items-center justify-center">
-        <span className="text-white font-bold text-sm">CE</span>
-      </div>
-      <span className="font-bold text-xl">CEKA</span>
+    <Link to="/" className={cn("flex items-center gap-2", className)}>
+      {(variant === 'full' || variant === 'icon-only') && (
+        <img 
+          src="/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png" 
+          alt="CEKA Logo" 
+          className="h-8 w-8"
+        />
+      )}
+      
+      {(variant === 'full' || variant === 'text-only') && (
+        <div className="flex flex-col">
+          <span className="font-bold text-kenya-green">CEKA</span>
+        </div>
+      )}
     </Link>
   );
 };
