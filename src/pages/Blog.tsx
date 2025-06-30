@@ -26,7 +26,7 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  // Filter posts based on authentication and admin status
+  // Filter posts based on search and status
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,19 +34,13 @@ const Blog = () => {
     
     const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
     
-    // Show published posts to everyone
-    // Show drafts only to admins or the post author
-    if (post.status === 'published') {
-      return matchesSearch && matchesStatus;
-    } else if (post.status === 'draft') {
-      return isAdmin && matchesSearch && matchesStatus;
-    }
-    
-    return false;
+    return matchesSearch && matchesStatus;
   });
 
-  // Separate published posts for public display
+  // Separate posts by status
   const publishedPosts = filteredPosts.filter(post => post.status === 'published');
+  const draftPosts = filteredPosts.filter(post => post.status === 'draft');
+  const allPosts = [...publishedPosts, ...draftPosts]; // Show published first, then drafts
 
   const handleCreateNew = () => {
     if (!user) {
@@ -148,12 +142,12 @@ const Blog = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="published" className="space-y-6">
+        <Tabs defaultValue="all" className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <TabsList>
-              <TabsTrigger value="published">Published</TabsTrigger>
-              {isAdmin && <TabsTrigger value="drafts">Drafts</TabsTrigger>}
-              {isAdmin && <TabsTrigger value="all">All Posts</TabsTrigger>}
+              <TabsTrigger value="all">All Posts</TabsTrigger>
+              <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
+              <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
             </TabsList>
 
             <div className="flex gap-2 w-full md:w-auto">
@@ -182,21 +176,42 @@ const Blog = () => {
             </div>
           </div>
 
+          <TabsContent value="all">
+            <div className="space-y-6">
+              {draftPosts.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-amber-600 border-b border-amber-200 pb-2">
+                    Coming Soon - Awaiting Approval ({draftPosts.length})
+                  </h2>
+                  <BlogList posts={draftPosts} />
+                </div>
+              )}
+              
+              {publishedPosts.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold border-b pb-2">
+                    Published Posts ({publishedPosts.length})
+                  </h2>
+                  <BlogList posts={publishedPosts} />
+                </div>
+              )}
+              
+              {allPosts.length === 0 && (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium mb-2">No posts found</h3>
+                  <p className="text-muted-foreground">Check back later for new content or create the first post!</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="published">
             <BlogList posts={publishedPosts} />
           </TabsContent>
 
-          {isAdmin && (
-            <TabsContent value="drafts">
-              <BlogList posts={filteredPosts.filter(post => post.status === 'draft')} />
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="all">
-              <BlogList posts={filteredPosts} />
-            </TabsContent>
-          )}
+          <TabsContent value="drafts">
+            <BlogList posts={draftPosts} />
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>

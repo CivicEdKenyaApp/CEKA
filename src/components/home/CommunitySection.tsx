@@ -110,7 +110,7 @@ const CommunitySection = () => {
               Connect with like-minded citizens passionate about civic education and making a difference in Kenya.
             </p>
             <Button asChild className="mt-2 bg-kenya-green hover:bg-kenya-green/90">
-              <Link to="/volunteer">
+              <Link to="/blog">
                 Join Now
               </Link>
             </Button>

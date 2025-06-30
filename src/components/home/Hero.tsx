@@ -14,7 +14,7 @@ const Hero = () => {
   const [interactionCounts, setInteractionCounts] = React.useState({
     resources: 0,
     legislative: 0,
-    community: 0,
+    blog: 0,
     volunteer: 0
   });
 
@@ -83,12 +83,12 @@ const Hero = () => {
                   </motion.div>
                 </Link>
                 
-                <Link to="/community" onClick={() => handleCardInteraction('community')}>
+                <Link to="/blog" onClick={() => handleCardInteraction('blog')}>
                   <motion.div 
                     className="kenyan-card-accent p-5 space-y-3 animate-fade-in cursor-pointer" 
                     style={{animationDelay: '0.2s'}}
                     whileHover={{ 
-                      scale: getAnimationScale('community'), 
+                      scale: getAnimationScale('blog'), 
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                       rotate: 1
                     }}
@@ -96,8 +96,8 @@ const Hero = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <Users className="h-6 w-6 text-kenya-red" />
-                    <h3 className="font-medium text-lg">{translate('Community Forum', language)}</h3>
-                    <p className="text-sm text-muted-foreground">{translate('Connect and discuss civic matters with other citizens.', language)}</p>
+                    <h3 className="font-medium text-lg">{translate('Blog & Discussions', language)}</h3>
+                    <p className="text-sm text-muted-foreground">{translate('Read insights and engage in civic discussions with citizens.', language)}</p>
                   </motion.div>
                 </Link>
               </div>
