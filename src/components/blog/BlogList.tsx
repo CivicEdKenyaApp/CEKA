@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useViewCount } from '@/hooks/useViewCount';
-import { DraftPostPreview } from './DraftPostPreview';
 
 interface BlogListProps {
   posts: BlogPost[];
@@ -157,12 +157,6 @@ export function BlogList({ posts }: BlogListProps) {
   return (
     <div className="space-y-6">
       {posts.map((post) => {
-        // If post is draft, show preview component
-        if (post.status === 'draft') {
-          return <DraftPostPreview key={post.id} post={post} />;
-        }
-
-        // Otherwise show regular post card
         const isLiked = likedPosts.has(post.id);
         const isSaved = savedPosts.has(post.id);
         
