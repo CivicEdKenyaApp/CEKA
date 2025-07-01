@@ -23,9 +23,6 @@ export interface AdminSession {
 }
 
 class AdminService {
-  private generateSessionToken(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
 
   async getAdminNotifications(): Promise<AdminNotification[]> {
     try {
@@ -85,68 +82,6 @@ class AdminService {
     } catch (error) {
       console.error('Error checking admin status:', error);
       return false;
-    }
-  }
-
-  async checkAdminWithSessionManagement(): Promise<boolean> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-
-      const sessionToken = this.generateSessionToken();
-      
-      const { data, error } = await supabase.rpc('is_admin_with_session_check', {
-        user_id: user.id,
-        session_token: sessionToken
-      });
-
-      if (error) {
-        console.error('Error checking admin with session:', error);
-        return false;
-      }
-
-      if (data) {
-        // Store session token for cleanup later
-        localStorage.setItem('admin_session_token', sessionToken);
-      }
-
-      return data || false;
-    } catch (error) {
-      console.error('Error checking admin status with session:', error);
-      return false;
-    }
-  }
-
-  async cleanupAdminSession(): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const sessionToken = localStorage.getItem('admin_session_token');
-      
-      if (user && sessionToken) {
-        await supabase.rpc('cleanup_admin_session', {
-          user_id: user.id,
-          session_token: sessionToken
-        });
-        localStorage.removeItem('admin_session_token');
-      }
-    } catch (error) {
-      console.error('Error cleaning up admin session:', error);
-    }
-  }
-
-  async getActiveSessions(): Promise<AdminSession[]> {
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('is_active', true)
-        .order('last_active', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching active sessions:', error);
-      throw error;
     }
   }
 
