@@ -244,14 +244,6 @@ const BlogPostPage = () => {
             </div>
           </header>
 
-          // Add this after setting the post state
-console.log('Post date debugging:', {
-  published_at: post.published_at,
-  created_at: post.created_at,
-  formatted_published: new Date(post.published_at || post.created_at).toLocaleDateString(),
-  title: post.title
-});
-
           <div className="prose prose-lg max-w-none mb-8">
             <div className="whitespace-pre-wrap">{post.content}</div>
           </div>
@@ -345,5 +337,15 @@ console.log('Post date debugging:', {
     </Layout>
   );
 };
+
+
+          // Add this after setting the post state
+console.log('Post date debugging:', {
+  published_at: post.published_at,
+  created_at: post.created_at,
+  formatted_published: new Date(post.published_at || post.created_at).toLocaleDateString(),
+  title: post.title
+});
+
 
 export default BlogPostPage;
