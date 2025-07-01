@@ -205,11 +205,11 @@ const Blog = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="published">
+          <TabsContent value="Published">
             <BlogList posts={publishedPosts} />
           </TabsContent>
 
-          <TabsContent value="drafts">
+          <TabsContent value="Drafts">
             <BlogList posts={draftPosts} />
           </TabsContent>
         </Tabs>
