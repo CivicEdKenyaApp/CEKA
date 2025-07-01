@@ -198,10 +198,32 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           admin_notes: string | null
           author: string | null
+          category_id: string | null
           content: string
           created_at: string | null
           excerpt: string | null
@@ -214,10 +236,12 @@ export type Database = {
           tags: string[] | null
           title: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           admin_notes?: string | null
           author?: string | null
+          category_id?: string | null
           content: string
           created_at?: string | null
           excerpt?: string | null
@@ -230,10 +254,12 @@ export type Database = {
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           admin_notes?: string | null
           author?: string | null
+          category_id?: string | null
           content?: string
           created_at?: string | null
           excerpt?: string | null
@@ -246,8 +272,24 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       civic_education_providers: {
         Row: {
@@ -295,7 +337,15 @@ export type Database = {
           updated_at?: string | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "civic_education_providers_submitted_by_user_id_fkey"
+            columns: ["submitted_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       civic_events: {
         Row: {
@@ -492,7 +542,15 @@ export type Database = {
           virus_scan_result?: string | null
           virus_scanned?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedback: {
         Row: {
@@ -522,7 +580,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -555,7 +621,15 @@ export type Database = {
           type?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -584,6 +658,27 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      resource_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -621,7 +716,15 @@ export type Database = {
           view_type?: string
           viewed_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resource_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resources: {
         Row: {
@@ -754,7 +857,15 @@ export type Database = {
           role?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       volunteer_applications: {
         Row: {
