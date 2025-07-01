@@ -10,11 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useViewCount } from '@/hooks/useViewCount';
 import { DraftPostPreview } from './DraftPostPreview';
 
-console.log('Post dates:', {
-  published_at: post.published_at,
-  created_at: post.created_at,
-  title: post.title
-});
 
 interface BlogListProps {
   posts: BlogPost[];
