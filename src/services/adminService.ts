@@ -12,7 +12,21 @@ export interface AdminNotification {
   created_at: string;
 }
 
+export interface AdminSession {
+  id: string;
+  user_id: string;
+  email: string;
+  session_token: string;
+  created_at: string;
+  last_active: string;
+  is_active: boolean;
+}
+
 class AdminService {
+  private generateSessionToken(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
   async getAdminNotifications(): Promise<AdminNotification[]> {
     try {
       const { data, error } = await supabase
@@ -61,17 +75,78 @@ class AdminService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', user.id)
-        .single();
-
-      if (error) return false;
-      return data?.email === 'civiceducationkenya@gmail.com';
+      const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+      if (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+      }
+      
+      return data || false;
     } catch (error) {
       console.error('Error checking admin status:', error);
       return false;
+    }
+  }
+
+  async checkAdminWithSessionManagement(): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const sessionToken = this.generateSessionToken();
+      
+      const { data, error } = await supabase.rpc('is_admin_with_session_check', {
+        user_id: user.id,
+        session_token: sessionToken
+      });
+
+      if (error) {
+        console.error('Error checking admin with session:', error);
+        return false;
+      }
+
+      if (data) {
+        // Store session token for cleanup later
+        localStorage.setItem('admin_session_token', sessionToken);
+      }
+
+      return data || false;
+    } catch (error) {
+      console.error('Error checking admin status with session:', error);
+      return false;
+    }
+  }
+
+  async cleanupAdminSession(): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const sessionToken = localStorage.getItem('admin_session_token');
+      
+      if (user && sessionToken) {
+        await supabase.rpc('cleanup_admin_session', {
+          user_id: user.id,
+          session_token: sessionToken
+        });
+        localStorage.removeItem('admin_session_token');
+      }
+    } catch (error) {
+      console.error('Error cleaning up admin session:', error);
+    }
+  }
+
+  async getActiveSessions(): Promise<AdminSession[]> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('is_active', true)
+        .order('last_active', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching active sessions:', error);
+      throw error;
     }
   }
 
@@ -155,6 +230,51 @@ class AdminService {
       if (error) throw error;
     } catch (error) {
       console.error('Error rejecting post:', error);
+      throw error;
+    }
+  }
+
+  // Method to populate sample data
+  async populateSampleData(): Promise<void> {
+    try {
+      // Insert sample resources
+      const sampleResources = [
+        {
+          title: 'Understanding Kenya\'s Constitution',
+          description: 'A comprehensive guide to understanding the 2010 Constitution of Kenya and its key provisions.',
+          category: 'Legal Documents',
+          type: 'PDF',
+          url: '/resources/constitution-guide.pdf',
+          thumbnail_url: '/lovable-uploads/constitution-thumbnail.png',
+          is_downloadable: true
+        },
+        {
+          title: 'Citizen\'s Guide to Governance',
+          description: 'Learn how government works and how citizens can participate in democratic processes.',
+          category: 'Civic Education',
+          type: 'Video',
+          url: 'https://www.youtube.com/watch?v=example1',
+          thumbnail_url: '/lovable-uploads/governance-thumbnail.png',
+          is_downloadable: false
+        },
+        {
+          title: 'Your Rights and Freedoms',
+          description: 'An interactive guide to understanding your fundamental rights and freedoms as a Kenyan citizen.',
+          category: 'Human Rights',
+          type: 'Interactive',
+          url: '/resources/rights-guide',
+          thumbnail_url: '/lovable-uploads/rights-thumbnail.png',
+          is_downloadable: false
+        }
+      ];
+
+      for (const resource of sampleResources) {
+        await supabase.from('resources').insert(resource);
+      }
+
+      console.log('Sample data populated successfully');
+    } catch (error) {
+      console.error('Error populating sample data:', error);
       throw error;
     }
   }
