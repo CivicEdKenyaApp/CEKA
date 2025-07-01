@@ -58,7 +58,7 @@ const Footer = () => {
             <li><Link to="/" className="hover:text-kenya-green">{translate('Home', language)}</Link></li>
             <li><Link to="/legislative-tracker" className="hover:text-kenya-green">{translate('Legislative Tracker', language)}</Link></li>
             <li><Link to="/resources" className="hover:text-kenya-green">{translate('Resource Hub', language)}</Link></li>
-            <li><Link to="/community" className="hover:text-kenya-green">{translate('Community', language)}</Link></li>
+            <li><Link to="/blog" className="hover:text-kenya-green">{translate('Blog', language)}</Link></li>
             <li><Link to="/volunteer" className="hover:text-kenya-green">{translate('Volunteer', language)}</Link></li>
           </ul>
         </div>
