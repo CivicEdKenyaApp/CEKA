@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string | null
@@ -36,6 +72,39 @@ export type Database = {
           related_id?: string | null
           title?: string
           type?: string
+        }
+        Relationships: []
+      }
+      admin_sessions: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          last_active: string
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          last_active?: string
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          last_active?: string
+          session_token?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -785,6 +854,30 @@ export type Database = {
           },
         ]
       }
+      system_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_date: string
+          metric_name: string
+          metric_value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_date?: string
+          metric_name: string
+          metric_value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_date?: string
+          metric_name?: string
+          metric_value?: number
+        }
+        Relationships: []
+      }
       user_contributions: {
         Row: {
           ai_summary: string | null
@@ -1004,6 +1097,17 @@ export type Database = {
       apply_for_volunteer_opportunity: {
         Args: { user_id: string; opportunity_id: string; motivation: string }
         Returns: undefined
+      }
+      cleanup_expired_admin_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_admin_session: {
+        Args: { p_user_id: string; p_email: string }
+        Returns: {
+          session_token: string
+          expires_at: string
+        }[]
       }
       create_discussion: {
         Args: {
