@@ -33,6 +33,11 @@ export function useEnhancedAdmin() {
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
+      toast({
+        title: "Error",
+        description: "Unable to verify admin access. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

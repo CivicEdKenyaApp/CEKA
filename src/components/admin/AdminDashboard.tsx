@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { useAdmin } from '@/hooks/useAdmin';
+import { useEnhancedAdmin } from '@/hooks/useEnhancedAdmin';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock, Settings } from 'lucide-react';
 import EnhancedAdminDashboard from './EnhancedAdminDashboard';
@@ -11,70 +11,95 @@ import { useAdminAccess } from '@/hooks/useAdminAccess';
 
 const AdminDashboard = () => {
   const { isAdmin, isLoading, sessionLimited } = useAdminAccess();
-  const [showEnhanced, setShowEnhanced] = useState(false);
+  const [showEnhanced, setShowEnhanced] = useState(true); // Default to enhanced view
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading admin dashboard...</div>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <div className="text-lg font-medium">Loading admin dashboard...</div>
+              <div className="text-muted-foreground">Verifying admin access...</div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (sessionLimited) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-red-600">Session Limit Reached</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              Maximum of 3 concurrent admin sessions allowed. Please try again later or contact system administrator.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Card className="max-w-md">
+              <CardHeader>
+                <CardTitle className="text-center text-red-600">Session Limit Reached</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-muted-foreground">
+                  Maximum of 3 concurrent admin sessions allowed. Please try again later or contact system administrator.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              Admin privileges required to access this dashboard.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Card className="max-w-md">
+              <CardHeader>
+                <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <p className="text-muted-foreground">
+                  Admin privileges required to access this dashboard.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Only users with admin email (civiceducationkenya@gmail.com) can access this area.
+                </p>
+                <Button asChild>
+                  <a href="/">Return to Homepage</a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Show enhanced dashboard toggle
+  // Show enhanced dashboard
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            {showEnhanced ? 'Enhanced analytics and management' : 'Basic admin functions'}
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">CEKA Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Comprehensive system management and analytics for civic education platform
+            </p>
+          </div>
+          <Button 
+            onClick={() => setShowEnhanced(!showEnhanced)}
+            variant={showEnhanced ? "default" : "outline"}
+            className="bg-kenya-green hover:bg-kenya-green/90"
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            {showEnhanced ? 'Basic View' : 'Enhanced View'}
+          </Button>
         </div>
-        <Button 
-          onClick={() => setShowEnhanced(!showEnhanced)}
-          variant={showEnhanced ? "default" : "outline"}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          {showEnhanced ? 'Basic View' : 'Enhanced View'}
-        </Button>
-      </div>
 
-      {showEnhanced ? <EnhancedAdminDashboard /> : <BasicAdminDashboard />}
+        {showEnhanced ? <EnhancedAdminDashboard /> : <BasicAdminDashboard />}
+      </div>
     </div>
   );
 };
@@ -92,7 +117,7 @@ const BasicAdminDashboard = () => {
     schedulePost,
     rejectPost,
     refreshAdminData
-  } = useAdmin();
+  } = useEnhancedAdmin();
   
   const { toast } = useToast();
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
@@ -102,7 +127,7 @@ const BasicAdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-lg">Loading admin dashboard...</div>
       </div>
     );
@@ -110,7 +135,7 @@ const BasicAdminDashboard = () => {
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-lg text-red-600">Access denied. Admin privileges required.</div>
       </div>
     );
@@ -192,9 +217,9 @@ const BasicAdminDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h2 className="text-2xl font-bold">Basic Admin Dashboard</h2>
         <Button 
           onClick={refreshAdminData}
           variant="outline"

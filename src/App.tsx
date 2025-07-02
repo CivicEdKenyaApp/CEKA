@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -19,6 +18,7 @@ import ResourceHub from '@/pages/ResourceHub';
 import LegislativeTracker from '@/pages/LegislativeTracker';
 import LegislativeTrackerDetail from '@/pages/LegislativeTrackerDetail';
 import LegislationDetail from '@/pages/LegislationDetail';
+import BillDetail from '@/pages/BillDetail';
 import RejectFinanceBill from '@/pages/RejectFinanceBill';
 import Volunteer from '@/pages/Volunteer';
 import VolunteerApplication from '@/pages/VolunteerApplication';
@@ -93,6 +93,7 @@ const AppContent: React.FC = () => {
         <Route path="/legislative-tracker" element={<LegislativeTracker />} />
         <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
         <Route path="/legislation/:id" element={<LegislationDetail />} />
+        <Route path="/bill/:id" element={<BillDetail />} />
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
         <Route path="/volunteer" element={<Volunteer />} />
         <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />

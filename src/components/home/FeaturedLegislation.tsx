@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight, EyeIcon, Users, Tag, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,43 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-
-// Sample featured legislation data
-const featuredLegislation = [
-  {
-    id: 'bill-finance-2025',
-    title: 'Finance Bill, 2025',
-    description: 'Proposes amendments to expand the tax net; targeting digital and informal sectors, removing several tax incentives, tightening compliance measures, and giving KRA more administrative authority',
-    status: 'First Reading',
-    category: 'Governance',
-    date: '2025-04-30',
-    followersCount: 15000,
-    tags: ['Finance', 'Governance', 'Devolution'],
-    timeRemaining: '11 days'
-  },
-  {
-    id: 'bill-456',
-    title: 'Digital Rights and Freedoms Bill, 2023',
-    description: 'Establishes a framework for protecting citizens\' digital rights, privacy, and freedoms in the online space.',
-    status: 'First Reading',
-    category: 'Technology',
-    date: '2023-08-22',
-    followersCount: 978,
-    tags: ['Digital', 'Rights', 'Privacy'],
-    timeRemaining: '30 days'
-  },
-  {
-    id: 'bill-789',
-    title: 'Healthcare Access Improvement Act, 2023',
-    description: 'Aims to improve healthcare accessibility and affordability for all Kenyans through system reforms.',
-    status: 'Second Reading',
-    category: 'Health',
-    date: '2023-07-30',
-    followersCount: 2134,
-    tags: ['Healthcare', 'Reforms', 'Access'],
-    timeRemaining: '7 days'
-  }
-];
+import { billService, Bill } from '@/services/billService';
 
 // Status color mapping
 const getStatusColor = (status: string) => {
@@ -65,8 +29,93 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const getTimeRemaining = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diff > 0) {
+    return `${diff} days`;
+  } else if (diff === 0) {
+    return 'Today';
+  } else {
+    return `${Math.abs(diff)} days ago`;
+  }
+};
+
 const FeaturedLegislation = () => {
   const { language } = useLanguage();
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFeaturedBills();
+  }, []);
+
+  const loadFeaturedBills = async () => {
+    try {
+      const featuredBills = await billService.getFeaturedBills(3);
+      setBills(featuredBills);
+    } catch (error) {
+      console.error('Error loading featured bills:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="py-8 md:py-12">
+        <div className="container">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {translate('Featured Legislation', language)}
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                {translate('Track key bills and policies currently under consideration', language)}
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="pb-3">
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (bills.length === 0) {
+    return (
+      <div className="py-8 md:py-12">
+        <div className="container">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {translate('Featured Legislation', language)}
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                {translate('Track key bills and policies currently under consideration', language)}
+              </p>
+            </div>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No bills available at the moment.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 md:py-12">
@@ -87,7 +136,7 @@ const FeaturedLegislation = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-          {featuredLegislation.map((bill) => (
+          {bills.map((bill) => (
             <Card key={bill.id} className="hover:shadow-md transition-shadow duration-300">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -96,21 +145,13 @@ const FeaturedLegislation = () => {
                   </Badge>
                   <div className="flex items-center text-muted-foreground text-sm">
                     <Clock className="h-3.5 w-3.5 mr-1" />
-                    {bill.timeRemaining}
+                    {getTimeRemaining(bill.date)}
                   </div>
                 </div>
                 <CardTitle className="text-lg mt-3">{bill.title}</CardTitle>
-                <CardDescription className="line-clamp-2 mt-1">{bill.description}</CardDescription>
+                <CardDescription className="line-clamp-2 mt-1">{bill.summary}</CardDescription>
               </CardHeader>
               <CardContent className="pb-3">
-                <div className="flex flex-wrap gap-1.5 mt-1 mb-4">
-                  {bill.tags.map((tag, i) => (
-                    <Badge key={i} variant="outline" className="text-xs font-normal">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center text-muted-foreground">
                     <Tag className="h-3.5 w-3.5 mr-1.5" />
@@ -125,15 +166,15 @@ const FeaturedLegislation = () => {
                   </div>
                   <div className="flex items-center text-muted-foreground col-span-2">
                     <Users className="h-3.5 w-3.5 mr-1.5" />
-                    {bill.followersCount.toLocaleString()} {translate('followers', language)}
+                    Sponsored by {bill.sponsor}
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
                 <Button asChild size="sm" className="w-full">
-                  <Link to={`/legislative-tracker/${bill.id}`}>
+                  <Link to={`/legislation/${bill.id}`}>
                     <EyeIcon className="h-4 w-4 mr-2" />
-                    {translate('Track this bill', language)}
+                    {translate('View Details', language)}
                   </Link>
                 </Button>
               </CardFooter>
