@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,82 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock, Settings } from 'lucide-react';
+import EnhancedAdminDashboard from './EnhancedAdminDashboard';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 
 const AdminDashboard = () => {
+  const { isAdmin, isLoading, sessionLimited } = useAdminAccess();
+  const [showEnhanced, setShowEnhanced] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading admin dashboard...</div>
+      </div>
+    );
+  }
+
+  if (sessionLimited) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-red-600">Session Limit Reached</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-muted-foreground">
+              Maximum of 3 concurrent admin sessions allowed. Please try again later or contact system administrator.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-muted-foreground">
+              Admin privileges required to access this dashboard.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show enhanced dashboard toggle
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            {showEnhanced ? 'Enhanced analytics and management' : 'Basic admin functions'}
+          </p>
+        </div>
+        <Button 
+          onClick={() => setShowEnhanced(!showEnhanced)}
+          variant={showEnhanced ? "default" : "outline"}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          {showEnhanced ? 'Basic View' : 'Enhanced View'}
+        </Button>
+      </div>
+
+      {showEnhanced ? <EnhancedAdminDashboard /> : <BasicAdminDashboard />}
+    </div>
+  );
+};
+
+// Keep the existing basic dashboard as a fallback
+const BasicAdminDashboard = () => {
   const { 
     notifications, 
     draftPosts, 

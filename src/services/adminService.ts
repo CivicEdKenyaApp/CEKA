@@ -19,11 +19,42 @@ export interface AdminSession {
   session_token: string;
   created_at: string;
   last_active: string;
+  expires_at: string;
   is_active: boolean;
 }
 
-class AdminService {
+export interface AdminDashboardStats {
+  total_users: number;
+  total_posts: number;
+  total_resources: number;
+  total_bills: number;
+  active_sessions: number;
+  recent_signups: number;
+  pending_drafts: number;
+  total_discussions: number;
+  total_views: number;
+  avg_daily_users: number;
+}
 
+export interface UserActivityStats {
+  date: string;
+  new_users: number;
+  active_users: number;
+  blog_posts: number;
+  discussions: number;
+}
+
+export interface ModerationQueueItem {
+  id: string;
+  type: string;
+  title: string;
+  author: string;
+  created_at: string;
+  status: string;
+  content_preview: string;
+}
+
+class AdminService {
   async getAdminNotifications(): Promise<AdminNotification[]> {
     try {
       const { data, error } = await supabase
@@ -129,6 +160,12 @@ class AdminService {
         .eq('id', postId);
 
       if (error) throw error;
+
+      // Log admin action
+      await this.logAdminAction('update_post_status', 'blog_post', postId, { 
+        status, 
+        admin_notes: adminNotes 
+      });
     } catch (error) {
       console.error('Error updating post status:', error);
       throw error;
@@ -146,6 +183,10 @@ class AdminService {
         .eq('id', postId);
 
       if (error) throw error;
+
+      await this.logAdminAction('schedule_post', 'blog_post', postId, { 
+        scheduled_at: scheduledAt 
+      });
     } catch (error) {
       console.error('Error scheduling post:', error);
       throw error;
@@ -163,13 +204,151 @@ class AdminService {
         .eq('id', postId);
 
       if (error) throw error;
+
+      await this.logAdminAction('reject_post', 'blog_post', postId, { 
+        rejection_reason: rejectionReason 
+      });
     } catch (error) {
       console.error('Error rejecting post:', error);
       throw error;
     }
   }
 
-  // Method to populate sample data
+  // New enhanced dashboard methods
+  async getDashboardStats(): Promise<AdminDashboardStats> {
+    try {
+      const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+      
+      if (error) throw error;
+      
+      return data[0] || {
+        total_users: 0,
+        total_posts: 0,
+        total_resources: 0,
+        total_bills: 0,
+        active_sessions: 0,
+        recent_signups: 0,
+        pending_drafts: 0,
+        total_discussions: 0,
+        total_views: 0,
+        avg_daily_users: 0
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
+  }
+
+  async getUserActivityStats(): Promise<UserActivityStats[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_user_activity_stats');
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching user activity stats:', error);
+      throw error;
+    }
+  }
+
+  async getModerationQueue(): Promise<ModerationQueueItem[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_moderation_queue');
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching moderation queue:', error);
+      throw error;
+    }
+  }
+
+  async getActiveSessions(): Promise<AdminSession[]> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_sessions')
+        .select('*')
+        .eq('is_active', true)
+        .order('last_active', { ascending: false });
+
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching active sessions:', error);
+      throw error;
+    }
+  }
+
+  async updateSystemMetrics(): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('update_system_metrics');
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating system metrics:', error);
+      throw error;
+    }
+  }
+
+  async logAdminAction(action: string, resourceType: string, resourceId?: string, details?: any): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('log_admin_action', {
+        p_action: action,
+        p_resource_type: resourceType,
+        p_resource_id: resourceId,
+        p_details: details ? JSON.stringify(details) : null
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging admin action:', error);
+      // Don't throw here as we don't want to break main functionality
+    }
+  }
+
+  async checkAdminWithSessionManagement(): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const isAdmin = await this.isUserAdmin();
+      if (!isAdmin) return false;
+
+      // Create or update admin session
+      const { data, error } = await supabase.rpc('create_admin_session', {
+        p_user_id: user.id,
+        p_email: user.email
+      });
+
+      if (error) throw error;
+      
+      // If no session was created, it means the limit was reached
+      return data && data.length > 0;
+    } catch (error) {
+      console.error('Error checking admin session:', error);
+      return false;
+    }
+  }
+
+  async cleanupAdminSession(): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('admin_sessions')
+        .update({ is_active: false })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error cleaning up admin session:', error);
+    }
+  }
+
   async populateSampleData(): Promise<void> {
     try {
       // Insert sample resources
