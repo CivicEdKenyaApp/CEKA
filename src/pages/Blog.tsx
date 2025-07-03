@@ -30,17 +30,17 @@ const Blog = () => {
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     
     const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
 
-  // Separate posts by status
+  // Separate posts by status - fix the filtering logic
   const publishedPosts = filteredPosts.filter(post => post.status === 'published');
   const draftPosts = filteredPosts.filter(post => post.status === 'draft');
-  const allPosts = [...publishedPosts, ...draftPosts]; // Show published first, then drafts
+  const allPosts = [...publishedPosts, ...draftPosts];
 
   const handleCreateNew = () => {
     if (!user) {
@@ -72,7 +72,6 @@ const Blog = () => {
         });
       }
       
-      // Navigate back to the main blog page
       setTimeout(() => {
         navigate('/blog');
       }, 1500);
@@ -145,7 +144,7 @@ const Blog = () => {
         <Tabs defaultValue="all" className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <TabsList>
-              <TabsTrigger value="all">All Posts</TabsTrigger>
+              <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
               <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
               <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
             </TabsList>
@@ -205,12 +204,26 @@ const Blog = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="Published">
-            <BlogList posts={publishedPosts} />
+          <TabsContent value="published">
+            {publishedPosts.length > 0 ? (
+              <BlogList posts={publishedPosts} />
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium mb-2">No published posts</h3>
+                <p className="text-muted-foreground">Published posts will appear here once approved by the admin.</p>
+              </div>
+            )}
           </TabsContent>
 
-          <TabsContent value="Drafts">
-            <BlogList posts={draftPosts} />
+          <TabsContent value="drafts">
+            {draftPosts.length > 0 ? (
+              <BlogList posts={draftPosts} />
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium mb-2">No draft posts</h3>
+                <p className="text-muted-foreground">Draft posts awaiting approval will appear here.</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
