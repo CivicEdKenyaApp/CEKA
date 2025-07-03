@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BillFollowButton } from '@/components/legislative/BillFollowButton';
 
+// Define the Bill interface based on Supabase schema
 interface Bill {
   id: string;
   title: string;
@@ -28,8 +28,6 @@ interface Bill {
   date: string;
   created_at: string;
   url?: string | null;
-  sponsor?: string;
-  description?: string;
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'alpha-asc' | 'alpha-desc' | 'status' | 'category';
@@ -57,48 +55,7 @@ const LegislativeTracker = () => {
         if (fetchError) {
           throw fetchError;
         }
-        
-        // If no bills in database, create some sample bills
-        if (!data || data.length === 0) {
-          const sampleBills: Bill[] = [
-            {
-              id: '74961912-8ba7-47f2-bf61-9ae3abafe2e1',
-              title: 'Education Amendment Bill',
-              summary: 'Enhances access to quality education for all Kenyan citizens through policy reforms and funding provisions.',
-              status: 'First Reading',
-              category: 'Education',
-              date: '2025-03-15',
-              created_at: '2025-03-15T10:00:00Z',
-              sponsor: 'Hon. James Mwangi',
-              description: 'The Education Amendment Bill seeks to reform Kenya\'s education system by improving infrastructure, curriculum, and teacher training.'
-            },
-            {
-              id: '85072023-9cb8-53e3-c672-0bf4b8ceee3f',
-              title: 'Healthcare Access Bill',
-              summary: 'Improves healthcare accessibility and affordability for all Kenyan citizens.',
-              status: 'Committee Stage',
-              category: 'Healthcare',
-              date: '2025-02-20',
-              created_at: '2025-02-20T14:30:00Z',
-              sponsor: 'Hon. Mary Wanjiku',
-              description: 'This bill aims to establish universal healthcare coverage and improve medical services across Kenya.'
-            },
-            {
-              id: '96183134-adc9-64f4-d783-1cg5c9dfff4g',
-              title: 'Environmental Protection Act',
-              summary: 'Strengthens environmental protection measures and promotes sustainable development.',
-              status: 'Public Feedback',
-              category: 'Environment',
-              date: '2025-01-10',
-              created_at: '2025-01-10T09:15:00Z',
-              sponsor: 'Hon. Peter Kimani',
-              description: 'Comprehensive environmental protection legislation to combat climate change and preserve natural resources.'
-            }
-          ];
-          setBillsData(sampleBills);
-        } else {
-          setBillsData(data || []);
-        }
+        setBillsData(data || []);
       } catch (e: any) {
         console.error('Error fetching bills:', e);
         setError(e.message || 'Failed to fetch bills.');
@@ -119,8 +76,7 @@ const LegislativeTracker = () => {
       filtered = filtered.filter(bill =>
         bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (bill.sponsor && bill.sponsor.toLowerCase().includes(searchTerm.toLowerCase()))
+        bill.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -157,7 +113,7 @@ const LegislativeTracker = () => {
     setFilteredBills(filtered);
   }, [billsData, searchTerm, selectedCategory, selectedStatus, sortBy]);
 
-  // Get unique categories and statuses for filters
+  // Get unique categories and statuses for filters, filtering out empty strings
   const uniqueCategories = [...new Set(billsData.map(bill => bill.category))].filter(category => category && category.trim() !== '');
   const uniqueStatuses = [...new Set(billsData.map(bill => bill.status))].filter(status => status && status.trim() !== '');
 
@@ -347,7 +303,7 @@ const LegislativeTracker = () => {
                           </div>
                           
                           <h3 className="text-lg font-semibold mt-2 mb-1">
-                            <Link to={`/bill/${bill.id}`} className="hover:text-kenya-green transition-colors">
+                            <Link to={`/legislative-tracker/${bill.id}`} className="hover:text-kenya-green transition-colors">
                               {bill.title}
                             </Link>
                           </h3>
@@ -359,20 +315,14 @@ const LegislativeTracker = () => {
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <Calendar className="h-3.5 w-3.5" />
                               <span>Created: {new Date(bill.created_at).toLocaleDateString()}</span>
-                              {bill.sponsor && (
-                                <>
-                                  <span className="mx-2">•</span>
-                                  <span>Sponsor: {bill.sponsor}</span>
-                                </>
-                              )}
                             </div>
                             
-                            <div className="flex items-center gap-2 mt-2 md:mt-0">
+                            <div className="flex gap-2 mt-2 md:mt-0">
                               <BillFollowButton billId={bill.id} />
-                              <Button variant="outline" size="sm" asChild>
-                                <Link to={`/bill/${bill.id}`}>
-                                  View Details
-                                  <ArrowRight className="ml-1 h-3 w-3" />
+                              <Button size="sm" variant="ghost" asChild>
+                                <Link to={`/legislative-tracker/${bill.id}`} className="flex items-center">
+                                  Details
+                                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
                                 </Link>
                               </Button>
                             </div>
@@ -405,6 +355,24 @@ const LegislativeTracker = () => {
                 </div>
               </TabsContent>
             </Tabs>
+          </div>
+        </div>
+        
+        <div className="mt-10 p-6 border border-dashed border-muted-foreground/20 rounded-lg text-center relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-background px-4">
+            <PlusCircle className="h-6 w-6 text-kenya-green mx-auto" />
+          </div>
+          <div className="max-w-xl mx-auto">
+            <h3 className="text-lg font-medium mb-2">Contribute to Legislative Tracking</h3>
+            <p className="text-muted-foreground mb-4">
+              Have information about bills or legislative changes? Share URLs, documents, or descriptions 
+              to help keep this tracker up-to-date.
+            </p>
+            <Button asChild className="bg-kenya-green hover:bg-kenya-green/90">
+              <Link to="/legislative-tracker/contribute">
+                Share Insights or URLs
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

@@ -23,8 +23,6 @@ const getStatusColor = (status: string) => {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
     case 'Enacted':
       return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
-    case 'Public Feedback':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   }
@@ -45,74 +43,7 @@ const BillDetail = () => {
   const loadBill = async (billId: string) => {
     try {
       setLoading(true);
-      let billData = await billService.getBillById(billId);
-      
-      // If not found in database, try sample data
-      if (!billData) {
-        const sampleBills: Record<string, Bill> = {
-          '74961912-8ba7-47f2-bf61-9ae3abafe2e1': {
-            id: '74961912-8ba7-47f2-bf61-9ae3abafe2e1',
-            title: 'Education Amendment Bill',
-            summary: 'Enhances access to quality education for all Kenyan citizens through policy reforms and funding provisions.',
-            status: 'First Reading',
-            category: 'Education',
-            date: '2025-03-15',
-            created_at: '2025-03-15T10:00:00Z',
-            updated_at: '2025-03-15T10:00:00Z',
-            sponsor: 'Hon. James Mwangi',
-            description: 'The Education Amendment Bill seeks to reform Kenya\'s education system by improving infrastructure, curriculum, and teacher training. It addresses challenges in access to quality education, particularly in underserved regions. The bill proposes increased funding for schools, modernization of educational resources, and implementation of inclusive learning practices.',
-            constitutional_section: 'Article 53 & 54 - Education Rights',
-            stages: [
-              {
-                name: "Introduction",
-                date: "2025-02-10",
-                completed: true,
-                description: "The bill was introduced to Parliament by Hon. James Mwangi."
-              },
-              {
-                name: "First Reading",
-                date: "2025-03-15",
-                completed: true,
-                description: "The bill was formally introduced in Parliament."
-              },
-              {
-                name: "Public Feedback",
-                date: "2025-04-20",
-                completed: false,
-                description: "The bill is open for public comments and stakeholder input."
-              }
-            ]
-          },
-          '85072023-9cb8-53e3-c672-0bf4b8ceee3f': {
-            id: '85072023-9cb8-53e3-c672-0bf4b8ceee3f',
-            title: 'Healthcare Access Bill',
-            summary: 'Improves healthcare accessibility and affordability for all Kenyan citizens.',
-            status: 'Committee Stage',
-            category: 'Healthcare',
-            date: '2025-02-20',
-            created_at: '2025-02-20T14:30:00Z',
-            updated_at: '2025-02-20T14:30:00Z',
-            sponsor: 'Hon. Mary Wanjiku',
-            description: 'This bill aims to establish universal healthcare coverage and improve medical services across Kenya. It includes provisions for healthcare financing, insurance coverage, and medical infrastructure development.',
-            constitutional_section: 'Article 43 - Healthcare Rights'
-          },
-          '96183134-adc9-64f4-d783-1cg5c9dfff4g': {
-            id: '96183134-adc9-64f4-d783-1cg5c9dfff4g',
-            title: 'Environmental Protection Act',
-            summary: 'Strengthens environmental protection measures and promotes sustainable development.',
-            status: 'Public Feedback',
-            category: 'Environment',
-            date: '2025-01-10',
-            created_at: '2025-01-10T09:15:00Z',
-            updated_at: '2025-01-10T09:15:00Z',
-            sponsor: 'Hon. Peter Kimani',
-            description: 'Comprehensive environmental protection legislation to combat climate change and preserve natural resources.',
-            constitutional_section: 'Article 42 - Environmental Rights'
-          }
-        };
-        
-        billData = sampleBills[billId] || null;
-      }
+      const billData = await billService.getBillById(billId);
       
       if (!billData) {
         setError('Bill not found');
@@ -170,6 +101,7 @@ const BillDetail = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-6">
           <Button variant="ghost" asChild className="mb-4">
             <Link to="/legislative-tracker">
@@ -193,18 +125,23 @@ const BillDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {bill.description || 'Detailed information about this bill will be available soon. Our team is working to provide comprehensive details about the legislative process, key provisions, and potential impact.'}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Description */}
+            {bill.description && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {bill.description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
+            {/* Stages */}
             {bill.stages && (
               <Card>
                 <CardHeader>
@@ -215,32 +152,29 @@ const BillDetail = () => {
                     {Array.isArray(bill.stages) ? bill.stages.map((stage: any, index: number) => (
                       <div key={index} className="flex items-center gap-4">
                         <div className={`w-4 h-4 rounded-full ${
-                          stage.completed ? 'bg-green-500' :
+                          stage.status === 'completed' ? 'bg-green-500' :
                           stage.status === 'current' ? 'bg-blue-500' :
                           'bg-gray-300'
                         }`} />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium">{stage.name}</h4>
-                            {stage.date && stage.date !== 'Pending' && (
+                            {stage.date && (
                               <span className="text-sm text-muted-foreground">
                                 {new Date(stage.date).toLocaleDateString()}
                               </span>
                             )}
                           </div>
-                          {stage.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{stage.description}</p>
-                          )}
                           <Badge 
-                            variant={stage.completed ? 'default' : 'secondary'}
+                            variant={stage.status === 'completed' ? 'default' : 'secondary'}
                             className="mt-1"
                           >
-                            {stage.completed ? 'Completed' : 'Pending'}
+                            {stage.status}
                           </Badge>
                         </div>
                       </div>
                     )) : (
-                      <p className="text-muted-foreground">Stage information will be updated as the bill progresses through Parliament.</p>
+                      <p className="text-muted-foreground">Stage information not available</p>
                     )}
                   </div>
                 </CardContent>
@@ -248,7 +182,9 @@ const BillDetail = () => {
             )}
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-6">
+            {/* Bill Info */}
             <Card>
               <CardHeader>
                 <CardTitle>Bill Information</CardTitle>
@@ -258,7 +194,7 @@ const BillDetail = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Sponsored by</p>
-                    <p className="font-medium">{bill.sponsor || 'Information pending'}</p>
+                    <p className="font-medium">{bill.sponsor}</p>
                   </div>
                 </div>
                 
@@ -269,7 +205,7 @@ const BillDetail = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Date Introduced</p>
                     <p className="font-medium">
-                      {new Date(bill.date || bill.created_at).toLocaleDateString()}
+                      {new Date(bill.date).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -299,6 +235,7 @@ const BillDetail = () => {
               </CardContent>
             </Card>
 
+            {/* Actions */}
             <Card>
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
@@ -323,6 +260,7 @@ const BillDetail = () => {
               </CardContent>
             </Card>
 
+            {/* Recent Activity */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
