@@ -1,20 +1,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Download, ChevronLeft, Share2, Lock, Eye } from 'lucide-react';
+import { Download, ChevronLeft, Share2, Lock, Eye } from 'lucide-react'; // Added Eye icon
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added CardHeader, CardTitle
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
-import DocumentViewerComponent from '@/components/documents/DocumentViewer';
-import { Tables } from '@/integrations/supabase/types';
+import DocumentViewerComponent from '@/components/documents/DocumentViewer'; // Renamed to avoid conflict with page name
+import { Tables } from '@/integrations/supabase/types'; // Import Supabase types
 
+// Define Resource type based on Supabase 'resources' table
 type Resource = Tables<'resources'>;
 
+// Interface for related resources, can be simpler if needed
 interface RelatedResourcePreview {
   id: string | number;
   title: string;
@@ -28,7 +30,7 @@ const DocumentViewerPage = () => {
   const { session } = useAuth();
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewCount, setViewCount] = useState(0);
+  const [viewCount, setViewCount] = useState(0); // Placeholder, consider implementing actual view tracking
   const [relatedResources, setRelatedResources] = useState<RelatedResourcePreview[]>([]);
 
   useEffect(() => {
@@ -42,59 +44,16 @@ const DocumentViewerPage = () => {
       try {
         setLoading(true);
         
-        // Try to fetch resource by ID (handle both UUID and integer formats)
-        let resourceData = null;
-        let resourceError = null;
+        // Fetch main resource
+        const { data: resourceData, error: resourceError } = await supabase
+          .from('resources')
+          .select('*')
+          .eq('id', id)
+          .single();
 
-        // First try as UUID
-        if (id.includes('-')) {
-          const { data, error } = await supabase
-            .from('resources')
-            .select('*')
-            .eq('id', id)
-            .single();
-          resourceData = data;
-          resourceError = error;
-        } else {
-          // If it's not UUID format, try to find by a different approach
-          // For now, let's create some mock data for integer IDs to handle the current URLs
-          const mockResources: Record<string, any> = {
-            '1': {
-              id: '1',
-              title: 'Understanding the Constitution of Kenya',
-              description: 'A comprehensive guide to the Constitution of Kenya 2010, covering fundamental rights, government structure, and key provisions.',
-              type: 'document',
-              category: 'Constitution',
-              url: 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/The_Constitution_of_Kenya_2010.pdf',
-              is_downloadable: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              uploadedBy: 'CEKA Admin'
-            },
-            '2': {
-              id: '2', 
-              title: 'Blood Parliament: BBC Africa Eye Documentary (Pt 1)',
-              description: 'An investigative documentary examining corruption and violence in Kenya\'s parliament.',
-              type: 'video',
-              category: 'Documentary',
-              url: 'https://www.youtube.com/watch?v=example',
-              videoUrl: 'https://www.youtube.com/watch?v=example',
-              is_downloadable: false,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              uploadedBy: 'BBC Africa Eye'
-            }
-          };
-
-          if (mockResources[id]) {
-            resourceData = mockResources[id];
-          } else {
-            resourceError = { message: 'Resource not found' };
-          }
-        }
-
-        if (resourceError) {
-          console.error('Resource fetch error:', resourceError);
+        if (resourceError) throw resourceError;
+        
+        if (!resourceData) {
           toast({
             title: "Resource not found",
             description: "The requested resource could not be loaded.",
@@ -104,36 +63,25 @@ const DocumentViewerPage = () => {
           return;
         }
         
-        if (!resourceData) {
-          toast({
-            title: "Resource not found", 
-            description: "The requested resource could not be loaded.",
-            variant: "destructive",
-          });
-          navigate("/resources");
-          return;
-        }
-        
         setResource(resourceData);
-        setViewCount(Math.floor(Math.random() * 100) + 20);
+        setViewCount(Math.floor(Math.random() * 100) + 20); // Mock view count
 
-        // Fetch related resources
-        try {
-          const { data: relatedData, error: relatedError } = await supabase
-            .from('resources')
-            .select('id, title, type')
-            .neq('id', resourceData.id)
-            .limit(3);
+        // Fetch related resources (e.g., 3 other resources, excluding the current one)
+        // For more sophisticated related resources, you might filter by category or tags
+        const { data: relatedData, error: relatedError } = await supabase
+          .from('resources')
+          .select('id, title, type')
+          .neq('id', id) // Exclude current resource
+          .limit(3);
 
-          if (!relatedError && relatedData) {
-            setRelatedResources(relatedData.map(r => ({
-              id: r.id,
-              title: r.title ?? 'Untitled Resource',
-              type: r.type ?? 'document'
-            })));
-          }
-        } catch (error) {
-          console.warn("Could not fetch related resources:", error);
+        if (relatedError) {
+          console.warn("Could not fetch related resources:", relatedError.message);
+        } else if (relatedData) {
+          setRelatedResources(relatedData.map(r => ({
+            id: r.id,
+            title: r.title ?? 'Untitled Resource',
+            type: r.type ?? 'document'
+          })));
         }
 
       } catch (error: any) {
@@ -161,8 +109,9 @@ const DocumentViewerPage = () => {
       return;
     }
     
-    if (resource?.is_downloadable && resource?.url) {
-      const downloadLink = resource.downloadUrl || resource.url;
+    if (resource?.is_downloadable && resource?.url) { // Assuming 'url' can be used for download if 'downloadUrl' is not present
+      const downloadLink = resource.downloadUrl || resource.url; // Prefer downloadUrl if available
+      // Append ?download=1 if not already part of the url and it's a Supabase storage URL
       const finalDownloadLink = (downloadLink.includes('supabase.co/storage/v1/object') && !downloadLink.includes('?download=')) 
                                 ? `${downloadLink}?download=1`
                                 : downloadLink;
@@ -181,7 +130,7 @@ const DocumentViewerPage = () => {
         });
     } else {
         toast({
-            title: "Download Error", 
+            title: "Download Error",
             description: "Could not initiate download. Resource URL is missing.",
             variant: "destructive"
         });
@@ -254,8 +203,8 @@ const DocumentViewerPage = () => {
                 <p className="text-lg mb-6">{resource.description}</p>
                 
                 <DocumentViewerComponent
-                  url={resource.url}
-                  type={resource.type}
+                  url={resource.url} // DocumentViewer expects a `url` prop
+                  type={resource.type} // And a `type` prop
                   title={resource.title}
                 />
                 
@@ -299,6 +248,21 @@ const DocumentViewerPage = () => {
               It is part of our civic education materials designed to help citizens understand 
               their rights and responsibilities.
             </p>
+            
+            {/* billObjective and county are not in the current 'resources' table. Display if present. */}
+            {/* {(resource as any).billObjective && (
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Bill Objective Alignment</h3>
+                <Badge variant="secondary">{(resource as any).billObjective}</Badge>
+              </div>
+            )}
+            
+            {(resource as any).county && (
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Geographic Focus</h3>
+                <p className="text-sm">{(resource as any).county}</p>
+              </div>
+            )} */}
           </div>
 
           <div>
@@ -306,8 +270,9 @@ const DocumentViewerPage = () => {
                 <CardHeader>
                     <CardTitle>Resource Information</CardTitle>
                 </CardHeader>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-6 space-y-4"> {/* Reduced spacing */}
                 <div>
+                  {/* <h3 className="font-semibold mb-2">Resource Information</h3> */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Type:</span>
