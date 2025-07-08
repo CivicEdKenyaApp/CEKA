@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { BlogPost, blogService } from '@/services/blogService';
 import { ReadOtherPosts } from '@/components/blog/ReadOtherPosts';
+import { BlogSidebar } from '@/components/blog/BlogSidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -99,11 +100,11 @@ const BlogPostPage = () => {
   const handleShare = async () => {
     if (!post) return;
     
-    const shareUrl = `https://ceka.lovable.app/blog/${post.slug}`;
+    const currentUrl = window.location.href;
     const shareData = {
       title: post.title,
       text: post.excerpt || 'Check out this blog post on CEKA',
-      url: shareUrl
+      url: currentUrl
     };
 
     // Try native sharing first (mobile devices)
@@ -122,24 +123,22 @@ const BlogPostPage = () => {
 
     // Fallback to copying link
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(currentUrl);
       toast({
         title: "Link Copied",
         description: "Post link copied to clipboard"
       });
     } catch (error) {
       // Final fallback - show share options
-      const shareText = `Check out this post: ${post.title} - ${shareUrl}`;
+      const shareText = `Check out this post: ${post.title} - ${currentUrl}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
       
       // Open WhatsApp as primary fallback
       window.open(whatsappUrl, '_blank', 'width=600,height=400');
       
       toast({
         title: "Share Options",
-        description: "Opening WhatsApp to share. You can also share on Twitter or Facebook."
+        description: "Opening WhatsApp to share. Link also copied to clipboard."
       });
     }
   };
@@ -203,136 +202,146 @@ const BlogPostPage = () => {
           </Link>
         </Button>
 
-        <article className="max-w-4xl mx-auto">
-          <header className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-                {post.status}
-              </Badge>
-              {post.tags && post.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
-            
-            {post.excerpt && (
-              <p className="text-lg text-muted-foreground mb-6">{post.excerpt}</p>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {post.author}
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <article className="max-w-4xl">
+              <header className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                    {post.status}
+                  </Badge>
+                  {post.tags && post.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                
+                <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
+                
+                {post.excerpt && (
+                  <p className="text-lg text-muted-foreground mb-6">{post.excerpt}</p>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {post.author}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Eye className="h-4 w-4" />
+                    {viewCount} views
+                  </div>
                 </div>
+              </header>
+
+              <div className="prose prose-lg max-w-none mb-8">
+                <div className="whitespace-pre-wrap">{post.content}</div>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Eye className="h-4 w-4" />
-                {viewCount} views
-              </div>
-            </div>
-          </header>
 
-          <div className="prose prose-lg max-w-none mb-8">
-            <div className="whitespace-pre-wrap">{post.content}</div>
-          </div>
+              <footer className="border-t pt-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isLiked ? "default" : "ghost"}
+                      size="sm"
+                      onClick={handleLike}
+                      className={isLiked ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
+                    >
+                      <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+                      Like
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleShare}
+                      className="hover:text-kenya-green"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" />
+                      Share
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleReply}
+                      className="hover:text-kenya-green"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-1" />
+                      Reply
+                    </Button>
 
-          <footer className="border-t pt-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={isLiked ? "default" : "ghost"}
-                  size="sm"
-                  onClick={handleLike}
-                  className={isLiked ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
-                >
-                  <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
-                  Like
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="hover:text-kenya-green"
-                >
-                  <Share2 className="h-4 w-4 mr-1" />
-                  Share
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleReply}
-                  className="hover:text-kenya-green"
-                >
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  Reply
-                </Button>
+                    <Button
+                      variant={isSaved ? "default" : "ghost"}
+                      size="sm"
+                      onClick={handleSave}
+                      className={isSaved ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
+                    >
+                      <Bookmark className={`h-4 w-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
+                      {isSaved ? 'Saved' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
 
-                <Button
-                  variant={isSaved ? "default" : "ghost"}
-                  size="sm"
-                  onClick={handleSave}
-                  className={isSaved ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
-                >
-                  <Bookmark className={`h-4 w-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
-                  {isSaved ? 'Saved' : 'Save'}
-                </Button>
-              </div>
-            </div>
-
-            {showReplyForm && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="" alt="You" />
-                        <AvatarFallback>
-                          {session?.user?.email?.charAt(0).toUpperCase() || 'A'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-3">
-                        <Textarea
-                          placeholder={session ? "Write your reply..." : "Sign in to reply (anonymous replies coming soon)"}
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          className="min-h-[100px]"
-                        />
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground">
-                            {session ? `Replying as ${session.user.email}` : 'Anonymous replies coming soon'}
-                          </p>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setShowReplyForm(false)}>
-                              Cancel
-                            </Button>
-                            <Button size="sm" onClick={submitReply} disabled={!session || !replyText.trim()}>
-                              <Send className="h-4 w-4 mr-1" />
-                              Post Reply
-                            </Button>
+                {showReplyForm && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src="" alt="You" />
+                            <AvatarFallback>
+                              {session?.user?.email?.charAt(0).toUpperCase() || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-3">
+                            <Textarea
+                              placeholder={session ? "Write your reply..." : "Sign in to reply (anonymous replies coming soon)"}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              className="min-h-[100px]"
+                            />
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-muted-foreground">
+                                {session ? `Replying as ${session.user.email}` : 'Anonymous replies coming soon'}
+                              </p>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setShowReplyForm(false)}>
+                                  Cancel
+                                </Button>
+                                <Button size="sm" onClick={submitReply} disabled={!session || !replyText.trim()}>
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Post Reply
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </footer>
-        </article>
+                    </CardContent>
+                  </Card>
+                )}
+              </footer>
+            </article>
 
-        {/* Read Other Posts Section */}
-        <div className="max-w-4xl mx-auto mt-12 pt-8 border-t">
-          <ReadOtherPosts currentPostId={post.id} limit={4} />
+            {/* Read Other Posts Section */}
+            <div className="mt-12 pt-8 border-t">
+              <ReadOtherPosts currentPostId={post.id} limit={4} />
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <BlogSidebar />
+          </div>
         </div>
       </div>
     </Layout>
