@@ -172,7 +172,7 @@ const FeaturedLegislation = () => {
               </CardContent>
               <CardFooter>
                 <Button asChild size="sm" className="w-full">
-                  <Link to={`/legislation/${bill.id}`}>
+                  <Link to={`/bill/${bill.id}`}>
                     <EyeIcon className="h-4 w-4 mr-2" />
                     {translate('View Details', language)}
                   </Link>

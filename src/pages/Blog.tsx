@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { useBlog } from '@/hooks/useBlog';
 import { BlogList } from '@/components/blog/BlogList';
+import { BlogSidebar } from '@/components/blog/BlogSidebar';
 import { BlogEditor } from '@/components/blog/BlogEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -141,91 +142,101 @@ const Blog = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="all" className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
-              <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
-              <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
-            </TabsList>
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <Tabs defaultValue="all" className="space-y-6">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <TabsList>
+                  <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
+                  <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
+                  <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
+                </TabsList>
 
-            <div className="flex gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search posts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
+                <div className="flex gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search posts..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                  
+                  {isAdmin && (
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
               </div>
-              
-              {isAdmin && (
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+
+              <TabsContent value="all">
+                <div className="space-y-6">
+                  {draftPosts.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-lg font-semibold text-amber-600 border-b border-amber-200 pb-2">
+                        Coming Soon - Awaiting Approval ({draftPosts.length})
+                      </h2>
+                      <BlogList posts={draftPosts} />
+                    </div>
+                  )}
+                  
+                  {publishedPosts.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-lg font-semibold border-b pb-2">
+                        Published Posts ({publishedPosts.length})
+                      </h2>
+                      <BlogList posts={publishedPosts} />
+                    </div>
+                  )}
+                  
+                  {allPosts.length === 0 && (
+                    <div className="text-center py-12">
+                      <h3 className="text-lg font-medium mb-2">No posts found</h3>
+                      <p className="text-muted-foreground">Check back later for new content or create the first post!</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="published">
+                {publishedPosts.length > 0 ? (
+                  <BlogList posts={publishedPosts} />
+                ) : (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-medium mb-2">No published posts</h3>
+                    <p className="text-muted-foreground">Published posts will appear here once approved by the admin.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="drafts">
+                {draftPosts.length > 0 ? (
+                  <BlogList posts={draftPosts} />
+                ) : (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-medium mb-2">No draft posts</h3>
+                    <p className="text-muted-foreground">Draft posts awaiting approval will appear here.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <TabsContent value="all">
-            <div className="space-y-6">
-              {draftPosts.length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-amber-600 border-b border-amber-200 pb-2">
-                    Coming Soon - Awaiting Approval ({draftPosts.length})
-                  </h2>
-                  <BlogList posts={draftPosts} />
-                </div>
-              )}
-              
-              {publishedPosts.length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold border-b pb-2">
-                    Published Posts ({publishedPosts.length})
-                  </h2>
-                  <BlogList posts={publishedPosts} />
-                </div>
-              )}
-              
-              {allPosts.length === 0 && (
-                <div className="text-center py-12">
-                  <h3 className="text-lg font-medium mb-2">No posts found</h3>
-                  <p className="text-muted-foreground">Check back later for new content or create the first post!</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="published">
-            {publishedPosts.length > 0 ? (
-              <BlogList posts={publishedPosts} />
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium mb-2">No published posts</h3>
-                <p className="text-muted-foreground">Published posts will appear here once approved by the admin.</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="drafts">
-            {draftPosts.length > 0 ? (
-              <BlogList posts={draftPosts} />
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium mb-2">No draft posts</h3>
-                <p className="text-muted-foreground">Draft posts awaiting approval will appear here.</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <BlogSidebar />
+          </div>
+        </div>
       </div>
     </Layout>
   );
