@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,7 @@ const ShareModal: React.FC<{ post: BlogPost; isOpen: boolean; onClose: () => voi
   
   if (!isOpen) return null;
 
-  const shareUrl = `${window.location.origin}/blog/${post.slug}`;
+  const shareUrl = `https://ceka.lovable.app/blog/${post.slug}`;
   const postTitle = post.title;
   const postDescription = post.excerpt || post.content.slice(0, 150) + '...';
 
@@ -190,9 +191,9 @@ export function BlogList({ posts }: BlogListProps) {
     setSavedPosts(newSavedPosts);
   };
 
-  // Enhanced share function
+  // Enhanced share function with correct URL format
   const handleShare = async (post: BlogPost) => {
-    const shareUrl = `${window.location.origin}/blog/${post.slug}`;
+    const shareUrl = `https://ceka.lovable.app/blog/${post.slug}`;
     const shareData = {
       title: post.title,
       text: post.excerpt || 'Check out this blog post on CEKA',
@@ -203,6 +204,10 @@ export function BlogList({ posts }: BlogListProps) {
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
+        toast({
+          title: "Shared Successfully",
+          description: "Post shared successfully!"
+        });
         return;
       } catch (error) {
         // User cancelled or error occurred, fall back to custom modal
@@ -226,7 +231,10 @@ export function BlogList({ posts }: BlogListProps) {
     }
     
     // Navigate to the blog post with reply form
-    window.location.href = `/blog/${posts.find(p => p.id === postId)?.slug}#reply`;
+    const post = posts.find(p => p.id === postId);
+    if (post) {
+      window.location.href = `/blog/${post.slug}#reply`;
+    }
   };
 
   const PostViewCount = ({ postId }: { postId: string }) => {

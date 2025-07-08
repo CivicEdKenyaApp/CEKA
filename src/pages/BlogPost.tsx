@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { BlogPost, blogService } from '@/services/blogService';
+import { ReadOtherPosts } from '@/components/blog/ReadOtherPosts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -98,53 +99,48 @@ const BlogPostPage = () => {
   const handleShare = async () => {
     if (!post) return;
     
+    const shareUrl = `https://ceka.lovable.app/blog/${post.slug}`;
     const shareData = {
       title: post.title,
       text: post.excerpt || 'Check out this blog post on CEKA',
-      url: window.location.href
+      url: shareUrl
     };
 
-    if (navigator.share) {
+    // Try native sharing first (mobile devices)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      // Fallback options
-      try {
-        await navigator.clipboard.writeText(window.location.href);
         toast({
-          title: "Link Copied",
-          description: "Post link copied to clipboard"
+          title: "Shared Successfully",
+          description: "Post shared successfully!"
         });
+        return;
       } catch (error) {
-        // Final fallback - show share options
-        const shareText = `Check out this post: ${post.title} - ${window.location.href}`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-        
-        toast({
-          title: "Share Options",
-          description: (
-            <div className="space-y-2">
-              <p>Share this post:</p>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => window.open(whatsappUrl, '_blank')}>
-                  WhatsApp
-                </Button>
-                <Button size="sm" onClick={() => window.open(twitterUrl, '_blank')}>
-                  Twitter
-                </Button>
-                <Button size="sm" onClick={() => window.open(facebookUrl, '_blank')}>
-                  Facebook
-                </Button>
-              </div>
-            </div>
-          )
-        });
+        console.log('Native share cancelled or failed:', error);
       }
+    }
+
+    // Fallback to copying link
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied",
+        description: "Post link copied to clipboard"
+      });
+    } catch (error) {
+      // Final fallback - show share options
+      const shareText = `Check out this post: ${post.title} - ${shareUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      
+      // Open WhatsApp as primary fallback
+      window.open(whatsappUrl, '_blank', 'width=600,height=400');
+      
+      toast({
+        title: "Share Options",
+        description: "Opening WhatsApp to share. You can also share on Twitter or Facebook."
+      });
     }
   };
 
@@ -333,10 +329,14 @@ const BlogPostPage = () => {
             )}
           </footer>
         </article>
+
+        {/* Read Other Posts Section */}
+        <div className="max-w-4xl mx-auto mt-12 pt-8 border-t">
+          <ReadOtherPosts currentPostId={post.id} limit={4} />
+        </div>
       </div>
     </Layout>
   );
 };
-
 
 export default BlogPostPage;
