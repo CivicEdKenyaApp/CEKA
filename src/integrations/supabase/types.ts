@@ -710,29 +710,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          areas_of_interest: Json | null
+          auth_user_id: string | null
           avatar_url: string | null
+          bio: string | null
+          county: string | null
           created_at: string
+          created_via: string | null
           email: string | null
           full_name: string | null
           id: string
+          interests: Json | null
           updated_at: string
           username: string | null
         }
         Insert: {
+          areas_of_interest?: Json | null
+          auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          county?: string | null
           created_at?: string
+          created_via?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          interests?: Json | null
           updated_at?: string
           username?: string | null
         }
         Update: {
+          areas_of_interest?: Json | null
+          auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          county?: string | null
           created_at?: string
+          created_via?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          interests?: Json | null
           updated_at?: string
           username?: string | null
         }
@@ -1012,39 +1030,60 @@ export type Database = {
       }
       volunteer_opportunities: {
         Row: {
+          apply_url: string | null
           commitment: string
+          contact_email: string | null
           created_at: string
+          created_by_user_id: string | null
           date: string
           description: string
           id: string
+          is_remote: boolean | null
           location: string
           organization: string
+          skills_required: Json | null
+          status: string | null
+          tags: Json | null
           time: string
           title: string
           type: string
           updated_at: string
         }
         Insert: {
+          apply_url?: string | null
           commitment: string
+          contact_email?: string | null
           created_at?: string
+          created_by_user_id?: string | null
           date: string
           description: string
           id?: string
+          is_remote?: boolean | null
           location: string
           organization: string
+          skills_required?: Json | null
+          status?: string | null
+          tags?: Json | null
           time: string
           title: string
           type: string
           updated_at?: string
         }
         Update: {
+          apply_url?: string | null
           commitment?: string
+          contact_email?: string | null
           created_at?: string
+          created_by_user_id?: string | null
           date?: string
           description?: string
           id?: string
+          is_remote?: boolean | null
           location?: string
           organization?: string
+          skills_required?: Json | null
+          status?: string | null
+          tags?: Json | null
           time?: string
           title?: string
           type?: string
@@ -1116,6 +1155,17 @@ export type Database = {
           session_token: string
           expires_at: string
         }[]
+      }
+      create_community_profile: {
+        Args: {
+          p_full_name: string
+          p_email?: string
+          p_county?: string
+          p_bio?: string
+          p_interests?: Json
+          p_areas_of_interest?: Json
+        }
+        Returns: string
       }
       create_discussion: {
         Args: {
@@ -1240,6 +1290,10 @@ export type Database = {
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      link_community_profile: {
+        Args: { p_profile_id: string; p_auth_user_id: string }
+        Returns: undefined
       }
       list_open_volunteer_opportunities: {
         Args: Record<PropertyKey, never>
