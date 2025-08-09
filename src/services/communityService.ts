@@ -17,9 +17,8 @@ export class CommunityService {
     const { data, error } = await supabase
       .from('profiles')
       .insert({
-        ...profileData,
-        is_anonymous: true,
-        created_via: 'join-community',
+        full_name: profileData.full_name,
+        email: profileData.email,
         id: crypto.randomUUID() // Generate a temporary ID for anonymous profiles
       })
       .select('id')
@@ -34,8 +33,6 @@ export class CommunityService {
       .from('profiles')
       .update({
         id: userId,
-        is_anonymous: false,
-        created_via: 'auth',
         updated_at: new Date().toISOString()
       })
       .eq('id', profileId);
@@ -46,9 +43,8 @@ export class CommunityService {
   async findAnonymousProfileByEmail(email: string): Promise<CommunityProfile | null> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, interests, location, bio, is_anonymous, created_via')
+      .select('id, full_name, email')
       .eq('email', email)
-      .eq('is_anonymous', true)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -57,16 +53,16 @@ export class CommunityService {
     
     if (!data) return null;
     
-    // Transform the database result to match our interface
+    // Transform the database result to match our interface with default values
     return {
       id: data.id,
       full_name: data.full_name || '',
       email: data.email || undefined,
-      interests: data.interests || undefined,
-      location: data.location || undefined,
-      bio: data.bio || undefined,
-      is_anonymous: data.is_anonymous,
-      created_via: data.created_via
+      interests: undefined, // Not stored in profiles table
+      location: undefined, // Not stored in profiles table
+      bio: undefined, // Not stored in profiles table
+      is_anonymous: true, // Default for community profiles
+      created_via: 'join-community' // Default value
     };
   }
 }
