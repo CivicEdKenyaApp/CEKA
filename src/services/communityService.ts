@@ -46,7 +46,7 @@ export class CommunityService {
   async findAnonymousProfileByEmail(email: string): Promise<CommunityProfile | null> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, email, interests, location, bio, is_anonymous, created_via')
       .eq('email', email)
       .eq('is_anonymous', true)
       .order('created_at', { ascending: false })
