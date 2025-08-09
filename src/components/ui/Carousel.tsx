@@ -165,8 +165,11 @@ export const Carousel: React.FC<CarouselProps> = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        style={{ touchAction: 'pan-y' }}
-      >
+        style={{ 
+          transform: `translateX(-${currentSlide * 100}%)`,
+          touchAction: 'pan-y'  // Merge both styles here
+            }}
+        >
         {items.map((item, index) => (
           <div
             key={item.id}
