@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Resources from '@/pages/Resources';
 import ResourceDetail from '@/pages/ResourceDetail';
 import JoinCommunity from '@/pages/JoinCommunity';
-import Community from '@/pages/Community';
 import Auth from '@/pages/Auth';
 import Feedback from '@/pages/Feedback';
 import Volunteer from '@/pages/Volunteer';
@@ -14,10 +14,9 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import DocumentViewerPage from '@/pages/DocumentViewerPage';
+import VolunteerSubmit from '@/pages/VolunteerSubmit';
 
 const queryClient = new QueryClient();
-
-import VolunteerSubmit from '@/pages/VolunteerSubmit';
 
 const App = () => {
   return (
@@ -33,7 +32,6 @@ const App = () => {
                 <Route path="/resources/:id" element={<ResourceDetail />} />
                 <Route path="/document/:id" element={<DocumentViewerPage />} />
                 <Route path="/join" element={<JoinCommunity />} />
-                <Route path="/community" element={<Community />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/feedback" element={<Feedback />} />
                 <Route path="/volunteer" element={<Volunteer />} />
