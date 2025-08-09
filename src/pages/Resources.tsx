@@ -135,8 +135,10 @@ const Resources = () => {
       supabase.rpc('track_resource_view', {
         p_resource_id: resource.id,
         p_resource_type: resource.type || 'unknown'
-      }).catch(err => console.warn('Failed to track view:', err));
-    }
+      }).then(
+        () => {}, 
+        (err) => console.warn('Failed to track view:', err)
+      );
 
     // Open based on type
     if (resource.type?.toLowerCase() === 'video' && resource.videoUrl) {
