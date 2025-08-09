@@ -2,31 +2,23 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CommunityProfile {
-  id: string;
+  id?: string;
   full_name: string;
   email?: string;
+  interests?: string[];
   location?: string;
   bio?: string;
-  interests?: string[];
   is_anonymous: boolean;
   created_via: string;
 }
 
-export interface CreateCommunityProfileData {
-  full_name: string;
-  email?: string;
-  location?: string;
-  bio?: string;
-  interests?: string[];
-}
-
-class CommunityService {
-  async createCommunityProfile(profileData: CreateCommunityProfileData): Promise<string> {
+export class CommunityService {
+  async createCommunityProfile(profileData: Omit<CommunityProfile, 'id' | 'is_anonymous' | 'created_via'>): Promise<string> {
     const { data, error } = await supabase
       .from('profiles')
       .insert({
         full_name: profileData.full_name,
-        email: profileData.email || null,
+        email: profileData.email,
         id: crypto.randomUUID() // Generate a temporary ID for anonymous profiles
       })
       .select('id')
@@ -57,7 +49,7 @@ class CommunityService {
       .limit(1)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error && error.code !== 'PGRST116') throw error;
     
     if (!data) return null;
     
@@ -66,9 +58,9 @@ class CommunityService {
       id: data.id,
       full_name: data.full_name || '',
       email: data.email || undefined,
-      interests: undefined, // Not stored in profiles table currently
-      location: undefined, // Not stored in profiles table currently
-      bio: undefined, // Not stored in profiles table currently
+      interests: undefined, // Not stored in profiles table
+      location: undefined, // Not stored in profiles table
+      bio: undefined, // Not stored in profiles table
       is_anonymous: true, // Default for community profiles
       created_via: 'join-community' // Default value
     };

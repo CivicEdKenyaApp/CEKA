@@ -1,290 +1,248 @@
-
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, ExternalLink, AlertCircle, Play, Loader2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { FileText, Video, Image as ImageIcon, File, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/providers/AuthProvider';
-import { useToast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DocumentViewerProps {
   url: string;
   type: string;
-  title: string;
+  title?: string;
+  downloadUrl?: string;
 }
 
-const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, type, title }) => {
+const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, type, title, downloadUrl }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [documentUrl, setDocumentUrl] = useState<string>('');
-  const { session } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const processDocumentUrl = async () => {
+    // Reset states when URL changes
+    setLoading(true);
+    setError(null);
+    
+    // Simulate checking if file is accessible
+    const checkFileAccess = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        if (!url) {
-          throw new Error('No document URL provided');
-        }
-
-        let processedUrl = url;
-
-        // Handle Supabase storage URLs
-        if (url.includes('supabase.co/storage/v1/object')) {
-          // For Supabase storage, ensure we have the public access URL
-          if (url.includes('/public/')) {
-            processedUrl = url;
-          } else if (url.includes('/sign/')) {
-            // This is a signed URL that might be expired
-            // Try to convert to public URL if possible
-            const publicUrl = url.replace(/\/sign\/.*\?.*$/, '').replace('/object/', '/object/public/');
-            processedUrl = publicUrl;
-          } else {
-            // Try to access the URL as is
-            processedUrl = url;
-          }
-        }
-
-        // For PDFs, ensure proper viewing
-        if (type.toLowerCase().includes('pdf') || processedUrl.toLowerCase().includes('.pdf')) {
-          // Add PDF viewer parameters
-          processedUrl = `${processedUrl}#view=FitH&toolbar=1&navpanes=1&scrollbar=1`;
-        }
-
-        setDocumentUrl(processedUrl);
+        // For real implementation, you might want to check if the file exists
+        // This timeout simulates the loading process
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       } catch (err) {
-        console.error('Error processing document URL:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load document');
-      } finally {
         setLoading(false);
+        setError('File could not be loaded');
       }
     };
+    
+    checkFileAccess();
+  }, [url]);
 
-    processDocumentUrl();
-  }, [url, type]);
-
-  const handleDownload = () => {
-    if (!documentUrl) return;
-
-    try {
-      // Create download link
-      const downloadUrl = documentUrl.includes('?') 
-        ? `${documentUrl}&download=1` 
-        : `${documentUrl}?download=1`;
+  const getFileType = (): string => {
+    // Extract file extension from URL or use provided type
+    if (type && typeof type === 'string') {
+      const lowerType = type.toLowerCase();
       
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = title || 'document';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "Download started",
-        description: "Your download has begun.",
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: "Unable to download the document. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleOpenInNewTab = () => {
-    if (!documentUrl) return;
-    window.open(documentUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const renderVideoPlayer = () => {
-    // Handle YouTube URLs
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      let videoId = '';
-      if (url.includes('youtube.com/watch?v=')) {
-        videoId = url.split('v=')[1]?.split('&')[0] || '';
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+      // Check if type contains full MIME type
+      if (lowerType.includes('/')) {
+        if (lowerType.includes('pdf')) return 'pdf';
+        if (lowerType.includes('video')) return 'video';
+        if (lowerType.includes('image')) return 'image';
+        if (lowerType.includes('text/plain')) return 'txt';
+        if (lowerType.includes('msword') || lowerType.includes('wordprocessingml')) return 'doc';
       }
+      
+      // Check if type is just the extension
+      if (lowerType === 'pdf') return 'pdf';
+      if (lowerType === 'video' || lowerType === 'mp4' || lowerType === 'webm') return 'video';
+      if (lowerType === 'image' || lowerType === 'jpg' || lowerType === 'jpeg' || 
+          lowerType === 'png' || lowerType === 'gif') return 'image';
+      if (lowerType === 'txt') return 'txt';
+      if (lowerType === 'doc' || lowerType === 'docx') return 'doc';
+    }
+    
+    // Try to extract extension from URL as fallback
+    const urlExtension = url.split('.').pop()?.toLowerCase();
+    if (urlExtension) {
+      if (urlExtension === 'pdf') return 'pdf';
+      if (['mp4', 'webm', 'mov'].includes(urlExtension)) return 'video';
+      if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(urlExtension)) return 'image';
+      if (urlExtension === 'txt') return 'txt';
+      if (['doc', 'docx'].includes(urlExtension)) return 'doc';
+    }
+    
+    // Default fallback
+    return 'unknown';
+  };
 
-      if (videoId) {
+  const renderLoader = () => (
+    <div className="flex flex-col items-center justify-center p-12">
+      <Skeleton className="h-4 w-32 mb-3" />
+      <Skeleton className="h-64 w-full mb-3" />
+      <Skeleton className="h-4 w-48" />
+    </div>
+  );
+
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+      <AlertCircle className="h-12 w-12 mb-4 text-destructive" />
+      <h3 className="text-lg font-medium mb-2">Failed to load document</h3>
+      <p className="mb-4">{error || "This document couldn't be loaded. It may be unavailable, restricted, or in an unsupported format."}</p>
+      {downloadUrl && (
+        <Button variant="outline" asChild>
+          <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+            Download Instead
+          </a>
+        </Button>
+      )}
+    </div>
+  );
+
+  const getDocumentContent = () => {
+    if (loading) {
+      return renderLoader();
+    }
+    
+    if (error) {
+      return renderError();
+    }
+    
+    const fileType = getFileType();
+    
+    switch (fileType) {
+      case 'pdf':
         return (
-          <div className="aspect-video w-full">
+          <div className="relative">
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
-              title={title}
-              className="w-full h-full rounded-lg"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              src={`${url}#toolbar=0`}
+              className="w-full h-[500px] border-none rounded-md"
+              title={title || "PDF document viewer"}
+              onLoad={() => setLoading(false)}
+              onError={() => setError("Failed to load PDF")}
             />
           </div>
         );
-      }
-    }
-
-    // Handle direct video URLs
-    return (
-      <div className="aspect-video w-full bg-black rounded-lg flex items-center justify-center">
-        <video 
-          controls 
-          className="w-full h-full rounded-lg"
-          preload="metadata"
-        >
-          <source src={documentUrl} type="video/mp4" />
-          <source src={documentUrl} type="video/webm" />
-          <source src={documentUrl} type="video/ogg" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    );
-  };
-
-  const renderPDFViewer = () => (
-    <div className="w-full h-96 border rounded-lg overflow-hidden bg-gray-50">
-      <iframe
-        src={documentUrl}
-        title={title}
-        className="w-full h-full"
-        onLoad={() => setLoading(false)}
-        onError={() => {
-          setError('Failed to load PDF document');
-          setLoading(false);
-        }}
-      />
-    </div>
-  );
-
-  const renderImageViewer = () => (
-    <div className="w-full flex justify-center">
-      <img
-        src={documentUrl}
-        alt={title}
-        className="max-w-full h-auto rounded-lg shadow-lg"
-        onLoad={() => setLoading(false)}
-        onError={() => {
-          setError('Failed to load image');
-          setLoading(false);
-        }}
-      />
-    </div>
-  );
-
-  const renderFallbackViewer = () => (
-    <Card>
-      <CardContent className="p-8 text-center">
-        <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Document Preview Not Available</h3>
-        <p className="text-muted-foreground mb-6">
-          This document type cannot be previewed in the browser. 
-          You can download it or open it in a new tab.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleDownload} className="bg-kenya-green hover:bg-kenya-green/90">
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-          <Button variant="outline" onClick={handleOpenInNewTab}>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open in New Tab
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading document...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          <div className="flex justify-between items-center">
-            <span>{error}</span>
-            <div className="flex gap-2 ml-4">
-              <Button size="sm" onClick={handleDownload} className="bg-kenya-green hover:bg-kenya-green/90">
-                <Download className="mr-1 h-3 w-3" />
-                Download
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleOpenInNewTab}>
-                <ExternalLink className="mr-1 h-3 w-3" />
-                Open
-              </Button>
+        
+      case 'video':
+        return (
+          <video 
+            controls 
+            className="w-full rounded-md"
+            controlsList="nodownload"
+            onLoadedData={() => setLoading(false)}
+            onError={() => setError("Failed to load video")}
+          >
+            <source src={url} type={type} />
+            Your browser does not support the video tag.
+          </video>
+        );
+        
+      case 'image':
+        return (
+          <div className="flex justify-center">
+            <img 
+              src={url} 
+              alt={title || "Document preview"} 
+              className="max-w-full max-h-[600px] rounded-md object-contain"
+              onLoad={() => setLoading(false)}
+              onError={() => setError("Failed to load image")}
+            />
+          </div>
+        );
+        
+      case 'txt':
+        // For txt files, we could load the content directly or use an iframe
+        return (
+          <iframe
+            src={url}
+            className="w-full h-[500px] border-none rounded-md"
+            title={title || "Text document viewer"}
+            onLoad={() => setLoading(false)}
+            onError={() => setError("Failed to load text document")}
+          />
+        );
+        
+      case 'doc':
+        // Try to use Google Docs viewer for Office documents
+        return (
+          <div>
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
+              className="w-full h-[500px] border-none rounded-md"
+              title={title || "Document viewer"}
+              onLoad={() => setLoading(false)}
+              onError={() => setError("Failed to load document")}
+            />
+            {/* Fallback in case Google Docs viewer fails */}
+            <div className="mt-2 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                If the document doesn't load properly, you can download it instead.
+              </p>
+              {downloadUrl && (
+                <Button size="sm" variant="outline" asChild>
+                  <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                    Download Document
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
-        </AlertDescription>
-      </Alert>
-    );
-  }
+        );
+        
+      default:
+        // Fallback for unsupported file types
+        return (
+          <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+            <File className="w-12 h-12 mb-4" />
+            <p className="text-center mb-4">This file type is not supported for preview.</p>
+            {downloadUrl && (
+              <Button variant="outline" asChild>
+                <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                  Download File
+                </a>
+              </Button>
+            )}
+          </div>
+        );
+    }
+  };
 
-  // Render appropriate viewer based on document type
-  const lowerType = type.toLowerCase();
-  
-  if (lowerType.includes('video') || url.includes('youtube') || url.includes('youtu.be')) {
-    return (
-      <div className="space-y-4">
-        {renderVideoPlayer()}
-        <div className="flex justify-center">
-          <Button variant="outline" onClick={handleOpenInNewTab}>
-            <Play className="mr-2 h-4 w-4" />
-            Open in Player
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  if (lowerType.includes('pdf') || lowerType.includes('document')) {
-    return (
-      <div className="space-y-4">
-        {renderPDFViewer()}
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleDownload} className="bg-kenya-green hover:bg-kenya-green/90">
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-          </Button>
-          <Button variant="outline" onClick={handleOpenInNewTab}>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open in New Tab
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  if (lowerType.includes('image') || lowerType.includes('infographic')) {
-    return (
-      <div className="space-y-4">
-        {renderImageViewer()}
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleDownload} className="bg-kenya-green hover:bg-kenya-green/90">
-            <Download className="mr-2 h-4 w-4" />
-            Download Image
-          </Button>
-          <Button variant="outline" onClick={handleOpenInNewTab}>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            View Full Size
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const getDocumentIcon = () => {
+    const fileType = getFileType();
+    
+    switch (fileType) {
+      case 'pdf':
+        return <FileText className="h-5 w-5 mr-2" />;
+      case 'video':
+        return <Video className="h-5 w-5 mr-2" />;
+      case 'image':
+        return <ImageIcon className="h-5 w-5 mr-2" />;
+      default:
+        return <File className="h-5 w-5 mr-2" />;
+    }
+  };
 
-  return renderFallbackViewer();
+  return (
+    <Card className="overflow-hidden">
+      {title && (
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="flex items-center">
+            {getDocumentIcon()}
+            <h3 className="font-medium">{title}</h3>
+          </div>
+          {downloadUrl && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                Download
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
+      <div className="p-4">
+        {getDocumentContent()}
+      </div>
+    </Card>
+  );
 };
 
 export default DocumentViewer;
