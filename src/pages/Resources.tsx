@@ -268,18 +268,19 @@ const Resources = () => {
               {filteredResources.map((resource) => (
                 <ResourceCard
                   key={resource.id}
-                  id={resource.id}
-                  title={resource.title}
-                  description={resource.description}
-                  type={resource.type}
-                  category={resource.category}
-                  url={resource.url}
-                  is_downloadable={resource.is_downloadable}
-                  created_at={resource.created_at}
-                  updated_at={resource.updated_at}
-                  uploadedBy={resource.uploadedBy}
-                  thumbnail_url={resource.thumbnail_url}
-                  onClick={() => navigate(`/resources/${resource.id}`)}
+                  resource={{
+                    id: resource.id,
+                    title: resource.title,
+                    description: resource.description,
+                    type: resource.type,
+                    uploadDate: resource.created_at,
+                    uploadedBy: resource.uploadedBy,
+                    downloadUrl: resource.url,
+                    videoUrl: resource.type.toLowerCase() === 'video' ? resource.url : undefined,
+                    category: resource.category,
+                    is_downloadable: resource.is_downloadable,
+                  }}
+                  onToggleSelect={() => navigate(`/resources/${resource.id}`)}
                 />
               ))}
             </div>
