@@ -230,6 +230,7 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          sources: string | null
           sponsor: string | null
           stages: Json | null
           status: string
@@ -246,6 +247,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          sources?: string | null
           sponsor?: string | null
           stages?: Json | null
           status: string
@@ -262,6 +264,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          sources?: string | null
           sponsor?: string | null
           stages?: Json | null
           status?: string
