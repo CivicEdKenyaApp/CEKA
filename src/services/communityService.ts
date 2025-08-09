@@ -54,7 +54,20 @@ export class CommunityService {
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    
+    if (!data) return null;
+    
+    // Transform the database result to match our interface
+    return {
+      id: data.id,
+      full_name: data.full_name || '',
+      email: data.email || undefined,
+      interests: data.interests || undefined,
+      location: data.location || undefined,
+      bio: data.bio || undefined,
+      is_anonymous: data.is_anonymous,
+      created_via: data.created_via
+    };
   }
 }
 
