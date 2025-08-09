@@ -3,315 +3,234 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/utils';
 import { communityService } from '@/services/communityService';
-import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen } from 'lucide-react';
+import { Users, Mail, MapPin, Heart, BookOpen, Scale, Megaphone, Lightbulb } from 'lucide-react';
 
 const JoinCommunity = () => {
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    location: '',
+    bio: '',
+    interests: [] as string[]
+  });
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { language } = useLanguage();
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    county: '',
-    interests: '',
-    selectedAreas: [] as string[]
-  });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const interestOptions = [
+    { id: 'civic-education', label: 'Civic Education', icon: BookOpen },
+    { id: 'legislation-tracking', label: 'Legislation Tracking', icon: Scale },
+    { id: 'community-organizing', label: 'Community Organizing', icon: Users },
+    { id: 'advocacy', label: 'Advocacy & Campaigns', icon: Megaphone },
+    { id: 'policy-research', label: 'Policy Research', icon: Lightbulb },
+    { id: 'voter-education', label: 'Voter Education', icon: Heart }
+  ];
 
-  const handleAreaChange = (area: string, checked: boolean) => {
+  const handleInterestChange = (interestId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      selectedAreas: checked 
-        ? [...prev.selectedAreas, area]
-        : prev.selectedAreas.filter(a => a !== area)
+      interests: checked 
+        ? [...prev.interests, interestId]
+        : prev.interests.filter(id => id !== interestId)
     }));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
+    if (!formData.full_name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your full name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // Create community profile using the service
       const profileId = await communityService.createCommunityProfile({
-        full_name: `${formData.firstName} ${formData.lastName}`.trim(),
+        full_name: formData.full_name.trim(),
         email: formData.email.trim() || undefined,
-        location: formData.county.trim() || undefined,
-        bio: formData.interests.trim() || undefined,
-        interests: formData.selectedAreas.length > 0 ? formData.selectedAreas : undefined
+        location: formData.location.trim() || undefined,
+        bio: formData.bio.trim() || undefined,
+        interests: formData.interests.length > 0 ? formData.interests : undefined
       });
 
-      // Store profile ID for later linking
+      // Store profile ID in localStorage for later linking on sign-in
       localStorage.setItem('ceka_community_profile_id', profileId);
 
-      // Show success message
+      // Show success toast and redirect
       toast({
-        title: translate("Application Submitted!", language),
-        description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
+        title: "Success! You're in!",
+        description: "We're so glad to have you. Sign in to unlock full features like following bills, saving preferences and community chat.",
+        action: (
+          <Button 
+            size="sm" 
+            onClick={() => navigate('/auth')}
+            className="ml-2"
+          >
+            Sign in
+          </Button>
+        )
       });
-      
-      setFormSubmitted(true);
-      
-      // Redirect after a short delay
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
+
+      // Redirect to homepage
+      navigate('/');
+
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error creating community profile:', error);
       toast({
         title: "Error",
-        description: "Failed to submit your application. Please try again.",
+        description: "Failed to create your profile. Please try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-  
-  const testimonials = [
-    {
-      name: "Wanjiku Kamau",
-      role: translate("Community Leader", language),
-      avatar: "/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png",
-      text: translate("Being part of CEKA has helped me understand my rights as a citizen and connect with like-minded people who care about Kenya's future.", language)
-    },
-    {
-      name: "David Ochieng",
-      role: translate("Student Member", language),
-      avatar: "/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png",
-      text: translate("The resources shared in this community have been invaluable for my studies. I've learned so much about our constitution and governance.", language)
-    },
-    {
-      name: "Amina Hassan",
-      role: translate("Volunteer Coordinator", language),
-      avatar: "/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png",
-      text: translate("CEKA provides a platform for me to contribute to civic education initiatives in my local community. The network of support is incredible.", language)
-    }
-  ];
-  
-  const benefits = [
-    {
-      icon: <MessageSquare className="h-8 w-8 text-kenya-green" />,
-      title: translate("Engage in Meaningful Discussions", language),
-      description: translate("Connect with fellow citizens and engage in informed discussions about Kenya's civic matters.", language)
-    },
-    {
-      icon: <BookOpen className="h-8 w-8 text-kenya-green" />,
-      title: translate("Access Exclusive Resources", language),
-      description: translate("Get priority access to educational materials, workshops, and events to enhance your civic knowledge.", language)
-    },
-    {
-      icon: <Share2 className="h-8 w-8 text-kenya-green" />,
-      title: translate("Amplify Your Voice", language),
-      description: translate("Share your perspectives and contribute to community initiatives that promote civic awareness.", language)
-    }
-  ];
 
-  const interestAreas = [
-    { id: 'constitution', label: translate("Constitution", language) },
-    { id: 'legislation', label: translate("Legislation", language) },
-    { id: 'human-rights', label: translate("Human Rights", language) },
-    { id: 'governance', label: translate("Governance", language) },
-    { id: 'voter-education', label: translate("Voter Education", language) },
-    { id: 'community-projects', label: translate("Community Projects", language) }
-  ];
-  
   return (
     <Layout>
-      <div className="container py-12 max-w-7xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
-            {translate("Join Our Community", language)}
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {translate("Be part of Kenya's growing network of active citizens committed to civic education and engagement.", language)}
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">{translate("Why Join CEKA?", language)}</h2>
-              <div className="grid gap-6">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{benefit.title}</h3>
-                      <p className="text-muted-foreground">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
+      <div className="container py-16">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-kenya-green/10 rounded-full">
+                <Users className="h-8 w-8 text-kenya-green" />
               </div>
             </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">{translate("Community Voices", language)}</h2>
-              <div className="grid gap-6">
-                {testimonials.map((testimonial, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12 border-2 border-primary/10">
-                          <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                          <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm italic">"{testimonial.text}"</p>
-                          <div className="mt-2">
-                            <p className="font-medium">{testimonial.name}</p>
-                            <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                          </div>
+            <h1 className="text-3xl font-bold mb-4">Join Our Community</h1>
+            <p className="text-muted-foreground">
+              Connect with fellow Kenyans who care about civic engagement, transparency, 
+              and building a better democracy together.
+            </p>
+          </div>
+
+          {/* Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tell Us About Yourself</CardTitle>
+              <CardDescription>
+                Help us understand your interests so we can connect you with relevant content and opportunities.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address (Optional)</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="your.email@example.com"
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    We'll use this to notify you about relevant opportunities and updates.
+                  </p>
+                </div>
+
+                {/* Location */}
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location (Optional)</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g., Nairobi, Mombasa, Kisumu"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Interests */}
+                <div className="space-y-4">
+                  <Label>Areas of Interest (Select all that apply)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {interestOptions.map((interest) => (
+                      <div key={interest.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                        <Checkbox
+                          id={interest.id}
+                          checked={formData.interests.includes(interest.id)}
+                          onCheckedChange={(checked) => handleInterestChange(interest.id, !!checked)}
+                        />
+                        <div className="flex items-center gap-2 flex-1">
+                          <interest.icon className="h-4 w-4 text-kenya-green" />
+                          <Label htmlFor={interest.id} className="text-sm font-medium cursor-pointer">
+                            {interest.label}
+                          </Label>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <Card className="border-t-4 border-kenya-green">
-              <CardHeader>
-                <CardTitle>{translate("Ready to Join?", language)}</CardTitle>
-                <CardDescription>
-                  {translate("Complete this simple form to become part of our community.", language)}
-                </CardDescription>
-              </CardHeader>
-              
-              {formSubmitted ? (
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <CheckCircle2 className="h-16 w-16 text-kenya-green mx-auto" />
-                    <h3 className="text-xl font-bold">{translate("Welcome Aboard!", language)}</h3>
-                    <p>{translate("Your application has been received. You are now part of the CEKA community!", language)}</p>
-                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the community page...", language)}</p>
+                    ))}
                   </div>
-                </CardContent>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">{translate("First Name", language)} *</Label>
-                        <Input 
-                          id="firstName" 
-                          value={formData.firstName}
-                          onChange={(e) => handleInputChange('firstName', e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">{translate("Last Name", language)} *</Label>
-                        <Input 
-                          id="lastName" 
-                          value={formData.lastName}
-                          onChange={(e) => handleInputChange('lastName', e.target.value)}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">{translate("Email", language)} *</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        required 
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="county">{translate("County", language)}</Label>
-                      <Input 
-                        id="county" 
-                        value={formData.county}
-                        onChange={(e) => handleInputChange('county', e.target.value)}
-                        placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)} 
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="interests">{translate("What interests you most about civic education?", language)}</Label>
-                      <Textarea 
-                        id="interests" 
-                        value={formData.interests}
-                        onChange={(e) => handleInputChange('interests', e.target.value)}
-                        placeholder={translate("Share your interests or what you hope to gain from this community...", language)}
-                        className="min-h-[100px]"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-base">{translate("Areas of Interest", language)}</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {interestAreas.map((area) => (
-                          <div key={area.id} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={area.id}
-                              checked={formData.selectedAreas.includes(area.id)}
-                              onCheckedChange={(checked) => handleAreaChange(area.id, !!checked)}
-                            />
-                            <label htmlFor={area.id} className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                              {area.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2 pt-2">
-                      <Checkbox id="terms" required />
-                      <div className="grid gap-1.5 leading-none">
-                        <label
-                          htmlFor="terms"
-                          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {translate("I agree to the", language)} <a href="#" className="text-primary hover:underline">{translate("terms and conditions", language)}</a>
-                        </label>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Tell us a bit about yourself (Optional)</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                    placeholder="What motivates you to get involved in civic engagement? What are your goals or experiences?"
+                    rows={4}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-kenya-green hover:bg-kenya-green/90"
+                  disabled={loading}
+                >
+                  {loading ? 'Joining...' : 'Join Now'}
+                </Button>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Already have an account?{' '}
                     <Button 
-                      type="submit" 
-                      className="w-full bg-kenya-green hover:bg-kenya-green/90"
-                      disabled={loading}
+                      variant="link" 
+                      size="sm" 
+                      onClick={() => navigate('/auth')}
+                      className="p-0 h-auto text-kenya-green"
                     >
-                      {loading ? translate("Joining...", language) : translate("Join Now", language)}
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      Sign in here
                     </Button>
-                  </CardFooter>
-                </form>
-              )}
-            </Card>
-            
-            <div className="mt-8 flex items-center justify-center p-4 bg-muted rounded-lg">
-              <Users className="h-5 w-5 text-muted-foreground mr-2" />
-              <p className="text-sm text-muted-foreground">
-                {translate("Join over 5,000 active citizens already in our community!", language)}
-              </p>
-            </div>
-          </div>
+                  </p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>
