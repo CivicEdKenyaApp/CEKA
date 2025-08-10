@@ -73,8 +73,8 @@ interface ExtendedResource extends Resource {
   downloadUrl?: string;
   videoUrl?: string;
   thumbnail?: string;
+  thumbnail_url?: string;
   dateAdded?: string;
-  is_downloadable?: boolean;
 }
 
 // Comprehensive mock resources combining all data from original components
@@ -91,6 +91,7 @@ const mockResources: ExtendedResource[] = [
     user_id: null,
     uploadedBy: "Civic Education Kenya",
     thumbnail: "/assets/constitution-thumbnail.jpg",
+    thumbnail_url: "/assets/constitution-thumbnail.jpg",
     dateAdded: "2023-05-15",
     author: "Civic Education Kenya",
     views: 1245,
@@ -111,6 +112,7 @@ const mockResources: ExtendedResource[] = [
     user_id: null,
     uploadedBy: "BBC Africa",
     thumbnail: "/assets/video-thumbnail.jpg",
+    thumbnail_url: "/assets/video-thumbnail.jpg",
     dateAdded: "2023-06-22",
     author: "BBC Africa",
     views: 890,
@@ -132,6 +134,7 @@ const mockResources: ExtendedResource[] = [
     user_id: null,
     uploadedBy: "Civic Education Kenya",
     thumbnail: "/assets/rights-thumbnail.jpg",
+    thumbnail_url: "/assets/rights-thumbnail.jpg",
     dateAdded: "2023-07-03",
     author: "Civic Education Kenya",
     views: 732,
@@ -153,6 +156,7 @@ const mockResources: ExtendedResource[] = [
     dateAdded: "2023-04-18",
     author: "Kenya Law Reform Commission",
     uploadedBy: "Kenya Law Reform Commission",
+    thumbnail_url: "/assets/legislative-thumbnail.jpg",
     views: 612,
     downloads: 287,
     tags: ["lawmaking", "parliament", "bills", "legislation"],
@@ -171,6 +175,7 @@ const mockResources: ExtendedResource[] = [
     dateAdded: "2023-08-09",
     author: "Council of Governors",
     uploadedBy: "Council of Governors",
+    thumbnail_url: "/assets/devolution-thumbnail.jpg",
     views: 543,
     downloads: 122,
     tags: ["devolution", "counties", "governance", "local government"],
@@ -580,9 +585,9 @@ const MegaResources = () => {
                 </Button>
               </div>
               <div className="bg-muted aspect-video relative flex items-center justify-center">
-                {resource.thumbnail ? (
+                {(resource.thumbnail || resource.thumbnail_url) ? (
                   <img 
-                    src={resource.thumbnail} 
+                    src={resource.thumbnail || resource.thumbnail_url} 
                     alt={resource.title} 
                     className="w-full h-full object-cover"
                   />
@@ -668,9 +673,9 @@ const MegaResources = () => {
                 onClick={() => handleResourceClick(resource)}>
             <div className="flex items-start p-4">
               <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
-                {resource.thumbnail ? (
+                {(resource.thumbnail || resource.thumbnail_url) ? (
                   <img 
-                    src={resource.thumbnail} 
+                    src={resource.thumbnail || resource.thumbnail_url} 
                     alt={resource.title}
                     className="w-full h-full object-cover rounded-md"
                   />
