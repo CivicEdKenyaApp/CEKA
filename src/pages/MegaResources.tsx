@@ -62,17 +62,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 type Resource = Tables<'resources'>;
 
 // Create a proper extended interface that doesn't conflict with base Resource
-interface ExtendedResource {
-  id: string;
-  title: string;
-  type: string;
-  category: string;
-  description: string;
-  url: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string | null;
-  is_downloadable: boolean;
+interface ExtendedResource extends Omit<Resource, 'tags'> {
   views?: number;
   downloads?: number;
   tags?: string[];
@@ -81,13 +71,12 @@ interface ExtendedResource {
   author?: string;
   uploadedBy?: string;
   downloadUrl?: string;
-  videoUrl?: string;
+  videoUrl?: string | null;
   thumbnail?: string;
-  thumbnail_url?: string;
   dateAdded?: string;
 }
 
-// Comprehensive mock resources with 100+ entries from your request
+// Comprehensive mock resources with 100+ entries
 const mockResources: ExtendedResource[] = [
   {
     id: "1",
@@ -95,12 +84,11 @@ const mockResources: ExtendedResource[] = [
     type: "pdf",
     category: "Constitution",
     description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8",
+    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     user_id: null,
     uploadedBy: "Civic Education Kenya",
-    thumbnail: "/assets/constitution-thumbnail.jpg",
     thumbnail_url: "/assets/constitution-thumbnail.jpg",
     dateAdded: "2023-05-15",
     author: "Civic Education Kenya",
@@ -109,7 +97,7 @@ const mockResources: ExtendedResource[] = [
     tags: ["constitution", "governance", "rights"],
     featured: true,
     is_downloadable: true,
-    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8"
+    downloadUrl: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf"
   },
   {
     id: "2",
@@ -122,7 +110,6 @@ const mockResources: ExtendedResource[] = [
     updated_at: new Date().toISOString(),
     user_id: null,
     uploadedBy: "BBC Africa",
-    thumbnail: "/assets/video-thumbnail.jpg",
     thumbnail_url: "https://i.ytimg.com/vi/qz0f1yyf_eA/maxresdefault.jpg",
     dateAdded: "2023-06-22",
     author: "BBC Africa",
@@ -688,12 +675,16 @@ const MegaResources = () => {
       }
     }
 
-    // Track view
+    // Track view with normalized resource type
     if (resource.id) {
       try {
+        // Map the resource type to match database constraints
+        let normalizedType = resource.type?.toLowerCase() || 'unknown';
+        if (normalizedType === 'document') normalizedType = 'pdf';
+        
         const { data, error } = await supabase.rpc('track_resource_view', {
           p_resource_id: resource.id,
-          p_resource_type: resource.type || 'unknown'
+          p_resource_type: normalizedType
         });
 
         if (error) {
@@ -861,12 +852,14 @@ const MegaResources = () => {
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type) {
+    switch (type?.toLowerCase()) {
       case 'pdf':
+      case 'document':
         return <FileText className="w-5 h-5" />;
       case 'video':
         return <Video className="w-5 h-5" />;
       case 'image':
+      case 'infographic':
         return <ImageIcon className="w-5 h-5" />;
       case 'audio':
         return <BookOpen className="w-5 h-5" />;
@@ -891,23 +884,10 @@ const MegaResources = () => {
           <Card className={`h-full transition-shadow hover:shadow-md overflow-hidden cursor-pointer ${isSelected ? 'border-primary' : ''}`}
                 onClick={() => handleResourceClick(resource)}>
             <div className="relative">
-              <div className="absolute top-2 right-2 z-10">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleResourceSelection(resource.id || '');
-                  }}
-                >
-                  {isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
-                </Button>
-              </div>
               <div className="bg-muted aspect-video relative flex items-center justify-center">
-                {(resource.thumbnail || resource.thumbnail_url) ? (
+                {resource.thumbnail_url ? (
                   <img 
-                    src={resource.thumbnail || resource.thumbnail_url} 
+                    src={resource.thumbnail_url} 
                     alt={resource.title} 
                     className="w-full h-full object-cover"
                   />
@@ -980,67 +960,60 @@ const MegaResources = () => {
           </Card>
         </motion.div>
       );
-    } else {
-      // List view
-      return (
-        <motion.div
-          key={resource.id}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          layout
-        >
-          <Card className={`transition-shadow hover:shadow-md cursor-pointer ${isSelected ? 'border-primary' : ''}`}
-                onClick={() => handleResourceClick(resource)}>
-            <div className="flex items-start p-4">
-              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
-                {(resource.thumbnail || resource.thumbnail_url) ? (
-                  <img 
-                    src={resource.thumbnail || resource.thumbnail_url} 
-                    alt={resource.title}
-                    className="w-full h-full object-cover rounded-md"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full w-full">
-                    {getTypeIcon(resource.type || '')}
-                  </div>
-                )}
-              </div>
-              <div className="flex-grow min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="bg-background/80">
-                    <div className="flex items-center gap-1">
-                      {getTypeIcon(resource.type || '')}
-                      {resource.type?.toUpperCase()}
-                    </div>
-                  </Badge>
-                  <Badge variant="secondary">{resource.category}</Badge>
+    }
+
+    // List view
+    return (
+      <motion.div
+        key={resource.id}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        layout
+      >
+        <Card className={`transition-shadow hover:shadow-md cursor-pointer ${isSelected ? 'border-primary' : ''}`}
+              onClick={() => handleResourceClick(resource)}>
+          <div className="flex items-start p-4">
+            <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
+              {resource.thumbnail_url ? (
+                <img 
+                  src={resource.thumbnail_url} 
+                  alt={resource.title}
+                  className="w-full h-full object-cover rounded-md"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full">
+                  {getTypeIcon(resource.type || '')}
                 </div>
-                <h3 className="font-semibold hover:underline line-clamp-1">{resource.title}</h3>
-                <p className="text-muted-foreground text-sm line-clamp-1">{resource.description}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">{new Date(resource.created_at || '').toLocaleDateString()}</span>
-                    <span className="text-xs text-muted-foreground">{resource.views || 0} views</span>
+              )}
+            </div>
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="bg-background/80">
+                  <div className="flex items-center gap-1">
+                    {getTypeIcon(resource.type || '')}
+                    {resource.type?.toUpperCase()}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={(e) => {
-                      e.stopPropagation();
-                      toggleResourceSelection(resource.id || '');
-                    }}>
-                      {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-                      {isSelected ? "Selected" : "Select"}
-                    </Button>
-                    <Button size="sm" variant="secondary">
-                      {translate("View Details", language)}
-                    </Button>
-                  </div>
+                </Badge>
+                <Badge variant="secondary">{resource.category}</Badge>
+              </div>
+              <h3 className="font-semibold hover:underline line-clamp-1">{resource.title}</h3>
+              <p className="text-muted-foreground text-sm line-clamp-1">{resource.description}</p>
+              <div className="flex justify-between items-center mt-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">{new Date(resource.created_at || '').toLocaleDateString()}</span>
+                  <span className="text-xs text-muted-foreground">{resource.views || 0} views</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary">
+                    {translate("View Details", language)}
+                  </Button>
                 </div>
               </div>
             </div>
-          </Card>
-        </motion.div>
-      );
-    }
+          </div>
+        </Card>
+      </motion.div>
+    );
   };
 
   // Detail view for individual resource
@@ -1093,13 +1066,6 @@ const MegaResources = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              <h2 className="text-xl font-semibold mb-4">About this Resource</h2>
-              <p className="text-muted-foreground">
-                This {currentResource.type?.toLowerCase()} provides information about {currentResource.category} in Kenya. 
-                It is part of our civic education materials designed to help citizens understand 
-                their rights and responsibilities.
-              </p>
             </div>
 
             <div>
@@ -1150,82 +1116,6 @@ const MegaResources = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Hub view
-  if (viewMode === 'hub') {
-    return (
-      <Layout>
-        <div className="container py-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl font-bold">Resource Hub</h1>
-              <p className="text-muted-foreground">Explore curated resources for civic education</p>
-            </div>
-            <Button onClick={handleUploadClick} className="bg-kenya-green hover:bg-kenya-green/90">
-              <Plus className="mr-2 h-4 w-4" />
-              Upload Resource
-            </Button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-4">
-            {/* Filters */}
-            <div className="md:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Filters</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="search">Search</Label>
-                    <Input
-                      type="text"
-                      id="search"
-                      placeholder="Search resources..."
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select onValueChange={handleCategoryChange} value={selectedCategory}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {resourceCategories.map(category => (
-                          <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="sort">Sort By</Label>
-                    <Select onValueChange={setSortOrder} value={sortOrder}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select order" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="newest">Newest</SelectItem>
-                        <SelectItem value="popular">Popular</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Resource List */}
-            <div className="md:col-span-3">
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                {filteredResources.map(resource => renderResourceCard(resource))}
-              </div>
             </div>
           </div>
         </div>
@@ -1304,29 +1194,6 @@ const MegaResources = () => {
           </div>
         </div>
 
-        {/* Selected resources panel */}
-        {selectedResources.length > 0 && (
-          <Card className="mb-6 border-primary">
-            <CardHeader className="py-3">
-              <CardTitle className="text-lg">{translate("Selected Resources", language)}</CardTitle>
-            </CardHeader>
-            <CardContent className="py-2">
-              <p className="text-sm font-medium">{selectedResources.length} {selectedResources.length === 1 ? 'resource' : 'resources'} selected</p>
-            </CardContent>
-            <CardFooter className="pt-2 pb-3">
-              <div className="flex gap-2 w-full">
-                <Button variant="outline" className="flex-1" onClick={() => setSelectedResources([])}>
-                  {translate("Clear", language)}
-                </Button>
-                <Button className="flex-1" onClick={downloadSelectedResources}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {translate("Download", language)}
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        )}
-
         {/* Resources Grid/List */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1348,10 +1215,6 @@ const MegaResources = () => {
             <p className="text-muted-foreground">
               {translate("Try adjusting your filters or search terms.", language)}
             </p>
-            <Button variant="outline" onClick={resetFilters} className="mt-4">
-              <X className="h-4 w-4 mr-2" />
-              Clear filters
-            </Button>
           </div>
         ) : (
           <Tabs defaultValue="all" className="w-full">
@@ -1378,10 +1241,6 @@ const MegaResources = () => {
                   <div className="text-center py-12">
                     <h3 className="text-lg font-medium">No {category} resources match your filters</h3>
                     <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
-                    <Button variant="outline" onClick={resetFilters} className="mt-4">
-                      <X className="h-4 w-4 mr-2" />
-                      Clear filters
-                    </Button>
                   </div>
                 ) : (
                   <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
