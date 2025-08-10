@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface CommunityProfile {
   id?: string;
@@ -11,6 +12,28 @@ export interface CommunityProfile {
   areas_of_interest?: string[];
   created_via?: string;
 }
+
+// Helper function to safely parse Json arrays to string arrays
+const parseJsonArray = (jsonValue: Json | null | undefined): string[] => {
+  if (!jsonValue) return [];
+  
+  if (Array.isArray(jsonValue)) {
+    return jsonValue.filter((item): item is string => typeof item === 'string');
+  }
+  
+  if (typeof jsonValue === 'string') {
+    try {
+      const parsed = JSON.parse(jsonValue);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item): item is string => typeof item === 'string');
+      }
+    } catch {
+      // If parsing fails, return empty array
+    }
+  }
+  
+  return [];
+};
 
 export class CommunityService {
   async createCommunityProfile(profileData: Omit<CommunityProfile, 'id' | 'created_via'>): Promise<string> {
@@ -57,8 +80,8 @@ export class CommunityService {
       email: data.email || undefined,
       county: data.county || undefined,
       bio: data.bio || undefined,
-      interests: data.interests || undefined,
-      areas_of_interest: data.areas_of_interest || undefined,
+      interests: parseJsonArray(data.interests),
+      areas_of_interest: parseJsonArray(data.areas_of_interest),
       created_via: 'join-community'
     };
   }
