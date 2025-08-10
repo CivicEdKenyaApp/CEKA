@@ -51,14 +51,28 @@ export class CommunityService {
     
     if (!data) return null;
     
+    // Safely convert Json arrays to string arrays
+    const parseJsonArray = (jsonData: any): string[] => {
+      if (!jsonData) return [];
+      if (Array.isArray(jsonData)) {
+        return jsonData.map(item => String(item));
+      }
+      try {
+        const parsed = JSON.parse(jsonData);
+        return Array.isArray(parsed) ? parsed.map(item => String(item)) : [];
+      } catch {
+        return [];
+      }
+    };
+    
     return {
       id: data.id,
       full_name: data.full_name || '',
       email: data.email || undefined,
       county: data.county || undefined,
       bio: data.bio || undefined,
-      interests: Array.isArray(data.interests) ? data.interests : [],
-      areas_of_interest: Array.isArray(data.areas_of_interest) ? data.areas_of_interest : [],
+      interests: parseJsonArray(data.interests),
+      areas_of_interest: parseJsonArray(data.areas_of_interest),
       created_via: 'join-community'
     };
   }
