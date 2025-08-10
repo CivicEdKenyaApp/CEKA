@@ -130,18 +130,12 @@ const Resources = () => {
       }
     }
 
-    // Track view with proper promise handling
+    // Track view
     if (resource.id) {
       supabase.rpc('track_resource_view', {
         p_resource_id: resource.id,
         p_resource_type: resource.type || 'unknown'
-      })
-      .then(() => {
-        console.log('Resource view tracked successfully');
-      })
-      .catch(err => {
-        console.warn('Failed to track view:', err);
-      });
+      }).catch(err => console.warn('Failed to track view:', err));
     }
 
     // Open based on type
