@@ -14,19 +14,23 @@ interface CarouselItem {
   color?: 'red' | 'green' | 'black' | 'white';
 }
 
-interface CarouselProps {
+interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   items: CarouselItem[];
   autoplay?: boolean;
   autoplayDelay?: number;
-  className?: string;
 }
 
-export const Carousel: React.FC<CarouselProps> = ({ 
-  items, 
-  autoplay = true, 
-  autoplayDelay = 3000,
-  className 
-}) => {
+export const Carousel: React.FC<CarouselProps> = (props) => {
+  const { 
+    items, 
+    autoplay = true, 
+    autoplayDelay = 3000,
+    className: incomingClassName,
+    style: incomingStyle,
+    children,
+    ...rest 
+  } = props;
+  
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -153,19 +157,28 @@ export const Carousel: React.FC<CarouselProps> = ({
 
   if (!items.length) return null;
 
+  const mergedClassName = cn('relative overflow-hidden rounded-xl', incomingClassName);
+  const mergedStyle: React.CSSProperties = {
+    ...(incomingStyle ?? {}),
+  };
+
   return (
     <div 
-      className={cn('relative overflow-hidden rounded-xl', className)}
+      className={mergedClassName}
+      style={mergedStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      {...rest}
     >
       <div 
         className="flex transition-transform duration-500 ease-in-out"
-        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        style={{ 
+          transform: `translateX(-${currentSlide * 100}%)`,
+          touchAction: 'pan-y'
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        style={{ touchAction: 'pan-y' }}
       >
         {items.map((item, index) => (
           <div

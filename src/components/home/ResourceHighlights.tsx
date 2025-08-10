@@ -8,6 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Book, Video, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+export interface Resource {
+  id: string;
+  title: string;
+  summary?: string;
+  type?: string;
+  category?: string;
+  url?: string;
+}
+
 interface ResourcesType {
   constitution: {
     pdf: string;
@@ -23,13 +32,31 @@ interface ResourcesType {
   };
 }
 
-interface ResourceHighlightsProps {
-  resources: ResourcesType;
+export interface ResourceHighlightsProps {
+  resources?: ResourcesType;
 }
 
 const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
   const { language } = useLanguage();
   const { theme } = useTheme();
+  
+  // Default resources if none provided
+  const defaultResources: ResourcesType = {
+    constitution: {
+      pdf: "647caa0e-6ffd-44b1-8962-4bb96ae7dfb3",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
+    },
+    lawmaking: {
+      infographic: "9e3756a7-9c6d-4352-9539-9a589e2428c9",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
+    },
+    rights: {
+      infographic: "98f0e638-115c-48a6-ae94-74c8c26e650d",
+      video: "4a8f62d5-5edd-4cfe-8c05-c6cfaba3c9bb"
+    }
+  };
+
+  const resourceData = resources || defaultResources;
   
   const resourceIcons = {
     pdf: <Book className="h-5 w-5 text-kenya-green" />,
@@ -71,7 +98,7 @@ const ResourceHighlights = ({ resources }: ResourceHighlightsProps) => {
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.entries(resources).map(([key, resource], index) => (
+          {Object.entries(resourceData).map(([key, resource], index) => (
             <motion.div
               key={key}
               initial={{ opacity: 0, y: 20 }}
