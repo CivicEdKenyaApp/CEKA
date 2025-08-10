@@ -31,8 +31,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
+             <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth-page" element={<AuthPage />} />
@@ -46,7 +45,6 @@ const App = () => (
                 <Route path="/volunteer" element={<Volunteer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
       </LanguageProvider>
