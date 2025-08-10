@@ -161,13 +161,11 @@ export const Carousel: React.FC<CarouselProps> = ({
     >
       <div 
         className="flex transition-transform duration-500 ease-in-out"
-        style={{ 
-          transform: `translateX(-${currentSlide * 100}%)`,
-          touchAction: 'pan-y'
-        }}
+        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        style={{ touchAction: 'pan-y' }}
       >
         {items.map((item, index) => (
           <div
