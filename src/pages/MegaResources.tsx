@@ -69,8 +69,6 @@ interface ExtendedResource extends Omit<Resource, 'tags'> {
   featured?: boolean;
   county?: string;
   author?: string;
-  uploadedBy?: string;
-  downloadUrl?: string;
   videoUrl?: string | null;
   thumbnail?: string;
   dateAdded?: string;
