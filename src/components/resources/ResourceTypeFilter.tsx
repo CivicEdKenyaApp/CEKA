@@ -10,6 +10,12 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 
+export interface ResourceTypeFilterProps {
+  selectedType: string;
+  onTypeChange: (type: string) => void;
+  availableTypes: string[];
+}
+
 const resourceTypes = [
   { 
     id: 'all', 
@@ -71,7 +77,11 @@ const categories = [
   }
 ];
 
-const ResourceTypeFilter = () => {
+const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
+  selectedType,
+  onTypeChange,
+  availableTypes
+}) => {
   const location = useLocation();
   const { language } = useLanguage();
   const { theme } = useTheme();
@@ -133,16 +143,18 @@ const ResourceTypeFilter = () => {
                   (type.id !== 'all' && location.pathname.includes(`/type/${type.id}`));
                   
                 return (
-                  <Link
+                  <button
                     key={type.id}
-                    to={type.path}
+                    onClick={() => {
+                      onTypeChange(type.id);
+                      setResourcesOpen(false);
+                    }}
                     className={cn(
-                      "flex items-center px-3 py-2 text-sm rounded-md",
+                      "flex items-center px-3 py-2 text-sm rounded-md text-left",
                       isActive 
                         ? "bg-kenya-green text-white" 
                         : `hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-gray-700' : ''}`
                     )}
-                    onClick={() => setResourcesOpen(false)}
                   >
                     <span className={cn("mr-2", isActive ? "text-white" : "text-muted-foreground")}>
                       {type.icon}
@@ -154,7 +166,7 @@ const ResourceTypeFilter = () => {
                         className="ml-auto w-1.5 h-1.5 bg-white rounded-full" 
                       />
                     )}
-                  </Link>
+                  </button>
                 );
               })}
             </div>
