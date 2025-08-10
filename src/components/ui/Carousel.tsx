@@ -112,7 +112,7 @@ export const Carousel: React.FC<CarouselProps> = ({
       case 'red':
         return 'bg-gradient-to-br from-red-600 to-red-700 text-white';
       case 'green':
-        return 'bg-gradient-to-br from-green-600 to-green-700 text-white';
+        return 'bg-gradient-to-br from-kenya-green to-green-700 text-white';
       case 'black':
         return 'bg-gradient-to-br from-gray-800 to-gray-900 text-white';
       case 'white':
@@ -123,7 +123,14 @@ export const Carousel: React.FC<CarouselProps> = ({
   };
 
   const getCtaGradient = () => {
-    return 'bg-gradient-to-br from-red-600/20 via-green-600/20 via-gray-800/20 to-gray-100/20 backdrop-blur-sm bg-white/10 dark:bg-black/10 border border-white/20 dark:border-black/20 text-foreground';
+    return `
+      bg-gradient-to-br 
+      from-red-600/20 via-kenya-green/20 via-gray-800/20 to-gray-100/20
+      backdrop-blur-sm
+      bg-white/10 dark:bg-black/10
+      border border-white/20 dark:border-black/20
+      text-foreground
+    `;
   };
 
   const getDotColor = (index: number, isActive: boolean) => {
@@ -134,7 +141,7 @@ export const Carousel: React.FC<CarouselProps> = ({
       case 'red':
         return 'bg-red-600';
       case 'green':
-        return 'bg-green-600';
+        return 'bg-kenya-green';
       case 'black':
         return 'bg-gray-800 dark:bg-gray-600';
       case 'white':
@@ -154,13 +161,11 @@ export const Carousel: React.FC<CarouselProps> = ({
     >
       <div 
         className="flex transition-transform duration-500 ease-in-out"
-        style={{ 
-          transform: `translateX(-${currentSlide * 100}%)`,
-          touchAction: 'pan-y'
-        }}
+        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        style={{ touchAction: 'pan-y' }}
       >
         {items.map((item, index) => (
           <div
