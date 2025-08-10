@@ -10,12 +10,6 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export interface ResourceTypeFilterProps {
-  selectedType: string;
-  onTypeChange: (type: string) => void;
-  availableTypes: string[];
-}
-
 const resourceTypes = [
   { 
     id: 'all', 
@@ -77,11 +71,7 @@ const categories = [
   }
 ];
 
-const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
-  selectedType,
-  onTypeChange,
-  availableTypes
-}) => {
+const ResourceTypeFilter = () => {
   const location = useLocation();
   const { language } = useLanguage();
   const { theme } = useTheme();
@@ -143,18 +133,16 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
                   (type.id !== 'all' && location.pathname.includes(`/type/${type.id}`));
                   
                 return (
-                  <button
+                  <Link
                     key={type.id}
-                    onClick={() => {
-                      onTypeChange(type.id);
-                      setResourcesOpen(false);
-                    }}
+                    to={type.path}
                     className={cn(
-                      "flex items-center px-3 py-2 text-sm rounded-md text-left",
+                      "flex items-center px-3 py-2 text-sm rounded-md",
                       isActive 
                         ? "bg-kenya-green text-white" 
                         : `hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-gray-700' : ''}`
                     )}
+                    onClick={() => setResourcesOpen(false)}
                   >
                     <span className={cn("mr-2", isActive ? "text-white" : "text-muted-foreground")}>
                       {type.icon}
@@ -166,7 +154,7 @@ const ResourceTypeFilter: React.FC<ResourceTypeFilterProps> = ({
                         className="ml-auto w-1.5 h-1.5 bg-white rounded-full" 
                       />
                     )}
-                  </button>
+                  </Link>
                 );
               })}
             </div>
