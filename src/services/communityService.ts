@@ -57,8 +57,8 @@ export class CommunityService {
       email: data.email || undefined,
       county: data.county || undefined,
       bio: data.bio || undefined,
-      interests: data.interests || undefined,
-      areas_of_interest: data.areas_of_interest || undefined,
+      interests: Array.isArray(data.interests) ? data.interests : [],
+      areas_of_interest: Array.isArray(data.areas_of_interest) ? data.areas_of_interest : [],
       created_via: 'join-community'
     };
   }

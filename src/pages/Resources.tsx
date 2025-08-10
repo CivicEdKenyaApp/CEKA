@@ -6,8 +6,6 @@ import Layout from '@/components/layout/Layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import ResourceCard from '@/components/resources/ResourceCard';
-import ResourceTypeFilter from '@/components/resources/ResourceTypeFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Filter, Download, ExternalLink, Eye } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -135,7 +133,7 @@ const Resources = () => {
       supabase.rpc('track_resource_view', {
         p_resource_id: resource.id,
         p_resource_type: resource.type || 'unknown'
-      }).catch(err => console.warn('Failed to track view:', err));
+      }).then().catch(err => console.warn('Failed to track view:', err));
     }
 
     // Open based on type
@@ -236,11 +234,18 @@ const Resources = () => {
               <span className="text-sm font-medium">{translate("Filter by:", language)}</span>
             </div>
             
-            <ResourceTypeFilter
-              selectedType={selectedType}
-              onTypeChange={handleTypeChange}
-              availableTypes={['all', ...resourceTypes]}
-            />
+            <select
+              value={selectedType}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              className="px-3 py-2 border rounded-md text-sm bg-background"
+            >
+              <option value="all">{translate("All Types", language)}</option>
+              {resourceTypes.map(type => (
+                <option key={type} value={type}>
+                  {translate(type.charAt(0).toUpperCase() + type.slice(1), language)}
+                </option>
+              ))}
+            </select>
 
             <select
               value={selectedCategory}
