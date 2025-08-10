@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import Blog from "./pages/Blog";
 import CivicEducation from "./pages/CivicEducation";
 import Volunteer from "./pages/Volunteer";
 import NotFound from "./pages/NotFound";
+import MegaResources from '@/pages/MegaResources';
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,10 @@ const App = () => (
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/join-community" element={<JoinCommunity />} />
                 <Route path="/volunteer/submit" element={<VolunteerSubmit />} />
-                <Route path="/resources" element={<Resources />} />
+                <Route path="/resources" element={<MegaResources />} />
+                <Route path="/resources/:id" element={<MegaResources />} />
+                <Route path="/resource-hub" element={<MegaResources />} />
+                <Route path="/resource-library" element={<MegaResources />} />
                 <Route path="/legislative-tracker" element={<LegislativeTracker />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/civic-education" element={<CivicEducation />} />
