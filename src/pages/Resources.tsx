@@ -112,7 +112,7 @@ const Resources = () => {
     setSearchParams(newParams);
   };
 
-  const handleResourceClick = async (resource: Resource) => {
+  const handleResourceClick = (resource: Resource) => {
     console.log('Resource clicked:', resource);
     
     // Generate proper public URL for resources
@@ -130,20 +130,12 @@ const Resources = () => {
       }
     }
 
-    // Track view using proper Supabase error handling
+    // Track view
     if (resource.id) {
-      try {
-        const { data, error } = await supabase.rpc('track_resource_view', {
-          p_resource_id: resource.id,
-          p_resource_type: resource.type || 'unknown'
-        });
-
-        if (error) {
-          console.warn('Failed to track view:', error);
-        }
-      } catch (err) {
-        console.error('Unexpected error tracking view:', err);
-      }
+      supabase.rpc('track_resource_view', {
+        p_resource_id: resource.id,
+        p_resource_type: resource.type || 'unknown'
+      }).catch(err => console.warn('Failed to track view:', err));
     }
 
     // Open based on type
@@ -198,7 +190,6 @@ const Resources = () => {
 
   const resourceTypes = Array.from(new Set(resources.map(r => r.type?.toLowerCase() || 'other')));
   const resourceCategories = Array.from(new Set(resources.map(r => r.category?.toLowerCase() || 'other')));
-  const availableTypes = ['all', ...resourceTypes];
 
   if (error) {
     return (
@@ -248,7 +239,7 @@ const Resources = () => {
             <ResourceTypeFilter
               selectedType={selectedType}
               onTypeChange={handleTypeChange}
-              availableTypes={availableTypes}
+              availableTypes={['all', ...resourceTypes]}
             />
 
             <select
