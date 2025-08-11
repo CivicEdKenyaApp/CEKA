@@ -28,7 +28,7 @@ const SplashScreen = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ 
-                type: "spring", 
+                type: "spring" as const, 
                 stiffness: 150, 
                 damping: 20,
                 delay: 0.2
@@ -48,8 +48,7 @@ const SplashScreen = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ 
                 delay: 0.6, 
-                duration: 0.5,
-                exit: { duration: 0.3 }
+                duration: 0.5
               }}
               className="space-y-3"
             >
@@ -66,8 +65,7 @@ const SplashScreen = () => {
               transition={{ 
                 delay: 1,
                 duration: 1.5,
-                ease: "easeInOut",
-                exit: { duration: 0.3 }
+                ease: "easeInOut"
               }}
               className="mt-8 h-1 bg-primary rounded-full max-w-xs"
             />
@@ -80,7 +78,7 @@ const SplashScreen = () => {
                 delay: 1,
                 duration: 2, 
                 repeat: 1,
-                repeatType: "loop"
+                repeatType: "loop" as const
               }}
               className="mt-8 text-sm text-muted-foreground"
             >
