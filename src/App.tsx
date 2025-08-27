@@ -1,121 +1,145 @@
-
-import { Suspense, lazy } from 'react';
-import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Routes, Route } from 'react-router-dom';
-import LoadingScreen from '@/components/LoadingScreen';
+import React, { useState, useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Toaster } from '@/components/ui/toaster';
+import ScrollListener from '@/components/auth/ScrollListener';
+import AuthModal from '@/components/auth/AuthModal';
+import WelcomeTour from '@/components/tour/WelcomeTour';
+import Index from '@/pages/Index';
+import AuthPage from '@/pages/AuthPage';
+import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
+import AdminDashboard from '@/pages/AdminDashboard';
+import ResourceLibrary from '@/pages/ResourceLibrary';
+import ResourceDetail from '@/pages/ResourceDetail';
+import ResourceHub from '@/pages/ResourceHub';
+import LegislativeTracker from '@/pages/LegislativeTracker';
+import LegislativeTrackerDetail from '@/pages/LegislativeTrackerDetail';
+import LegislationDetail from '@/pages/LegislationDetail';
+import BillDetail from '@/pages/BillDetail';
+import RejectFinanceBill from '@/pages/RejectFinanceBill';
+import Volunteer from '@/pages/Volunteer';
+import VolunteerApplication from '@/pages/VolunteerApplication';
+import UserProfile from '@/pages/UserProfile';
+import ProfileSettings from '@/pages/ProfileSettings';
+import Notifications from '@/pages/Notifications';
+import AdvocacyToolkit from '@/pages/AdvocacyToolkit';
+import AdvocacyToolkitDetail from '@/pages/AdvocacyToolkitDetail';
+import JoinCommunity from '@/pages/JoinCommunity';
+import ConstitutionPage from '@/pages/ConstitutionPage';
+import LegalPage from '@/pages/LegalPage';
+import FeedbackPage from '@/pages/FeedbackPage';
+import DiscussionDetail from '@/pages/DiscussionDetail';
+import CampaignDetail from '@/pages/CampaignDetail';
+import SearchResults from '@/pages/SearchResults';
+import DocumentViewerPage from '@/pages/DocumentViewerPage';
+import ResourceUpload from '@/pages/ResourceUpload';
+import PendingResources from '@/pages/PendingResources';
+import ThumbnailDemo from '@/pages/ThumbnailDemo';
+import SettingsLayout from '@/pages/settings/SettingsLayout';
+import Settings from '@/pages/Settings';
+import AccountSettings from '@/pages/settings/AccountSettings';
+import NotificationSettings from '@/pages/settings/NotificationSettings';
+import PrivacySettings from '@/pages/settings/PrivacySettings';
+import NotFound from '@/pages/NotFound';
+import { useAuth } from '@/providers/AuthProvider';
 
-const Index = lazy(() => import('@/pages/Index'));
-const AuthPage = lazy(() => import('@/pages/AuthPage'));
-const CivicEducation = lazy(() => import('@/pages/CivicEducation'));
-const LegislativeTracker = lazy(() => import('@/pages/LegislativeTracker'));
-const ResourceDetail = lazy(() => import('@/pages/ResourceDetail'));
-const MegaResources = lazy(() => import('@/pages/MegaResources'));
-const JoinCommunity = lazy(() => import('@/pages/JoinCommunity'));
-const BillDetail = lazy(() => import('@/pages/BillDetail'));
-const LegislationDetail = lazy(() => import('@/pages/LegislationDetail'));
-const LegislativeTrackerDetail = lazy(() => import('@/pages/LegislativeTrackerDetail'));
-const CampaignDetail = lazy(() => import('@/pages/CampaignDetail'));
-const ConstitutionPage = lazy(() => import('@/pages/ConstitutionPage'));
-const SearchResults = lazy(() => import('@/pages/SearchResults'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-const Feedback = lazy(() => import('@/pages/Feedback'));
-const ResourceUpload = lazy(() => import('@/pages/ResourceUpload'));
-const EventsCalendar = lazy(() => import('@/pages/EventsCalendar'));
-const AdvocacyToolkit = lazy(() => import('@/pages/AdvocacyToolkit'));
-const AdvocacyToolkitDetail = lazy(() => import('@/pages/AdvocacyToolkitDetail'));
-const ProfileSettings = lazy(() => import('@/pages/ProfileSettings'));
-const Blog = lazy(() => import('@/pages/Blog'));
-const BlogPost = lazy(() => import('@/pages/BlogPost'));
-const UserProfile = lazy(() => import('@/pages/UserProfile'));
-const Volunteer = lazy(() => import('@/pages/Volunteer'));
-const VolunteerApplication = lazy(() => import('@/pages/VolunteerApplication'));
-const VolunteerSubmit = lazy(() => import('@/pages/VolunteerSubmit'));
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const ThumbnailDemo = lazy(() => import('@/pages/ThumbnailDemo'));
-const ThumbnailDemoPage = lazy(() => import('@/pages/ThumbnailDemoPage'));
-const LegalPage = lazy(() => import('@/pages/LegalPage'));
-const RejectFinanceBill = lazy(() => import('@/pages/RejectFinanceBill'));
-const FeedbackPage = lazy(() => import('@/pages/FeedbackPage'));
-const Settings = lazy(() => import('@/pages/Settings'));
-const Notifications = lazy(() => import('@/pages/Notifications'));
-const DocumentViewerPage = lazy(() => import('@/pages/DocumentViewerPage'));
-const DiscussionDetail = lazy(() => import('@/pages/DiscussionDetail'));
-const PendingResources = lazy(() => import('@/pages/PendingResources'));
+const ScrollToTop = () => {
+  const location = useLocation();
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
-function App() {
+  return null;
+};
+
+const AppContent: React.FC = () => {
+  const { session } = useAuth();
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+
+  useEffect(() => {
+    // Show welcome tour for new authenticated users
+    if (session) {
+      const hasSeenTour = localStorage.getItem('ceka-welcome-tour-seen');
+      if (!hasSeenTour) {
+        setShowWelcomeTour(true);
+      }
+    }
+  }, [session]);
+
+  const handleTourComplete = () => {
+    localStorage.setItem('ceka-welcome-tour-seen', 'true');
+    setShowWelcomeTour(false);
+  };
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <Suspense fallback={<LoadingScreen />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/civic-education" element={<CivicEducation />} />
-                    <Route path="/legislative-tracker" element={<LegislativeTracker />} />
-                    <Route path="/resources" element={<MegaResources />} />
-                    <Route path="/resources/:id" element={<MegaResources />} />
-                    <Route path="/resource-library" element={<MegaResources />} />
-                    <Route path="/resource-hub" element={<MegaResources />} />
-                    <Route path="/resource-detail/:id" element={<ResourceDetail />} />
-                    <Route path="/document-viewer/:id" element={<DocumentViewerPage />} />
-                    <Route path="/join-community" element={<JoinCommunity />} />
-                    <Route path="/bills/:id" element={<BillDetail />} />
-                    <Route path="/legislation/:id" element={<LegislationDetail />} />
-                    <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
-                    <Route path="/campaigns/:id" element={<CampaignDetail />} />
-                    <Route path="/constitution" element={<ConstitutionPage />} />
-                    <Route path="/search" element={<SearchResults />} />
-                    <Route path="/feedback" element={<Feedback />} />
-                    <Route path="/resource-upload" element={<ResourceUpload />} />
-                    <Route path="/events" element={<EventsCalendar />} />
-                    <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
-                    <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
-                    <Route path="/profile" element={<ProfileSettings />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                    <Route path="/user/:id" element={<UserProfile />} />
-                    <Route path="/volunteer" element={<Volunteer />} />
-                    <Route path="/volunteer/:id" element={<VolunteerApplication />} />
-                    <Route path="/volunteer-submit" element={<VolunteerSubmit />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/thumbnail-demo" element={<ThumbnailDemo />} />
-                    <Route path="/thumbnail-demo-page" element={<ThumbnailDemoPage />} />
-                    <Route path="/legal" element={<LegalPage />} />
-                    <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
-                    <Route path="/feedback-page" element={<FeedbackPage />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/discussions/:id" element={<DiscussionDetail />} />
-                    <Route path="/pending-resources" element={<PendingResources />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <Toaster />
-              </div>
-            </TooltipProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <>
+      <ScrollToTop />
+      {showWelcomeTour && <WelcomeTour onComplete={handleTourComplete} />}
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/resources" element={<ResourceLibrary />} />
+        <Route path="/resources/:id" element={<ResourceDetail />} />
+        <Route path="/resources/upload" element={<ResourceUpload />} />
+        <Route path="/resources/pending" element={<PendingResources />} />
+        <Route path="/resource-hub" element={<ResourceHub />} />
+        <Route path="/legislative-tracker" element={<LegislativeTracker />} />
+        <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
+        <Route path="/legislation/:id" element={<LegislationDetail />} />
+        <Route path="/bill/:id" element={<BillDetail />} />
+        <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
+        <Route path="/volunteer" element={<Volunteer />} />
+        <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile/settings" element={<ProfileSettings />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
+        <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
+        <Route path="/join-community" element={<JoinCommunity />} />
+        <Route path="/constitution" element={<ConstitutionPage />} />
+        <Route path="/legal" element={<LegalPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/discussion/:id" element={<DiscussionDetail />} />
+        <Route path="/campaign/:id" element={<CampaignDetail />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/document/:id" element={<DocumentViewerPage />} />
+        <Route path="/thumbnail-demo" element={<ThumbnailDemo />} />
+        <Route path="/settings" element={<SettingsLayout />}>
+          <Route index element={<Settings />} />
+          <Route path="account" element={<AccountSettings />} />
+          <Route path="notifications" element={<NotificationSettings />} />
+          <Route path="privacy" element={<PrivacySettings />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ScrollListener>
+            <AuthModal 
+              open={false} 
+              onOpenChange={() => {}} 
+            />
+            <AppContent />
+          </ScrollListener>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+};
 
 export default App;

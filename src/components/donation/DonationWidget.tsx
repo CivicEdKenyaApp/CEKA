@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, ArrowRight, Gift, Copy, ExternalLink } from 'lucide-react';
@@ -122,28 +123,28 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
   
   const darkMode = theme === 'dark';
   
-  // Animation variants - fixed to not use function in variants
+  // Animation variants
   const containerVariants = {
     hidden: { 
       opacity: 0, 
       scale: 0.8,
-      bottom: isMobile ? "80px" : "20px",
+      bottom: isMobile ? "80px" : "20px", // Position above BottomNavbar on mobile
       right: "20px" 
     },
-    visible: { 
-      opacity: isIdle ? 0.7 : 1, 
+    visible: (expanded) => ({ 
+      opacity: expanded ? 1 : isIdle ? 0.7 : 1, 
       scale: 1,
-      bottom: isExpanded ? "50%" : isMobile ? "80px" : "30%",
-      right: isExpanded ? "50%" : "20px",
-      x: isExpanded ? "50%" : 0,
-      y: isExpanded ? "50%" : 0,
+      bottom: expanded ? "50%" : isMobile ? "80px" : "30%", // Positioned at 30% from bottom on desktop
+      right: expanded ? "50%" : "20px",
+      x: expanded ? "50%" : 0,
+      y: expanded ? "50%" : 0,
       transition: {
-        type: "spring" as const,
+        type: "spring",
         stiffness: 380,
         damping: 30,
         mass: 1
       }
-    },
+    }),
     exit: { 
       opacity: 0, 
       scale: 0.8,
@@ -181,9 +182,10 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
           initial="hidden"
           animate="visible"
           exit="exit"
+          custom={isExpanded}
           className={`fixed z-50 shadow-lg rounded-lg
             ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
-          style={{ zIndex: 999 }}
+          style={{ zIndex: 999 }} // Ensure it's above everything else
         >
           {!isExpanded ? (
             // Collapsed state (floating button)
