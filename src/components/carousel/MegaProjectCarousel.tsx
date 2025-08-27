@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from './supabase/client';
 
 type Slide = {
   id: string;
