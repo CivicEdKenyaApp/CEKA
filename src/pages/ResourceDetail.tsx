@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -8,10 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { ChevronLeft, Download, FileText, Video, Image, Share2, ThumbsUp, Eye } from 'lucide-react';
+import { ChevronLeft, Download, FileText, Video, Image, Share2, Eye } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { useDocument } from '@/hooks/use-document';
+import { useViewCount } from '@/hooks/useViewCount';
+import { useViewTracking } from '@/hooks/useViewTracking';
+import { normalizeDownloadUrl, getYouTubeEmbedUrl } from '@/utils/url';
 
 type Resource = Tables<'resources'>;
 
@@ -32,7 +34,7 @@ const mockResources = [
     type: "video",
     category: "Governance",
     description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/resources/Videos/Governance/Blood%20Parliament%20-%20BBC%20Africa%20Eye%20Documentary%20(Pt%201).mp4",
+    url: "https://youtu.be/qz0f1yyf_eA",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -53,10 +55,11 @@ const ResourceDetail = () => {
   const navigate = useNavigate();
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewCount, setViewCount] = useState(0);
   const { toast } = useToast();
 
-  // Use mock resources when running in development
+  // Use Supabase-backed realtime view count
+  const viewCount = useViewCount(id || '', 'resource');
+
   useEffect(() => {
     const fetchResource = async () => {
       try {
@@ -66,8 +69,9 @@ const ResourceDetail = () => {
         const mockResource = mockResources.find(r => r.id === id);
         
         if (mockResource) {
-          setResource(mockResource as unknown as Resource);
-          setViewCount(Math.floor(Math.random() * 100) + 20);
+          // Normalize URL for in-app viewing
+          const normalized = { ...mockResource, url: normalizeDownloadUrl(mockResource.url) };
+          setResource(normalized as unknown as Resource);
           setLoading(false);
           return;
         }
@@ -81,8 +85,8 @@ const ResourceDetail = () => {
           
         if (error) throw error;
         
-        setResource(data);
-        setViewCount(Math.floor(Math.random() * 100) + 20); // Placeholder
+        const normalizedDb = data ? { ...data, url: normalizeDownloadUrl((data as any).url) } : null;
+        setResource(normalizedDb as Resource);
       } catch (error) {
         console.error('Error fetching resource:', error);
         toast({
@@ -99,7 +103,20 @@ const ResourceDetail = () => {
     fetchResource();
   }, [id, toast, navigate]);
 
-  const { isLoading: isDocumentLoading, error: documentError, documentUrl } = useDocument({
+  // Track view once the resource is known
+  const { trackVideoPlay } = useViewTracking({
+    resourceId: id || '',
+    resourceType: 'resource',
+    viewType: 'page_view',
+  });
+
+  useEffect(() => {
+    // If it's a video and auto-play/interaction happens, we can later call trackVideoPlay()
+    // We keep this returned function for potential cleanup
+    return () => {};
+  }, [trackVideoPlay]);
+
+  const { isLoading: isDocumentLoading } = useDocument({
     url: resource?.url || '',
     type: resource?.type || '',
   });
@@ -107,6 +124,7 @@ const ResourceDetail = () => {
   const getResourceIcon = (type: string) => {
     switch (type?.toLowerCase()) {
       case 'pdf':
+      case 'document':
         return <FileText className="h-10 w-10" />;
       case 'video':
         return <Video className="h-10 w-10" />;
@@ -125,19 +143,28 @@ const ResourceDetail = () => {
     });
     
     if (resource) {
-      window.open(resource.url, '_blank');
+      const finalUrl = normalizeDownloadUrl((resource as any).downloadUrl || resource.url);
+      if (finalUrl) window.open(finalUrl, '_blank');
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied",
-      description: "Resource link copied to clipboard",
-    });
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "Resource link copied to clipboard",
+      });
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy link to clipboard.",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Related resources (excluding current one)
+  // Related resources (excluding current one) - non-destructive mock
   const relatedResources = mockResources.filter(r => r.id !== id);
 
   if (loading) {
@@ -168,6 +195,8 @@ const ResourceDetail = () => {
     );
   }
 
+  const youTubeEmbed = resource.type?.toLowerCase() === 'video' ? getYouTubeEmbedUrl((resource as any).videoUrl || resource.url) : null;
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
@@ -187,20 +216,38 @@ const ResourceDetail = () => {
                 <div className="flex items-center text-muted-foreground text-sm mb-4">
                   <Eye className="h-4 w-4 mr-1" /> {viewCount} views
                   <span className="mx-2">•</span>
-                  <span>Added {new Date(resource.created_at).toLocaleDateString()}</span>
+                  <span>Added {new Date((resource as any).created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
 
             <Card className="mb-8">
               <CardContent className="p-6">
-                <p className="text-lg mb-6">{resource.description}</p>
-                
-                <DocumentViewer
-                  url={resource.url}
-                  type={resource.type}
-                  title={resource.title}
-                />
+                <p className="text-lg mb-6">{(resource as any).description}</p>
+
+                {/* Local inline viewer */}
+                {youTubeEmbed ? (
+                  <div className="aspect-video w-full rounded-md overflow-hidden">
+                    <iframe
+                      title={resource.title}
+                      src={youTubeEmbed}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      onLoad={() => {
+                        // Count a play interaction opportunity
+                        // Note: actual play tracking can be wired via YouTube API; here we record a play intent
+                        console.log('YouTube embed loaded');
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <DocumentViewer
+                    url={(resource as any).url}
+                    type={(resource as any).type}
+                    title={(resource as any).title}
+                  />
+                )}
                 
                 <Separator className="my-6" />
                 
@@ -219,7 +266,7 @@ const ResourceDetail = () => {
 
             <h2 className="text-xl font-semibold mb-4">About this Resource</h2>
             <p className="text-muted-foreground">
-              This {resource.type?.toLowerCase()} provides information about {resource.category} in Kenya. 
+              This {(resource as any).type?.toLowerCase()} provides information about {(resource as any).category} in Kenya. 
               It is part of our civic education materials designed to help citizens understand 
               their rights and responsibilities.
             </p>
@@ -229,7 +276,7 @@ const ResourceDetail = () => {
             <Card>
               <CardContent className="p-6">
                 <div className="flex justify-center mb-6 bg-muted p-6 rounded-lg">
-                  {getResourceIcon(resource.type || '')}
+                  {getResourceIcon((resource as any).type || '')}
                 </div>
                 
                 <h3 className="font-semibold mb-4">Resource Information</h3>
@@ -237,19 +284,19 @@ const ResourceDetail = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Type:</span>
-                    <span className="font-medium">{resource.type}</span>
+                    <span className="font-medium">{(resource as any).type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Category:</span>
-                    <span className="font-medium">{resource.category}</span>
+                    <span className="font-medium">{(resource as any).category}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Added on:</span>
-                    <span className="font-medium">{new Date(resource.created_at).toLocaleDateString()}</span>
+                    <span className="font-medium">{new Date((resource as any).created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Last updated:</span>
-                    <span className="font-medium">{new Date(resource.updated_at).toLocaleDateString()}</span>
+                    <span className="font-medium">{new Date((resource as any).updated_at).toLocaleDateString()}</span>
                   </div>
                 </div>
                 
@@ -264,7 +311,14 @@ const ResourceDetail = () => {
                       to={`/resources/${related.id}`} 
                       className="flex items-center p-2 hover:bg-muted rounded-md transition-colors"
                     >
-                      {getResourceIcon(related.type)}
+                      {(() => {
+                        switch ((related.type || '').toLowerCase()) {
+                          case 'video': return <Video className="h-5 w-5" />;
+                          case 'image':
+                          case 'infographic': return <Image className="h-5 w-5" />;
+                          default: return <FileText className="h-5 w-5" />;
+                        }
+                      })()}
                       <span className="ml-2 text-sm">{related.title}</span>
                     </Link>
                   ))}

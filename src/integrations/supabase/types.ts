@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -230,6 +230,7 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          sources: string | null
           sponsor: string | null
           stages: Json | null
           status: string
@@ -246,6 +247,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          sources?: string | null
           sponsor?: string | null
           stages?: Json | null
           status: string
@@ -262,6 +264,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          sources?: string | null
           sponsor?: string | null
           stages?: Json | null
           status?: string
@@ -707,29 +710,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          areas_of_interest: Json | null
+          auth_user_id: string | null
           avatar_url: string | null
+          bio: string | null
+          county: string | null
           created_at: string
+          created_via: string | null
           email: string | null
           full_name: string | null
           id: string
+          interests: Json | null
           updated_at: string
           username: string | null
         }
         Insert: {
+          areas_of_interest?: Json | null
+          auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          county?: string | null
           created_at?: string
+          created_via?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          interests?: Json | null
           updated_at?: string
           username?: string | null
         }
         Update: {
+          areas_of_interest?: Json | null
+          auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          county?: string | null
           created_at?: string
+          created_via?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          interests?: Json | null
           updated_at?: string
           username?: string | null
         }
@@ -1009,39 +1030,60 @@ export type Database = {
       }
       volunteer_opportunities: {
         Row: {
+          apply_url: string | null
           commitment: string
+          contact_email: string | null
           created_at: string
+          created_by_user_id: string | null
           date: string
           description: string
           id: string
+          is_remote: boolean | null
           location: string
           organization: string
+          skills_required: Json | null
+          status: string | null
+          tags: Json | null
           time: string
           title: string
           type: string
           updated_at: string
         }
         Insert: {
+          apply_url?: string | null
           commitment: string
+          contact_email?: string | null
           created_at?: string
+          created_by_user_id?: string | null
           date: string
           description: string
           id?: string
+          is_remote?: boolean | null
           location: string
           organization: string
+          skills_required?: Json | null
+          status?: string | null
+          tags?: Json | null
           time: string
           title: string
           type: string
           updated_at?: string
         }
         Update: {
+          apply_url?: string | null
           commitment?: string
+          contact_email?: string | null
           created_at?: string
+          created_by_user_id?: string | null
           date?: string
           description?: string
           id?: string
+          is_remote?: boolean | null
           location?: string
           organization?: string
+          skills_required?: Json | null
+          status?: string | null
+          tags?: Json | null
           time?: string
           title?: string
           type?: string
@@ -1100,7 +1142,7 @@ export type Database = {
     }
     Functions: {
       apply_for_volunteer_opportunity: {
-        Args: { user_id: string; opportunity_id: string; motivation: string }
+        Args: { motivation: string; opportunity_id: string; user_id: string }
         Returns: undefined
       }
       cleanup_expired_admin_sessions: {
@@ -1108,105 +1150,116 @@ export type Database = {
         Returns: undefined
       }
       create_admin_session: {
-        Args: { p_user_id: string; p_email: string }
+        Args: { p_email: string; p_user_id: string }
         Returns: {
-          session_token: string
           expires_at: string
+          session_token: string
         }[]
+      }
+      create_community_profile: {
+        Args: {
+          p_areas_of_interest?: Json
+          p_bio?: string
+          p_county?: string
+          p_email?: string
+          p_full_name: string
+          p_interests?: Json
+        }
+        Returns: string
       }
       create_discussion: {
         Args: {
-          user_id: string
+          content: string
           resource_id: string
           topic: string
-          content: string
+          user_id: string
         }
         Returns: undefined
       }
       create_event: {
         Args: {
-          title: string
+          category: string
           description: string
+          end_time: string
           event_date: string
           start_time: string
-          end_time: string
-          category: string
+          title: string
         }
         Returns: undefined
       }
       delete_user_profile: {
-        Args: { user_id: string; deactivate_user?: boolean }
+        Args: { deactivate_user?: boolean; user_id: string }
         Returns: undefined
       }
       filter_resources_by_topic: {
         Args: { topic: string }
         Returns: {
+          description: string
           id: string
           title: string
-          description: string
         }[]
       }
       follow_bill: {
-        Args: { user_id: string; bill_id: string }
+        Args: { bill_id: string; user_id: string }
         Returns: undefined
       }
       get_advocacy_toolkit: {
         Args: Record<PropertyKey, never>
         Returns: {
+          description: string
           id: string
           title: string
-          description: string
         }[]
       }
       get_all_learning_materials: {
         Args: Record<PropertyKey, never>
         Returns: {
+          description: string
           id: string
           title: string
-          description: string
           type: string
         }[]
       }
       get_all_providers: {
         Args: Record<PropertyKey, never>
         Returns: {
+          description: string
           id: string
           name: string
-          description: string
         }[]
       }
       get_bill_details: {
         Args: { bill_id: string }
         Returns: {
-          id: string
-          title: string
-          summary: string
           followed: boolean
+          id: string
+          summary: string
+          title: string
         }[]
       }
       get_discussion_thread: {
         Args: { d_id: string }
         Returns: {
-          discussion_id: string
-          title: string
           content: string
+          discussion_id: string
           replies: Json
+          title: string
         }[]
       }
       get_followed_bills: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: {
           bill_id: string
-          title: string
           summary: string
+          title: string
         }[]
       }
       get_my_volunteer_applications: {
         Args: { user_id: string }
         Returns: {
+          created_at: string
           opportunity_id: string
           status: string
-          created_at: string
         }[]
       }
       get_resource_view_count: {
@@ -1216,35 +1269,39 @@ export type Database = {
       get_upcoming_events: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
           description: string
-          event_date: string
-          start_time: string
           end_time: string
+          event_date: string
+          id: string
+          start_time: string
+          title: string
         }[]
       }
       get_user_profile: {
         Args: { user_id: string }
         Returns: {
-          id: string
-          username: string
-          full_name: string
           avatar_url: string
           email: string
+          full_name: string
+          id: string
+          username: string
         }[]
       }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
       }
+      link_community_profile: {
+        Args: { p_auth_user_id: string; p_profile_id: string }
+        Returns: undefined
+      }
       list_open_volunteer_opportunities: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          organization: string
           description: string
+          id: string
+          organization: string
+          title: string
         }[]
       }
       notify_users_about_bill_change: {
@@ -1256,50 +1313,50 @@ export type Database = {
         Returns: undefined
       }
       reply_to_discussion: {
-        Args: { discussion_id: string; user_id: string; reply_content: string }
+        Args: { discussion_id: string; reply_content: string; user_id: string }
         Returns: undefined
       }
       search_bills: {
         Args: { keyword: string }
         Returns: {
           id: string
-          title: string
           summary: string
+          title: string
         }[]
       }
       search_providers_by_county_or_topic: {
         Args: { county: string; topic: string }
         Returns: {
+          description: string
           id: string
           name: string
-          description: string
         }[]
       }
       submit_contribution: {
-        Args: { user_id: string; type: string; content: string }
+        Args: { content: string; type: string; user_id: string }
         Returns: undefined
       }
       submit_feedback: {
-        Args: { user_id: string; subject: string; body: string }
+        Args: { body: string; subject: string; user_id: string }
         Returns: undefined
       }
       track_resource_view: {
         Args: {
+          p_ip_address?: unknown
           p_resource_id: string
           p_resource_type: string
-          p_view_type?: string
-          p_user_id?: string
-          p_ip_address?: unknown
           p_user_agent?: string
+          p_user_id?: string
+          p_view_type?: string
         }
         Returns: string
       }
       unfollow_bill: {
-        Args: { user_id: string; bill_id: string }
+        Args: { bill_id: string; user_id: string }
         Returns: undefined
       }
       update_user_profile: {
-        Args: { user_id: string; name: string; location: string; bio: string }
+        Args: { bio: string; location: string; name: string; user_id: string }
         Returns: undefined
       }
     }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -6,11 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, MessageSquare, Download, ExternalLink, BookOpen } from 'lucide-react';
+import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
+import MegaResources from '@/components/resources/MegaResources';
+import CommunityProfileForm from '@/components/community/CommunityProfileForm';
+import VolunteerOpportunityDialog from '@/components/volunteer/VolunteerOpportunityDialog';
 
 const ConstitutionPage = () => {
   return (
     <Layout>
       <div className="container py-8 md:py-12">
+        {/* Kenya-themed projects carousel */}
+        <div className="mb-10">
+          <MegaProjectCarousel
+            slides={[
+              { id: 'c1', title: 'Constitution Highlights', description: 'Explore the key chapters and the Bill of Rights.', color: 'kenya-green', ctaText: 'Learn more', onClick: () => {} },
+              { id: 'c2', title: 'How Laws Are Made', description: 'Understand the legislative process in Kenya.', color: 'kenya-red', ctaText: 'See process', onClick: () => {} },
+              { id: 'c3', title: 'Public Participation', description: 'Your voice matters in governance.', color: 'kenya-black', ctaText: 'Get involved', onClick: () => {} },
+              { id: 'c4', title: 'Civic Education Toolkit', description: 'Discover learning materials and toolkits.', color: 'kenya-white', ctaText: 'Browse resources', onClick: () => {} },
+            ]}
+          />
+        </div>
+
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Understanding Kenya's Constitution</h1>
@@ -196,20 +211,33 @@ const ConstitutionPage = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="bg-kenya-green/10 p-6 rounded-lg mb-8">
+          {/* Combined Mega Resources section (non-destructive enhancement) */}
+          <div className="border-t pt-8">
+            <h3 className="text-xl font-semibold mb-4">Explore and Filter Resources</h3>
+            <MegaResources />
+          </div>
+
+          {/* Join discussion - existing content kept, plus community profile quick-create */}
+          <div className="bg-kenya-green/10 p-6 rounded-lg mb-8 mt-10">
             <h3 className="text-xl font-semibold mb-4">Join the Discussion</h3>
             <p className="mb-6">
               Have questions about Kenya's Constitution or want to share your insights on civic education? 
               Join the conversation in our community discussion forum.
             </p>
-            <Button asChild>
-              <Link to="/community">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Go to Discussions
-              </Link>
-            </Button>
+            <div className="flex flex-col md:flex-row gap-3">
+              <Button asChild>
+                <Link to="/community">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Go to Discussions
+                </Link>
+              </Button>
+              <div className="flex-1">
+                <CommunityProfileForm />
+              </div>
+            </div>
           </div>
 
+          {/* Volunteer section: keep existing related resources and add submission dialog entry point */}
           <div className="border-t pt-8">
             <h3 className="text-xl font-semibold mb-4">Related Resources</h3>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -235,6 +263,10 @@ const ConstitutionPage = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="mt-6 max-w-md">
+              <VolunteerOpportunityDialog />
             </div>
           </div>
         </div>
