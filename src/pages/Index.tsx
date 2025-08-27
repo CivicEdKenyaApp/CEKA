@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
@@ -9,6 +8,21 @@ import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
 import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
+import { supabase } from '@/lib/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
+
+// Types for our carousel slides
+interface CarouselSlide {
+  id: string;
+  title: string;
+  description: string | null;
+  cta_text: string | null;
+  color: 'kenya-red' | 'kenya-green' | 'kenya-black' | 'kenya-white';
+  link_url: string | null;
+  image_url: string | null;
+  type: 'project' | 'cta';
+}
 
 // Sample resource links for educational content
 export const sampleResources = {
@@ -25,50 +39,6 @@ export const sampleResources = {
     video: "https://www.youtube.com/watch?v=JpY9s1Agbsw"
   }
 };
-
-// Featured carousel slides with Kenyan flag theming
-const featuredSlides = [
-  {
-    id: '1',
-    title: 'Constitutional Education Initiative',
-    description: 'Empowering citizens with knowledge of their constitutional rights and responsibilities through community workshops and digital resources.',
-    ctaText: 'Learn More',
-    color: 'kenya-red' as const,
-    onClick: () => window.open('/constitution', '_blank')
-  },
-  {
-    id: '2',
-    title: 'Legislative Tracking Platform',
-    description: 'Real-time monitoring and analysis of parliamentary proceedings, bill progress, and legislative developments affecting Kenyan citizens.',
-    ctaText: 'Track Bills',
-    color: 'kenya-green' as const,
-    onClick: () => window.open('/legislative-tracker', '_blank')
-  },
-  {
-    id: '3',
-    title: 'Community Engagement Networks',
-    description: 'Building grassroots networks that facilitate citizen participation in local governance and community development initiatives.',
-    ctaText: 'Join Community',
-    color: 'kenya-black' as const,
-    onClick: () => window.open('/join-community', '_blank')
-  },
-  {
-    id: '4',
-    title: 'Digital Civic Resources Hub',
-    description: 'Comprehensive online library providing accessible civic education materials, legal documents, and educational content for all Kenyans.',
-    ctaText: 'Explore Resources',
-    color: 'kenya-white' as const,
-    onClick: () => window.open('/resources', '_blank')
-  },
-  {
-    id: '5',
-    title: 'Support Our Mission',
-    description: 'Join us in building a more informed and engaged democratic society. Your support helps us expand our reach and impact across Kenya.',
-    ctaText: 'Support Us',
-    color: 'kenya-green' as const,
-    onClick: () => window.open('/join-community', '_blank')
-  }
-];
 
 // Custom component for the featured cards that link to different sections
 const FeatureCard = ({ title, description, icon, to, color }) => {
@@ -95,11 +65,71 @@ const FeatureCard = ({ title, description, icon, to, color }) => {
 };
 
 const Index = () => {
+  const { language } = useLanguage();
+  const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCarouselSlides = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('carousel_slides')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+
+        if (error) throw error;
+        setCarouselSlides(data || []);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching carousel slides:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCarouselSlides();
+  }, []);
+
+  // Format the slides for the MegaProjectCarousel component
+  const formattedSlides = carouselSlides.map(slide => ({
+    id: slide.id,
+    title: translate(slide.title, language),
+    description: slide.description ? translate(slide.description, language) : undefined,
+    ctaText: slide.cta_text ? translate(slide.cta_text, language) : undefined,
+    color: slide.color,
+    onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
+  }));
+
+  if (loading) {
+    return (
+      <Layout>
+        <Hero />
+        <div className="container mx-auto py-8 text-center">
+          <div className="text-lg">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <Hero />
+        <div className="container mx-auto py-8 text-center">
+          <div className="text-lg text-red-500">Error: {error}</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Hero />
       <MegaProjectCarousel 
-        slides={featuredSlides}
+        slides={formattedSlides}
         autoPlayMs={4500}
         className="my-8"
       />
