@@ -5,7 +5,7 @@ import Footer from './Footer';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import BottomNavbar from './BottomNavbar';
-import DonationWidget from '../donation/DonationWidget';
+import DonationWidget from '@/components/DonationWidget';
 
 interface LayoutProps {
   children: React.ReactNode;
