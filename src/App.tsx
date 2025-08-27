@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -12,7 +11,7 @@ import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
-import AdminDashboard from '@/pages/AdminDashboard';
+import AdminDashboard from '@/pages/AdminDashboard';  
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
 import ResourceHub from '@/pages/ResourceHub';
@@ -44,7 +43,7 @@ import SettingsLayout from '@/pages/settings/SettingsLayout';
 import Settings from '@/pages/Settings';
 import AccountSettings from '@/pages/settings/AccountSettings';
 import NotificationSettings from '@/pages/settings/NotificationSettings';
-import PrivacySettings from '@/pages/settings/PrivacySettings';
+import PrivacySettings from '@/pages/PrivacySettings';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/providers/AuthProvider';
 

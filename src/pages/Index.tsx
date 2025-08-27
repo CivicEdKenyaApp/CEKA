@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,7 +9,7 @@ import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
 import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
-import { supabase } from '../../supabase/client';
+import { supabase } from '@/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
@@ -41,7 +42,7 @@ export const sampleResources = {
 };
 
 // Custom component for the featured cards that link to different sections
-const FeatureCard = ({ title, description, icon, to, color }) => {
+const FeatureCard = ({ title, description, icon, to, color }: any) => {
   return (
     <Link to={to}>
       <motion.div 
@@ -82,7 +83,7 @@ const Index = () => {
 
         if (error) throw error;
         setCarouselSlides(data || []);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
         console.error('Error fetching carousel slides:', err);
       } finally {
@@ -128,11 +129,14 @@ const Index = () => {
   return (
     <Layout>
       <Hero />
-      <MegaProjectCarousel 
-        slides={formattedSlides}
-        autoPlayMs={4500}
-        className="my-8"
-      />
+      <div className="py-8">
+        <MegaProjectCarousel 
+          slides={formattedSlides}
+          autoPlayMs={4500}
+          className="container mx-auto"
+          baseWidth={1200}
+        />
+      </div>
       <FeaturedLegislation />
       <ResourceHighlights resources={sampleResources} />
       <CommunitySection />
