@@ -43,7 +43,7 @@ import SettingsLayout from '@/pages/settings/SettingsLayout';
 import Settings from '@/pages/Settings';
 import AccountSettings from '@/pages/settings/AccountSettings';
 import NotificationSettings from '@/pages/settings/NotificationSettings';
-import PrivacySettings from '@/pages/PrivacySettings';
+import PrivacySettings from '@/pages/settings/PrivacySettings';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/providers/AuthProvider';
 
