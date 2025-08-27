@@ -15,14 +15,14 @@ type Slide = {
 };
 
 interface MegaProjectCarouselProps {
-  slides?: Slide[]; // Make optional to allow Supabase fetching
+  slides?: Slide[];
   className?: string;
   autoPlayMs?: number;
   baseWidth?: number;
   pauseOnHover?: boolean;
   loop?: boolean;
   round?: boolean;
-  supabaseTable?: string; // New prop for Supabase table name
+  supabaseTable?: string;
 }
 
 const colorClassMap: Record<Slide['color'], string> = {
@@ -62,7 +62,6 @@ export default function MegaProjectCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Fetch slides from Supabase if not provided via props
   useEffect(() => {
     if (propSlides) return;
     
@@ -72,11 +71,21 @@ export default function MegaProjectCarousel({
         const { data, error } = await supabase
           .from(supabaseTable)
           .select('*')
+          .eq('is_active', true)
           .order('order_index', { ascending: true });
         
         if (error) throw error;
         
-        setSlides(data as Slide[]);
+        const formattedSlides = data.map(slide => ({
+          id: slide.id,
+          title: slide.title,
+          description: slide.description,
+          ctaText: slide.cta_text,
+          color: slide.color,
+          onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
+        }));
+        
+        setSlides(formattedSlides);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching carousel slides:', err);
@@ -88,10 +97,12 @@ export default function MegaProjectCarousel({
     fetchSlides();
   }, [propSlides, supabaseTable]);
 
-  // Auto-play functionality
   useEffect(() => {
-    if (!autoplay || (!pauseOnHover || !isHovered)) {
-      const timer = setInterval(() => {
+    if (slides.length === 0) return;
+    
+    let timer: NodeJS.Timeout;
+    if (autoPlayMs > 0 && !isHovered) {
+      timer = setInterval(() => {
         setCurrentIndex((prev) => {
           if (prev === slides.length - 1 && loop) {
             return prev + 1;
@@ -102,9 +113,11 @@ export default function MegaProjectCarousel({
           return prev + 1;
         });
       }, autoPlayMs);
-      return () => clearInterval(timer);
     }
-  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length, pauseOnHover]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length]);
 
   const effectiveTransition = isResetting ? { duration: 0 } : SPRING_OPTIONS;
 
@@ -178,7 +191,6 @@ export default function MegaProjectCarousel({
         ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
       }}
     >
-      {/* Gradient edges */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background via-background/60 to-transparent z-10" />
@@ -226,7 +238,7 @@ export default function MegaProjectCarousel({
                 ...(round && { borderRadius: '50%' }),
               }}
               transition={effectiveTransition}
-              onPointerDown={(e) => e.preventDefault()} // Prevent text selection
+              onPointerDown={(e) => e.preventDefault()}
               onClick={() => slide.onClick?.()}
             >
               {slide.icon && (
@@ -256,7 +268,6 @@ export default function MegaProjectCarousel({
         })}
       </motion.div>
 
-      {/* Dots indicator */}
       <div className={cn(
         "mt-3 flex items-center justify-center gap-2",
         round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
