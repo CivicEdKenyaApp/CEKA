@@ -13,70 +13,28 @@ import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen } from 'lucide-react';
-import { communityService } from '@/services/communityService';
 
 const JoinCommunity = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const firstName = formData.get('firstName') as string;
-    const lastName = formData.get('lastName') as string;
-    const email = formData.get('email') as string;
-    const county = formData.get('county') as string;
-    const interests = formData.get('interests') as string;
-    
-    // Collect checked areas of interest
-    const areasOfInterest: string[] = [];
-    const checkboxes = ['constitution', 'legislation', 'human-rights', 'governance', 'voter-education', 'community-projects'];
-    checkboxes.forEach(checkbox => {
-      if (formData.get(checkbox)) {
-        areasOfInterest.push(checkbox);
-      }
+    // Show success message
+    toast({
+      title: translate("Application Submitted!", language),
+      description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
     });
-
-    try {
-      const profileId = await communityService.createCommunityProfile({
-        full_name: `${firstName} ${lastName}`.trim(),
-        email: email || undefined,
-        county: county || undefined,
-        bio: interests || undefined,
-        interests: undefined,
-        areas_of_interest: areasOfInterest.length > 0 ? areasOfInterest : undefined
-      });
-
-      // Store profile ID for later linking
-      localStorage.setItem('ceka_community_profile_id', profileId);
-
-      // Show success message
-      toast({
-        title: translate("Application Submitted!", language),
-        description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
-      });
-      
-      setFormSubmitted(true);
-      
-      // Redirect after a short delay
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-    } catch (error) {
-      console.error('Error creating community profile:', error);
-      toast({
-        title: translate("Error", language),
-        description: translate("Failed to submit your application. Please try again.", language),
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    
+    setFormSubmitted(true);
+    
+    // Redirect after a short delay
+    setTimeout(() => {
+      navigate('/community');
+    }, 3000);
   };
   
   const testimonials = [
@@ -188,7 +146,7 @@ const JoinCommunity = () => {
                     <CheckCircle2 className="h-16 w-16 text-kenya-green mx-auto" />
                     <h3 className="text-xl font-bold">{translate("Welcome Aboard!", language)}</h3>
                     <p>{translate("Your application has been received. You are now part of the CEKA community!", language)}</p>
-                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the home page...", language)}</p>
+                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the community page...", language)}</p>
                   </div>
                 </CardContent>
               ) : (
@@ -197,29 +155,28 @@ const JoinCommunity = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">{translate("First Name", language)} *</Label>
-                        <Input id="firstName" name="firstName" required />
+                        <Input id="firstName" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">{translate("Last Name", language)} *</Label>
-                        <Input id="lastName" name="lastName" required />
+                        <Input id="lastName" required />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="email">{translate("Email", language)} *</Label>
-                      <Input id="email" name="email" type="email" required />
+                      <Input id="email" type="email" required />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="county">{translate("County", language)}</Label>
-                      <Input id="county" name="county" placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)} />
+                      <Input id="county" placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)} />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="interests">{translate("What interests you most about civic education?", language)}</Label>
                       <Textarea 
                         id="interests" 
-                        name="interests"
                         placeholder={translate("Share your interests or what you hope to gain from this community...", language)}
                         className="min-h-[100px]"
                       />
@@ -229,37 +186,37 @@ const JoinCommunity = () => {
                       <Label className="text-base">{translate("Areas of Interest", language)}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="constitution" name="constitution" />
+                          <Checkbox id="constitution" />
                           <label htmlFor="constitution" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Constitution", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="legislation" name="legislation" />
+                          <Checkbox id="legislation" />
                           <label htmlFor="legislation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Legislation", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="human-rights" name="human-rights" />
+                          <Checkbox id="human-rights" />
                           <label htmlFor="human-rights" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Human Rights", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="governance" name="governance" />
+                          <Checkbox id="governance" />
                           <label htmlFor="governance" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Governance", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="voter-education" name="voter-education" />
+                          <Checkbox id="voter-education" />
                           <label htmlFor="voter-education" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Voter Education", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="community-projects" name="community-projects" />
+                          <Checkbox id="community-projects" />
                           <label htmlFor="community-projects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Community Projects", language)}
                           </label>
@@ -268,7 +225,7 @@ const JoinCommunity = () => {
                     </div>
                     
                     <div className="flex items-start space-x-2 pt-2">
-                      <Checkbox id="terms" name="terms" required />
+                      <Checkbox id="terms" required />
                       <div className="grid gap-1.5 leading-none">
                         <label
                           htmlFor="terms"
@@ -280,8 +237,8 @@ const JoinCommunity = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90" disabled={loading}>
-                      {loading ? translate("Joining...", language) : translate("Join Now", language)}
+                    <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90">
+                      {translate("Join Now", language)}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
