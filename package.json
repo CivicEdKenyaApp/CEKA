@@ -50,6 +50,7 @@
     "firebase": "^10.7.1",
     "framer-motion": "^12.23.12",
     "input-otp": "^1.2.4",
+    "leaflet": "^1.9.4",
     "localforage": "^1.10.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
