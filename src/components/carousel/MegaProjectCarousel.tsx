@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
-import { supabase } from '../../supabase/client';
+import { supabase } from '@/supabase/client';
 
 type Slide = {
   id: string;
@@ -26,8 +27,8 @@ interface MegaProjectCarouselProps {
 }
 
 const colorClassMap: Record<Slide['color'], string> = {
-  'kenya-red': 'bg-kenya-red/20 text-foreground',
-  'kenya-green': 'bg-kenya-green/20 text-foreground',
+  'kenya-red': 'bg-red-600/20 text-foreground',
+  'kenya-green': 'bg-green-600/20 text-foreground',
   'kenya-black': 'bg-black/20 text-white',
   'kenya-white': 'bg-white/30 text-foreground',
 };
@@ -35,7 +36,7 @@ const colorClassMap: Record<Slide['color'], string> = {
 const DRAG_BUFFER = 0;
 const VELOCITY_THRESHOLD = 500;
 const GAP = 16;
-const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 };
+const SPRING_OPTIONS = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 export default function MegaProjectCarousel({ 
   slides: propSlides, 
@@ -86,7 +87,7 @@ export default function MegaProjectCarousel({
         }));
         
         setSlides(formattedSlides);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
         console.error('Error fetching carousel slides:', err);
       } finally {
@@ -130,7 +131,7 @@ export default function MegaProjectCarousel({
     }
   };
 
-  const handleDragEnd = (_, info) => {
+  const handleDragEnd = (_: any, info: any) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
     if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
@@ -280,9 +281,9 @@ export default function MegaProjectCarousel({
               'h-2.5 w-2.5 rounded-full transition-all cursor-pointer',
               currentIndex % slides.length === i ? 'w-6' : 'opacity-60',
               i % 4 === 0
-                ? 'bg-kenya-green'
+                ? 'bg-red-600'
                 : i % 4 === 1
-                ? 'bg-kenya-red'
+                ? 'bg-green-600'
                 : i % 4 === 2
                 ? 'bg-black'
                 : 'bg-white border'
