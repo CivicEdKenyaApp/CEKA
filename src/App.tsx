@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -20,6 +21,7 @@ import LegislativeTrackerDetail from '@/pages/LegislativeTrackerDetail';
 import LegislationDetail from '@/pages/LegislationDetail';
 import BillDetail from '@/pages/BillDetail';
 import RejectFinanceBill from '@/pages/RejectFinanceBill';
+import SHAmbles from '@/pages/SHAmbles';
 import Volunteer from '@/pages/Volunteer';
 import VolunteerApplication from '@/pages/VolunteerApplication';
 import UserProfile from '@/pages/UserProfile';
@@ -95,6 +97,7 @@ const AppContent: React.FC = () => {
         <Route path="/legislation/:id" element={<LegislationDetail />} />
         <Route path="/bill/:id" element={<BillDetail />} />
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
+        <Route path="/shambles" element={<SHAmbles />} />
         <Route path="/volunteer" element={<Volunteer />} />
         <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
         <Route path="/profile" element={<UserProfile />} />

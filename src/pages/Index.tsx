@@ -8,6 +8,7 @@ import FeaturedLegislation from '@/components/home/FeaturedLegislation';
 import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
+import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
 
 // Sample resource links for educational content
 export const sampleResources = {
@@ -24,6 +25,50 @@ export const sampleResources = {
     video: "https://www.youtube.com/watch?v=JpY9s1Agbsw"
   }
 };
+
+// Featured carousel slides with Kenyan flag theming
+const featuredSlides = [
+  {
+    id: '1',
+    title: 'Constitutional Education Initiative',
+    description: 'Empowering citizens with knowledge of their constitutional rights and responsibilities through community workshops and digital resources.',
+    ctaText: 'Learn More',
+    color: 'kenya-red' as const,
+    onClick: () => window.open('/constitution', '_blank')
+  },
+  {
+    id: '2',
+    title: 'Legislative Tracking Platform',
+    description: 'Real-time monitoring and analysis of parliamentary proceedings, bill progress, and legislative developments affecting Kenyan citizens.',
+    ctaText: 'Track Bills',
+    color: 'kenya-green' as const,
+    onClick: () => window.open('/legislative-tracker', '_blank')
+  },
+  {
+    id: '3',
+    title: 'Community Engagement Networks',
+    description: 'Building grassroots networks that facilitate citizen participation in local governance and community development initiatives.',
+    ctaText: 'Join Community',
+    color: 'kenya-black' as const,
+    onClick: () => window.open('/join-community', '_blank')
+  },
+  {
+    id: '4',
+    title: 'Digital Civic Resources Hub',
+    description: 'Comprehensive online library providing accessible civic education materials, legal documents, and educational content for all Kenyans.',
+    ctaText: 'Explore Resources',
+    color: 'kenya-white' as const,
+    onClick: () => window.open('/resources', '_blank')
+  },
+  {
+    id: '5',
+    title: 'Support Our Mission',
+    description: 'Join us in building a more informed and engaged democratic society. Your support helps us expand our reach and impact across Kenya.',
+    ctaText: 'Support Us',
+    color: 'kenya-green' as const,
+    onClick: () => window.open('/join-community', '_blank')
+  }
+];
 
 // Custom component for the featured cards that link to different sections
 const FeatureCard = ({ title, description, icon, to, color }) => {
@@ -49,13 +94,15 @@ const FeatureCard = ({ title, description, icon, to, color }) => {
   );
 };
 
-// Add this component to the Hero component or modify Hero component directly
-// to use these feature cards
-
 const Index = () => {
   return (
     <Layout>
       <Hero />
+      <MegaProjectCarousel 
+        slides={featuredSlides}
+        autoPlayMs={4500}
+        className="my-8"
+      />
       <FeaturedLegislation />
       <ResourceHighlights resources={sampleResources} />
       <CommunitySection />

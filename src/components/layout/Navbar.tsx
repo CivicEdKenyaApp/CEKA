@@ -60,11 +60,12 @@ const Navbar = () => {
     { name: 'Blog', path: '/blog' },
     { name: 'Resources', path: '/resources' },
     { 
-      name: 'Legislative', 
+      name: 'Tools', 
       path: '/legislative-tracker',
       dropdown: [
-        { name: 'Bill Tracker', path: '/legislative-tracker' },
+        { name: 'Legislative Bill Tracker', path: '/legislative-tracker' },
         { name: 'Reject Finance Bill', path: '/reject-finance-bill' },
+        { name: 'SHAmbles', path: '/shambles' },
       ]
     },
     { name: 'Join Us', path: '/join-community' },
