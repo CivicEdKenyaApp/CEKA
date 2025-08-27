@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,16 +18,17 @@ const SplashScreen = () => {
       {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.8 } }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-background"
         >
           <div className="flex flex-col items-center text-center px-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.3 } }}
+              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ 
-                type: "spring" as const, 
+                type: "spring", 
                 stiffness: 150, 
                 damping: 20,
                 delay: 0.2
@@ -43,10 +45,11 @@ const SplashScreen = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10, transition: { duration: 0.3 } }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ 
                 delay: 0.6, 
-                duration: 0.5
+                duration: 0.5,
+                exit: { duration: 0.3 }
               }}
               className="space-y-3"
             >
@@ -59,11 +62,12 @@ const SplashScreen = () => {
             <motion.div
               initial={{ width: "0%" }}
               animate={{ width: "80%" }}
-              exit={{ width: "0%", opacity: 0, transition: { duration: 0.3 } }}
+              exit={{ width: "0%", opacity: 0 }}
               transition={{ 
                 delay: 1,
                 duration: 1.5,
-                ease: "easeInOut"
+                ease: "easeInOut",
+                exit: { duration: 0.3 }
               }}
               className="mt-8 h-1 bg-primary rounded-full max-w-xs"
             />
@@ -76,7 +80,7 @@ const SplashScreen = () => {
                 delay: 1,
                 duration: 2, 
                 repeat: 1,
-                repeatType: "loop" as const
+                repeatType: "loop"
               }}
               className="mt-8 text-sm text-muted-foreground"
             >
