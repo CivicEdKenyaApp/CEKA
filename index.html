@@ -17,11 +17,19 @@
     <meta name="twitter:image" content="https://https://ugc.production.linktr.ee/da2bd069-4a8d-45ff-b9f9-ba70718473d5_the-civic-education-kenya-app-official-logo.png?io=true&size=avatar-v3_0" />
 
     
-  <meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self' https:; 
-               connect-src 'self' https: 
-               wss://cajrvemigxghnfmyopiy.supabase.co 
-               https://cajrvemigxghnfmyopiy.supabase.co;">
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https://cajrvemigxghnfmyopiy.supabase.co;      
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https://cajrvemigxghnfmyopiy.supabase.co https://images.unsplash.com https://i.imgur.com https://img.youtube.com https://lh3.googleusercontent.com https://upload.wikimedia.org https://*.googleusercontent.com;
+      
+      connect-src 'self' https://cajrvemigxghnfmyopiy.supabase.co wss://cajrvemigxghnfmyopiy.supabase.co;
+      
+      frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com;
+      
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      ">
+
   </head>
 
   <!-- Favicon and App Icons -->
