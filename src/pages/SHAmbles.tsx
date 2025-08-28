@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, Map, Image, BarChart3, Filter, Grid3X3, List, ChevronDown, ChevronUp, Expand, Shrink, ZoomIn, ZoomOut, RefreshCw, Copy, Check, Heart, AlertTriangle, Users, Download, Share, Eye } from 'lucide-react';
+import { ExternalLink, Map, Image, BarChart3, Filter, Grid3X3, List, ChevronDown, ChevronUp, Expand, Shrink, ZoomIn, ZoomOut, RefreshCw, Copy, Check, Heart, AlertTriangle, Users, Download, Share, Eye, Upload, Globe, Database } from 'lucide-react';
 import { supabase } from '@/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import Navbar from '@/components/layout/Navbar';
 
 // Lazy load components for better performance
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
+const DataProcessor = lazy(() => import('@/components/DataProcessor'));
 
 interface Visualizer {
   id: number;
@@ -36,6 +37,8 @@ const SHAmbles: React.FC = () => {
   const [healthcareGeoJsonData, setHealthcareGeoJsonData] = useState<any>(null);
   const [kenyaBoundariesData, setKenyaBoundariesData] = useState<any>(null);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [showDataProcessor, setShowDataProcessor] = useState(false);
+  const [processedDatasets, setProcessedDatasets] = useState<any[]>([]);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -116,7 +119,7 @@ const SHAmbles: React.FC = () => {
       mapRef.current = L.map(mapContainerRef.current).setView([-0.0236, 37.9062], 6);
       
       // Add OpenStreetMap base layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}/.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(mapRef.current);
       
@@ -163,6 +166,39 @@ const SHAmbles: React.FC = () => {
           }
         }).addTo(mapRef.current);
       }
+      
+      // Add processed datasets to the map
+      processedDatasets.forEach(dataset => {
+        if (dataset.has_geojson) {
+          // Fetch and add the dataset to the map
+          fetch(`/api/geojson/${dataset.session_id}`)
+            .then(response => response.json())
+            .then(data => {
+              L.geoJSON(data, {
+                pointToLayer: (feature, latlng) => {
+                  const facilityType = feature.properties?.type || 'Other';
+                  const markerColor = getMarkerColor(facilityType);
+                  return L.circleMarker(latlng, {
+                    radius: 6,
+                    fillColor: markerColor,
+                    color: '#000',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                  });
+                },
+                onEachFeature: (feature, layer) => {
+                  if (feature.properties) {
+                    const props = feature.properties;
+                    const popupContent = `<div class="p-2 min-w-[250px]"><h3 class="font-bold text-lg">${props.name || 'Unknown Facility'}</h3><p><strong>Type:</strong> ${props.type || 'N/A'}</p><p><strong>County:</strong> ${props.county || 'N/A'}</p><p><strong>Data Source:</strong> ${props.data_source || 'N/A'}</p></div>`;
+                    layer.bindPopup(popupContent);
+                  }
+                }
+              }).addTo(mapRef.current);
+            })
+            .catch(error => console.error('Error loading processed dataset:', error));
+        }
+      });
       
       // Add legend
       const legend = L.control({ position: 'bottomright' });
@@ -258,6 +294,22 @@ const SHAmbles: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const loadProcessedDatasets = async () => {
+    try {
+      const response = await fetch('/api/datasets');
+      const data = await response.json();
+      setProcessedDatasets(data.datasets || []);
+    } catch (error) {
+      console.error('Error loading processed datasets:', error);
+    }
+  };
+
+  const handleDatasetProcessed = () => {
+    // Refresh the map and datasets list when new data is processed
+    loadProcessedDatasets();
+    refreshMap();
   };
 
   const categories = ['all', ...new Set(visualizers.map(v => v.category))].filter(Boolean) as string[];
@@ -415,101 +467,123 @@ const SHAmbles: React.FC = () => {
               >
                 <List className="h-4 w-4" /> List
               </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => setShowDataProcessor(!showDataProcessor)}
+                className="gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+              >
+                {showDataProcessor ? <Database className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
+                {showDataProcessor ? "View Visualizations" : "Process Data"}
+              </Button>
             </div>
           </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex justify-between items-center mb-4">
-              <TabsList className="bg-white/80 backdrop-blur-sm border dark:bg-slate-800/80 dark:border-slate-700">
-                {categories.map(category => (
-                  <TabsTrigger 
-                    key={category} 
-                    value={category} 
-                    className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-slate-700 dark:data-[state=active]:text-slate-100"
-                  >
-                    {category === 'all' ? 'All' : category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-slate-400">
-                <Filter className="h-4 w-4" />
-                <span>{filteredVisualizers.length} visualizations</span>
-              </div>
-            </div>
-            
-            <TabsContent value={activeTab} className="space-y-6 mt-0">
-              {/* Visualizations Grid */}
-              <div className={cn("gap-6", viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col")}>
-                {filteredVisualizers.map((visualizer) => {
-                  const isExpanded = expandedCards.has(visualizer.id);
-                  return (
-                    <Card key={visualizer.id} className={cn("overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm transition-all duration-300 dark:bg-slate-800/80 dark:text-slate-100", isExpanded && "md:col-span-2 md:row-span-2")}>
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start gap-4">
-                          <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                            {visualizer.type === 'leaflet' && <Map className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
-                            {visualizer.type === 'interactive' && <Eye className="h-5 w-5 text-green-600 dark:text-green-400" />}
-                            {visualizer.type === 'map' && <Map className="h-5 w-5 text-green-600 dark:text-green-400" />}
-                            {visualizer.type === 'image' && <Image className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
-                            {visualizer.title}
-                          </CardTitle>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 dark:text-slate-400 dark:hover:bg-slate-700" onClick={() => toggleCardExpansion(visualizer.id)}>
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                        <CardDescription className="dark:text-slate-400">{visualizer.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {renderVisualizer(visualizer)}
-                        <div className="mt-4 p-4 bg-slate-50/50 rounded-lg border border-slate-100 dark:bg-slate-700/50 dark:border-slate-600">
-                          <h4 className="font-medium mb-2 text-slate-700 flex items-center gap-2 dark:text-slate-200">
-                            <BarChart3 className="h-4 w-4" /> Analytical Interpretation
-                          </h4>
-                          <p className="text-sm text-slate-600 dark:text-slate-300">
-                            {visualizer.type === 'leaflet' && "This interactive map provides a comprehensive view of healthcare facility distribution across Kenya. Each point represents a healthcare facility, color-coded by type. The map reveals significant disparities in healthcare access between urban and rural areas, with clear clustering around population centers."}
-                            {visualizer.type === 'interactive' && "This interactive visualization allows for deep exploration of healthcare facility distribution patterns. Use the filtering options to examine specific facility types, ownership models, or geographic regions. The map reveals significant urban-rural disparities and identifies both healthcare service hubs and underserved areas."}
-                            {visualizer.type === 'map' && "This comprehensive mapping solution provides multiple perspectives on healthcare infrastructure distribution. The layered approach allows for comparative analysis across administrative boundaries, revealing how healthcare access correlates with political and geographic divisions."}
-                            {visualizer.type === 'image' && visualizer.title.includes('County') && "The county-level analysis reveals stark disparities in healthcare infrastructure investment. Urban counties show significantly higher facility density, while remote regions demonstrate limited access. This visualization highlights the need for targeted infrastructure development in underserved areas."}
-                            {visualizer.type === 'image' && visualizer.title.includes('Constituency') && "Constituency-level data provides insights into the relationship between political representation and healthcare access. This visualization reveals patterns that may inform resource allocation decisions and policy development aimed at equitable healthcare distribution."}
-                            {visualizer.type === 'image' && visualizer.title.includes('Ownership') && "The ownership distribution illustrates Kenya's mixed healthcare economy. The significant Ministry of Health presence demonstrates substantial public investment, while private and faith-based providers fill critical gaps. This mixed model represents both challenges and opportunities for healthcare system coordination."}
-                            {visualizer.type === 'image' && visualizer.title.includes('Subcounty') && "Subcounty analysis provides granular insights often missed in broader examinations. This visualization reveals hyper-local patterns of healthcare access, identifying specific communities with limited services despite being in otherwise well-served counties."}
-                            {visualizer.type === 'image' && visualizer.title.includes('Geographic Clusters') && "Cluster analysis identifies both service hubs and healthcare deserts. The visualization reveals patterns of healthcare facility aggregation that correlate with population density, transportation infrastructure, and historical development patterns, highlighting areas needing targeted intervention."}
-                          </p>
-                        </div>
-                        {visualizer.type !== 'image' && visualizer.type !== 'leaflet' && (
-                          <Button variant="outline" className="w-full mt-4 gap-2 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" asChild>
-                            <a href={visualizer.url} target="_blank" rel="noopener noreferrer">
-                              Open in new tab <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          </Tabs>
+          {showDataProcessor ? (
+            <Suspense fallback={
+              <Card className="p-6">
+                <Skeleton className="h-8 w-64 mb-4" />
+                <Skeleton className="h-64 w-full rounded-lg" />
+              </Card>
+            }>
+              <DataProcessor onDataProcessed={handleDatasetProcessed} />
+            </Suspense>
+          ) : (
+            <>
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <TabsList className="bg-white/80 backdrop-blur-sm border dark:bg-slate-800/80 dark:border-slate-700">
+                    {categories.map(category => (
+                      <TabsTrigger 
+                        key={category} 
+                        value={category} 
+                        className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-slate-700 dark:data-[state=active]:text-slate-100"
+                      >
+                        {category === 'all' ? 'All' : category}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-slate-400">
+                    <Filter className="h-4 w-4" />
+                    <span>{filteredVisualizers.length} visualizations</span>
+                  </div>
+                </div>
+                
+                <TabsContent value={activeTab} className="space-y-6 mt-0">
+                  {/* Visualizations Grid */}
+                  <div className={cn("gap-6", viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col")}>
+                    {filteredVisualizers.map((visualizer) => {
+                      const isExpanded = expandedCards.has(visualizer.id);
+                      return (
+                        <Card key={visualizer.id} className={cn("overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm transition-all duration-300 dark:bg-slate-800/80 dark:text-slate-100", isExpanded && "md:col-span-2 md:row-span-2")}>
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start gap-4">
+                              <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                                {visualizer.type === 'leaflet' && <Map className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+                                {visualizer.type === 'interactive' && <Eye className="h-5 w-5 text-green-600 dark:text-green-400" />}
+                                {visualizer.type === 'map' && <Map className="h-5 w-5 text-green-600 dark:text-green-400" />}
+                                {visualizer.type === 'image' && <Image className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
+                                {visualizer.title}
+                              </CardTitle>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 dark:text-slate-400 dark:hover:bg-slate-700" onClick={() => toggleCardExpansion(visualizer.id)}>
+                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                            <CardDescription className="dark:text-slate-400">{visualizer.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            {renderVisualizer(visualizer)}
+                            <div className="mt-4 p-4 bg-slate-50/50 rounded-lg border border-slate-100 dark:bg-slate-700/50 dark:border-slate-600">
+                              <h4 className="font-medium mb-2 text-slate-700 flex items-center gap-2 dark:text-slate-200">
+                                <BarChart3 className="h-4 w-4" /> Analytical Interpretation
+                              </h4>
+                              <p className="text-sm text-slate-600 dark:text-slate-300">
+                                {visualizer.type === 'leaflet' && "This interactive map provides a comprehensive view of healthcare facility distribution across Kenya. Each point represents a healthcare facility, color-coded by type. The map reveals significant disparities in healthcare access between urban and rural areas, with clear clustering around population centers."}
+                                {visualizer.type === 'interactive' && "This interactive visualization allows for deep exploration of healthcare facility distribution patterns. Use the filtering options to examine specific facility types, ownership models, or geographic regions. The map reveals significant urban-rural disparities and identifies both healthcare service hubs and underserved areas."}
+                                {visualizer.type === 'map' && "This comprehensive mapping solution provides multiple perspectives on healthcare infrastructure distribution. The layered approach allows for comparative analysis across administrative boundaries, revealing how healthcare access correlates with political and geographic divisions."}
+                                {visualizer.type === 'image' && visualizer.title.includes('County') && "The county-level analysis reveals stark disparities in healthcare infrastructure investment. Urban counties show significantly higher facility density, while remote regions demonstrate limited access. This visualization highlights the need for targeted infrastructure development in underserved areas."}
+                                {visualizer.type === 'image' && visualizer.title.includes('Constituency') && "Constituency-level data provides insights into the relationship between political representation and healthcare access. This visualization reveals patterns that may inform resource allocation decisions and policy development aimed at equitable healthcare distribution."}
+                                {visualizer.type === 'image' && visualizer.title.includes('Ownership') && "The ownership distribution illustrates Kenya's mixed healthcare economy. The significant Ministry of Health presence demonstrates substantial public investment, while private and faith-based providers fill critical gaps. This mixed model represents both challenges and opportunities for healthcare system coordination."}
+                                {visualizer.type === 'image' && visualizer.title.includes('Subcounty') && "Subcounty analysis provides granular insights often missed in broader examinations. This visualization reveals hyper-local patterns of healthcare access, identifying specific communities with limited services despite being in otherwise well-served counties."}
+                                {visualizer.type === 'image' && visualizer.title.includes('Geographic Clusters') && "Cluster analysis identifies both service hubs and healthcare deserts. The visualization reveals patterns of healthcare facility aggregation that correlate with population density, transportation infrastructure, and historical development patterns, highlighting areas needing targeted intervention."}
+                              </p>
+                            </div>
+                            {visualizer.type !== 'image' && visualizer.type !== 'leaflet' && (
+                              <Button variant="outline" className="w-full mt-4 gap-2 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" asChild>
+                                <a href={visualizer.url} target="_blank" rel="noopener noreferrer">
+                                  Open in new tab <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </TabsContent>
+              </Tabs>
 
-          {/* Call to Action Section */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-slate-800/80 dark:text-slate-100">
-            <CardContent className="p-8">
-              <AlertTriangle className="w-16 h-16 text-kenya-red mx-auto mb-4 dark:text-red-400" />
-              <h2 className="text-3xl font-bold text-kenya-green mb-4 dark:text-green-500">Help Us Improve Healthcare Transparency</h2>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto dark:text-slate-400">
-                Your support helps us continue our mission of tracking healthcare resource allocation and ensuring equitable distribution across Kenya.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700">
-                  <Heart className="mr-2" /> Support Our Work
-                </Button>
-                <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10">
-                  Learn More
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Call to Action Section */}
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-slate-800/80 dark:text-slate-100">
+                <CardContent className="p-8">
+                  <AlertTriangle className="w-16 h-16 text-kenya-red mx-auto mb-4 dark:text-red-400" />
+                  <h2 className="text-3xl font-bold text-kenya-green mb-4 dark:text-green-500">Help Us Improve Healthcare Transparency</h2>
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto dark:text-slate-400">
+                    Your support helps us continue our mission of tracking healthcare resource allocation and ensuring equitable distribution across Kenya.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700">
+                      <Heart className="mr-2" /> Support Our Work
+                    </Button>
+                    <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10">
+                      Learn More
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Floating Donation Widget */}
