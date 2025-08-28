@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,7 +25,6 @@ const DataProcessor = () => {
   const [activeTab, setActiveTab] = useState('upload');
 
   useEffect(() => {
-    // Initialize map
     const mapInstance = L.map('map').setView([-0.0236, 37.9062], 6);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -33,14 +32,9 @@ const DataProcessor = () => {
     }).addTo(mapInstance);
     
     setMap(mapInstance);
-    
-    // Load Kenya GeoJSON
     loadKenyaGeoJSON(mapInstance);
-    
-    // Load datasets
     loadDatasets();
     
-    // Clean up on component unmount
     return () => {
       mapInstance.remove();
     };
@@ -99,7 +93,6 @@ const DataProcessor = () => {
       setSessionId(response.data.session_id);
       setUploadStatus('File uploaded. Processing started...');
 
-      // Poll for status updates
       const checkStatus = async () => {
         try {
           const statusResponse = await axios.get(`/api/status/${response.data.session_id}`);
@@ -110,9 +103,8 @@ const DataProcessor = () => {
           } else if (statusResponse.data.success) {
             setUploadStatus('Processing completed successfully!');
             setProcessing(false);
-            loadDatasets(); // Refresh dataset list
+            loadDatasets();
             
-            // Add the new dataset to the map
             if (statusResponse.data.files && statusResponse.data.files.combined_geojson) {
               addDatasetToMap(response.data.session_id);
             }
@@ -152,7 +144,6 @@ const DataProcessor = () => {
       setSessionId(response.data.session_id);
       setUploadStatus('Crawling started. Processing will begin once completed.');
 
-      // Poll for status updates
       const checkStatus = async () => {
         try {
           const statusResponse = await axios.get(`/api/status/${response.data.session_id}`);
@@ -166,9 +157,8 @@ const DataProcessor = () => {
           } else if (statusResponse.data.success) {
             setUploadStatus('Crawling and processing completed successfully!');
             setCrawling(false);
-            loadDatasets(); // Refresh dataset list
+            loadDatasets();
             
-            // Add the new dataset to the map
             if (statusResponse.data.files && statusResponse.data.files.combined_geojson) {
               addDatasetToMap(response.data.session_id);
             }
@@ -193,15 +183,12 @@ const DataProcessor = () => {
     try {
       const response = await axios.get(`/api/geojson/${sessionId}`);
       
-      // Remove existing layer for this dataset if it exists
       if (mapLayers[sessionId]) {
         map.removeLayer(mapLayers[sessionId]);
       }
       
-      // Create a new layer for this dataset
       const newLayer = L.geoJSON(response.data, {
         pointToLayer: (feature, latlng) => {
-          // Custom markers based on facility type
           const type = feature.properties.type || 'Other';
           const color = getColorForType(type);
           
@@ -215,7 +202,6 @@ const DataProcessor = () => {
           });
         },
         onEachFeature: (feature, layer) => {
-          // Popup content
           const props = feature.properties;
           const popupContent = `
             <div>
@@ -231,7 +217,6 @@ const DataProcessor = () => {
         }
       }).addTo(map);
       
-      // Store the layer reference
       setMapLayers(prev => ({ ...prev, [sessionId]: newLayer }));
       
     } catch (error) {
@@ -256,16 +241,16 @@ const DataProcessor = () => {
   const loadDatasets = async () => {
     try {
       const response = await axios.get('/api/datasets');
-      setDatasets(response.data.datasets);
+      setDatasets(response.data.datasets || []);
       
-      // Add all datasets to the map
-      for (const dataset of response.data.datasets) {
+      for (const dataset of response.data.datasets || []) {
         if (dataset.has_geojson) {
           addDatasetToMap(dataset.session_id);
         }
       }
     } catch (error) {
       console.error('Error loading datasets:', error);
+      setDatasets([]);
     }
   };
 
@@ -275,12 +260,10 @@ const DataProcessor = () => {
         responseType: 'blob',
       });
 
-      // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
       
-      // Set appropriate file extension
       const extensions = {
         'cleaned': 'csv',
         'geojson': 'geojson',
@@ -394,7 +377,7 @@ const DataProcessor = () => {
         <button onClick={loadDatasets}>Refresh List</button>
         
         <div className="datasets-list">
-          {datasets.map(dataset => (
+          {datasets && datasets.map(dataset => (
             <div key={dataset.session_id} className="dataset-item">
               <h4>{dataset.data_type} - {new Date(dataset.processed_date).toLocaleString()}</h4>
               <p>Records: {dataset.total_records}</p>
