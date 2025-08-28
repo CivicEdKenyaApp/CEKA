@@ -12,9 +12,6 @@ import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/layout/Navbar';
 
 // Lazy load components for better performance
-const FacilityStatistics = lazy(() => import('@/components/FacilityStatistics'));
-const AllocationAnalysis = lazy(() => import('@/components/AllocationAnalysis'));
-const CountyComparison = lazy(() => import('@/components/CountyComparison'));
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
 
 interface Visualizer {
@@ -29,38 +26,8 @@ interface Visualizer {
   is_active: boolean;
 }
 
-interface FacilityStats {
-  total_facilities: number;
-  facilities_with_coords: number;
-  counties_count: number;
-  subcounties_count: number;
-  constituencies_count: number;
-  operational_facilities: number;
-  facility_types: Record<string, number>;
-  ownership_types: Record<string, number>;
-}
-
-interface HealthFacility {
-  FID: number;
-  OBJECTID?: number;
-  name: string | null;
-  type: string | null;
-  owner: string | null;
-  county: string | null;
-  subcounty: string | null;
-  division: string | null;
-  location: string | null;
-  sub_location: string | null;
-  constituency: string | null;
-  nearest_to: string | null;
-  latitude: number | null;
-  longitude: number | null;
-}
-
 const SHAmbles: React.FC = () => {
   const [visualizers, setVisualizers] = useState<Visualizer[]>([]);
-  const [facilityStats, setFacilityStats] = useState<FacilityStats | null>(null);
-  const [healthFacilities, setHealthFacilities] = useState<HealthFacility[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -84,10 +51,10 @@ const SHAmbles: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if ((healthcareGeoJsonData || healthFacilities.length > 0) && kenyaBoundariesData && mapContainerRef.current && !mapInitialized) {
+    if (healthcareGeoJsonData && kenyaBoundariesData && mapContainerRef.current && !mapInitialized) {
       initializeMap();
     }
-  }, [healthcareGeoJsonData, kenyaBoundariesData, mapInitialized, healthFacilities]);
+  }, [healthcareGeoJsonData, kenyaBoundariesData, mapInitialized]);
 
   const fetchData = async () => {
     try {
@@ -103,60 +70,10 @@ const SHAmbles: React.FC = () => {
       if (visualizersError) throw visualizersError;
       setVisualizers(visualizersData || []);
 
-      // Fetch health facilities data
-      const { data: facilitiesData, error: facilitiesError } = await supabase
-        .from('health_facilities')
-        .select('*')
-        .limit(10000); // Limit to prevent overfetching but ensure we get enough data
-
-      if (facilitiesError) throw facilitiesError;
-      
-      if (facilitiesData) {
-        setHealthFacilities(facilitiesData);
-        
-        const uniqueCounties = new Set(facilitiesData.map(f => f.county).filter(Boolean));
-        const uniqueSubcounties = new Set(facilitiesData.map(f => f.subcounty).filter(Boolean));
-        const uniqueConstituencies = new Set(facilitiesData.map(f => f.constituency).filter(Boolean));
-        const facilitiesWithCoords = facilitiesData.filter(f => f.latitude !== null && f.longitude !== null).length;
-        const operationalFacilities = facilitiesData.filter(f => f.operational_status === 'Operational').length;
-
-        // Count facility types
-        const facilityTypes: Record<string, number> = {};
-        facilitiesData.forEach(f => {
-          const type = f.type || 'Unknown';
-          facilityTypes[type] = (facilityTypes[type] || 0) + 1;
-        });
-
-        // Count ownership types
-        const ownershipTypes: Record<string, number> = {};
-        facilitiesData.forEach(f => {
-          const owner = f.owner || 'Unknown';
-          ownershipTypes[owner] = (ownershipTypes[owner] || 0) + 1;
-        });
-
-        setFacilityStats({
-          total_facilities: facilitiesData.length,
-          facilities_with_coords: facilitiesWithCoords,
-          counties_count: uniqueCounties.size,
-          subcounties_count: uniqueSubcounties.size,
-          constituencies_count: uniqueConstituencies.size,
-          operational_facilities: operationalFacilities,
-          facility_types: facilityTypes,
-          ownership_types: ownershipTypes
-        });
-
-        // Convert facilities data to GeoJSON format for the map
-        const geoJsonData = convertToGeoJSON(facilitiesData);
-        setHealthcareGeoJsonData(geoJsonData);
-      }
-
-      // Try to fetch Kenya boundaries data
-      try {
-        const boundariesResponse = await fetch('https://raw.githubusercontent.com/CodeForAfrica/kenya-geojson/master/counties.geojson');
-        const boundariesData = await boundariesResponse.json();
-        setKenyaBoundariesData(boundariesData);
-      } catch (e) {
-        console.log('Could not load boundaries data, using default');
+      // Find and fetch GeoJSON data if available
+      const leafletVisualizer = visualizersData?.find(v => v.type === 'leaflet');
+      if (leafletVisualizer?.geo_json_url) {
+        await fetchGeoJsonData(leafletVisualizer.geo_json_url);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -170,27 +87,25 @@ const SHAmbles: React.FC = () => {
     }
   };
 
-  const convertToGeoJSON = (facilities: HealthFacility[]): any => {
-    return {
-      type: 'FeatureCollection',
-      features: facilities
-        .filter(f => f.latitude !== null && f.longitude !== null)
-        .map(facility => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [facility.longitude, facility.latitude]
-          },
-          properties: {
-            name: facility.name,
-            type: facility.type,
-            owner: facility.owner,
-            county: facility.county,
-            constituency: facility.constituency,
-            // Add other properties as needed
-          }
-        }))
-    };
+  const fetchGeoJsonData = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      setHealthcareGeoJsonData(data);
+      
+      // Also try to fetch Kenya boundaries if available
+      const boundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
+      
+      try {
+        const boundariesResponse = await fetch(boundariesUrl);
+        const boundariesData = await boundariesResponse.json();
+        setKenyaBoundariesData(boundariesData);
+      } catch (e) {
+        console.log('Could not load boundaries data, using default');
+      }
+    } catch (error) {
+      console.error('Error fetching GeoJSON data:', error);
+    }
   };
 
   const initializeMap = () => {
@@ -252,10 +167,10 @@ const SHAmbles: React.FC = () => {
       // Add legend
       const legend = L.control({ position: 'bottomright' });
       legend.onAdd = () => {
-        const div = L.DomUtil.create('div', 'info legend bg-white p-3 rounded shadow-md dark:bg-gray-800 dark:text-white');
+        const div = L.DomUtil.create('div', 'info legend bg-white p-3 rounded shadow-md');
         const facilityTypes = [
           { type: 'Hospital', color: getMarkerColor('Hospital') },
-          { type: 'Health Center', color: getMarkerColor('Health Center') },
+          { type: 'Health Center', color: getMarkerColor('HealthCenter') },
           { type: 'Dispensary', color: getMarkerColor('Dispensary') },
           { type: 'Clinic', color: getMarkerColor('Clinic') },
           { type: 'Pharmacy', color: getMarkerColor('Pharmacy') },
@@ -286,7 +201,7 @@ const SHAmbles: React.FC = () => {
   const getMarkerColor = (facilityType: string): string => {
     const typeColors: Record<string, string> = {
       'Hospital': '#e53e3e',
-      'Health Center': '#3182ce',
+      'HealthCenter': '#3182ce',
       'Dispensary': '#38a169',
       'Clinic': '#805ad5',
       'Pharmacy': '#ed8936',
@@ -319,7 +234,10 @@ const SHAmbles: React.FC = () => {
     }
     setMapInitialized(false);
     setTimeout(() => {
-      initializeMap();
+      const leafletVisualizer = visualizers.find(v => v.type === 'leaflet');
+      if (leafletVisualizer?.geo_json_url) {
+        fetchGeoJsonData(leafletVisualizer.geo_json_url);
+      }
     }, 100);
   };
 
@@ -353,10 +271,10 @@ const SHAmbles: React.FC = () => {
       case 'leaflet':
         return (
           <div className="relative group">
-            <div className="w-full border rounded-lg overflow-hidden bg-muted/20 transition-all duration-300 dark:bg-gray-800/50" style={{ height: isExpanded ? '600px' : '400px' }}>
+            <div className="w-full border rounded-lg overflow-hidden bg-muted/20 transition-all duration-300" style={{ height: isExpanded ? '600px' : '400px' }}>
               <div ref={mapContainerRef} className="w-full h-full" />
               {!mapInitialized && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm dark:bg-gray-900/70">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                   <div className="text-center">
                     <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p>Loading map...</p>
@@ -365,13 +283,13 @@ const SHAmbles: React.FC = () => {
               )}
             </div>
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={refreshMap}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={refreshMap}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={copyGeoJsonUrl}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={copyGeoJsonUrl}>
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => toggleCardExpansion(visualizer.id)}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </Button>
             </div>
@@ -381,24 +299,24 @@ const SHAmbles: React.FC = () => {
       case 'map':
         return (
           <div className="relative group">
-            <div className="w-full h-96 border rounded-lg overflow-hidden bg-muted/20 transition-all duration-300 dark:bg-gray-800/50" style={{ height: isExpanded ? '500px' : '384px' }}>
+            <div className="w-full h-96 border rounded-lg overflow-hidden bg-muted/20 transition-all duration-300" style={{ height: isExpanded ? '500px' : '384px' }}>
               <iframe 
                 src={visualizer.url} 
                 title={visualizer.title} 
                 className="w-full h-full border-0 transition-all duration-300" 
-                loading="lazy" 
-                allowFullScreen 
+                loading="lazy"
+                allowFullScreen
                 style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: '0 0' }}
               />
             </div>
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => adjustZoom(visualizer.id, 'out')}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => adjustZoom(visualizer.id, 'in')}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => toggleCardExpansion(visualizer.id)}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </Button>
             </div>
@@ -410,18 +328,18 @@ const SHAmbles: React.FC = () => {
             <img 
               src={visualizer.url} 
               alt={visualizer.title} 
-              className={cn("w-full h-auto rounded-lg transition-all duration-300 object-contain dark:bg-gray-800", isExpanded ? "max-h-[500px]" : "max-h-96")} 
-              loading="lazy" 
+              className={cn("w-full h-auto rounded-lg transition-all duration-300 object-contain", isExpanded ? "max-h-[500px]" : "max-h-96")} 
+              loading="lazy"
               style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
             />
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => adjustZoom(visualizer.id, 'out')}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => adjustZoom(visualizer.id, 'in')}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm dark:bg-gray-800" onClick={() => toggleCardExpansion(visualizer.id)}>
+              <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </Button>
             </div>
@@ -429,8 +347,8 @@ const SHAmbles: React.FC = () => {
         );
       default:
         return (
-          <div className="w-full h-64 bg-muted/20 rounded-lg flex items-center justify-center dark:bg-gray-800">
-            <p className="text-muted-foreground dark:text-gray-400">Unsupported visualizer type</p>
+          <div className="w-full h-64 bg-muted/20 rounded-lg flex items-center justify-center">
+            <p className="text-muted-foreground">Unsupported visualizer type</p>
           </div>
         );
     }
@@ -438,24 +356,24 @@ const SHAmbles: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-6">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div className="space-y-2">
-              <Skeleton className="h-10 w-64 dark:bg-gray-700" />
-              <Skeleton className="h-5 w-96 dark:bg-gray-700" />
+              <Skeleton className="h-10 w-64" />
+              <Skeleton className="h-5 w-96" />
             </div>
-            <Skeleton className="h-10 w-32 dark:bg-gray-700" />
+            <Skeleton className="h-10 w-32" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 dark:backdrop-blur-sm">
+              <Card key={i} className="overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader className="pb-3">
-                  <Skeleton className="h-6 w-3/4 dark:bg-gray-700" />
-                  <Skeleton className="h-4 w-full dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="h-64 w-full rounded-lg dark:bg-gray-700" />
+                  <Skeleton className="h-64 w-full rounded-lg" />
                 </CardContent>
               </Card>
             ))}
@@ -468,7 +386,7 @@ const SHAmbles: React.FC = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 md:p-6 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 md:p-6 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -476,197 +394,79 @@ const SHAmbles: React.FC = () => {
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
                 SHAmbles: Healthcare Facility Visualization
               </h1>
-              <p className="text-muted-foreground text-lg max-w-2xl dark:text-gray-400">
+              <p className="text-muted-foreground text-lg max-w-2xl dark:text-slate-400">
                 Interactive visualizations and comprehensive analysis of Kenya's healthcare infrastructure
               </p>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                size="sm" 
                 onClick={() => setViewMode('grid')}
-                className="gap-2 dark:bg-gray-800 dark:hover:bg-gray-700"
+                className="gap-2 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
               >
                 <Grid3X3 className="h-4 w-4" /> Grid
               </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'outline'} 
+                size="sm" 
                 onClick={() => setViewMode('list')}
-                className="gap-2 dark:bg-gray-800 dark:hover:bg-gray-700"
+                className="gap-2 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
               >
                 <List className="h-4 w-4" /> List
               </Button>
             </div>
           </div>
 
-          {/* Stats Overview */}
-          {facilityStats && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{facilityStats.total_facilities.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Total Facilities</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{facilityStats.operational_facilities.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Operational</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{facilityStats.facilities_with_coords.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">With Coordinates</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{facilityStats.counties_count}</p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Counties</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm dark:bg-gray-800/80 dark:backdrop-blur-sm col-span-2 md:col-span-1">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">{facilityStats.constituencies_count}</p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Constituencies</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex justify-between items-center mb-4">
-              <TabsList className="bg-white/80 backdrop-blur-sm border dark:bg-gray-800/80 dark:backdrop-blur-sm dark:border-gray-700">
+              <TabsList className="bg-white/80 backdrop-blur-sm border dark:bg-slate-800/80 dark:border-slate-700">
                 {categories.map(category => (
                   <TabsTrigger 
                     key={category} 
                     value={category} 
-                    className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-200"
+                    className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-slate-700 dark:data-[state=active]:text-slate-100"
                   >
                     {category === 'all' ? 'All' : category}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-slate-400">
                 <Filter className="h-4 w-4" />
                 <span>{filteredVisualizers.length} visualizations</span>
               </div>
             </div>
             
             <TabsContent value={activeTab} className="space-y-6 mt-0">
-              {/* Data Quality Report */}
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                    <BarChart3 className="h-5 w-5" /> Data Quality & Analysis Report
-                  </CardTitle>
-                  <CardDescription className="dark:text-gray-400">
-                    Comprehensive analysis of Kenya's healthcare facility data integrity and distribution patterns
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg text-slate-700 dark:text-gray-300">Data Integrity Assessment</h3>
-                      <p className="text-slate-600 mb-3 dark:text-gray-400">
-                        The healthcare facilities dataset represents one of the most comprehensive collections of Kenyan healthcare infrastructure, meticulously compiled from authoritative sources with rigorous quality validation processes.
-                      </p>
-                      <ul className="space-y-2 text-sm text-slate-600 dark:text-gray-400">
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></div>
-                          <span>100% completeness for critical fields: name, type, ownership, and geographic coordinates</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></div>
-                          <span>Minimal data gaps in secondary administrative divisions (under 9% missingness)</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></div>
-                          <span>Precise geographic coordinates enabling accurate spatial analysis for all facilities</span>
-                        </li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-3 text-lg text-slate-700 dark:text-gray-300">Key Distribution Insights</h3>
-                      <p className="text-slate-600 mb-3 dark:text-gray-400">
-                        The analysis reveals significant patterns in healthcare infrastructure distribution across Kenya's diverse regions and administrative boundaries.
-                      </p>
-                      <ul className="space-y-2 text-sm text-slate-600 dark:text-gray-400">
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                          <span>Urban concentration with Nairobi County leading at 883 facilities</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                          <span>Dispensaries (4,608) and Medical Clinics (3,179) constitute the majority of facilities</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                          <span>Significant public sector involvement with Ministry of Health operating 45.3% of facilities</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                          <span>Complete coverage across all 47 counties enables comprehensive regional analysis</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Statistics Components */}
-              <Suspense fallback={
-                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-gray-800/80 dark:backdrop-blur-sm">
-                  <CardHeader>
-                    <Skeleton className="h-6 w-48 dark:bg-gray-700" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-64 w-full dark:bg-gray-700" />
-                  </CardContent>
-                </Card>
-              }>
-                <FacilityStatistics data={healthFacilities} />
-                <AllocationAnalysis data={healthFacilities} />
-                <CountyComparison data={healthFacilities} />
-              </Suspense>
-
               {/* Visualizations Grid */}
               <div className={cn("gap-6", viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col")}>
                 {filteredVisualizers.map((visualizer) => {
                   const isExpanded = expandedCards.has(visualizer.id);
                   return (
-                    <Card 
-                      key={visualizer.id} 
-                      className={cn(
-                        "overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm transition-all duration-300 dark:bg-gray-800/80 dark:backdrop-blur-sm",
-                        isExpanded && "md:col-span-2 md:row-span-2"
-                      )}
-                    >
+                    <Card key={visualizer.id} className={cn("overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm transition-all duration-300 dark:bg-slate-800/80 dark:text-slate-100", isExpanded && "md:col-span-2 md:row-span-2")}>
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start gap-4">
-                          <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-gray-200">
+                          <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
                             {visualizer.type === 'leaflet' && <Map className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
                             {visualizer.type === 'interactive' && <Eye className="h-5 w-5 text-green-600 dark:text-green-400" />}
                             {visualizer.type === 'map' && <Map className="h-5 w-5 text-green-600 dark:text-green-400" />}
                             {visualizer.type === 'image' && <Image className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
                             {visualizer.title}
                           </CardTitle>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 dark:hover:bg-gray-700" onClick={() => toggleCardExpansion(visualizer.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 dark:text-slate-400 dark:hover:bg-slate-700" onClick={() => toggleCardExpansion(visualizer.id)}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </Button>
                         </div>
-                        <CardDescription className="dark:text-gray-400">{visualizer.description}</CardDescription>
+                        <CardDescription className="dark:text-slate-400">{visualizer.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         {renderVisualizer(visualizer)}
-                        <div className="mt-4 p-4 bg-slate-50/50 rounded-lg border border-slate-100 dark:bg-gray-700/50 dark:border-gray-600">
-                          <h4 className="font-medium mb-2 text-slate-700 flex items-center gap-2 dark:text-gray-300">
+                        <div className="mt-4 p-4 bg-slate-50/50 rounded-lg border border-slate-100 dark:bg-slate-700/50 dark:border-slate-600">
+                          <h4 className="font-medium mb-2 text-slate-700 flex items-center gap-2 dark:text-slate-200">
                             <BarChart3 className="h-4 w-4" /> Analytical Interpretation
                           </h4>
-                          <p className="text-sm text-slate-600 dark:text-gray-400">
+                          <p className="text-sm text-slate-600 dark:text-slate-300">
                             {visualizer.type === 'leaflet' && "This interactive map provides a comprehensive view of healthcare facility distribution across Kenya. Each point represents a healthcare facility, color-coded by type. The map reveals significant disparities in healthcare access between urban and rural areas, with clear clustering around population centers."}
                             {visualizer.type === 'interactive' && "This interactive visualization allows for deep exploration of healthcare facility distribution patterns. Use the filtering options to examine specific facility types, ownership models, or geographic regions. The map reveals significant urban-rural disparities and identifies both healthcare service hubs and underserved areas."}
                             {visualizer.type === 'map' && "This comprehensive mapping solution provides multiple perspectives on healthcare infrastructure distribution. The layered approach allows for comparative analysis across administrative boundaries, revealing how healthcare access correlates with political and geographic divisions."}
@@ -678,7 +478,7 @@ const SHAmbles: React.FC = () => {
                           </p>
                         </div>
                         {visualizer.type !== 'image' && visualizer.type !== 'leaflet' && (
-                          <Button variant="outline" className="w-full mt-4 gap-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white" asChild>
+                          <Button variant="outline" className="w-full mt-4 gap-2 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" asChild>
                             <a href={visualizer.url} target="_blank" rel="noopener noreferrer">
                               Open in new tab <ExternalLink className="h-4 w-4" />
                             </a>
@@ -693,18 +493,18 @@ const SHAmbles: React.FC = () => {
           </Tabs>
 
           {/* Call to Action Section */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-gray-800/80 dark:backdrop-blur-sm">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-slate-800/80 dark:text-slate-100">
             <CardContent className="p-8">
-              <AlertTriangle className="w-16 h-16 text-kenya-red mx-auto mb-4 dark:text-red-500" />
-              <h2 className="text-3xl font-bold text-kenya-green mb-4 dark:text-green-600">Help Us Improve Healthcare Transparency</h2>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto dark:text-gray-400">
+              <AlertTriangle className="w-16 h-16 text-kenya-red mx-auto mb-4 dark:text-red-400" />
+              <h2 className="text-3xl font-bold text-kenya-green mb-4 dark:text-green-500">Help Us Improve Healthcare Transparency</h2>
+              <p className="text-gray-600 mb-6 max-w-2xl mx-auto dark:text-slate-400">
                 Your support helps us continue our mission of tracking healthcare resource allocation and ensuring equitable distribution across Kenya.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-700 dark:hover:bg-green-600">
+                <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700">
                   <Heart className="mr-2" /> Support Our Work
                 </Button>
-                <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500/10">
+                <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10">
                   Learn More
                 </Button>
               </div>
