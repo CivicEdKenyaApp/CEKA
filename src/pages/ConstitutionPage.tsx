@@ -17,11 +17,11 @@ const ConstitutionPage = () => {
         {/* Kenya-themed projects carousel */}
         <div className="mb-10">
           <MegaProjectCarousel
-            slides={[
-              { id: 'c1', title: 'Constitution Highlights', description: 'Explore the key chapters and the Bill of Rights.', color: 'kenya-green', ctaText: 'Learn more', onClick: () => {} },
-              { id: 'c2', title: 'How Laws Are Made', description: 'Understand the legislative process in Kenya.', color: 'kenya-red', ctaText: 'See process', onClick: () => {} },
-              { id: 'c3', title: 'Public Participation', description: 'Your voice matters in governance.', color: 'kenya-black', ctaText: 'Get involved', onClick: () => {} },
-              { id: 'c4', title: 'Civic Education Toolkit', description: 'Discover learning materials and toolkits.', color: 'kenya-white', ctaText: 'Browse resources', onClick: () => {} },
+            items={[
+              { id: 'c1', title: 'Constitution Highlights', description: 'Explore the key chapters and the Bill of Rights.', color: 'green', type: 'project', link: '#' },
+              { id: 'c2', title: 'How Laws Are Made', description: 'Understand the legislative process in Kenya.', color: 'red', type: 'project', link: '#' },
+              { id: 'c3', title: 'Public Participation', description: 'Your voice matters in governance.', color: 'black', type: 'project', link: '#' },
+              { id: 'c4', title: 'Civic Education Toolkit', description: 'Discover learning materials and toolkits.', color: 'white', type: 'project', link: '#' },
             ]}
           />
         </div>
