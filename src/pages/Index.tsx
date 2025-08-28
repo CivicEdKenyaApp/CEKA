@@ -98,12 +98,10 @@ const Index = () => {
   const formattedSlides = carouselSlides.map(slide => ({
     id: slide.id,
     title: translate(slide.title, language),
-    description: slide.description ? translate(slide.description, language) : '',
-    link: slide.link_url || undefined,
-    type: slide.type as 'project' | 'cta',
-    color: slide.color === 'kenya-red' ? 'red' : 
-           slide.color === 'kenya-green' ? 'green' :
-           slide.color === 'kenya-black' ? 'black' : 'white'
+    description: slide.description ? translate(slide.description, language) : undefined,
+    ctaText: slide.cta_text ? translate(slide.cta_text, language) : undefined,
+    color: slide.color,
+    onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
   }));
 
   if (loading) {
@@ -133,10 +131,10 @@ const Index = () => {
       <Hero />
       <div className="py-8">
         <MegaProjectCarousel 
-          items={formattedSlides}
-          autoplay={true}
-          autoplayDelay={4500}
+          slides={formattedSlides}
+          autoPlayMs={4500}
           className="container mx-auto"
+          baseWidth={1200}
         />
       </div>
       <FeaturedLegislation />
