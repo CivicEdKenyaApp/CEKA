@@ -13,6 +13,19 @@ import threading
 app = Flask(__name__)
 CORS(app)
 
+# ✅ Add Content Security Policy (CSP) headers to all responses
+@app.after_request
+def set_csp(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self' https:; "
+        "connect-src 'self' https://cajrvemigxghnfmyopiy.supabase.co wss://cajrvemigxghnfmyopiy.supabase.co; "
+        "img-src 'self' data: https:; "
+        "style-src 'self' 'unsafe-inline' https:; "
+        "script-src 'self' 'unsafe-inline' https:;"
+    )
+    return response
+
+
 # Configuration
 UPLOAD_FOLDER = 'user_uploads'
 PROCESSED_FOLDER = 'processed_data'
