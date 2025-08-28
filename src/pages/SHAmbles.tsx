@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalLink, Map, Image, BarChart3, Filter, Grid3X3, List, ChevronDown, ChevronUp, Expand, Shrink, ZoomIn, ZoomOut, RefreshCw, Copy, Check, Heart, AlertTriangle, Users, Download, Share, Eye, Upload, Globe, Database } from 'lucide-react';
 import { supabase } from '@/supabase/client';
 import { cn } from '@/lib/utils';
@@ -97,7 +100,7 @@ const SHAmbles: React.FC = () => {
       setHealthcareGeoJsonData(data);
       
       // Also try to fetch Kenya boundaries if available
-      const boundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
+      const boundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJstorawge-url-signing-key';
       
       try {
         const boundariesResponse = await fetch(boundariesUrl);
@@ -471,7 +474,7 @@ const SHAmbles: React.FC = () => {
                 variant="default" 
                 size="sm" 
                 onClick={() => setShowDataProcessor(!showDataProcessor)}
-                className="gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+                className="gap-2 bg-kenya-green hover:bg-kenya-green/90 dark:bg-kenya-green dark:hover:bg-kenya-green/80"
               >
                 {showDataProcessor ? <Database className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
                 {showDataProcessor ? "View Visualizations" : "Process Data"}
@@ -486,7 +489,20 @@ const SHAmbles: React.FC = () => {
                 <Skeleton className="h-64 w-full rounded-lg" />
               </Card>
             }>
-              <DataProcessor onDataProcessed={handleDatasetProcessed} />
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80 dark:text-slate-100">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                    <Database className="h-5 w-5 text-kenya-green dark:text-kenya-green" />
+                    Healthcare Data Processing
+                  </CardTitle>
+                  <CardDescription className="dark:text-slate-400">
+                    Upload or crawl healthcare data to process and visualize it on the map
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataProcessor onDataProcessed={handleDatasetProcessed} />
+                </CardContent>
+              </Card>
             </Suspense>
           ) : (
             <>
