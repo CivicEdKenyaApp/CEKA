@@ -137,8 +137,8 @@ const App: React.FC = () => {
               open={false} 
               onOpenChange={() => {}} 
             />
-            <DataProcessor />
             <AppContent />
+            <DataProcessor />
           </ScrollListener>
         </AuthProvider>
       </LanguageProvider>
