@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/supabase/client';
 import { cn } from '@/lib/utils';
+import Navbar from '@/components/layout/Navbar';
 
 interface Visualizer {
   id: number;
@@ -331,9 +332,11 @@ const SHAmbles: React.FC = () => {
   }
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background pt-16 p-4 md:p-6">
-        <div className="max-w-7xl mx-auto space-y-8">
+    <>
+      <Navbar />
+      <TooltipProvider>
+        <div className="min-h-screen bg-background pt-16 p-4 md:p-6">
+          <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -736,8 +739,9 @@ const SHAmbles: React.FC = () => {
             </Tabs>
           </motion.div>
         </div>
-      </div>
-    </TooltipProvider>
+        </div>
+      </TooltipProvider>
+    </>
   );
 };
 
