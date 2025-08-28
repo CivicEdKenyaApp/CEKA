@@ -1,0 +1,109 @@
+.data-processor {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.upload-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.upload-section input,
+.upload-section select {
+  margin: 10px 0;
+  padding: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.upload-section button {
+  padding: 10px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-section button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.map-section {
+  margin: 30px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.datasets-section {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.datasets-list {
+  margin-top: 20px;
+}
+
+.dataset-item {
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.dataset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dataset-actions button {
+  padding: 8px 12px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dataset-actions button:hover {
+  background-color: #0b7dda;
+}
+
+.dataset-actions label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.leaflet-popup-content {
+  margin: 10px;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.leaflet-popup-content p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.custom-marker {
+  background: transparent;
+  border: none;
+}
