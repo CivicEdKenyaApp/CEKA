@@ -17,7 +17,6 @@ import Navbar from '@/components/layout/Navbar';
 // Lazy load components for better performance
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
 const DataProcessor = lazy(() => import('@/components/DataProcessor'));
-const DataProcessor = lazy(() => import('@/components/volunteer/DataProcessor'));
 
 interface Visualizer {
   id: number;
