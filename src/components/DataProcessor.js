@@ -13,13 +13,16 @@ L.Icon.Default.mergeOptions({
 
 const DataProcessor = () => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [crawlUrl, setCrawlUrl] = useState('');
   const [dataType, setDataType] = useState('healthcare');
   const [uploadStatus, setUploadStatus] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [crawling, setCrawling] = useState(false);
   const [datasets, setDatasets] = useState([]);
   const [map, setMap] = useState(null);
   const [mapLayers, setMapLayers] = useState({});
+  const [activeTab, setActiveTab] = useState('upload');
 
   useEffect(() => {
     // Initialize map
@@ -65,6 +68,10 @@ const DataProcessor = () => {
     setSelectedFile(event.target.files[0]);
   };
 
+  const handleCrawlUrlChange = (event) => {
+    setCrawlUrl(event.target.value);
+  };
+
   const handleDataTypeChange = (event) => {
     setDataType(event.target.value);
   };
@@ -97,15 +104,16 @@ const DataProcessor = () => {
         try {
           const statusResponse = await axios.get(`/api/status/${response.data.session_id}`);
           
-          if (statusResponse.data.status === 'processing') {
-            setTimeout(checkStatus, 2000); // Check again after 2 seconds
+          if (statusResponse.data.status === 'processing' || statusResponse.data.status === 'crawling') {
+            setUploadStatus(statusResponse.data.message);
+            setTimeout(checkStatus, 2000);
           } else if (statusResponse.data.success) {
             setUploadStatus('Processing completed successfully!');
             setProcessing(false);
             loadDatasets(); // Refresh dataset list
             
             // Add the new dataset to the map
-            if (statusResponse.data.files.combined_geojson) {
+            if (statusResponse.data.files && statusResponse.data.files.combined_geojson) {
               addDatasetToMap(response.data.session_id);
             }
           } else {
@@ -122,6 +130,62 @@ const DataProcessor = () => {
     } catch (error) {
       setUploadStatus('Upload failed');
       setProcessing(false);
+    }
+  };
+
+  const handleCrawl = async () => {
+    if (!crawlUrl) {
+      alert('Please enter a URL to crawl');
+      return;
+    }
+
+    setCrawling(true);
+    setUploadStatus('Starting crawl...');
+
+    try {
+      const response = await axios.post('/api/crawl', {
+        url: crawlUrl,
+        depth: 2,
+        max_pages: 100
+      });
+
+      setSessionId(response.data.session_id);
+      setUploadStatus('Crawling started. Processing will begin once completed.');
+
+      // Poll for status updates
+      const checkStatus = async () => {
+        try {
+          const statusResponse = await axios.get(`/api/status/${response.data.session_id}`);
+          
+          if (statusResponse.data.status === 'crawling') {
+            setUploadStatus(`Crawling: ${statusResponse.data.message}`);
+            setTimeout(checkStatus, 2000);
+          } else if (statusResponse.data.status === 'processing') {
+            setUploadStatus('Crawling completed. Processing data...');
+            setTimeout(checkStatus, 2000);
+          } else if (statusResponse.data.success) {
+            setUploadStatus('Crawling and processing completed successfully!');
+            setCrawling(false);
+            loadDatasets(); // Refresh dataset list
+            
+            // Add the new dataset to the map
+            if (statusResponse.data.files && statusResponse.data.files.combined_geojson) {
+              addDatasetToMap(response.data.session_id);
+            }
+          } else {
+            setUploadStatus(`Error: ${statusResponse.data.message}`);
+            setCrawling(false);
+          }
+        } catch (error) {
+          setUploadStatus('Error checking status');
+          setCrawling(false);
+        }
+      };
+
+      setTimeout(checkStatus, 2000);
+    } catch (error) {
+      setUploadStatus('Crawl failed');
+      setCrawling(false);
     }
   };
 
@@ -221,7 +285,8 @@ const DataProcessor = () => {
         'cleaned': 'csv',
         'geojson': 'geojson',
         'report': 'json',
-        'summary': 'txt'
+        'summary': 'txt',
+        'map': 'html'
       };
       
       link.setAttribute('download', `processed_data.${extensions[fileType]}`);
@@ -247,25 +312,75 @@ const DataProcessor = () => {
     <div className="data-processor">
       <h2>Kenya Healthcare Data Processing</h2>
       
-      <div className="upload-section">
-        <h3>Upload New Data</h3>
-        <div>
-          <input type="file" onChange={handleFileChange} />
-        </div>
-        <div>
-          <label>
-            Data Type:
-            <select value={dataType} onChange={handleDataTypeChange}>
-              <option value="healthcare">Healthcare Facilities</option>
-              <option value="education">Education Institutions</option>
-              <option value="infrastructure">Infrastructure</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-        </div>
-        <button onClick={handleUpload} disabled={processing}>
-          {processing ? 'Processing...' : 'Upload and Process'}
+      <div className="tabs">
+        <button 
+          className={activeTab === 'upload' ? 'active' : ''} 
+          onClick={() => setActiveTab('upload')}
+        >
+          Upload Data
         </button>
+        <button 
+          className={activeTab === 'crawl' ? 'active' : ''} 
+          onClick={() => setActiveTab('crawl')}
+        >
+          Crawl Website
+        </button>
+      </div>
+      
+      {activeTab === 'upload' && (
+        <div className="upload-section">
+          <h3>Upload Data File</h3>
+          <div>
+            <input type="file" onChange={handleFileChange} />
+          </div>
+          <div>
+            <label>
+              Data Type:
+              <select value={dataType} onChange={handleDataTypeChange}>
+                <option value="healthcare">Healthcare Facilities</option>
+                <option value="education">Education Institutions</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+          </div>
+          <button onClick={handleUpload} disabled={processing}>
+            {processing ? 'Processing...' : 'Upload and Process'}
+          </button>
+        </div>
+      )}
+      
+      {activeTab === 'crawl' && (
+        <div className="crawl-section">
+          <h3>Crawl Website for Data</h3>
+          <div>
+            <input 
+              type="text" 
+              placeholder="Enter website URL to crawl" 
+              value={crawlUrl}
+              onChange={handleCrawlUrlChange}
+              style={{ width: '300px', padding: '8px' }}
+            />
+          </div>
+          <div>
+            <label>
+              Data Type:
+              <select value={dataType} onChange={handleDataTypeChange}>
+                <option value="healthcare">Healthcare Facilities</option>
+                <option value="education">Education Institutions</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+          </div>
+          <button onClick={handleCrawl} disabled={crawling}>
+            {crawling ? 'Crawling...' : 'Start Crawling'}
+          </button>
+        </div>
+      )}
+      
+      <div className="status-section">
+        <h4>Status:</h4>
         <p>{uploadStatus}</p>
       </div>
 
@@ -305,6 +420,9 @@ const DataProcessor = () => {
                 </button>
                 <button onClick={() => downloadFile(dataset.session_id, 'summary')}>
                   Download Summary
+                </button>
+                <button onClick={() => downloadFile(dataset.session_id, 'map')}>
+                  Download Map
                 </button>
               </div>
             </div>
