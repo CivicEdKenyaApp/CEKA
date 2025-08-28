@@ -46,6 +46,7 @@ import NotificationSettings from '@/pages/settings/NotificationSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/providers/AuthProvider';
+import DataProcessor from './components/DataProcessor';
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -136,6 +137,7 @@ const App: React.FC = () => {
               open={false} 
               onOpenChange={() => {}} 
             />
+            <DataProcessor />
             <AppContent />
           </ScrollListener>
         </AuthProvider>
