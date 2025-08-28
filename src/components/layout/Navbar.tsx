@@ -24,7 +24,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import Navbar from '@/components/layout/Navbar';
 import AuthModal from '@/components/auth/AuthModal';
 
 type NavItem = {
@@ -127,7 +126,6 @@ const Navbar = () => {
 
   return (
     <>
-      <Navbar />
       <nav
         className={`sticky top-0 z-50 w-full transition-all duration-200 ${
           showBg ? 'bg-background shadow-md' : 'bg-background/80 backdrop-blur-sm'
