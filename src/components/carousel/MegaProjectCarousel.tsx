@@ -1,300 +1,328 @@
-import React, { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { useTheme } from '@/contexts/ThemeContext';
-import { supabase } from '@/supabase/client';
 
-type Slide = {
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
+import { motion } from 'framer-motion';
+
+interface CarouselItem {
   id: string;
   title: string;
-  description?: string;
-  ctaText?: string;
-  onClick?: () => void;
-  color: 'kenya-red' | 'kenya-green' | 'kenya-black' | 'kenya-white';
-  icon?: React.ReactNode;
-};
-
-interface MegaProjectCarouselProps {
-  slides?: Slide[];
-  className?: string;
-  autoPlayMs?: number;
-  baseWidth?: number;
-  pauseOnHover?: boolean;
-  loop?: boolean;
-  round?: boolean;
-  supabaseTable?: string;
+  description: string;
+  image?: string;
+  link?: string;
+  type?: 'project' | 'cta';
+  color?: 'red' | 'green' | 'black' | 'white';
 }
 
-const colorClassMap: Record<Slide['color'], string> = {
-  'kenya-red': 'bg-kenya-red/20 text-foreground',
-  'kenya-green': 'bg-kenya-green/20 text-foreground',
-  'kenya-black': 'bg-black/20 text-white',
-  'kenya-white': 'bg-white/30 text-foreground',
-};
+interface MegaCarouselProps extends React.HTMLAttributes<HTMLDivElement> {
+  items?: CarouselItem[];
+  autoplay?: boolean;
+  autoplayDelay?: number;
+  showProjects?: boolean;
+}
 
-const DRAG_BUFFER = 0;
-const VELOCITY_THRESHOLD = 500;
-const GAP = 16;
-const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 };
+export const MegaProjectCarousel: React.FC<MegaCarouselProps> = ({
+  items: externalItems,
+  autoplay = true,
+  autoplayDelay = 4000,
+  showProjects = true,
+  className,
+  ...props
+}) => {
+  const { language } = useLanguage();
+  
+  // Default projects data
+  const defaultProjects = [
+    {
+      id: '1',
+      title: translate('Constitutional Education Initiative', language),
+      description: translate('Empowering citizens with knowledge of their constitutional rights and responsibilities through community workshops and digital resources.', language),
+      image: '/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png',
+      link: '/civic-education',
+      type: 'project' as const,
+      color: 'red' as const
+    },
+    {
+      id: '2',
+      title: translate('Legislative Tracking Platform', language),
+      description: translate('Real-time monitoring and analysis of parliamentary proceedings, bill progress, and legislative developments affecting Kenyan citizens.', language),
+      image: '/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png',
+      link: '/legislative-tracker',
+      type: 'project' as const,
+      color: 'green' as const
+    },
+    {
+      id: '3',
+      title: translate('Community Engagement Networks', language),
+      description: translate('Building grassroots networks that facilitate citizen participation in local governance and community development initiatives.', language),
+      image: '/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png',
+      link: '/join-community',
+      type: 'project' as const,
+      color: 'black' as const
+    },
+    {
+      id: '4',
+      title: translate('Digital Civic Resources Hub', language),
+      description: translate('Comprehensive online library providing accessible civic education materials, legal documents, and educational content for all Kenyans.', language),
+      image: '/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png',
+      link: '/resources',
+      type: 'project' as const,
+      color: 'white' as const
+    },
+    {
+      id: '5',
+      title: translate('Support Our Mission', language),
+      description: translate('Join us in building a more informed and engaged democratic society. Your support helps us expand our reach and impact across Kenya.', language),
+      type: 'cta' as const,
+      link: '/join-community'
+    }
+  ];
 
-export default function MegaProjectCarousel({ 
-  slides: propSlides, 
-  className, 
-  autoPlayMs = 4500, 
-  baseWidth = 300,
-  pauseOnHover = true,
-  loop = true,
-  round = false,
-  supabaseTable = 'carousel_slides'
-}: MegaProjectCarouselProps) {
-  const { theme } = useTheme();
-  const [slides, setSlides] = useState<Slide[]>(propSlides || []);
-  const [loading, setLoading] = useState(!propSlides);
-  const [error, setError] = useState<string | null>(null);
+  const items = externalItems || (showProjects ? defaultProjects : []);
   
-  const containerPadding = 16;
-  const itemWidth = baseWidth - containerPadding * 2;
-  const trackItemOffset = itemWidth + GAP;
-  
-  const carouselItems = loop && slides.length > 0 ? [...slides, slides[0]] : slides;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const x = useMotionValue(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, time: 0 });
+  const intervalRef = useRef<NodeJS.Timeout>();
 
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % items.length);
+  }, [items.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + items.length) % items.length);
+  }, [items.length]);
+
+  const goToSlide = useCallback((index: number) => {
+    setCurrentSlide(index);
+  }, []);
+
+  // Autoplay functionality
   useEffect(() => {
-    if (propSlides) return;
-    
-    const fetchSlides = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from(supabaseTable)
-          .select('*')
-          .eq('is_active', true)
-          .order('order_index', { ascending: true });
-        
-        if (error) throw error;
-        
-        const formattedSlides = data.map(slide => ({
-          id: slide.id,
-          title: slide.title,
-          description: slide.description,
-          ctaText: slide.cta_text,
-          color: slide.color,
-          onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
-        }));
-        
-        setSlides(formattedSlides);
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching carousel slides:', err);
-      } finally {
-        setLoading(false);
+    if (autoplay && !isHovered && !isDragging) {
+      intervalRef.current = setInterval(nextSlide, autoplayDelay);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-    };
-    
-    fetchSlides();
-  }, [propSlides, supabaseTable]);
-
-  useEffect(() => {
-    if (slides.length === 0) return;
-    
-    let timer: NodeJS.Timeout;
-    if (autoPlayMs > 0 && !isHovered) {
-      timer = setInterval(() => {
-        setCurrentIndex((prev) => {
-          if (prev === slides.length - 1 && loop) {
-            return prev + 1;
-          }
-          if (prev === carouselItems.length - 1) {
-            return loop ? 0 : prev;
-          }
-          return prev + 1;
-        });
-      }, autoPlayMs);
     }
+
     return () => {
-      if (timer) clearInterval(timer);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length]);
+  }, [autoplay, autoplayDelay, isHovered, isDragging, nextSlide]);
 
-  const effectiveTransition = isResetting ? { duration: 0 } : SPRING_OPTIONS;
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
-  const handleAnimationComplete = () => {
-    if (loop && currentIndex === carouselItems.length - 1) {
-      setIsResetting(true);
-      x.set(0);
-      setCurrentIndex(0);
-      setTimeout(() => setIsResetting(false), 50);
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, time: Date.now() });
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = Math.abs(e.clientX - dragStart.x);
+    const deltaTime = Date.now() - dragStart.time;
+    
+    if (deltaX > 12 && deltaTime < 200) {
+      e.preventDefault();
     }
   };
 
-  const handleDragEnd = (_, info) => {
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
-    if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      if (loop && currentIndex === slides.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        setCurrentIndex((prev) => Math.min(prev + 1, carouselItems.length - 1));
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - dragStart.x;
+    const deltaTime = Date.now() - dragStart.time;
+    
+    setIsDragging(false);
+    
+    if (Math.abs(deltaX) < 12 && deltaTime < 200) {
+      const item = items[currentSlide];
+      if (item.link) {
+        window.open(item.link, '_blank', 'noopener,noreferrer');
       }
-    } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
-      if (loop && currentIndex === 0) {
-        setCurrentIndex(slides.length - 1);
+    } else if (Math.abs(deltaX) > 50) {
+      if (deltaX > 0) {
+        prevSlide();
       } else {
-        setCurrentIndex((prev) => Math.max(prev - 1, 0));
+        nextSlide();
       }
     }
   };
 
-  const dragProps = loop
-    ? {}
-    : {
-        dragConstraints: {
-          left: -trackItemOffset * (carouselItems.length - 1),
-          right: 0,
-        },
-      };
+  const getSlideColorClass = (color?: string) => {
+    switch (color) {
+      case 'red':
+        return 'bg-gradient-to-br from-red-600 to-red-700 text-white';
+      case 'green':
+        return 'bg-gradient-to-br from-kenya-green to-green-700 text-white';
+      case 'black':
+        return 'bg-gradient-to-br from-gray-800 to-gray-900 text-white';
+      case 'white':
+        return 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 border border-gray-200';
+      default:
+        return 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground';
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg">Loading slides...</div>
-      </div>
-    );
-  }
+  const getCtaGradient = () => {
+    return `bg-gradient-to-br from-red-600/20 via-kenya-green/20 via-gray-800/20 to-gray-100/20 backdrop-blur-sm bg-white/10 dark:bg-black/10 border border-white/20 dark:border-black/20 text-foreground`;
+  };
 
-  if (error) {
-    return (
-      <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
+  const getDotColor = (index: number, isActive: boolean) => {
+    if (!isActive) return 'bg-muted-foreground/30';
+    
+    const item = items[index];
+    switch (item.color) {
+      case 'red':
+        return 'bg-red-600';
+      case 'green':
+        return 'bg-kenya-green';
+      case 'black':
+        return 'bg-gray-800 dark:bg-gray-600';
+      case 'white':
+        return 'bg-gray-300 dark:bg-gray-400';
+      default:
+        return 'bg-primary';
+    }
+  };
 
-  if (slides.length === 0) {
-    return (
-      <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg">No slides available</div>
-      </div>
-    );
-  }
+  if (!items.length) return null;
 
   return (
-    <div
-      className={cn('relative', className, round && 'rounded-full')}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        width: `${baseWidth}px`,
-        ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
-      }}
-    >
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background via-background/60 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-
-      <motion.div
-        className="carousel-track flex"
-        drag="x"
-        {...dragProps}
-        style={{
-          width: itemWidth,
-          gap: `${GAP}px`,
-          perspective: 1000,
-          perspectiveOrigin: `${currentIndex * trackItemOffset + itemWidth / 2}px 50%`,
-          x,
-        }}
-        onDragEnd={handleDragEnd}
-        animate={{ x: -(currentIndex * trackItemOffset) }}
-        transition={effectiveTransition}
-        onAnimationComplete={handleAnimationComplete}
-      >
-        {carouselItems.map((slide, index) => {
-          const range = [
-            -(index + 1) * trackItemOffset,
-            -index * trackItemOffset,
-            -(index - 1) * trackItemOffset,
-          ];
-          const outputRange = [90, 0, -90];
-          const rotateY = useTransform(x, range, outputRange, { clamp: false });
+    <div className="py-16 bg-gradient-to-br from-background to-muted/20">
+      <div className="container">
+        {showProjects && (
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              {translate('Our Impact Projects', language)}
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              {translate('Discover how we\'re transforming civic education and democratic participation across Kenya through innovative programs and community-driven initiatives.', language)}
+            </p>
+          </div>
+        )}
+        
+        <div 
+          className={cn(
+            'relative overflow-hidden rounded-xl max-w-4xl mx-auto',
+            'before:absolute before:top-0 before:left-0 before:w-32 before:h-full before:bg-gradient-to-r before:from-background before:to-transparent before:z-10 before:pointer-events-none',
+            'after:absolute after:top-0 after:right-0 after:w-32 after:h-full after:bg-gradient-to-l after:from-background after:to-transparent after:z-10 after:pointer-events-none',
+            className
+          )}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          {...props}
+        >
+          <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/20 to-transparent z-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/20 to-transparent z-10 pointer-events-none" />
           
-          return (
-            <motion.div
-              key={`${slide.id}-${index}`}
-              className={cn(
-                'rounded-xl p-6 md:p-8 backdrop-blur-sm border transition-all flex flex-col justify-between cursor-grab',
-                colorClassMap[slide.color],
-                theme === 'dark' ? 'border-primary/20' : 'border-primary/10',
-                'hover:shadow-lg',
-                round && 'rounded-full justify-center items-center text-center'
-              )}
-              style={{
-                width: itemWidth,
-                height: round ? itemWidth : 'auto',
-                rotateY: rotateY,
-                ...(round && { borderRadius: '50%' }),
-              }}
-              transition={effectiveTransition}
-              onPointerDown={(e) => e.preventDefault()}
-              onClick={() => slide.onClick?.()}
-            >
-              {slide.icon && (
-                <div className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center mb-4",
-                  round && "mx-auto"
-                )}>
-                  {slide.icon}
-                </div>
-              )}
-              
-              <div className={cn(round && "flex flex-col items-center")}>
-                <div className="text-sm opacity-80">Slide {index + 1}</div>
-                <h3 className="text-xl md:text-2xl font-semibold mt-2">{slide.title}</h3>
-                {slide.description && (
-                  <p className="mt-2 text-sm md:text-base opacity-90">{slide.description}</p>
+          <motion.div 
+            className="flex transition-transform duration-500 ease-in-out"
+            animate={{ x: `-${currentSlide * 100}%` }}
+            transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
+            style={{ touchAction: 'pan-y' }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+          >
+            {items.map((item, index) => (
+              <div
+                key={item.id}
+                className={cn(
+                  'w-full flex-shrink-0 p-8 cursor-pointer select-none relative min-h-[300px] flex items-center justify-center',
+                  item.type === 'cta' 
+                    ? getCtaGradient()
+                    : getSlideColorClass(item.color)
                 )}
-              </div>
-              
-              {slide.ctaText && (
-                <div className="mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-background/60 border self-start">
-                  <span className="text-sm">{slide.ctaText}</span>
+              >
+                <div className="text-center space-y-4 z-20">
+                  {item.image && (
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-32 h-32 mx-auto rounded-lg object-cover shadow-lg"
+                    />
+                  )}
+                  <h3 className="text-2xl font-bold">{item.title}</h3>
+                  <p className="text-lg opacity-90">{item.description}</p>
+                  {item.type === 'cta' && (
+                    <div className="flex gap-4 justify-center mt-6">
+                      <Button 
+                        variant="outline" 
+                        className="bg-white/20 hover:bg-white/30 border-white/30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open('/join-community', '_blank', 'noopener,noreferrer');
+                        }}
+                      >
+                        Support our work
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="bg-white/20 hover:bg-white/30 border-white/30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open('/resources', '_blank', 'noopener,noreferrer');
+                        }}
+                      >
+                        More projects
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </motion.div>
+              </div>
+            ))}
+          </motion.div>
 
-      <div className={cn(
-        "mt-3 flex items-center justify-center gap-2",
-        round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
-      )}>
-        {slides.map((s, i) => (
-          <motion.button
-            key={s.id}
-            aria-label={`Go to slide ${i + 1}`}
-            className={cn(
-              'h-2.5 w-2.5 rounded-full transition-all cursor-pointer',
-              currentIndex % slides.length === i ? 'w-6' : 'opacity-60',
-              i % 4 === 0
-                ? 'bg-kenya-green'
-                : i % 4 === 1
-                ? 'bg-kenya-red'
-                : i % 4 === 2
-                ? 'bg-black'
-                : 'bg-white border'
-            )}
-            animate={{
-              scale: currentIndex % slides.length === i ? 1.2 : 1,
-            }}
-            onClick={() => setCurrentIndex(i)}
-            transition={{ duration: 0.15 }}
-          />
-        ))}
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 z-30"
+            onClick={prevSlide}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 z-30"
+            onClick={nextSlide}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-30">
+            {items.map((_, index) => (
+              <motion.button
+                key={index}
+                className={cn(
+                  'w-3 h-3 rounded-full transition-all duration-300 ease-in-out',
+                  index === currentSlide 
+                    ? cn('scale-125', getDotColor(index, true))
+                    : getDotColor(index, false)
+                )}
+                onClick={() => goToSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default MegaProjectCarousel;
