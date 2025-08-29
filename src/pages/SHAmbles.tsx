@@ -583,7 +583,7 @@ const SHAmbles: React.FC = () => {
                 SHAmbles: Healthcare Facility Visualization
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl dark:text-slate-400">
-                Interactive visualizations and comprehensive analysis of Kenya's healthcare infrastructure
+                An interactive visualization and comprehensive analysis of the distribution of health facilities across Kenya and their respective data.
               </p>
             </div>
             <div className="flex gap-2">
