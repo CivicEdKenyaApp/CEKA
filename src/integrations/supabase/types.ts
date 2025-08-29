@@ -368,6 +368,51 @@ export type Database = {
           },
         ]
       }
+      carousel_slides: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          cta_text: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string | null
+          order_index: number | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          order_index?: number | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          order_index?: number | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       civic_education_providers: {
         Row: {
           contact_email: string | null
@@ -667,6 +712,57 @@ export type Database = {
           },
         ]
       }
+      health_facilities: {
+        Row: {
+          constituency: string | null
+          county: string | null
+          division: string | null
+          FID: number
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          name: string | null
+          nearest_to: string | null
+          OBJECTID: number | null
+          owner: string | null
+          sub_location: string | null
+          subcounty: string | null
+          type: string | null
+        }
+        Insert: {
+          constituency?: string | null
+          county?: string | null
+          division?: string | null
+          FID: number
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name?: string | null
+          nearest_to?: string | null
+          OBJECTID?: number | null
+          owner?: string | null
+          sub_location?: string | null
+          subcounty?: string | null
+          type?: string | null
+        }
+        Update: {
+          constituency?: string | null
+          county?: string | null
+          division?: string | null
+          FID?: number
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name?: string | null
+          nearest_to?: string | null
+          OBJECTID?: number | null
+          owner?: string | null
+          sub_location?: string | null
+          subcounty?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -721,6 +817,7 @@ export type Database = {
           full_name: string | null
           id: string
           interests: Json | null
+          is_admin: boolean | null
           updated_at: string
           username: string | null
         }
@@ -736,6 +833,7 @@ export type Database = {
           full_name?: string | null
           id: string
           interests?: Json | null
+          is_admin?: boolean | null
           updated_at?: string
           username?: string | null
         }
@@ -751,6 +849,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           interests?: Json | null
+          is_admin?: boolean | null
           updated_at?: string
           username?: string | null
         }
@@ -985,6 +1084,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      visualizers: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: number
+          is_active: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          title: string
+          type: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
       }
       volunteer_applications: {
         Row: {
