@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2 class="mb-4"><i class="fas fa-cloud-upload-alt"></i> Upload Data Files</h2>
+        
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>Upload Files</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="files" class="form-label">Select files to upload:</label>
+                        <input class="form-control" type="file" id="files" name="files" multiple required>
+                        <div class="form-text">
+                            Supported formats: CSV, JSON, GeoJSON, KML, TopoJSON, WKT, PNG, PDF
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> Instructions</h5>
+                        <ul>
+                            <li>Upload at least two files: Kenya administrative boundaries (GeoJSON/KML) and healthcare facilities data (CSV with coordinates)</li>
+                            <li>CSV files should contain columns for latitude and longitude</li>
+                            <li>Larger files may take longer to process</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-process"></i> Process Files
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
