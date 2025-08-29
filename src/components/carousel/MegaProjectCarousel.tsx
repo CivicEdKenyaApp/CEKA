@@ -51,6 +51,7 @@ export default function MegaProjectCarousel({
   const [slides, setSlides] = useState<Slide[]>(propSlides || []);
   const [loading, setLoading] = useState(!propSlides);
   const [error, setError] = useState<string | null>(null);
+  const [cycleCount, setCycleCount] = useState(0);
   
   const containerPadding = 16;
   const itemWidth = 250;
@@ -62,6 +63,8 @@ export default function MegaProjectCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef(0);
+  const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
+  const isSpecialTransition = useRef(false);
 
   useEffect(() => {
     if (propSlides) return;
@@ -101,21 +104,33 @@ export default function MegaProjectCarousel({
   useEffect(() => {
     if (slides.length <= 1) return;
     
-    let timer: NodeJS.Timeout;
+    if (autoPlayTimer.current) {
+      clearTimeout(autoPlayTimer.current);
+    }
+    
     if (autoPlayMs > 0 && !isHovered && !isDragging) {
-      timer = setInterval(() => {
+      // Special handling for the last card (extended duration)
+      const isLastCard = currentIndex === slides.length - 1;
+      const delay = isLastCard ? autoPlayMs + 500 : autoPlayMs;
+      
+      autoPlayTimer.current = setTimeout(() => {
         setCurrentIndex((prev) => {
           if (prev === slides.length - 1) {
+            // Increment cycle count when we complete a full cycle
+            setCycleCount(c => c + 1);
             return loop ? 0 : prev;
           }
           return prev + 1;
         });
-      }, autoPlayMs);
+      }, delay);
     }
+    
     return () => {
-      if (timer) clearInterval(timer);
+      if (autoPlayTimer.current) {
+        clearTimeout(autoPlayTimer.current);
+      }
     };
-  }, [autoPlayMs, isHovered, isDragging, loop, slides.length]);
+  }, [autoPlayMs, isHovered, isDragging, loop, slides.length, currentIndex]);
 
   const handleDragStart = useCallback((event) => {
     setIsDragging(true);
@@ -135,7 +150,11 @@ export default function MegaProjectCarousel({
     const direction = offset > 0 || velocity > 0 ? -1 : 1;
 
     if (loop) {
-      setCurrentIndex(prev => (prev + direction + slides.length) % slides.length);
+      const newIndex = (currentIndex + direction + slides.length) % slides.length;
+      if (newIndex === 0 && currentIndex === slides.length - 1) {
+        setCycleCount(c => c + 1);
+      }
+      setCurrentIndex(newIndex);
     } else {
       setCurrentIndex(prev => Math.max(0, Math.min(prev + direction, slides.length - 1)));
     }
@@ -201,12 +220,20 @@ export default function MegaProjectCarousel({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         animate={{ x: -currentIndex * trackItemOffset }}
-        transition={SPRING_OPTIONS}
+        transition={
+          isSpecialTransition.current 
+            ? { type: "spring", stiffness: 400, damping: 25, mass: 0.8 }
+            : SPRING_OPTIONS
+        }
       >
         {carouselItems.map((slide, index) => {
           const position = (index - currentIndex + slides.length) % slides.length;
           const isActive = position === 0;
           const isAdjacent = Math.abs(position) === 1 || (loop && position === slides.length - 1);
+          
+          // Special animation for first card on every 2nd cycle
+          const isFirstCard = index === 0;
+          const shouldSpecialAnimate = isFirstCard && cycleCount > 0 && cycleCount % 2 === 0 && isActive;
           
           return (
             <motion.div
@@ -226,7 +253,18 @@ export default function MegaProjectCarousel({
                 scale: isActive ? 1 : isAdjacent ? 0.95 : 0.9,
                 zIndex: isActive ? 20 : isAdjacent ? 10 : 1,
               }}
-              transition={SPRING_OPTIONS}
+              animate={{
+                scale: shouldSpecialAnimate ? [1, 1.1, 1] : isActive ? 1 : isAdjacent ? 0.95 : 0.9,
+                rotate: shouldSpecialAnimate ? [0, 5, -5, 0] : 0,
+              }}
+              transition={{
+                scale: shouldSpecialAnimate 
+                  ? { duration: 0.6, ease: "easeInOut" } 
+                  : SPRING_OPTIONS,
+                rotate: shouldSpecialAnimate 
+                  ? { duration: 0.6, ease: "easeInOut" }
+                  : SPRING_OPTIONS,
+              }}
               onPointerDown={(e) => e.preventDefault()}
               onClick={(e) => handleCardClick(slide, index, e)}
             >
