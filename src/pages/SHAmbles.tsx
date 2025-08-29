@@ -579,7 +579,7 @@ const SHAmbles: React.FC = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-slate-600 bg-clip-text text-transparent dark:from-green-400 dark:to-white-400">
                 SHAmbles: Healthcare Facility Visualization
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl dark:text-slate-400">
