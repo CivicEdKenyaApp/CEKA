@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import React, { useEffect, useState, useCallback } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,7 @@ const colorClassMap: Record<Slide['color'], string> = {
   'kenya-white': 'bg-white/30 text-foreground',
 };
 
-const DRAG_BUFFER = 50;
+const DRAG_BUFFER = 30;
 const VELOCITY_THRESHOLD = 500;
 const GAP = 16;
 const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 };
@@ -56,11 +56,11 @@ export default function MegaProjectCarousel({
   const itemWidth = baseWidth - containerPadding * 2;
   const trackItemOffset = itemWidth + GAP;
   
-  const carouselItems = loop && slides.length > 0 ? [...slides, slides[0]] : slides;
+  const carouselItems = loop && slides.length > 1 ? [...slides, slides[0]] : slides;
   const [currentIndex, setCurrentIndex] = useState(0);
   const x = useMotionValue(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (propSlides) return;
@@ -98,16 +98,13 @@ export default function MegaProjectCarousel({
   }, [propSlides, supabaseTable]);
 
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length <= 1) return;
     
     let timer: NodeJS.Timeout;
-    if (autoPlayMs > 0 && !isHovered && !isResetting) {
+    if (autoPlayMs > 0 && !isHovered && !isDragging) {
       timer = setInterval(() => {
         setCurrentIndex((prev) => {
-          if (prev === slides.length - 1 && loop) {
-            return prev + 1;
-          }
-          if (prev === carouselItems.length - 1) {
+          if (prev === slides.length - 1) {
             return loop ? 0 : prev;
           }
           return prev + 1;
@@ -117,50 +114,30 @@ export default function MegaProjectCarousel({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length, isResetting]);
+  }, [autoPlayMs, isHovered, isDragging, loop, slides.length]);
 
-  const effectiveTransition = isResetting ? { duration: 0 } : SPRING_OPTIONS;
-
-  const handleAnimationComplete = () => {
-    if (loop && currentIndex === carouselItems.length - 1) {
-      setIsResetting(true);
-      x.set(0);
-      setCurrentIndex(0);
-      setTimeout(() => setIsResetting(false), 50);
-    }
-  };
-
-  const handleDragEnd = (_, info) => {
+  const handleDragEnd = useCallback((_, info) => {
+    setIsDragging(false);
     const offset = info.offset.x;
     const velocity = info.velocity.x;
-    
-    if (Math.abs(offset) > DRAG_BUFFER || Math.abs(velocity) > VELOCITY_THRESHOLD) {
-      const direction = offset > 0 || velocity > 0 ? -1 : 1;
-      
-      setCurrentIndex((prev) => {
-        if (direction === 1) {
-          if (prev >= carouselItems.length - 1) {
-            return loop ? 0 : prev;
-          }
-          return prev + 1;
-        } else {
-          if (prev <= 0) {
-            return loop ? carouselItems.length - 1 : 0;
-          }
-          return prev - 1;
-        }
-      });
-    }
-  };
 
-  const dragProps = loop
-    ? {}
-    : {
-        dragConstraints: {
-          left: -trackItemOffset * (carouselItems.length - 1),
-          right: 0,
-        },
-      };
+    if (Math.abs(offset) < DRAG_BUFFER && Math.abs(velocity) < VELOCITY_THRESHOLD) {
+      animate(x, -currentIndex * trackItemOffset, SPRING_OPTIONS);
+      return;
+    }
+
+    const direction = offset > 0 || velocity > 0 ? -1 : 1;
+
+    if (loop) {
+      setCurrentIndex(prev => (prev + direction + slides.length) % slides.length);
+    } else {
+      setCurrentIndex(prev => Math.max(0, Math.min(prev + direction, slides.length - 1)));
+    }
+  }, [currentIndex, loop, slides.length, trackItemOffset, x]);
+
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
 
   if (loading) {
     return (
@@ -189,52 +166,56 @@ export default function MegaProjectCarousel({
   return (
     <div
       className={cn('relative overflow-hidden', className, round && 'rounded-full')}
-      onMouseEnter={() => pauseOnHover && setIsHovered(true)}
-      onMouseLeave={() => pauseOnHover && setIsHovered(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         width: `${baseWidth}px`,
         ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
       }}
     >
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent z-10" />
-
       <motion.div
-        className="carousel-track flex cursor-grab active:cursor-grabbing"
+        className="flex"
         drag="x"
-        {...dragProps}
-        style={{
-          gap: `${GAP}px`,
-          x,
+        dragConstraints={{
+          left: -(carouselItems.length - 1) * trackItemOffset,
+          right: 0,
         }}
+        style={{
+          x,
+          width: itemWidth,
+          gap: `${GAP}px`,
+        }}
+        onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={{ x: -currentIndex * trackItemOffset }}
-        transition={effectiveTransition}
-        onAnimationComplete={handleAnimationComplete}
+        transition={SPRING_OPTIONS}
       >
         {carouselItems.map((slide, index) => {
-          const isActive = currentIndex === index;
-          const isAdjacent = Math.abs(currentIndex - index) === 1;
+          const position = (index - currentIndex + slides.length) % slides.length;
+          const isActive = position === 0;
+          const isAdjacent = Math.abs(position) === 1 || (loop && position === slides.length - 1);
           
           return (
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-xl p-6 md:p-8 border transition-all flex flex-col justify-between flex-shrink-0',
+                'rounded-xl p-6 md:p-8 backdrop-blur-sm border transition-all flex flex-col justify-between cursor-grab',
                 colorClassMap[slide.color],
                 theme === 'dark' ? 'border-primary/20' : 'border-primary/10',
+                'hover:shadow-lg flex-shrink-0',
                 round && 'rounded-full justify-center items-center text-center'
               )}
               style={{
                 width: itemWidth,
                 height: round ? itemWidth : 'auto',
-                filter: isActive ? 'none' : isAdjacent ? 'blur(2px)' : 'blur(4px)',
-                opacity: isActive ? 1 : isAdjacent ? 0.8 : 0.6,
-                scale: isActive ? 1 : 0.95,
+                filter: isActive ? 'blur(0px)' : isAdjacent ? 'blur(2px)' : 'blur(4px)',
+                opacity: isActive ? 1 : isAdjacent ? 0.8 : 0.5,
+                scale: isActive ? 1 : isAdjacent ? 0.95 : 0.9,
+                zIndex: isActive ? 20 : isAdjacent ? 10 : 1,
               }}
               transition={SPRING_OPTIONS}
               onPointerDown={(e) => e.preventDefault()}
-              onClick={() => slide.onClick?.()}
+              onClick={() => !isDragging && slide.onClick?.()}
             >
               {slide.icon && (
                 <div className={cn(
@@ -246,8 +227,7 @@ export default function MegaProjectCarousel({
               )}
               
               <div className={cn(round && "flex flex-col items-center")}>
-                <div className="text-sm opacity-80">Slide {index + 1}</div>
-                <h3 className="text-xl md:text-2xl font-semibold mt-2">{slide.title}</h3>
+                <h3 className="text-xl md:text-2xl font-semibold">{slide.title}</h3>
                 {slide.description && (
                   <p className="mt-2 text-sm md:text-base opacity-90">{slide.description}</p>
                 )}
@@ -263,33 +243,35 @@ export default function MegaProjectCarousel({
         })}
       </motion.div>
 
-      <div className={cn(
-        "mt-3 flex items-center justify-center gap-2",
-        round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
-      )}>
-        {slides.map((s, i) => (
-          <motion.button
-            key={s.id}
-            aria-label={`Go to slide ${i + 1}`}
-            className={cn(
-              'h-2.5 w-2.5 rounded-full transition-all cursor-pointer',
-              currentIndex % slides.length === i ? 'w-6' : 'opacity-60',
-              i % 4 === 0
-                ? 'bg-kenya-green'
-                : i % 4 === 1
-                ? 'bg-kenya-red'
-                : i % 4 === 2
-                ? 'bg-black'
-                : 'bg-white border'
-            )}
-            animate={{
-              scale: currentIndex % slides.length === i ? 1.2 : 1,
-            }}
-            onClick={() => setCurrentIndex(i)}
-            transition={{ duration: 0.15 }}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className={cn(
+          "mt-6 flex items-center justify-center gap-2",
+          round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
+        )}>
+          {slides.map((s, i) => (
+            <motion.button
+              key={s.id}
+              aria-label={`Go to slide ${i + 1}`}
+              className={cn(
+                'h-2.5 w-2.5 rounded-full transition-all cursor-pointer',
+                currentIndex === i ? 'w-6' : 'opacity-60',
+                i % 4 === 0
+                  ? 'bg-kenya-green'
+                  : i % 4 === 1
+                  ? 'bg-kenya-red'
+                  : i % 4 === 2
+                  ? 'bg-black'
+                  : 'bg-white border'
+              )}
+              animate={{
+                scale: currentIndex === i ? 1.2 : 1,
+              }}
+              onClick={() => goToSlide(i)}
+              transition={{ duration: 0.15 }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
