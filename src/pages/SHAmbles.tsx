@@ -10,7 +10,7 @@ import {
   Share, Eye, Upload, FileText, Database, Clock, CheckCircle, 
   XCircle, Play, Pause, Settings, HelpCircle, Info
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
@@ -21,6 +21,9 @@ import Navbar from '@/components/layout/Navbar';
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
 const DataUploadWizard = lazy(() => import('@/components/DataUploadWizard'));
 const ProcessingStatus = lazy(() => import('@/components/ProcessingStatus'));
+const FacilityStatistics = lazy(() => import('@/components/FacilityStatistics'));
+const AllocationAnalysis = lazy(() => import('@/components/AllocationAnalysis'));
+const CountyComparison = lazy(() => import('@/components/CountyComparison'));
 
 interface Visualizer {
   id: number;
@@ -34,7 +37,7 @@ interface Visualizer {
   is_active: boolean;
 }
 
-export interface ProcessingJob {
+interface ProcessingJob {
   id: string;
   status: 'processing' | 'completed' | 'failed';
   progress: number;
@@ -52,6 +55,10 @@ export interface ProcessingJob {
   created_at: string;
 }
 
+// URLs for GeoJSON data
+const healthcareGeoJsonUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/kenya_healthcare_enhanced.geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEva2VueWFfaGVhbHRoY2FyZV9lbmhhbmNlZC5nZW9qc29uIiwiaWF0IjoxNzU2MzQxMTY3LCJleHAiOjI1NDQ3NDExNjd9.J-jnvJx1Yk1jd5MH_ndiBhyBgfr_ZKrNrLoTs2WKC38';
+const kenyaBoundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
+
 const SHAmbles: React.FC = () => {
   const [visualizers, setVisualizers] = useState<Visualizer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +73,7 @@ const SHAmbles: React.FC = () => {
   const [showUploadWizard, setShowUploadWizard] = useState(false);
   const [showProcessingStatus, setShowProcessingStatus] = useState(false);
   const [selectedJob, setSelectedJob] = useState<ProcessingJob | null>(null);
+  const [analysisData, setAnalysisData] = useState<any>(null);
   
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -74,6 +82,7 @@ const SHAmbles: React.FC = () => {
   useEffect(() => {
     fetchData();
     fetchProcessingJobs();
+    fetchGeoJsonData();
     
     // Set up interval to check for job updates
     const jobCheckInterval = setInterval(fetchProcessingJobs, 10000);
@@ -106,12 +115,6 @@ const SHAmbles: React.FC = () => {
 
       if (visualizersError) throw visualizersError;
       setVisualizers(visualizersData || []);
-
-      // Find and fetch GeoJSON data if available
-      const leafletVisualizer = visualizersData?.find(v => v.type === 'leaflet');
-      if (leafletVisualizer?.geo_json_url) {
-        await fetchGeoJsonData(leafletVisualizer.geo_json_url);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -121,6 +124,28 @@ const SHAmbles: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchGeoJsonData = async () => {
+    try {
+      // Fetch healthcare facilities data
+      const healthcareResponse = await fetch(healthcareGeoJsonUrl);
+      const healthcareData = await healthcareResponse.json();
+      setHealthcareGeoJsonData(healthcareData);
+      setAnalysisData(healthcareData); // Set analysis data
+
+      // Fetch Kenya boundaries data
+      const boundariesResponse = await fetch(kenyaBoundariesUrl);
+      const boundariesData = await boundariesResponse.json();
+      setKenyaBoundariesData(boundariesData);
+    } catch (error) {
+      console.error('Error fetching GeoJSON data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load healthcare data",
+        variant: "destructive",
+      });
     }
   };
 
@@ -134,26 +159,6 @@ const SHAmbles: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching processing jobs:', error);
-    }
-  };
-
-  const fetchGeoJsonData = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      setHealthcareGeoJsonData(data);
-
-      // Also try to fetch Kenya boundaries if available
-      const boundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
-      try {
-        const boundariesResponse = await fetch(boundariesUrl);
-        const boundariesData = await boundariesResponse.json();
-        setKenyaBoundariesData(boundariesData);
-      } catch (e) {
-        console.log('Could not load boundaries data, using default');
-      }
-    } catch (error) {
-      console.error('Error fetching GeoJSON data:', error);
     }
   };
 
@@ -181,7 +186,7 @@ const SHAmbles: React.FC = () => {
           }),
           onEachFeature: (feature, layer) => {
             if (feature.properties) {
-              const popupContent = `<div class="p-2"><h3 class="font-bold text-lg">${feature.properties.name || 'Administrative Area'}</h3><p><strong>Type:</strong> ${feature.properties.admin_level || 'N/A'}</p></div>`;
+              const popupContent = `<div class="p-2"><h3 class="font-bold text-lg">${feature.properties.name || 'Administrative Area'}</h3><p><strong>Type:</strong> ${feature.properties.admin_level || 'N/A'}</p><p><strong>Facilities:</strong> ${feature.properties.facility_count || '0'}</p></div>`;
               layer.bindPopup(popupContent);
             }
           }
@@ -206,7 +211,7 @@ const SHAmbles: React.FC = () => {
           onEachFeature: (feature, layer) => {
             if (feature.properties) {
               const props = feature.properties;
-              const popupContent = `<div class="p-2 min-w-[250px]"><h3 class="font-bold text-lg">${props.name || 'Unknown Facility'}</h3><p><strong>Type:</strong> ${props.type || 'N/A'}</p><p><strong>County:</strong> ${props.county || 'N/A'}</p><p><strong>Constituency:</strong> ${props.constituency || 'N/A'}</p><p><strong>Owner:</strong> ${props.owner || 'N/A'}</p></div>`;
+              const popupContent = `<div class="p-2 min-w-[250px]"><h3 class="font-bold text-lg">${props.name || 'Unknown Facility'}</h3><p><strong>Type:</strong> ${props.type || 'N/A'}</p><p><strong>County:</strong> ${props.county || 'N/A'}</p><p><strong>Constituency:</strong> ${props.constituency || 'N/A'}</p><p><strong>Owner:</strong> ${props.owner || 'N/A'}</p>${props.money_allocated ? `<p><strong>Allocation:</strong> KES ${props.money_allocated.toLocaleString()}</p>` : ''}${props.allocation_period ? `<p><strong>Period:</strong> ${props.allocation_period}</p>` : ''}</div>`;
               layer.bindPopup(popupContent);
             }
           }
@@ -283,19 +288,13 @@ const SHAmbles: React.FC = () => {
     }
     setMapInitialized(false);
     setTimeout(() => {
-      const leafletVisualizer = visualizers.find(v => v.type === 'leaflet');
-      if (leafletVisualizer?.geo_json_url) {
-        fetchGeoJsonData(leafletVisualizer.geo_json_url);
-      }
+      fetchGeoJsonData();
     }, 100);
   };
 
   const copyGeoJsonUrl = async () => {
-    const leafletVisualizer = visualizers.find(v => v.type === 'leaflet');
-    if (!leafletVisualizer?.geo_json_url) return;
-    
     try {
-      await navigator.clipboard.writeText(leafletVisualizer.geo_json_url);
+      await navigator.clipboard.writeText(healthcareGeoJsonUrl);
       toast({
         title: "URL Copied",
         description: "Healthcare data URL copied to clipboard",
@@ -304,6 +303,50 @@ const SHAmbles: React.FC = () => {
       toast({
         title: "Copy Failed",
         description: "Failed to copy URL to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openInGeoJsonIo = () => {
+    if (!healthcareGeoJsonData) return;
+    try {
+      const jsonString = JSON.stringify(healthcareGeoJsonData);
+      const b64Data = btoa(unescape(encodeURIComponent(jsonString)));
+      const geoJsonIoUrl = `https://geojson.io/#data=data:application/json;base64,${b64Data}&map=6/-0.0236/37.9062`;
+      window.open(geoJsonIoUrl, '_blank');
+      toast({
+        title: "Opening GeoJSON.io",
+        description: "Healthcare facilities data is being loaded in GeoJSON.io",
+      });
+    } catch (error) {
+      console.error('Error opening GeoJSON.io:', error);
+      openDirectGeoJsonIo();
+    }
+  };
+
+  const openDirectGeoJsonIo = () => {
+    const encodedUrl = encodeURIComponent(healthcareGeoJsonUrl);
+    const geoJsonIoUrl = `https://geojson.io/#data=data:text/x-url,${encodedUrl}&map=6/-0.0236/37.9062`;
+    window.open(geoJsonIoUrl, '_blank');
+    toast({
+      title: "Opening GeoJSON.io",
+      description: "Loading healthcare data directly from URL",
+    });
+  };
+
+  const copyGeoJsonData = async () => {
+    if (!healthcareGeoJsonData) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(healthcareGeoJsonData, null, 2));
+      toast({
+        title: "Data Copied",
+        description: "Healthcare GeoJSON data copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy data to clipboard",
         variant: "destructive",
       });
     }
@@ -736,6 +779,53 @@ const SHAmbles: React.FC = () => {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Analysis Sections */}
+          {healthcareGeoJsonData && (
+            <div className="space-y-8">
+              {/* Facility Statistics */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <FacilityStatistics geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+
+              {/* Allocation Analysis */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <AllocationAnalysis geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+
+              {/* County Comparison */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <CountyComparison geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+            </div>
+          )}
 
           {/* Call to Action Section */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-slate-800/80 dark:text-slate-100">
