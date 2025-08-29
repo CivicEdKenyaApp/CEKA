@@ -3,7 +3,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Download, Clock, CheckCircle, XCircle, RefreshCw, FileText, Map, BarChart3, Database } from 'lucide-react';
-import { ProcessingJob } from '@/pages/SHAmbles';
+import { cn } from '@/lib/utils';
+
+export interface ProcessingJob {
+  id: string;
+  status: 'processing' | 'completed' | 'failed';
+  progress: number;
+  message: string;
+  results?: {
+    successful_files: string[];
+    failed_files: { file: string; error: string }[];
+    facility_count: number;
+    administrative_areas: number;
+  };
+  map_path?: string;
+  heatmap_path?: string;
+  report_path?: string;
+  geojson_path?: string;
+  created_at: string;
+}
 
 interface ProcessingStatusProps {
   jobs: ProcessingJob[];

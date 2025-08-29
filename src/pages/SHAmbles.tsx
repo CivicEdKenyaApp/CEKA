@@ -10,7 +10,7 @@ import {
   Share, Eye, Upload, FileText, Database, Clock, CheckCircle, 
   XCircle, Play, Pause, Settings, HelpCircle, Info
 } from 'lucide-react';
-import { supabase } from '@/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
@@ -34,7 +34,7 @@ interface Visualizer {
   is_active: boolean;
 }
 
-interface ProcessingJob {
+export interface ProcessingJob {
   id: string;
   status: 'processing' | 'completed' | 'failed';
   progress: number;

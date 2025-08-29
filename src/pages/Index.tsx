@@ -9,7 +9,7 @@ import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
 import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
-import { supabase } from '@/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
