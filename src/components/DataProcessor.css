@@ -5,31 +5,7 @@
   font-family: Arial, sans-serif;
 }
 
-.tabs {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
-}
-
-.tabs button {
-  padding: 10px 20px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  border-bottom: 3px solid transparent;
-}
-
-.tabs button.active {
-  border-bottom-color: #4CAF50;
-  font-weight: bold;
-}
-
-.tabs button:hover {
-  background-color: #f5f5f5;
-}
-
-.upload-section, .crawl-section {
+.upload-section {
   margin-bottom: 30px;
   padding: 20px;
   border: 1px solid #ddd;
@@ -38,17 +14,14 @@
 }
 
 .upload-section input,
-.upload-section select,
-.crawl-section input,
-.crawl-section select {
+.upload-section select {
   margin: 10px 0;
   padding: 8px;
   width: 100%;
   max-width: 300px;
 }
 
-.upload-section button,
-.crawl-section button {
+.upload-section button {
   padding: 10px 15px;
   background-color: #4CAF50;
   color: white;
@@ -57,17 +30,9 @@
   cursor: pointer;
 }
 
-.upload-section button:disabled,
-.crawl-section button:disabled {
+.upload-section button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.status-section {
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
 }
 
 .map-section {
