@@ -1091,6 +1091,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           display_order: number | null
+          geo_json_url: string | null
           id: number
           is_active: boolean | null
           title: string
@@ -1103,6 +1104,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          geo_json_url?: string | null
           id?: number
           is_active?: boolean | null
           title: string
@@ -1115,6 +1117,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          geo_json_url?: string | null
           id?: number
           is_active?: boolean | null
           title?: string
