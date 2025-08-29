@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -41,7 +41,7 @@ export default function MegaProjectCarousel({
   slides: propSlides, 
   className, 
   autoPlayMs = 4500, 
-  baseWidth = 300,
+  baseWidth = 280,
   pauseOnHover = true,
   loop = true,
   round = false,
@@ -53,7 +53,7 @@ export default function MegaProjectCarousel({
   const [error, setError] = useState<string | null>(null);
   
   const containerPadding = 16;
-  const itemWidth = baseWidth - containerPadding * 2;
+  const itemWidth = 250;
   const trackItemOffset = itemWidth + GAP;
   
   const carouselItems = loop && slides.length > 1 ? [...slides, slides[0]] : slides;
@@ -61,6 +61,7 @@ export default function MegaProjectCarousel({
   const x = useMotionValue(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
 
   useEffect(() => {
     if (propSlides) return;
@@ -116,6 +117,11 @@ export default function MegaProjectCarousel({
     };
   }, [autoPlayMs, isHovered, isDragging, loop, slides.length]);
 
+  const handleDragStart = useCallback((event) => {
+    setIsDragging(true);
+    dragStartX.current = event.clientX;
+  }, []);
+
   const handleDragEnd = useCallback((_, info) => {
     setIsDragging(false);
     const offset = info.offset.x;
@@ -134,6 +140,13 @@ export default function MegaProjectCarousel({
       setCurrentIndex(prev => Math.max(0, Math.min(prev + direction, slides.length - 1)));
     }
   }, [currentIndex, loop, slides.length, trackItemOffset, x]);
+
+  const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
+    // Only trigger click if it wasn't a drag gesture
+    if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
+      slide.onClick?.();
+    }
+  }, [isDragging]);
 
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
@@ -165,16 +178,16 @@ export default function MegaProjectCarousel({
 
   return (
     <div
-      className={cn('relative overflow-hidden', className, round && 'rounded-full')}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={cn('relative overflow-hidden mx-auto', className, round && 'rounded-full')}
+      onMouseEnter={() => pauseOnHover && setIsHovered(true)}
+      onMouseLeave={() => pauseOnHover && setIsHovered(false)}
       style={{
         width: `${baseWidth}px`,
         ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
       }}
     >
       <motion.div
-        className="flex"
+        className="flex cursor-grab active:cursor-grabbing"
         drag="x"
         dragConstraints={{
           left: -(carouselItems.length - 1) * trackItemOffset,
@@ -185,7 +198,7 @@ export default function MegaProjectCarousel({
           width: itemWidth,
           gap: `${GAP}px`,
         }}
-        onDragStart={() => setIsDragging(true)}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         animate={{ x: -currentIndex * trackItemOffset }}
         transition={SPRING_OPTIONS}
@@ -199,7 +212,7 @@ export default function MegaProjectCarousel({
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-xl p-6 md:p-8 backdrop-blur-sm border transition-all flex flex-col justify-between cursor-grab',
+                'rounded-xl p-6 backdrop-blur-sm border transition-all flex flex-col justify-between',
                 colorClassMap[slide.color],
                 theme === 'dark' ? 'border-primary/20' : 'border-primary/10',
                 'hover:shadow-lg flex-shrink-0',
@@ -215,29 +228,38 @@ export default function MegaProjectCarousel({
               }}
               transition={SPRING_OPTIONS}
               onPointerDown={(e) => e.preventDefault()}
-              onClick={() => !isDragging && slide.onClick?.()}
+              onClick={(e) => handleCardClick(slide, index, e)}
             >
-              {slide.icon && (
-                <div className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center mb-4",
-                  round && "mx-auto"
-                )}>
-                  {slide.icon}
+              <div className={cn("flex flex-col h-full justify-center items-center text-center", 
+                round && "justify-center")}>
+                {slide.icon && (
+                  <div className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center mb-4",
+                    round && "mx-auto"
+                  )}>
+                    {slide.icon}
+                  </div>
+                )}
+                
+                <div className="flex flex-col items-center">
+                  <h3 className="text-lg font-semibold mb-2">{slide.title}</h3>
+                  {slide.description && (
+                    <p className="text-sm opacity-90 mb-4">{slide.description}</p>
+                  )}
                 </div>
-              )}
-              
-              <div className={cn(round && "flex flex-col items-center")}>
-                <h3 className="text-xl md:text-2xl font-semibold">{slide.title}</h3>
-                {slide.description && (
-                  <p className="mt-2 text-sm md:text-base opacity-90">{slide.description}</p>
+                
+                {slide.ctaText && (
+                  <button 
+                    className="mt-auto mx-auto px-4 py-2 rounded-lg bg-background/60 border text-sm hover:bg-background/80 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      slide.onClick?.();
+                    }}
+                  >
+                    {slide.ctaText}
+                  </button>
                 )}
               </div>
-              
-              {slide.ctaText && (
-                <div className="mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-background/60 border self-start">
-                  <span className="text-sm">{slide.ctaText}</span>
-                </div>
-              )}
             </motion.div>
           );
         })}
