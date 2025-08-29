@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,7 +8,9 @@ import {
   ChevronDown, ChevronUp, Expand, Shrink, ZoomIn, ZoomOut, 
   RefreshCw, Copy, Check, Heart, AlertTriangle, Users, Download, 
   Share, Eye, Upload, FileText, Database, Clock, CheckCircle, 
-  XCircle, Play, Pause, Settings, HelpCircle, Info
+  XCircle, Play, Pause, Settings, HelpCircle, Info,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -16,6 +18,14 @@ import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/layout/Navbar';
+
+// Fix for default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // Lazy load components for better performance
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
@@ -66,6 +76,7 @@ const SHAmbles: React.FC = () => {
   const [showUploadWizard, setShowUploadWizard] = useState(false);
   const [showProcessingStatus, setShowProcessingStatus] = useState(false);
   const [selectedJob, setSelectedJob] = useState<ProcessingJob | null>(null);
+  const [mapLayers, setMapLayers] = useState<Record<string, L.Layer>>({});
   
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -171,7 +182,7 @@ const SHAmbles: React.FC = () => {
 
       // Add Kenya administrative boundaries if available
       if (kenyaBoundariesData) {
-        L.geoJSON(kenyaBoundariesData, {
+        const boundariesLayer = L.geoJSON(kenyaBoundariesData, {
           style: () => ({
             fillColor: '#f0f0f0',
             weight: 2,
@@ -186,11 +197,12 @@ const SHAmbles: React.FC = () => {
             }
           }
         }).addTo(mapRef.current);
+        setMapLayers(prev => ({ ...prev, boundaries: boundariesLayer }));
       }
 
       // Add healthcare facilities layer
       if (healthcareGeoJsonData) {
-        L.geoJSON(healthcareGeoJsonData, {
+        const facilitiesLayer = L.geoJSON(healthcareGeoJsonData, {
           pointToLayer: (feature, latlng) => {
             const facilityType = feature.properties?.type || 'Other';
             const markerColor = getMarkerColor(facilityType);
@@ -211,6 +223,7 @@ const SHAmbles: React.FC = () => {
             }
           }
         }).addTo(mapRef.current);
+        setMapLayers(prev => ({ ...prev, facilities: facilitiesLayer }));
       }
 
       // Add legend
@@ -445,6 +458,16 @@ const SHAmbles: React.FC = () => {
     });
   };
 
+  const toggleLayerVisibility = (layerKey: string, visible: boolean) => {
+    if (mapRef.current && mapLayers[layerKey]) {
+      if (visible) {
+        mapRef.current.addLayer(mapLayers[layerKey]);
+      } else {
+        mapRef.current.removeLayer(mapLayers[layerKey]);
+      }
+    }
+  };
+
   const categories = ['all', ...new Set(visualizers.map(v => v.category))].filter(Boolean) as string[];
   const filteredVisualizers = activeTab === 'all' ? visualizers : visualizers.filter(v => v.category === activeTab);
 
@@ -478,6 +501,29 @@ const SHAmbles: React.FC = () => {
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </Button>
             </div>
+            <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-md">
+              <h4 className="text-sm font-semibold mb-2">Map Layers</h4>
+              <div className="space-y-1">
+                <label className="flex items-center text-xs">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked 
+                    onChange={(e) => toggleLayerVisibility('facilities', e.target.checked)}
+                    className="mr-2"
+                  />
+                  Healthcare Facilities
+                </label>
+                <label className="flex items-center text-xs">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked 
+                    onChange={(e) => toggleLayerVisibility('boundaries', e.target.checked)}
+                    className="mr-2"
+                  />
+                  Administrative Boundaries
+                </label>
+              </div>
+            </div>
           </div>
         );
       case 'interactive':
@@ -496,10 +542,10 @@ const SHAmbles: React.FC = () => {
             </div>
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
-                <ZoomOut className="h-4 w-4" />
+                <Minus className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
-                <ZoomIn className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
@@ -522,10 +568,10 @@ const SHAmbles: React.FC = () => {
             />
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
-                <ZoomOut className="h-4 w-4" />
+                <Minus className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
-                <ZoomIn className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
@@ -746,12 +792,22 @@ const SHAmbles: React.FC = () => {
                 Your support helps us continue our mission of tracking healthcare resource allocation and ensuring equitable distribution across Kenya.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700">
+                <Button 
+                  size="lg" 
+                  className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700"
+                  onClick={() => window.open('https://ko-fi.com/civiceducationke', '_blank')}
+                >
                   <Heart className="mr-2" />
                   Support Our Work
                 </Button>
-                <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10">
-                  Learn More
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
+                  onClick={() => setShowUploadWizard(true)}
+                >
+                  <Upload className="mr-2" />
+                  Upload Data
                 </Button>
               </div>
             </CardContent>
