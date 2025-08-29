@@ -1,20 +1,31 @@
-from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import os
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import uuid
 import threading
 from pathlib import Path
 
-from config import Config
+# Import your custom modules
 from utils.file_handler import FileHandler
 from utils.data_processor import DataProcessor
 from utils.geo_analyzer import GeoAnalyzer
 from utils.visualization_engine import VisualizationEngine
 from utils.report_generator import ReportGenerator
 
-app = Flask(__name__)
-app.config.from_object(Config)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# Store processing jobs (in production, use a proper task queue like Celery)
+# Configure app
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-please-change-in-production')
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['PROCESSED_DIR'] = 'processed_data'
+app.config['REPORTS_DIR'] = os.path.join('processed_data', 'reports')
+app.config['VISUALIZATIONS_DIR'] = os.path.join('processed_data', 'visualizations')
+
+# Create directories if they don't exist
+for directory in [app.config['UPLOAD_FOLDER'], app.config['PROCESSED_DIR'], 
+                  app.config['REPORTS_DIR'], app.config['VISUALIZATIONS_DIR']]:
+    Path(directory).mkdir(exist_ok=True)
+
+# Store processing jobs
 processing_jobs = {}
 
 @app.route('/')
@@ -145,33 +156,33 @@ def process_files(job_id, files):
         processing_jobs[job_id]['progress'] = 70
         processing_jobs[job_id]['message'] = 'Generating visualizations'
         
-        visualization_dir = app.config['VISUALIZATIONS_DIR'] / job_id
-        visualization_dir.mkdir(exist_ok=True)
+        visualization_dir = os.path.join(app.config['VISUALIZATIONS_DIR'], job_id)
+        Path(visualization_dir).mkdir(exist_ok=True)
         
         viz_engine = VisualizationEngine()
         map_path = viz_engine.create_interactive_map(
             enhanced_data, facility_data, 
-            str(visualization_dir / 'interactive_map.html')
+            os.path.join(visualization_dir, 'interactive_map.html')
         )
         heatmap_path = viz_engine.create_heatmap(
             facility_data,
-            str(visualization_dir / 'heatmap.html')
+            os.path.join(visualization_dir, 'heatmap.html')
         )
         
         # Step 6: Generate reports
         processing_jobs[job_id]['progress'] = 80
         processing_jobs[job_id]['message'] = 'Generating reports'
         
-        report_dir = app.config['REPORTS_DIR'] / job_id
-        report_dir.mkdir(exist_ok=True)
+        report_dir = os.path.join(app.config['REPORTS_DIR'], job_id)
+        Path(report_dir).mkdir(exist_ok=True)
         
         report_gen = ReportGenerator()
         json_report_path, text_report_path = report_gen.generate_comprehensive_report(
-            enhanced_data, facility_data, spatial_analysis, str(report_dir)
+            enhanced_data, facility_data, spatial_analysis, report_dir
         )
         
         # Step 7: Save enhanced GeoJSON
-        geojson_path = str(report_dir / 'enhanced_data.geojson')
+        geojson_path = os.path.join(report_dir, 'enhanced_data.geojson')
         enhanced_data.to_file(geojson_path, driver='GeoJSON')
         
         # Update job status
@@ -195,4 +206,5 @@ def process_files(job_id, files):
         processing_jobs[job_id]['error'] = str(e)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
