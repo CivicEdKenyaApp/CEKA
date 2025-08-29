@@ -1,9 +1,15 @@
 import os
+import sys
+from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import uuid
 import threading
-from pathlib import Path
 
+# Add the current directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+
+# Import your custom modules
 # Import your custom modules
 from utils.file_handler import FileHandler
 from utils.data_processor import DataProcessor
@@ -11,19 +17,26 @@ from utils.geo_analyzer import GeoAnalyzer
 from utils.visualization_engine import VisualizationEngine
 from utils.report_generator import ReportGenerator
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+# Set up absolute paths
+BASE_DIR = Path(__file__).parent
+TEMPLATE_DIR = BASE_DIR / 'templates'
+STATIC_DIR = BASE_DIR / 'static'
+
+app = Flask(__name__, 
+            template_folder=str(TEMPLATE_DIR),
+            static_folder=str(STATIC_DIR))
 
 # Configure app
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-please-change-in-production')
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['PROCESSED_DIR'] = 'processed_data'
-app.config['REPORTS_DIR'] = os.path.join('processed_data', 'reports')
-app.config['VISUALIZATIONS_DIR'] = os.path.join('processed_data', 'visualizations')
+app.config['UPLOAD_FOLDER'] = str(BASE_DIR / 'uploads')
+app.config['PROCESSED_DIR'] = str(BASE_DIR / 'processed_data')
+app.config['REPORTS_DIR'] = str(BASE_DIR / 'processed_data' / 'reports')
+app.config['VISUALIZATIONS_DIR'] = str(BASE_DIR / 'processed_data' / 'visualizations')
 
 # Create directories if they don't exist
 for directory in [app.config['UPLOAD_FOLDER'], app.config['PROCESSED_DIR'], 
                   app.config['REPORTS_DIR'], app.config['VISUALIZATIONS_DIR']]:
-    Path(directory).mkdir(exist_ok=True)
+    Path(directory).mkdir(exist_ok=True, parents=True)
 
 # Store processing jobs
 processing_jobs = {}
@@ -157,15 +170,17 @@ def process_files(job_id, files):
         processing_jobs[job_id]['message'] = 'Generating visualizations'
         
         visualization_dir = os.path.join(app.config['VISUALIZATIONS_DIR'], job_id)
-        Path(visualization_dir).mkdir(exist_ok=True)
+        Path(visualization_dir).mkdir(exist_ok=True, parents=True)
         
         viz_engine = VisualizationEngine()
         map_path = viz_engine.create_interactive_map(
             enhanced_data, facility_data, 
             os.path.join(visualization_dir, 'interactive_map.html')
+            os.path.join(visualization_dir, 'interactive_map.html')
         )
         heatmap_path = viz_engine.create_heatmap(
             facility_data,
+            os.path.join(visualization_dir, 'heatmap.html')
             os.path.join(visualization_dir, 'heatmap.html')
         )
         
@@ -174,14 +189,16 @@ def process_files(job_id, files):
         processing_jobs[job_id]['message'] = 'Generating reports'
         
         report_dir = os.path.join(app.config['REPORTS_DIR'], job_id)
-        Path(report_dir).mkdir(exist_ok=True)
+        Path(report_dir).mkdir(exist_ok=True, parents=True)
         
         report_gen = ReportGenerator()
         json_report_path, text_report_path = report_gen.generate_comprehensive_report(
             enhanced_data, facility_data, spatial_analysis, report_dir
+            enhanced_data, facility_data, spatial_analysis, report_dir
         )
         
         # Step 7: Save enhanced GeoJSON
+        geojson_path = os.path.join(report_dir, 'enhanced_data.geojson')
         geojson_path = os.path.join(report_dir, 'enhanced_data.geojson')
         enhanced_data.to_file(geojson_path, driver='GeoJSON')
         
@@ -201,10 +218,13 @@ def process_files(job_id, files):
         processing_jobs[job_id]['geojson_path'] = geojson_path
         
     except Exception as e:
-        app.logger.error(f"Error processing job {job_id}: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error processing job {job_id}: {error_details}")
         processing_jobs[job_id]['status'] = 'failed'
         processing_jobs[job_id]['error'] = str(e)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
