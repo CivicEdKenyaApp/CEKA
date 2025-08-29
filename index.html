@@ -18,20 +18,31 @@
     
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
+      
       script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in;
+      
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      
       img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com;
+      
       font-src 'self' data: https://fonts.gstatic.com;
+      
       connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com wss://*.supabase.co wss://*.supabase.in;
+      
       media-src 'self' blob:;
+      
       object-src 'none';
-      frame-src 'self' https://www.youtube.com https://player.vimeo.com;
+      
+      frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr;
+      
       base-uri 'self';
+      
       form-action 'self';
+      
       upgrade-insecure-requests;
       ">
-</head>
-
+  </head>
+  
   <!-- Favicon and App Icons -->
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.imgur.com/NvBmNPk.png" />
