@@ -32,10 +32,10 @@ const colorClassMap: Record<Slide['color'], string> = {
   'kenya-white': 'bg-white/30 text-foreground',
 };
 
-const DRAG_BUFFER = 0;
+const DRAG_BUFFER = 50;
 const VELOCITY_THRESHOLD = 500;
 const GAP = 16;
-const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 };
+const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 };
 
 export default function MegaProjectCarousel({ 
   slides: propSlides, 
@@ -101,7 +101,7 @@ export default function MegaProjectCarousel({
     if (slides.length === 0) return;
     
     let timer: NodeJS.Timeout;
-    if (autoPlayMs > 0 && !isHovered) {
+    if (autoPlayMs > 0 && !isHovered && !isResetting) {
       timer = setInterval(() => {
         setCurrentIndex((prev) => {
           if (prev === slides.length - 1 && loop) {
@@ -117,7 +117,7 @@ export default function MegaProjectCarousel({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length]);
+  }, [autoPlayMs, isHovered, loop, slides.length, carouselItems.length, isResetting]);
 
   const effectiveTransition = isResetting ? { duration: 0 } : SPRING_OPTIONS;
 
@@ -133,18 +133,23 @@ export default function MegaProjectCarousel({
   const handleDragEnd = (_, info) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
-    if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      if (loop && currentIndex === slides.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        setCurrentIndex((prev) => Math.min(prev + 1, carouselItems.length - 1));
-      }
-    } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
-      if (loop && currentIndex === 0) {
-        setCurrentIndex(slides.length - 1);
-      } else {
-        setCurrentIndex((prev) => Math.max(prev - 1, 0));
-      }
+    
+    if (Math.abs(offset) > DRAG_BUFFER || Math.abs(velocity) > VELOCITY_THRESHOLD) {
+      const direction = offset > 0 || velocity > 0 ? -1 : 1;
+      
+      setCurrentIndex((prev) => {
+        if (direction === 1) {
+          if (prev >= carouselItems.length - 1) {
+            return loop ? 0 : prev;
+          }
+          return prev + 1;
+        } else {
+          if (prev <= 0) {
+            return loop ? carouselItems.length - 1 : 0;
+          }
+          return prev - 1;
+        }
+      });
     }
   };
 
@@ -183,61 +188,51 @@ export default function MegaProjectCarousel({
 
   return (
     <div
-      className={cn('relative', className, round && 'rounded-full')}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={cn('relative overflow-hidden', className, round && 'rounded-full')}
+      onMouseEnter={() => pauseOnHover && setIsHovered(true)}
+      onMouseLeave={() => pauseOnHover && setIsHovered(false)}
       style={{
         width: `${baseWidth}px`,
         ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
       }}
     >
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background via-background/60 to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent z-10" />
 
       <motion.div
-        className="carousel-track flex"
+        className="carousel-track flex cursor-grab active:cursor-grabbing"
         drag="x"
         {...dragProps}
         style={{
-          width: itemWidth,
           gap: `${GAP}px`,
-          perspective: 1000,
-          perspectiveOrigin: `${currentIndex * trackItemOffset + itemWidth / 2}px 50%`,
           x,
         }}
         onDragEnd={handleDragEnd}
-        animate={{ x: -(currentIndex * trackItemOffset) }}
+        animate={{ x: -currentIndex * trackItemOffset }}
         transition={effectiveTransition}
         onAnimationComplete={handleAnimationComplete}
       >
         {carouselItems.map((slide, index) => {
-          const range = [
-            -(index + 1) * trackItemOffset,
-            -index * trackItemOffset,
-            -(index - 1) * trackItemOffset,
-          ];
-          const outputRange = [90, 0, -90];
-          const rotateY = useTransform(x, range, outputRange, { clamp: false });
+          const isActive = currentIndex === index;
+          const isAdjacent = Math.abs(currentIndex - index) === 1;
           
           return (
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-xl p-6 md:p-8 backdrop-blur-sm border transition-all flex flex-col justify-between cursor-grab',
+                'rounded-xl p-6 md:p-8 border transition-all flex flex-col justify-between flex-shrink-0',
                 colorClassMap[slide.color],
                 theme === 'dark' ? 'border-primary/20' : 'border-primary/10',
-                'hover:shadow-lg',
                 round && 'rounded-full justify-center items-center text-center'
               )}
               style={{
                 width: itemWidth,
                 height: round ? itemWidth : 'auto',
-                rotateY: rotateY,
-                ...(round && { borderRadius: '50%' }),
+                filter: isActive ? 'none' : isAdjacent ? 'blur(2px)' : 'blur(4px)',
+                opacity: isActive ? 1 : isAdjacent ? 0.8 : 0.6,
+                scale: isActive ? 1 : 0.95,
               }}
-              transition={effectiveTransition}
+              transition={SPRING_OPTIONS}
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => slide.onClick?.()}
             >
