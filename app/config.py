@@ -25,3 +25,11 @@ class Config:
     
     # Secret key for session management
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-please-change-in-production'
+    
+    # Railway-specific settings
+    @staticmethod
+    def init_app(app):
+        # Ensure upload directories exist
+        for directory in [Config.UPLOAD_FOLDER, Config.PROCESSED_DIR, 
+                         Config.REPORTS_DIR, Config.VISUALIZATIONS_DIR]:
+            directory.mkdir(exist_ok=True)
