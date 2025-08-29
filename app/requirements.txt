@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 Flask==3,<4
+=======
+Flask==3.0,<4
+>>>>>>> 37b158c (Python changes)
 flask-cors>=4.0,<5
 pandas==2.0.3
 geopandas==0.13.2
