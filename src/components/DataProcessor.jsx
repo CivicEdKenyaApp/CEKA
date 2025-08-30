@@ -11,6 +11,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Base URL for API depending on environment
+const API_BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000/api'
+    : 'https://civicedkenya.vercel.app/api';
+
 const DataProcessor = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [dataType, setDataType] = useState('healthcare');
@@ -24,19 +30,20 @@ const DataProcessor = () => {
   useEffect(() => {
     // Initialize map
     const mapInstance = L.map('map').setView([-0.0236, 37.9062], 6);
-    
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapInstance);
-    
+
     setMap(mapInstance);
-    
+
     // Load Kenya GeoJSON
     loadKenyaGeoJSON(mapInstance);
-    
+
     // Load datasets
     loadDatasets();
-    
+
     // Clean up on component unmount
     return () => {
       mapInstance.remove();
@@ -45,17 +52,17 @@ const DataProcessor = () => {
 
   const loadKenyaGeoJSON = async (mapInstance) => {
     try {
-      const response = await axios.get('/api/kenya-geojson');
+      const response = await axios.get(`${API_BASE_URL}/kenya-geojson`);
       const kenyaLayer = L.geoJSON(response.data, {
         style: {
           color: '#3388ff',
           weight: 2,
           opacity: 0.7,
-          fillOpacity: 0.1
-        }
+          fillOpacity: 0.1,
+        },
       }).addTo(mapInstance);
-      
-      setMapLayers(prev => ({ ...prev, kenya: kenyaLayer }));
+
+      setMapLayers((prev) => ({ ...prev, kenya: kenyaLayer }));
     } catch (error) {
       console.error('Error loading Kenya GeoJSON:', error);
     }
@@ -83,7 +90,7 @@ const DataProcessor = () => {
     formData.append('data_type', dataType);
 
     try {
-      const response = await axios.post('/api/upload', formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -95,15 +102,17 @@ const DataProcessor = () => {
       // Poll for status updates
       const checkStatus = async () => {
         try {
-          const statusResponse = await axios.get(`/api/status/${response.data.session_id}`);
-          
+          const statusResponse = await axios.get(
+            `${API_BASE_URL}/status/${response.data.session_id}`
+          );
+
           if (statusResponse.data.status === 'processing') {
             setTimeout(checkStatus, 2000); // Check again after 2 seconds
           } else if (statusResponse.data.success) {
             setUploadStatus('Processing completed successfully!');
             setProcessing(false);
             loadDatasets(); // Refresh dataset list
-            
+
             // Add the new dataset to the map
             if (statusResponse.data.files.combined_geojson) {
               addDatasetToMap(response.data.session_id);
@@ -127,31 +136,29 @@ const DataProcessor = () => {
 
   const addDatasetToMap = async (sessionId) => {
     try {
-      const response = await axios.get(`/api/geojson/${sessionId}`);
-      
+      const response = await axios.get(`${API_BASE_URL}/geojson/${sessionId}`);
+
       // Remove existing layer for this dataset if it exists
       if (mapLayers[sessionId]) {
         map.removeLayer(mapLayers[sessionId]);
       }
-      
+
       // Create a new layer for this dataset
       const newLayer = L.geoJSON(response.data, {
         pointToLayer: (feature, latlng) => {
-          // Custom markers based on facility type
           const type = feature.properties.type || 'Other';
           const color = getColorForType(type);
-          
+
           return L.marker(latlng, {
             icon: L.divIcon({
               className: 'custom-marker',
               html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
               iconSize: [16, 16],
-              iconAnchor: [8, 8]
-            })
+              iconAnchor: [8, 8],
+            }),
           });
         },
         onEachFeature: (feature, layer) => {
-          // Popup content
           const props = feature.properties;
           const popupContent = `
             <div>
@@ -162,14 +169,12 @@ const DataProcessor = () => {
               <p><strong>Data Source:</strong> ${props.data_source || 'N/A'}</p>
             </div>
           `;
-          
+
           layer.bindPopup(popupContent);
-        }
+        },
       }).addTo(map);
-      
-      // Store the layer reference
-      setMapLayers(prev => ({ ...prev, [sessionId]: newLayer }));
-      
+
+      setMapLayers((prev) => ({ ...prev, [sessionId]: newLayer }));
     } catch (error) {
       console.error('Error adding dataset to map:', error);
     }
@@ -177,24 +182,23 @@ const DataProcessor = () => {
 
   const getColorForType = (type) => {
     const colorMap = {
-      'Hospital': 'red',
+      Hospital: 'red',
       'Health Center': 'blue',
-      'Dispensary': 'green',
-      'Clinic': 'purple',
-      'Pharmacy': 'orange',
-      'Laboratory': 'gray',
-      'Other': 'black'
+      Dispensary: 'green',
+      Clinic: 'purple',
+      Pharmacy: 'orange',
+      Laboratory: 'gray',
+      Other: 'black',
     };
-    
+
     return colorMap[type] || 'black';
   };
 
   const loadDatasets = async () => {
     try {
-      const response = await axios.get('/api/datasets');
+      const response = await axios.get(`${API_BASE_URL}/datasets`);
       setDatasets(response.data.datasets);
-      
-      // Add all datasets to the map
+
       for (const dataset of response.data.datasets) {
         if (dataset.has_geojson) {
           addDatasetToMap(dataset.session_id);
@@ -207,23 +211,24 @@ const DataProcessor = () => {
 
   const downloadFile = async (sessionId, fileType) => {
     try {
-      const response = await axios.get(`/api/download/${sessionId}/${fileType}`, {
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/download/${sessionId}/${fileType}`,
+        {
+          responseType: 'blob',
+        }
+      );
 
-      // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      
-      // Set appropriate file extension
+
       const extensions = {
-        'cleaned': 'csv',
-        'geojson': 'geojson',
-        'report': 'json',
-        'summary': 'txt'
+        cleaned: 'csv',
+        geojson: 'geojson',
+        report: 'json',
+        summary: 'txt',
       };
-      
+
       link.setAttribute('download', `processed_data.${extensions[fileType]}`);
       document.body.appendChild(link);
       link.click();
@@ -246,7 +251,7 @@ const DataProcessor = () => {
   return (
     <div className="data-processor">
       <h2>Kenya Healthcare Data Processing</h2>
-      
+
       <div className="upload-section">
         <h3>Upload New Data</h3>
         <div>
@@ -277,18 +282,23 @@ const DataProcessor = () => {
       <div className="datasets-section">
         <h3>Processed Datasets</h3>
         <button onClick={loadDatasets}>Refresh List</button>
-        
+
         <div className="datasets-list">
-          {datasets.map(dataset => (
+          {datasets.map((dataset) => (
             <div key={dataset.session_id} className="dataset-item">
-              <h4>{dataset.data_type} - {new Date(dataset.processed_date).toLocaleString()}</h4>
+              <h4>
+                {dataset.data_type} -{' '}
+                {new Date(dataset.processed_date).toLocaleString()}
+              </h4>
               <p>Records: {dataset.total_records}</p>
               <div className="dataset-actions">
                 <label>
-                  <input 
-                    type="checkbox" 
-                    defaultChecked 
-                    onChange={(e) => toggleLayerVisibility(dataset.session_id, e.target.checked)}
+                  <input
+                    type="checkbox"
+                    defaultChecked
+                    onChange={(e) =>
+                      toggleLayerVisibility(dataset.session_id, e.target.checked)
+                    }
                   />
                   Show on Map
                 </label>
