@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import uuid
 import threading
+from flask_cors import CORS   # <-- ADD THIS
 
 # Add the current directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,16 @@ STATIC_DIR = BASE_DIR / 'static'
 app = Flask(__name__,
             template_folder=str(TEMPLATE_DIR),
             static_folder=str(STATIC_DIR))
+
+# Enable CORS for your frontend (Vercel + local dev)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://civicedkenya.vercel.app",   # production React frontend on Vercel
+            "http://localhost:3000"              # local React dev frontend
+        ]
+    }
+})
 
 # Configure app
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-please-change-in-production')
