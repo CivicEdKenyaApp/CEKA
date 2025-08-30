@@ -69,8 +69,8 @@ export interface ProcessingJob {
 }
 
 // URLs for GeoJSON data
-const healthcareGeoJsonUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson';
-const kenyaBoundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voter%20Data.geojson';
+const healthcareGeoJsonUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/kenya_healthcare_enhanced.geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEva2VueWFfaGVhbHRoY2FyZV9lbmhhbmNlZC5nZW9qc29uIiwiaWF0IjoxNzU2NTcxMzg2LCJleHAiOjI1NDQ5NzEzODZ9.t4eQD9V4uoU4rtXQvlNWS-IzvCInQOKseILJVdg3At0';
+const kenyaBoundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voter%20Data.geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlciBEYXRhLmdlb2pzb24iLCJpYXQiOjE3NTY1NzE0MzEsImV4cCI6MjU0NDk3MTQzMX0.lrSlSF3u75j38Obc2lQS7BggpnBSmC2f4-GvEZ_73-A';
 
 const SHAmbles: React.FC = () => {
   const [visualizers, setVisualizers] = useState<Visualizer[]>([]);
