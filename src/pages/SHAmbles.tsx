@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,29 +8,22 @@ import {
   ChevronDown, ChevronUp, Expand, Shrink, ZoomIn, ZoomOut, 
   RefreshCw, Copy, Check, Heart, AlertTriangle, Users, Download, 
   Share, Eye, Upload, FileText, Database, Clock, CheckCircle, 
-  XCircle, Play, Pause, Settings, HelpCircle, Info,
-  Plus,
-  Minus
+  XCircle, Play, Pause, Settings, HelpCircle, Info
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/layout/Navbar';
 
-// Fix for default markers in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
 // Lazy load components for better performance
 const DonationWidget = lazy(() => import('@/components/DonationWidget'));
 const DataUploadWizard = lazy(() => import('@/components/DataUploadWizard'));
 const ProcessingStatus = lazy(() => import('@/components/ProcessingStatus'));
+const FacilityStatistics = lazy(() => import('@/components/FacilityStatistics'));
+const AllocationAnalysis = lazy(() => import('@/components/AllocationAnalysis'));
+const CountyComparison = lazy(() => import('@/components/CountyComparison'));
 
 interface Visualizer {
   id: number;
@@ -44,23 +37,27 @@ interface Visualizer {
   is_active: boolean;
 }
 
-export interface ProcessingJob {
+interface ProcessingJob {
   id: string;
-  status: 'processing' | 'completed' | 'failed';
+  user_id: string;
+  job_name: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
-  message: string;
-  results?: {
-    successful_files: string[];
-    failed_files: { file: string; error: string }[];
-    facility_count: number;
-    administrative_areas: number;
-  };
-  map_path?: string;
-  heatmap_path?: string;
-  report_path?: string;
-  geojson_path?: string;
+  current_step: string | null;
+  input_files: any[];
+  input_urls: any[];
+  output_files: Record<string, string>;
+  error_message: string | null;
+  processing_logs: any[];
+  expires_at: string;
   created_at: string;
+  updated_at: string;
+  completed_at: string | null;
 }
+
+// URLs for GeoJSON data
+const healthcareGeoJsonUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/kenya_healthcare_enhanced.geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEva2VueWFfaGVhbHRoY2FyZV9lbmhhbmNlZC5nZW9qc29uIiwiaWF0IjoxNzU2MzQxMTY3LCJleHAiOjI1NDQ3NDExNjd9.J-jnvJx1Yk1jd5MH_ndiBhyBgfr_ZKrNrLoTs2WKC38';
+const kenyaBoundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRfVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
 
 const SHAmbles: React.FC = () => {
   const [visualizers, setVisualizers] = useState<Visualizer[]>([]);
@@ -76,33 +73,79 @@ const SHAmbles: React.FC = () => {
   const [showUploadWizard, setShowUploadWizard] = useState(false);
   const [showProcessingStatus, setShowProcessingStatus] = useState(false);
   const [selectedJob, setSelectedJob] = useState<ProcessingJob | null>(null);
-  const [mapLayers, setMapLayers] = useState<Record<string, L.Layer>>({});
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    
+    getCurrentUser();
     fetchData();
     fetchProcessingJobs();
+    fetchGeoJsonData();
     
-    // Set up interval to check for job updates
-    const jobCheckInterval = setInterval(fetchProcessingJobs, 10000);
+    // Set up real-time subscription for processing jobs
+    const processingJobsSubscription = supabase
+      .channel('processing-jobs-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'processing_jobs',
+          filter: userId ? `user_id=eq.${userId}` : undefined
+        }, 
+        (payload) => {
+          handleProcessingJobUpdate(payload);
+        }
+      )
+      .subscribe();
     
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
-      clearInterval(jobCheckInterval);
+      processingJobsSubscription.unsubscribe();
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (healthcareGeoJsonData && kenyaBoundariesData && mapContainerRef.current && !mapInitialized) {
       initializeMap();
     }
   }, [healthcareGeoJsonData, kenyaBoundariesData, mapInitialized]);
+
+  const handleProcessingJobUpdate = (payload: any) => {
+    if (payload.eventType === 'INSERT') {
+      setProcessingJobs(prev => [payload.new as ProcessingJob, ...prev]);
+    } else if (payload.eventType === 'UPDATE') {
+      setProcessingJobs(prev => 
+        prev.map(job => job.id === payload.new.id ? payload.new as ProcessingJob : job)
+      );
+      
+      // Update selected job if it's the current one
+      if (selectedJob && selectedJob.id === payload.new.id) {
+        setSelectedJob(payload.new as ProcessingJob);
+      }
+    } else if (payload.eventType === 'DELETE') {
+      setProcessingJobs(prev => prev.filter(job => job.id !== payload.old.id));
+      
+      // Clear selected job if it was deleted
+      if (selectedJob && selectedJob.id === payload.old.id) {
+        setSelectedJob(null);
+      }
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -117,12 +160,6 @@ const SHAmbles: React.FC = () => {
 
       if (visualizersError) throw visualizersError;
       setVisualizers(visualizersData || []);
-
-      // Find and fetch GeoJSON data if available
-      const leafletVisualizer = visualizersData?.find(v => v.type === 'leaflet');
-      if (leafletVisualizer?.geo_json_url) {
-        await fetchGeoJsonData(leafletVisualizer.geo_json_url);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -135,36 +172,48 @@ const SHAmbles: React.FC = () => {
     }
   };
 
-  const fetchProcessingJobs = async () => {
+  const fetchGeoJsonData = async () => {
     try {
-      // In a real implementation, this would fetch from your backend API
-      // For now, we'll use localStorage to simulate job persistence
-      const savedJobs = localStorage.getItem('processingJobs');
-      if (savedJobs) {
-        setProcessingJobs(JSON.parse(savedJobs));
-      }
+      // Fetch healthcare facilities data
+      const healthcareResponse = await fetch(healthcareGeoJsonUrl);
+      const healthcareData = await healthcareResponse.json();
+      setHealthcareGeoJsonData(healthcareData);
+      setAnalysisData(healthcareData); // Set analysis data
+
+      // Fetch Kenya boundaries data
+      const boundariesResponse = await fetch(kenyaBoundariesUrl);
+      const boundariesData = await boundariesResponse.json();
+      setKenyaBoundariesData(boundariesData);
     } catch (error) {
-      console.error('Error fetching processing jobs:', error);
+      console.error('Error fetching GeoJSON data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load healthcare data",
+        variant: "destructive",
+      });
     }
   };
 
-  const fetchGeoJsonData = async (url: string) => {
+  const fetchProcessingJobs = async () => {
     try {
-      const response = await fetch(url);
-      const data = await response.json();
-      setHealthcareGeoJsonData(data);
-
-      // Also try to fetch Kenya boundaries if available
-      const boundariesUrl = 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/healthcare%20data/FULL%20CORRECTED%20-%20Kenya%20Counties%20Voters\'%20Data%20(1).geojson?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYmE5NTY4OC04ZWFmLTQwNzYtYTljZi0wNWU2OWQ3ZjRjOWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoZWFsdGhjYXJlIGRhdGEvRlVMTCBDT1JSRUNURUQgLSBLZW55YSBDb3VudGllcyBWb3RlcnMnIERhdGEgKDEpLmdlb2pzb24iLCJpYXQiOjE3NTYzNDA5NjQsImV4cCI6MjU0NDc0MDk2NH0.NCZ2eLL1gkR7uq0tQoJqFcn4VdM8rk4u799tYRtwn5I';
-      try {
-        const boundariesResponse = await fetch(boundariesUrl);
-        const boundariesData = await boundariesResponse.json();
-        setKenyaBoundariesData(boundariesData);
-      } catch (e) {
-        console.log('Could not load boundaries data, using default');
-      }
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('processing_jobs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setProcessingJobs(data || []);
     } catch (error) {
-      console.error('Error fetching GeoJSON data:', error);
+      console.error('Error fetching processing jobs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load processing jobs",
+        variant: "destructive",
+      });
     }
   };
 
@@ -183,7 +232,7 @@ const SHAmbles: React.FC = () => {
       // Add Kenya administrative boundaries if available
       if (kenyaBoundariesData) {
         const boundariesLayer = L.geoJSON(kenyaBoundariesData, {
-          style: () => ({
+          style: (feature) => ({
             fillColor: '#f0f0f0',
             weight: 2,
             opacity: 1,
@@ -192,12 +241,11 @@ const SHAmbles: React.FC = () => {
           }),
           onEachFeature: (feature, layer) => {
             if (feature.properties) {
-              const popupContent = `<div class="p-2"><h3 class="font-bold text-lg">${feature.properties.name || 'Administrative Area'}</h3><p><strong>Type:</strong> ${feature.properties.admin_level || 'N/A'}</p></div>`;
+              const popupContent = `<div class="p-2"><h3 class="font-bold text-lg">${feature.properties.name || 'Administrative Area'}</h3><p><strong>Type:</strong> ${feature.properties.admin_level || 'N/A'}</p><p><strong>Facilities:</strong> ${feature.properties.facility_count || '0'}</p></div>`;
               layer.bindPopup(popupContent);
             }
           }
         }).addTo(mapRef.current);
-        setMapLayers(prev => ({ ...prev, boundaries: boundariesLayer }));
       }
 
       // Add healthcare facilities layer
@@ -218,12 +266,25 @@ const SHAmbles: React.FC = () => {
           onEachFeature: (feature, layer) => {
             if (feature.properties) {
               const props = feature.properties;
-              const popupContent = `<div class="p-2 min-w-[250px]"><h3 class="font-bold text-lg">${props.name || 'Unknown Facility'}</h3><p><strong>Type:</strong> ${props.type || 'N/A'}</p><p><strong>County:</strong> ${props.county || 'N/A'}</p><p><strong>Constituency:</strong> ${props.constituency || 'N/A'}</p><p><strong>Owner:</strong> ${props.owner || 'N/A'}</p></div>`;
+              const popupContent = `<div class="p-2 min-w-[250px]"><h3 class="font-bold text-lg">${props.name || 'Unknown Facility'}</h3><p><strong>Type:</strong> ${props.type || 'N/A'}</p><p><strong>County:</strong> ${props.county || 'N/A'}</p><p><strong>Constituency:</strong> ${props.constituency || 'N/A'}</p><p><strong>Owner:</strong> ${props.owner || 'N/A'}</p>${props.money_allocated ? `<p><strong>Allocation:</strong> KES ${props.money_allocated.toLocaleString()}</p>` : ''}${props.allocation_period ? `<p><strong>Period:</strong> ${props.allocation_period}</p>` : ''}</div>`;
               layer.bindPopup(popupContent);
             }
           }
         }).addTo(mapRef.current);
-        setMapLayers(prev => ({ ...prev, facilities: facilitiesLayer }));
+
+        // Fit map to show all of Kenya with some padding
+        if (kenyaBoundariesData) {
+          const boundariesLayer = L.geoJSON(kenyaBoundariesData);
+          mapRef.current.fitBounds(boundariesLayer.getBounds(), { padding: [20, 20] });
+        }
+
+        // Add layer control
+        const overlayMaps = {
+          "Administrative Boundaries": L.geoJSON(kenyaBoundariesData),
+          "Healthcare Facilities": facilitiesLayer
+        };
+        
+        L.control.layers(null, overlayMaps, { collapsed: false }).addTo(mapRef.current);
       }
 
       // Add legend
@@ -296,19 +357,13 @@ const SHAmbles: React.FC = () => {
     }
     setMapInitialized(false);
     setTimeout(() => {
-      const leafletVisualizer = visualizers.find(v => v.type === 'leaflet');
-      if (leafletVisualizer?.geo_json_url) {
-        fetchGeoJsonData(leafletVisualizer.geo_json_url);
-      }
+      fetchGeoJsonData();
     }, 100);
   };
 
   const copyGeoJsonUrl = async () => {
-    const leafletVisualizer = visualizers.find(v => v.type === 'leaflet');
-    if (!leafletVisualizer?.geo_json_url) return;
-    
     try {
-      await navigator.clipboard.writeText(leafletVisualizer.geo_json_url);
+      await navigator.clipboard.writeText(healthcareGeoJsonUrl);
       toast({
         title: "URL Copied",
         description: "Healthcare data URL copied to clipboard",
@@ -322,30 +377,104 @@ const SHAmbles: React.FC = () => {
     }
   };
 
-  const handleNewJobCreated = (jobId: string) => {
-    // Simulate job creation - in a real app, this would come from your backend
-    const newJob: ProcessingJob = {
-      id: jobId,
-      status: 'processing',
-      progress: 0,
-      message: 'Initializing processing...',
-      created_at: new Date().toISOString()
-    };
-    
-    const updatedJobs = [newJob, ...processingJobs];
-    setProcessingJobs(updatedJobs);
-    localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-    
-    setShowProcessingStatus(true);
-    setSelectedJob(newJob);
-    
-    // Simulate job progress updates
-    simulateJobProgress(jobId);
+  const openInGeoJsonIo = () => {
+    if (!healthcareGeoJsonData) return;
+    try {
+      const jsonString = JSON.stringify(healthcareGeoJsonData);
+      const b64Data = btoa(unescape(encodeURIComponent(jsonString)));
+      const geoJsonIoUrl = `https://geojson.io/#data=data:application/json;base64,${b64Data}&map=6/-0.0236/37.9062`;
+      window.open(geoJsonIoUrl, '_blank');
+      toast({
+        title: "Opening GeoJSON.io",
+        description: "Healthcare facilities data is being loaded in GeoJSON.io",
+      });
+    } catch (error) {
+      console.error('Error opening GeoJSON.io:', error);
+      openDirectGeoJsonIo();
+    }
   };
 
-  const simulateJobProgress = (jobId: string) => {
+  const openDirectGeoJsonIo = () => {
+    const encodedUrl = encodeURIComponent(healthcareGeoJsonUrl);
+    const geoJsonIoUrl = `https://geojson.io/#data=data:text/x-url,${encodedUrl}&map=6/-0.0236/37.9062`;
+    window.open(geoJsonIoUrl, '_blank');
+    toast({
+      title: "Opening GeoJSON.io",
+      description: "Loading healthcare data directly from URL",
+    });
+  };
+
+  const copyGeoJsonData = async () => {
+    if (!healthcareGeoJsonData) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(healthcareGeoJsonData, null, 2));
+      toast({
+        title: "Data Copied",
+        description: "Healthcare GeoJSON data copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy data to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNewJobCreated = async (jobData: { name: string; files: File[]; urls: string[] }) => {
+    try {
+      if (!userId) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to process data",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create a new processing job in the database
+      const { data, error } = await supabase
+        .from('processing_jobs')
+        .insert({
+          user_id: userId,
+          job_name: jobData.name,
+          status: 'pending',
+          progress: 0,
+          input_files: jobData.files.map(file => ({
+            name: file.name,
+            type: file.type,
+            size: file.size
+          })),
+          input_urls: jobData.urls,
+          current_step: 'Initializing processing...'
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setShowProcessingStatus(true);
+      setSelectedJob(data);
+      
+      // Start processing the job
+      simulateJobProgress(data.id);
+    } catch (error) {
+      console.error('Error creating processing job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create processing job",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const simulateJobProgress = async (jobId: string) => {
     let progress = 0;
-    const interval = setInterval(() => {
+    
+    // Update job status to processing
+    await updateJobStatus(jobId, 'processing', progress, 'Processing uploaded files...');
+    
+    const interval = setInterval(async () => {
       progress += 5;
       
       if (progress >= 100) {
@@ -353,118 +482,122 @@ const SHAmbles: React.FC = () => {
         clearInterval(interval);
         
         // Update job to completed
-        const updatedJobs = processingJobs.map(job => {
-          if (job.id === jobId) {
-            return {
-              ...job,
-              status: 'completed',
-              progress: 100,
-              message: 'Processing complete!',
-              results: {
-                successful_files: ['kenya_admin.geojson', 'healthcare_facilities.csv'],
-                failed_files: [],
-                facility_count: 1245,
-                administrative_areas: 47
-              },
-              map_path: '/processed/interactive_map.html',
-              heatmap_path: '/processed/heatmap.html',
-              report_path: '/processed/report.json',
-              geojson_path: '/processed/enhanced_data.geojson'
-            };
+        await updateJobStatus(
+          jobId, 
+          'completed', 
+          progress, 
+          'Processing complete!',
+          {
+            interactive_map: '/processed/interactive_map.html',
+            heatmap: '/processed/heatmap.html',
+            report: '/processed/report.json',
+            enhanced_geojson: '/processed/enhanced_data.geojson'
           }
-          return job;
-        });
-        
-        setProcessingJobs(updatedJobs);
-        localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-        
-        // Update selected job if it's the current one
-        if (selectedJob?.id === jobId) {
-          setSelectedJob(updatedJobs.find(j => j.id === jobId) || null);
-        }
+        );
       } else {
         // Update job progress
-        const updatedJobs = processingJobs.map(job => {
-          if (job.id === jobId) {
-            const messages = [
-              'Processing uploaded files...',
-              'Extracting spatial data...',
-              'Merging datasets...',
-              'Calculating statistics...',
-              'Generating visualizations...',
-              'Creating reports...'
-            ];
-            
-            return {
-              ...job,
-              progress,
-              message: messages[Math.floor(progress / 20)] || 'Processing...'
-            };
-          }
-          return job;
-        });
+        const messages = [
+          'Processing uploaded files...',
+          'Extracting spatial data...',
+          'Merging datasets...',
+          'Calculating statistics...',
+          'Generating visualizations...',
+          'Creating reports...'
+        ];
         
-        setProcessingJobs(updatedJobs);
-        localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-        
-        // Update selected job if it's the current one
-        if (selectedJob?.id === jobId) {
-          setSelectedJob(updatedJobs.find(j => j.id === jobId) || null);
-        }
+        await updateJobStatus(
+          jobId, 
+          'processing', 
+          progress, 
+          messages[Math.floor(progress / 20)] || 'Processing...'
+        );
       }
     }, 1000);
   };
 
-  const downloadFile = (jobId: string, fileType: string) => {
-    const job = processingJobs.find(j => j.id === jobId);
-    if (!job) return;
-    
-    let filePath = '';
-    let fileName = '';
-    
-    switch (fileType) {
-      case 'map':
-        filePath = job.map_path || '';
-        fileName = 'interactive_map.html';
-        break;
-      case 'heatmap':
-        filePath = job.heatmap_path || '';
-        fileName = 'heatmap.html';
-        break;
-      case 'report':
-        filePath = job.report_path || '';
-        fileName = 'analysis_report.json';
-        break;
-      case 'geojson':
-        filePath = job.geojson_path || '';
-        fileName = 'enhanced_data.geojson';
-        break;
+  const updateJobStatus = async (
+    jobId: string, 
+    status: 'pending' | 'processing' | 'completed' | 'failed', 
+    progress: number, 
+    currentStep: string,
+    outputFiles?: Record<string, string>
+  ) => {
+    try {
+      const updates: any = {
+        status,
+        progress,
+        current_step: currentStep,
+        updated_at: new Date().toISOString()
+      };
+      
+      if (status === 'completed') {
+        updates.completed_at = new Date().toISOString();
+      }
+      
+      if (outputFiles) {
+        updates.output_files = outputFiles;
+      }
+      
+      const { error } = await supabase
+        .from('processing_jobs')
+        .update(updates)
+        .eq('id', jobId);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating job status:', error);
     }
-    
-    if (!filePath) {
-      toast({
-        title: "Download Error",
-        description: "File not available for download",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real implementation, this would download the actual file
-    // For now, we'll just show a success message
-    toast({
-      title: "Download Started",
-      description: `Downloading ${fileName}`,
-    });
   };
 
-  const toggleLayerVisibility = (layerKey: string, visible: boolean) => {
-    if (mapRef.current && mapLayers[layerKey]) {
-      if (visible) {
-        mapRef.current.addLayer(mapLayers[layerKey]);
-      } else {
-        mapRef.current.removeLayer(mapLayers[layerKey]);
+  const downloadFile = async (jobId: string, fileType: string) => {
+    try {
+      const job = processingJobs.find(j => j.id === jobId);
+      if (!job) return;
+      
+      let filePath = '';
+      let fileName = '';
+      
+      switch (fileType) {
+        case 'interactive_map':
+          filePath = job.output_files?.interactive_map || '';
+          fileName = 'interactive_map.html';
+          break;
+        case 'heatmap':
+          filePath = job.output_files?.heatmap || '';
+          fileName = 'heatmap.html';
+          break;
+        case 'report':
+          filePath = job.output_files?.report || '';
+          fileName = 'analysis_report.json';
+          break;
+        case 'enhanced_geojson':
+          filePath = job.output_files?.enhanced_geojson || '';
+          fileName = 'enhanced_data.geojson';
+          break;
       }
+      
+      if (!filePath) {
+        toast({
+          title: "Download Error",
+          description: "File not available for download",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // In a real implementation, this would download the actual file
+      // For now, we'll just show a success message
+      toast({
+        title: "Download Started",
+        description: `Downloading ${fileName}`,
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download file",
+        variant: "destructive",
+      });
     }
   };
 
@@ -501,29 +634,6 @@ const SHAmbles: React.FC = () => {
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </Button>
             </div>
-            <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-md">
-              <h4 className="text-sm font-semibold mb-2">Map Layers</h4>
-              <div className="space-y-1">
-                <label className="flex items-center text-xs">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked 
-                    onChange={(e) => toggleLayerVisibility('facilities', e.target.checked)}
-                    className="mr-2"
-                  />
-                  Healthcare Facilities
-                </label>
-                <label className="flex items-center text-xs">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked 
-                    onChange={(e) => toggleLayerVisibility('boundaries', e.target.checked)}
-                    className="mr-2"
-                  />
-                  Administrative Boundaries
-                </label>
-              </div>
-            </div>
           </div>
         );
       case 'interactive':
@@ -542,10 +652,10 @@ const SHAmbles: React.FC = () => {
             </div>
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
-                <Minus className="h-4 w-4" />
+                <ZoomOut className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
-                <Plus className="h-4 w-4" />
+                <ZoomIn className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
@@ -568,10 +678,10 @@ const SHAmbles: React.FC = () => {
             />
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'out')}>
-                <Minus className="h-4 w-4" />
+                <ZoomOut className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => adjustZoom(visualizer.id, 'in')}>
-                <Plus className="h-4 w-4" />
+                <ZoomIn className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm" onClick={() => toggleCardExpansion(visualizer.id)}>
                 {isExpanded ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
@@ -625,11 +735,11 @@ const SHAmbles: React.FC = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-slate-600 bg-clip-text text-transparent dark:from-green-400 dark:to-white-400">
+              <h1 className="text-3xl md:text-4xl font-bold text-black dark:text-white">
                 SHAmbles: Healthcare Facility Visualization
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl dark:text-slate-400">
-                An interactive visualization and comprehensive analysis of the distribution of health facilities across Kenya and their respective data.
+                Interactive visualizations and comprehensive analysis of Kenya's healthcare infrastructure
               </p>
             </div>
             <div className="flex gap-2">
@@ -783,6 +893,53 @@ const SHAmbles: React.FC = () => {
             </TabsContent>
           </Tabs>
 
+          {/* Analysis Sections */}
+          {healthcareGeoJsonData && (
+            <div className="space-y-8">
+              {/* Facility Statistics */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <FacilityStatistics geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+
+              {/* Allocation Analysis */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <AllocationAnalysis geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+
+              {/* County Comparison */}
+              <Suspense fallback={
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              }>
+                <CountyComparison geoJsonData={healthcareGeoJsonData} />
+              </Suspense>
+            </div>
+          )}
+
           {/* Call to Action Section */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden text-center dark:bg-slate-800/80 dark:text-slate-100">
             <CardContent className="p-8">
@@ -792,22 +949,12 @@ const SHAmbles: React.FC = () => {
                 Your support helps us continue our mission of tracking healthcare resource allocation and ensuring equitable distribution across Kenya.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700"
-                  onClick={() => window.open('https://ko-fi.com/civiceducationke', '_blank')}
-                >
+                <Button size="lg" className="bg-kenya-green hover:bg-kenya-green/90 dark:bg-green-600 dark:hover:bg-green-700">
                   <Heart className="mr-2" />
                   Support Our Work
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
-                  onClick={() => setShowUploadWizard(true)}
-                >
-                  <Upload className="mr-2" />
-                  Upload Data
+                <Button size="lg" variant="outline" className="border-kenya-red text-kenya-red hover:bg-kenya-red/10 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10">
+                  Learn More
                 </Button>
               </div>
             </CardContent>
