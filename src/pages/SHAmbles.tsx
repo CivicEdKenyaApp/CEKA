@@ -52,20 +52,20 @@ interface Visualizer {
 
 export interface ProcessingJob {
   id: string;
-  status: 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
-  message: string;
-  results?: {
-    successful_files: string[];
-    failed_files: { file: string; error: string }[];
-    facility_count: number;
-    administrative_areas: number;
-  };
-  map_path?: string;
-  heatmap_path?: string;
-  report_path?: string;
-  geojson_path?: string;
+  job_name: string;
+  current_step: string | null;
+  input_files: any;
+  input_urls: any;
+  output_files: any;
+  error_message: string | null;
+  processing_logs: any;
+  expires_at: string | null;
   created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  user_id: string | null;
 }
 
 // URLs for GeoJSON data
@@ -100,15 +100,28 @@ const SHAmbles: React.FC = () => {
     fetchProcessingJobs();
     fetchGeoJsonData();
     
-    // Set up interval to check for job updates
-    const jobCheckInterval = setInterval(fetchProcessingJobs, 10000);
+    // Set up real-time subscription for processing jobs
+    const processingJobsSubscription = supabase
+      .channel('processing_jobs_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'processing_jobs'
+        },
+        (payload) => {
+          fetchProcessingJobs(); // Refresh jobs on any change
+        }
+      )
+      .subscribe();
     
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
-      clearInterval(jobCheckInterval);
+      processingJobsSubscription.unsubscribe();
     };
   }, []);
 
@@ -167,14 +180,23 @@ const SHAmbles: React.FC = () => {
 
   const fetchProcessingJobs = async () => {
     try {
-      // In a real implementation, this would fetch from your backend API
-      // For now, we'll use localStorage to simulate job persistence
-      const savedJobs = localStorage.getItem('processingJobs');
-      if (savedJobs) {
-        setProcessingJobs(JSON.parse(savedJobs));
+      const { data: jobs, error } = await supabase
+        .from('processing_jobs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
       }
+
+      setProcessingJobs(jobs || []);
     } catch (error) {
       console.error('Error fetching processing jobs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load processing jobs",
+        variant: "destructive",
+      });
     }
   };
 
@@ -370,140 +392,107 @@ const SHAmbles: React.FC = () => {
     }
   };
 
-  const handleNewJobCreated = (jobId: string) => {
-    // Simulate job creation - in a real app, this would come from your backend
-    const newJob: ProcessingJob = {
-      id: jobId,
-      status: 'processing',
-      progress: 0,
-      message: 'Initializing processing...',
-      created_at: new Date().toISOString()
-    };
-    
-    const updatedJobs = [newJob, ...processingJobs];
-    setProcessingJobs(updatedJobs);
-    localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-    
-    setShowProcessingStatus(true);
-    setSelectedJob(newJob);
-    
-    // Simulate job progress updates
-    simulateJobProgress(jobId);
-  };
-
-  const simulateJobProgress = (jobId: string) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 5;
+  const handleNewJobCreated = async (jobData: { name: string; files: string[]; urls: string[] }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        
-        // Update job to completed
-        const updatedJobs = processingJobs.map(job => {
-          if (job.id === jobId) {
-            return {
-              ...job,
-              status: 'completed',
-              progress: 100,
-              message: 'Processing complete!',
-              results: {
-                successful_files: ['kenya_admin.geojson', 'healthcare_facilities.csv'],
-                failed_files: [],
-                facility_count: 1245,
-                administrative_areas: 47
-              },
-              map_path: '/processed/interactive_map.html',
-              heatmap_path: '/processed/heatmap.html',
-              report_path: '/processed/report.json',
-              geojson_path: '/processed/enhanced_data.geojson'
-            };
+      const { data: job, error } = await supabase
+        .from('processing_jobs')
+        .insert([
+          {
+            job_name: jobData.name,
+            input_files: jobData.files,
+            input_urls: jobData.urls,
+            status: 'pending',
+            progress: 0,
+            user_id: user?.id || null
           }
-          return job;
-        });
-        
-        setProcessingJobs(updatedJobs);
-        localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-        
-        // Update selected job if it's the current one
-        if (selectedJob?.id === jobId) {
-          setSelectedJob(updatedJobs.find(j => j.id === jobId) || null);
-        }
-      } else {
-        // Update job progress
-        const updatedJobs = processingJobs.map(job => {
-          if (job.id === jobId) {
-            const messages = [
-              'Processing uploaded files...',
-              'Extracting spatial data...',
-              'Merging datasets...',
-              'Calculating statistics...',
-              'Generating visualizations...',
-              'Creating reports...'
-            ];
-            
-            return {
-              ...job,
-              progress,
-              message: messages[Math.floor(progress / 20)] || 'Processing...'
-            };
-          }
-          return job;
-        });
-        
-        setProcessingJobs(updatedJobs);
-        localStorage.setItem('processingJobs', JSON.stringify(updatedJobs));
-        
-        // Update selected job if it's the current one
-        if (selectedJob?.id === jobId) {
-          setSelectedJob(updatedJobs.find(j => j.id === jobId) || null);
-        }
-      }
-    }, 1000);
-  };
+        ])
+        .select()
+        .single();
 
-  const downloadFile = (jobId: string, fileType: string) => {
-    const job = processingJobs.find(j => j.id === jobId);
-    if (!job) return;
-    
-    let filePath = '';
-    let fileName = '';
-    
-    switch (fileType) {
-      case 'map':
-        filePath = job.map_path || '';
-        fileName = 'interactive_map.html';
-        break;
-      case 'heatmap':
-        filePath = job.heatmap_path || '';
-        fileName = 'heatmap.html';
-        break;
-      case 'report':
-        filePath = job.report_path || '';
-        fileName = 'analysis_report.json';
-        break;
-      case 'geojson':
-        filePath = job.geojson_path || '';
-        fileName = 'enhanced_data.geojson';
-        break;
-    }
-    
-    if (!filePath) {
+      if (error) throw error;
+
       toast({
-        title: "Download Error",
-        description: "File not available for download",
+        title: "Job Created",
+        description: "Your data processing job has been queued",
+      });
+
+      setShowProcessingStatus(true);
+      setSelectedJob(job);
+    } catch (error) {
+      console.error('Error creating job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create processing job",
         variant: "destructive",
       });
-      return;
     }
-    
-    // In a real implementation, this would download the actual file
-    // For now, we'll just show a success message
-    toast({
-      title: "Download Started",
-      description: `Downloading ${fileName}`,
-    });
+  };
+
+  const downloadFile = async (jobId: string, fileType: string) => {
+    try {
+      const job = processingJobs.find(j => j.id === jobId);
+      if (!job || !job.output_files) return;
+      
+      let filePath = '';
+      let fileName = '';
+      
+      switch (fileType) {
+        case 'map':
+          filePath = job.output_files.map_path || '';
+          fileName = 'interactive_map.html';
+          break;
+        case 'heatmap':
+          filePath = job.output_files.heatmap_path || '';
+          fileName = 'heatmap.html';
+          break;
+        case 'report':
+          filePath = job.output_files.report_path || '';
+          fileName = 'analysis_report.json';
+          break;
+        case 'geojson':
+          filePath = job.output_files.geojson_path || '';
+          fileName = 'enhanced_data.geojson';
+          break;
+      }
+      
+      if (!filePath) {
+        toast({
+          title: "Download Error",
+          description: "File not available for download",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Get a signed URL for the file
+      const { data: { signedUrl }, error } = await supabase.storage
+        .from('processed-data')
+        .createSignedUrl(filePath, 60); // 60 seconds expiration
+      
+      if (error) throw error;
+      
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = signedUrl;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${fileName}`,
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download file",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleLayerVisibility = (layerKey: string, visible: boolean) => {
