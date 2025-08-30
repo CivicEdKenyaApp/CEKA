@@ -14,8 +14,9 @@ L.Icon.Default.mergeOptions({
 // Base URL for API depending on environment
 const API_BASE_URL =
   process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000/api'
-    : 'https://civicedkenya.vercel.app/api';
+    ? 'http://127.0.0.1:5000'  // Flask dev server
+    : 'https://ceka-production.up.railway.app'; // Flask prod server
+
 
 const DataProcessor = () => {
   const [selectedFile, setSelectedFile] = useState(null);
