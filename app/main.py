@@ -4,7 +4,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import uuid
 import threading
-from flask_cors import CORS   # <-- ADD THIS
+from flask_cors import CORS   # <-- already added
 
 # Add the current directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,15 +26,57 @@ app = Flask(__name__,
             template_folder=str(TEMPLATE_DIR),
             static_folder=str(STATIC_DIR))
 
-# Enable CORS for your frontend (Vercel + local dev)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "https://civicedkenya.vercel.app",   # production React frontend on Vercel
-            "http://localhost:3000"              # local React dev frontend
-        ]
-    }
-})
+# ---- CORS/Session HARDENING (ADD) ------------------------------------------
+# If you need cookies (session) across domains (Vercel <-> Railway), you must allow credentials.
+# For non-cookie/AUTH-less fetches, you can drop supports_credentials=True.
+
+FRONTEND_ORIGINS = [
+    "https://civicedkenya.vercel.app",   # production React frontend on Vercel
+    "http://localhost:3000",             # local React dev frontend
+]
+
+app.config.update(
+    # allow cookies across sites (only if you actually use session)
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True,  # must be True when SameSite=None
+)
+
+CORS(
+    app,
+    resources={r"/*": {"origins": FRONTEND_ORIGINS}},
+    supports_credentials=True,
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "X-CSRF-Token"
+    ],
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    max_age=86400,  # cache preflight 24h
+)
+
+# Optional: make sure every response carries the right CORS headers (esp. on errors)
+@app.after_request
+def add_cors_headers(resp):
+    origin = request.headers.get("Origin")
+    if origin in FRONTEND_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Vary"] = "Origin"
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, X-CSRF-Token"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    return resp
+
+# Health check & favicon to avoid noisy 502s from client fetches (ADD)
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok"}), 200
+
+@app.route('/favicon.ico')
+def favicon():
+    # Return empty 204 so browsers stop error-spamming your logs
+    return ('', 204)
+# ---------------------------------------------------------------------------
 
 # Configure app
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-please-change-in-production')
@@ -238,6 +280,6 @@ def process_files(job_id, files):
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5000))  # Railway provides $PORT
     debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
