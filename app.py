@@ -11,7 +11,16 @@ import requests
 import threading
 
 app = Flask(__name__)
-CORS(app)
+
+# Restrict CORS to your Vercel frontend
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://civicedkenya.vercel.app",   # your production frontend
+            "http://localhost:3000"              # local dev React frontend
+        ]
+    }
+})
 
 # Configuration
 UPLOAD_FOLDER = 'user_uploads'
