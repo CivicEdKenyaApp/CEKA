@@ -53,7 +53,7 @@ const DataProcessor = () => {
 
   const loadKenyaGeoJSON = async (mapInstance) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/kenya-geojson`);
+      const response = await axios.get(`${API_BASE_URL}/api/kenya-geojson`);
       const kenyaLayer = L.geoJSON(response.data, {
         style: {
           color: '#3388ff',
@@ -91,7 +91,7 @@ const DataProcessor = () => {
     formData.append('data_type', dataType);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -104,7 +104,7 @@ const DataProcessor = () => {
       const checkStatus = async () => {
         try {
           const statusResponse = await axios.get(
-            `${API_BASE_URL}/status/${response.data.session_id}`
+            `${API_BASE_URL}/api/status/${response.data.session_id}`
           );
 
           if (statusResponse.data.status === 'processing') {
@@ -137,7 +137,7 @@ const DataProcessor = () => {
 
   const addDatasetToMap = async (sessionId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/geojson/${sessionId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/geojson/${sessionId}`);
 
       // Remove existing layer for this dataset if it exists
       if (mapLayers[sessionId]) {
@@ -197,7 +197,7 @@ const DataProcessor = () => {
 
   const loadDatasets = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/datasets`);
+      const response = await axios.get(`${API_BASE_URL}/api/datasets`);
       setDatasets(response.data.datasets);
 
       for (const dataset of response.data.datasets) {
@@ -213,7 +213,7 @@ const DataProcessor = () => {
   const downloadFile = async (sessionId, fileType) => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/download/${sessionId}/${fileType}`,
+        `${API_BASE_URL}/api/download/${sessionId}/${fileType}`,
         {
           responseType: 'blob',
         }
