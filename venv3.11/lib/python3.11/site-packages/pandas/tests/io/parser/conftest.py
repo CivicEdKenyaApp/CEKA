@@ -4,6 +4,7 @@ import os
 
 import pytest
 
+from pandas.compat import HAS_PYARROW
 from pandas.compat._optional import VERSIONS
 
 from pandas import (
@@ -29,13 +30,24 @@ class BaseParser:
         return read_csv(*args, **kwargs)
 
     def read_csv_check_warnings(
-        self, warn_type: type[Warning], warn_msg: str, *args, **kwargs
+        self,
+        warn_type: type[Warning],
+        warn_msg: str,
+        *args,
+        raise_on_extra_warnings=True,
+        check_stacklevel: bool = True,
+        **kwargs,
     ):
         # We need to check the stacklevel here instead of in the tests
         # since this is where read_csv is called and where the warning
         # should point to.
         kwargs = self.update_kwargs(kwargs)
-        with tm.assert_produces_warning(warn_type, match=warn_msg):
+        with tm.assert_produces_warning(
+            warn_type,
+            match=warn_msg,
+            raise_on_extra_warnings=raise_on_extra_warnings,
+            check_stacklevel=check_stacklevel,
+        ):
             return read_csv(*args, **kwargs)
 
     def read_table(self, *args, **kwargs):
@@ -43,13 +55,20 @@ class BaseParser:
         return read_table(*args, **kwargs)
 
     def read_table_check_warnings(
-        self, warn_type: type[Warning], warn_msg: str, *args, **kwargs
+        self,
+        warn_type: type[Warning],
+        warn_msg: str,
+        *args,
+        raise_on_extra_warnings=True,
+        **kwargs,
     ):
         # We need to check the stacklevel here instead of in the tests
         # since this is where read_table is called and where the warning
         # should point to.
         kwargs = self.update_kwargs(kwargs)
-        with tm.assert_produces_warning(warn_type, match=warn_msg):
+        with tm.assert_produces_warning(
+            warn_type, match=warn_msg, raise_on_extra_warnings=raise_on_extra_warnings
+        ):
             return read_table(*args, **kwargs)
 
 
@@ -99,7 +118,15 @@ _pyarrowParser = PyArrowParser
 
 _py_parsers_only = [_pythonParser]
 _c_parsers_only = [_cParserHighMemory, _cParserLowMemory]
-_pyarrow_parsers_only = [pytest.param(_pyarrowParser, marks=pytest.mark.single_cpu)]
+_pyarrow_parsers_only = [
+    pytest.param(
+        _pyarrowParser,
+        marks=[
+            pytest.mark.single_cpu,
+            pytest.mark.skipif(not HAS_PYARROW, reason="pyarrow is not installed"),
+        ],
+    )
+]
 
 _all_parsers = [*_c_parsers_only, *_py_parsers_only, *_pyarrow_parsers_only]
 
@@ -163,7 +190,16 @@ def _get_all_parser_float_precision_combinations():
             parser = parser.values[0]
         for precision in parser.float_precision_choices:
             # Re-wrap in pytest.param for pyarrow
-            mark = pytest.mark.single_cpu if parser.engine == "pyarrow" else ()
+            mark = (
+                [
+                    pytest.mark.single_cpu,
+                    pytest.mark.skipif(
+                        not HAS_PYARROW, reason="pyarrow is not installed"
+                    ),
+                ]
+                if parser.engine == "pyarrow"
+                else ()
+            )
             param = pytest.param((parser(), precision), marks=mark)
             params.append(param)
             ids.append(f"{parser_id}-{precision}")
@@ -189,7 +225,7 @@ _encoding_seps = ["", "-", "_"]
 _encoding_prefixes = ["utf", "UTF"]
 
 _encoding_fmts = [
-    f"{prefix}{sep}" + "{0}" for sep in _encoding_seps for prefix in _encoding_prefixes
+    f"{prefix}{sep}{{0}}" for sep in _encoding_seps for prefix in _encoding_prefixes
 ]
 
 
@@ -268,6 +304,8 @@ def numeric_decimal(request):
 def pyarrow_xfail(request):
     """
     Fixture that xfails a test if the engine is pyarrow.
+
+    Use if failure is do to unsupported keywords or inconsistent results.
     """
     if "all_parsers" in request.fixturenames:
         parser = request.getfixturevalue("all_parsers")
@@ -278,13 +316,15 @@ def pyarrow_xfail(request):
         return
     if parser.engine == "pyarrow":
         mark = pytest.mark.xfail(reason="pyarrow doesn't support this.")
-        request.node.add_marker(mark)
+        request.applymarker(mark)
 
 
 @pytest.fixture
 def pyarrow_skip(request):
     """
     Fixture that skips a test if the engine is pyarrow.
+
+    Use if failure is do a parsing failure from pyarrow.csv.read_csv
     """
     if "all_parsers" in request.fixturenames:
         parser = request.getfixturevalue("all_parsers")
@@ -294,4 +334,4 @@ def pyarrow_skip(request):
     else:
         return
     if parser.engine == "pyarrow":
-        pytest.skip("pyarrow doesn't support this.")
+        pytest.skip(reason="https://github.com/apache/arrow/issues/38676")
