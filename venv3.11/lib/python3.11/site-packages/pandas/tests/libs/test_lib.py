@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import pytest
 
@@ -59,7 +61,7 @@ class TestMisc:
         tm.assert_numpy_array_equal(result, expected)
 
         # case that can't be cast to td64ns
-        td = Timedelta(np.timedelta64(400, "Y"))
+        td = Timedelta(np.timedelta64(146000, "D"))
         assert hash(td) == hash(td.as_unit("ms"))
         assert hash(td) == hash(td.as_unit("us"))
         mapping1 = {td: 1}
@@ -283,3 +285,15 @@ def test_no_default_pickle():
     # GH#40397
     obj = tm.round_trip_pickle(lib.no_default)
     assert obj is lib.no_default
+
+
+def test_ensure_string_array_copy():
+    # ensure the original array is not modified in case of copy=False with
+    # pickle-roundtripped object dtype array
+    # https://github.com/pandas-dev/pandas/issues/54654
+    arr = np.array(["a", None], dtype=object)
+    arr = pickle.loads(pickle.dumps(arr))
+    result = lib.ensure_string_array(arr, copy=False)
+    assert not np.shares_memory(arr, result)
+    assert arr[1] is None
+    assert result[1] is np.nan
