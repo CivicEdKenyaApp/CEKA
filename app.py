@@ -12,21 +12,17 @@ import threading
 
 app = Flask(__name__)
 
-# Restrict CORS to your Vercel frontend
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "https://civicedkenya.vercel.app",   # your production frontend
-            "http://localhost:3000"              # local dev React frontend
-        ]
-    }
-})
+# CORS Configuration - Fixed to allow requests from your frontend
+CORS(app, origins=[
+    "https://civicedkenya.vercel.app",   # your production frontend
+    "http://localhost:3000"              # local dev React frontend
+])
 
 # Configuration
 UPLOAD_FOLDER = 'user_uploads'
 PROCESSED_FOLDER = 'processed_data'
 ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson'}
-KENYA_GEOJSON_URL = "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson"  # Update this URL
+KENYA_GEOJSON_URL = "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson"
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
@@ -299,9 +295,17 @@ def process_uploaded_data(session_id, file_path, data_type):
             "message": f"Error processing data: {str(e)}"
         }
 
-@app.route('/api/upload', methods=['POST'])
+@app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
     """Handle file upload and processing"""
+    if request.method == 'OPTIONS':
+        # Handle preflight request
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', 'https://civicedkenya.vercel.app')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+    
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
     
@@ -332,11 +336,13 @@ def upload_file():
         thread = threading.Thread(target=process_task)
         thread.start()
         
-        return jsonify({
+        response = jsonify({
             "session_id": session_id,
             "message": "File uploaded successfully. Processing started.",
             "status_url": f"/api/status/{session_id}"
-        }), 202
+        })
+        response.status_code = 202
+        return response
     
     return jsonify({"error": "Invalid file type"}), 400
 
@@ -350,11 +356,13 @@ def get_status(session_id):
             result = json.load(f)
         return jsonify(result)
     else:
-        return jsonify({
+        response = jsonify({
             "session_id": session_id,
             "status": "processing",
             "message": "Data is still being processed"
-        }), 202
+        })
+        response.status_code = 202
+        return response
 
 @app.route('/api/download/<session_id>/<file_type>')
 def download_file(session_id, file_type):
