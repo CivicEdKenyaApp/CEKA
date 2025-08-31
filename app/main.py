@@ -55,15 +55,6 @@ def handle_not_found(e):
         'message': 'The requested resource was not found'
     }), 404
 
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "*")
-        response.headers.add('Access-Control-Allow-Methods', "*")
-        return response
-
 @app.route('/')
 def health_check():
     return jsonify({
