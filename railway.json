@@ -4,7 +4,7 @@
     "builder": "python"
   },
   "deploy": {
-    "startCommand": "python app/app.py",
+    "startCommand": "python app/main.py",
     "restartPolicyType": "ON_FAILURE"
   }
 }
