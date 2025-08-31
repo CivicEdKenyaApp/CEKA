@@ -216,8 +216,8 @@ class build_clib(old_build_clib):
 
         sources = build_info.get('sources')
         if sources is None or not is_sequence(sources):
-            raise DistutilsSetupError(("in 'libraries' option (library '%s'), " +
-                                       "'sources' must be present and must be " +
+            raise DistutilsSetupError(("in 'libraries' option (library '%s'), "
+                                       "'sources' must be present and must be "
                                        "a list of source filenames") % lib_name)
         sources = list(sources)
 
@@ -320,8 +320,8 @@ class build_clib(old_build_clib):
             dispatch_hpath = os.path.join("numpy", "distutils", "include")
             dispatch_hpath = os.path.join(bsrc_dir, dispatch_hpath)
             include_dirs.append(dispatch_hpath)
-
-            copt_build_src = None if self.inplace else bsrc_dir
+            # copt_build_src = None if self.inplace else bsrc_dir
+            copt_build_src = bsrc_dir
             for _srcs, _dst, _ext in (
                 ((c_sources,), copt_c_sources, ('.dispatch.c',)),
                 ((c_sources, cxx_sources), copt_cxx_sources,
