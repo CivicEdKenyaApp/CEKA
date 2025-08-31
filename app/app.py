@@ -1,39 +1,55 @@
-from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
-import pandas as pd
-import json
 import os
 import uuid
-from datetime import datetime
-import numpy as np
-from werkzeug.utils import secure_filename
-import requests
+import json
+import time
+import logging
 import threading
+from datetime import datetime
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import pandas as pd
+import numpy as np
+import requests
+from io import StringIO
+import subprocess
+import tempfile
+import shutil
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Restrict CORS to your Vercel frontend
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "https://civicedkenya.vercel.app",   # your production frontend
-            "http://localhost:3000"              # local dev React frontend
-        ]
-    }
-})
+# Configure CORS to allow all origins
+CORS(
+    app,
+    resources={r"/api/*": {"origins": "https://civicedkenya.vercel.app"}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
 
 # Configuration
 UPLOAD_FOLDER = 'user_uploads'
 PROCESSED_FOLDER = 'processed_data'
-ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson'}
-KENYA_GEOJSON_URL = "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson"  # Update this URL
+SCRIPTS_FOLDER = 'scripts'
+ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson', 'xlsx', 'xls', 'txt'}
+KENYA_GEOJSON_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/public/data/kenya_counties.geojson"
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
+app.config['SCRIPTS_FOLDER'] = SCRIPTS_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
+# Ensure directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# In-memory storage for jobs (in production, use a database)
+jobs = {}
+datasets = {}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -45,8 +61,7 @@ def fetch_kenya_geojson():
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching Kenya GeoJSON: {e}")
-        # Return an empty GeoJSON as fallback
+        logger.error(f"Error fetching Kenya GeoJSON: {e}")
         return {"type": "FeatureCollection", "features": []}
 
 def convert_numpy_types(obj):
@@ -66,106 +81,58 @@ def convert_numpy_types(obj):
     else:
         return obj
 
-def process_uploaded_data(session_id, file_path, data_type):
-    """Process uploaded data through the full pipeline"""
+def run_processing_pipeline(job_id, input_path, data_type, file_format):
+    """Run the complete processing pipeline"""
     try:
         # Create session directory
-        session_dir = os.path.join(app.config['PROCESSED_FOLDER'], session_id)
+        session_dir = os.path.join(app.config['PROCESSED_FOLDER'], job_id)
         os.makedirs(session_dir, exist_ok=True)
         
-        # Load the uploaded data
-        file_ext = file_path.rsplit('.', 1)[1].lower()
+        # Step 1: Clean the data
+        clean_script = os.path.join(app.config['SCRIPTS_FOLDER'], 'clean_data.py')
+        cleaned_file = os.path.join(session_dir, "facilities_cleaned.csv")
         
-        if file_ext == 'csv':
-            df = pd.read_csv(file_path)
-        elif file_ext in ['json', 'geojson']:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # Handle different JSON structures
-            if isinstance(data, dict) and 'features' in data:
-                # GeoJSON format
-                features = data['features']
-                records = []
-                for feature in features:
-                    properties = feature.get('properties', {})
-                    geometry = feature.get('geometry', {})
-                    
-                    if geometry.get('type') == 'Point' and 'coordinates' in geometry:
-                        properties['longitude'] = geometry['coordinates'][0]
-                        properties['latitude'] = geometry['coordinates'][1]
-                    
-                    records.append(properties)
-                df = pd.DataFrame(records)
-            elif isinstance(data, list):
-                df = pd.DataFrame(data)
-            else:
-                df = pd.DataFrame([data])
-        else:
-            raise ValueError(f"Unsupported file format: {file_ext}")
+        subprocess.run([
+            'python', clean_script,
+            '--input', input_path,
+            '--output', cleaned_file
+        ], check=True)
         
-        # Standardize column names
-        column_mapping = {
-            'Facility_N': 'name', 'facility_name': 'name', 'FacilityName': 'name',
-            'Type': 'type', 'facility_type': 'type',
-            'Owner': 'owner', 'facility_owner': 'owner',
-            'County': 'county', 'County_Name': 'county',
-            'Sub_County': 'subcounty', 'SubCounty': 'subcounty',
-            'Division': 'division',
-            'Location': 'location',
-            'Sub_Locati': 'sub_location', 'SubLocation': 'sub_location',
-            'Constituen': 'constituency', 'Constituency': 'constituency',
-            'Nearest_To': 'nearest_to', 'NearestTo': 'nearest_to',
-            'Latitude': 'latitude', 'lat': 'latitude',
-            'Longitude': 'longitude', 'lon': 'longitude', 'lng': 'longitude'
-        }
+        # Step 2: Generate reports
+        report_script = os.path.join(app.config['SCRIPTS_FOLDER'], 'generate_report.py')
+        report_dir = os.path.join(session_dir, "reports")
+        os.makedirs(report_dir, exist_ok=True)
         
-        df.rename(columns=column_mapping, inplace=True)
+        subprocess.run([
+            'python', report_script,
+            '--input', cleaned_file,
+            '--output', report_dir
+        ], check=True)
         
-        # Clean text fields
-        text_columns = df.select_dtypes(include=['object']).columns
-        for col in text_columns:
-            df[col] = df[col].astype(str).str.strip().replace('nan', np.nan).replace('None', np.nan)
+        # Step 3: Create map visualization
+        map_script = os.path.join(app.config['SCRIPTS_FOLDER'], 'create_map.py')
+        map_file = os.path.join(session_dir, "facilities_map.html")
         
-        # Standardize facility types
-        if 'type' in df.columns:
-            type_mapping = {
-                'hosp': 'Hospital', 'hospital': 'Hospital',
-                'disp': 'Dispensary', 'dispensary': 'Dispensary',
-                'health centre': 'Health Center', 'health center': 'Health Center',
-                'clinic': 'Clinic', 
-                'medical': 'Medical Center', 'medical center': 'Medical Center',
-                'pharmacy': 'Pharmacy',
-                'laboratory': 'Laboratory', 'lab': 'Laboratory',
-                'maternity': 'Maternity',
-                'nursing': 'Nursing Home', 'nursing home': 'Nursing Home',
-            }
-            
-            df['type'] = df['type'].str.lower().replace(type_mapping).str.title()
+        subprocess.run([
+            'python', map_script,
+            '--input', cleaned_file,
+            '--output', map_file
+        ], check=True)
         
-        # Clean coordinate data
-        coord_columns = ['latitude', 'longitude']
-        for col in coord_columns:
-            if col in df.columns:
-                df[col] = df[col].astype(str).str.replace('[^\d\.\-]', '', regex=True)
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+        # Step 4: Advanced analysis
+        analysis_script = os.path.join(app.config['SCRIPTS_FOLDER'], 'analyze_distribution.py')
+        analysis_dir = os.path.join(session_dir, "analysis")
+        os.makedirs(analysis_dir, exist_ok=True)
         
-        # Standardize county names
-        if 'county' in df.columns:
-            df['county'] = df['county'].str.title().replace({
-                'Nairobi': 'Nairobi County',
-                'Mombasa': 'Mombasa County',
-                'Kisumu': 'Kisumu County',
-                'Nakuru': 'Nakuru County',
-            })
-        
-        # Save cleaned data
-        cleaned_file = os.path.join(session_dir, "cleaned_data.csv")
-        df.to_csv(cleaned_file, index=False, encoding='utf-8')
+        subprocess.run([
+            'python', analysis_script,
+            '--input', cleaned_file,
+            '--output', analysis_dir
+        ], check=True)
         
         # Merge with Kenya GeoJSON if coordinates available
+        df = pd.read_csv(cleaned_file)
         if 'latitude' in df.columns and 'longitude' in df.columns:
-            # Fetch Kenya GeoJSON from hosted URL
             kenya_geojson = fetch_kenya_geojson()
             
             # Convert facilities to GeoJSON features
@@ -188,7 +155,7 @@ def process_uploaded_data(session_id, file_path, data_type):
                         "ward": row.get('ward', 'Unknown'),
                         "owner": row.get('owner', 'Unknown'),
                         "data_source": data_type,
-                        "session_id": session_id
+                        "session_id": job_id
                     }
                 }
                 facility_features.append(feature)
@@ -204,166 +171,294 @@ def process_uploaded_data(session_id, file_path, data_type):
             with open(combined_geojson_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_geojson, f, indent=2, ensure_ascii=False)
         
-        # Generate reports
-        report = {
-            "session_id": session_id,
-            "processed_date": datetime.now().isoformat(),
-            "data_type": data_type,
-            "total_records": len(df),
-            "facilities_with_coordinates": df[['latitude', 'longitude']].notna().all(axis=1).sum() if 'latitude' in df.columns and 'longitude' in df.columns else 0,
-            "by_type": {},
-            "by_county": {},
-            "by_constituency": {},
-            "by_owner": {},
-            "missing_data": {}
-        }
+        # Load and return the report
+        report_path = os.path.join(report_dir, "analysis_report.json")
+        with open(report_path, 'r', encoding='utf-8') as f:
+            report = json.load(f)
         
-        # Count by type
-        if 'type' in df.columns:
-            type_counts = df['type'].value_counts()
-            report['by_type'] = {str(k): int(v) for k, v in type_counts.to_dict().items()}
+        # Add session info to report
+        report['session_id'] = job_id
+        report['processed_date'] = datetime.now().isoformat()
+        report['data_type'] = data_type
         
-        # Count by county
-        if 'county' in df.columns:
-            county_counts = df['county'].value_counts()
-            report['by_county'] = {str(k): int(v) for k, v in county_counts.to_dict().items()}
-        
-        # Count by constituency
-        if 'constituency' in df.columns:
-            constituency_counts = df['constituency'].value_counts()
-            report['by_constituency'] = {str(k): int(v) for k, v in constituency_counts.to_dict().items()}
-        
-        # Count by owner
-        if 'owner' in df.columns:
-            owner_counts = df['owner'].value_counts()
-            report['by_owner'] = {str(k): int(v) for k, v in owner_counts.to_dict().items()}
-        
-        # Missing data analysis
-        for col in df.columns:
-            missing = int(df[col].isna().sum())
-            report['missing_data'][col] = {
-                'missing_count': missing,
-                'missing_percentage': round(missing / len(df) * 100, 1) if len(df) > 0 else 0
-            }
-        
-        # Convert numpy types
-        report = convert_numpy_types(report)
-        
-        # Save report
-        report_path = os.path.join(session_dir, "analysis_report.json")
+        # Save updated report
         with open(report_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
         
-        # Create a text summary
-        summary_path = os.path.join(session_dir, "summary_report.txt")
-        with open(summary_path, 'w', encoding='utf-8') as f:
-            f.write(f"DATA ANALYSIS REPORT - {data_type.upper()}\n")
-            f.write("=========================================\n\n")
-            f.write(f"Report generated: {report['processed_date']}\n")
-            f.write(f"Session ID: {session_id}\n")
-            f.write(f"Total records: {report['total_records']}\n")
-            f.write(f"Records with coordinates: {report['facilities_with_coordinates']}\n\n")
-            
-            f.write("RECORDS BY TYPE:\n")
-            f.write("----------------\n")
-            for record_type, count in report['by_type'].items():
-                f.write(f"{record_type}: {count}\n")
-            
-            f.write("\nRECORDS BY COUNTY:\n")
-            f.write("------------------\n")
-            for county, count in report['by_county'].items():
-                f.write(f"{county}: {count}\n")
-            
-            f.write("\nMISSING DATA ANALYSIS:\n")
-            f.write("----------------------\n")
-            for col, stats in report['missing_data'].items():
-                f.write(f"{col}: {stats['missing_count']} ({stats['missing_percentage']}%)\n")
+        # Create dataset entry
+        datasets[job_id] = {
+            "session_id": job_id,
+            "data_type": data_type,
+            "processed_date": report['processed_date'],
+            "total_records": report['total_records'],
+            "has_geojson": 'latitude' in df.columns and 'longitude' in df.columns
+        }
         
         return {
             "success": True,
-            "session_id": session_id,
+            "session_id": job_id,
             "message": "Data processed successfully",
             "report": report,
-            "files": {
-                "cleaned_data": cleaned_file,
-                "combined_geojson": combined_geojson_path if 'latitude' in df.columns and 'longitude' in df.columns else None,
-                "analysis_report": report_path,
-                "summary_report": summary_path
+            "results": {
+                "successful_files": [os.path.basename(input_path)],
+                "failed_files": [],
+                "facility_count": report['total_records'],
+                "administrative_areas": len(report.get('by_county', {}))
             }
         }
     
     except Exception as e:
+        logger.error(f"Error processing data: {str(e)}")
         return {
             "success": False,
-            "session_id": session_id,
-            "message": f"Error processing data: {str(e)}"
+            "session_id": job_id,
+            "message": f"Error processing data: {str(e)}",
+            "results": {
+                "successful_files": [],
+                "failed_files": [os.path.basename(input_path)],
+                "facility_count": 0,
+                "administrative_areas": 0
+            }
         }
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """Handle file upload and processing"""
-    if 'file' not in request.files:
+    if 'files' not in request.files:
         return jsonify({"error": "No file provided"}), 400
     
-    file = request.files['file']
-    data_type = request.form.get('data_type', 'unknown')
+    file = request.files['files']
+    data_type = request.form.get('data_type', 'healthcare')
     
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
     
     if file and allowed_file(file.filename):
-        # Generate unique session ID
-        session_id = str(uuid.uuid4())
+        # Generate unique job ID
+        job_id = str(uuid.uuid4())
         
         # Save uploaded file
         filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{session_id}_{filename}")
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{job_id}_{filename}")
         file.save(file_path)
+        
+        # Get file format
+        file_format = filename.rsplit('.', 1)[1].lower()
+        
+        # Create job entry
+        jobs[job_id] = {
+            "id": job_id,
+            "status": "processing",
+            "progress": 0,
+            "message": "Starting processing",
+            "created_at": datetime.now().isoformat(),
+            "results": None
+        }
         
         # Process data in background thread
         def process_task():
-            result = process_uploaded_data(session_id, file_path, data_type)
-            # Store result in session directory for retrieval
-            result_path = os.path.join(app.config['PROCESSED_FOLDER'], session_id, "process_result.json")
-            with open(result_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+            try:
+                # Update job status
+                jobs[job_id]["progress"] = 25
+                jobs[job_id]["message"] = "Cleaning data"
+                
+                # Run processing pipeline
+                result = run_processing_pipeline(job_id, file_path, data_type, file_format)
+                
+                # Update job with results
+                jobs[job_id]["status"] = "completed" if result["success"] else "failed"
+                jobs[job_id]["progress"] = 100
+                jobs[job_id]["message"] = result["message"]
+                jobs[job_id]["results"] = result["results"]
+                
+                # Store result in session directory
+                result_path = os.path.join(app.config['PROCESSED_FOLDER'], job_id, "process_result.json")
+                with open(result_path, 'w', encoding='utf-8') as f:
+                    json.dump(result, f, indent=2, ensure_ascii=False)
+                    
+            except Exception as e:
+                logger.error(f"Error in processing task: {str(e)}")
+                jobs[job_id]["status"] = "failed"
+                jobs[job_id]["message"] = f"Processing error: {str(e)}"
+                jobs[job_id]["results"] = {
+                    "successful_files": [],
+                    "failed_files": [filename],
+                    "facility_count": 0,
+                    "administrative_areas": 0
+                }
         
         # Start processing in background
         thread = threading.Thread(target=process_task)
         thread.start()
         
         return jsonify({
-            "session_id": session_id,
+            "job_id": job_id,
             "message": "File uploaded successfully. Processing started.",
-            "status_url": f"/api/status/{session_id}"
+            "status_url": f"/api/status/{job_id}"
         }), 202
     
     return jsonify({"error": "Invalid file type"}), 400
 
-@app.route('/api/status/<session_id>')
-def get_status(session_id):
-    """Get processing status for a session"""
-    result_path = os.path.join(app.config['PROCESSED_FOLDER'], session_id, "process_result.json")
+@app.route('/api/process-url', methods=['POST'])
+def process_url():
+    """Initiate website crawling and processing"""
+    data = request.get_json()
+    if not data or 'url' not in data:
+        return jsonify({"error": "No URL provided"}), 400
     
-    if os.path.exists(result_path):
-        with open(result_path, 'r', encoding='utf-8') as f:
-            result = json.load(f)
-        return jsonify(result)
-    else:
-        return jsonify({
-            "session_id": session_id,
-            "status": "processing",
-            "message": "Data is still being processed"
-        }), 202
+    url = data['url']
+    data_type = data.get('data_type', 'healthcare')
+    
+    # Generate unique job ID
+    job_id = str(uuid.uuid4())
+    
+    # Create job entry
+    jobs[job_id] = {
+        "id": job_id,
+        "status": "processing",
+        "progress": 0,
+        "message": "Starting URL processing",
+        "created_at": datetime.now().isoformat(),
+        "results": None
+    }
+    
+    # Start processing in background thread
+    def process_url_task():
+        try:
+            # Update job status
+            jobs[job_id]["progress"] = 10
+            jobs[job_id]["message"] = "Downloading data from URL"
+            
+            # Download data from URL
+            response = requests.get(url)
+            response.raise_for_status()
+            
+            # Determine file type from content type or URL
+            content_type = response.headers.get('content-type', '')
+            if 'json' in content_type:
+                file_format = 'json'
+                content = response.json()
+            elif 'csv' in content_type:
+                file_format = 'csv'
+                content = response.text
+            else:
+                # Try to infer from URL
+                if url.endswith('.json'):
+                    file_format = 'json'
+                    content = response.json()
+                elif url.endswith('.csv'):
+                    file_format = 'csv'
+                    content = response.text
+                else:
+                    # Default to trying JSON, then CSV
+                    try:
+                        content = response.json()
+                        file_format = 'json'
+                    except:
+                        content = response.text
+                        file_format = 'csv'
+            
+            # Save downloaded data to temporary file
+            temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], "temp")
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            temp_file = os.path.join(temp_dir, f"{job_id}_downloaded_data.{file_format}")
+            
+            if file_format == 'json':
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(content, f, indent=2, ensure_ascii=False)
+            else:  # CSV
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            
+            # Update job status
+            jobs[job_id]["progress"] = 50
+            jobs[job_id]["message"] = "Processing downloaded data"
+            
+            # Run processing pipeline
+            result = run_processing_pipeline(job_id, temp_file, data_type, file_format)
+            
+            # Update job with results
+            jobs[job_id]["status"] = "completed" if result["success"] else "failed"
+            jobs[job_id]["progress"] = 100
+            jobs[job_id]["message"] = result["message"]
+            jobs[job_id]["results"] = result["results"]
+            
+            # Clean up temporary file
+            try:
+                os.remove(temp_file)
+            except:
+                pass
+                
+        except Exception as e:
+            logger.error(f"Error processing URL: {str(e)}")
+            jobs[job_id]["status"] = "failed"
+            jobs[job_id]["message"] = f"URL processing error: {str(e)}"
+            jobs[job_id]["results"] = {
+                "successful_files": [],
+                "failed_files": [url],
+                "facility_count": 0,
+                "administrative_areas": 0
+            }
+    
+    thread = threading.Thread(target=process_url_task)
+    thread.start()
+    
+    return jsonify({
+        "job_id": job_id,
+        "message": "URL processing started.",
+        "status_url": f"/api/status/{job_id}"
+    }), 202
+
+@app.route('/api/status/<job_id>')
+def get_status(job_id):
+    """Get processing status for a job"""
+    if job_id not in jobs:
+        return jsonify({"error": "Job not found"}), 404
+    
+    job = jobs[job_id]
+    return jsonify({
+        "id": job_id,
+        "status": job["status"],
+        "progress": job["progress"],
+        "message": job["message"],
+        "results": job["results"],
+        "created_at": job["created_at"]
+    })
+
+@app.route('/api/jobs')
+def get_jobs():
+    """Get all processing jobs"""
+    job_list = []
+    for job_id, job in jobs.items():
+        job_list.append({
+            "id": job_id,
+            "status": job["status"],
+            "progress": job["progress"],
+            "message": job["message"],
+            "created_at": job["created_at"]
+        })
+    
+    return jsonify({"jobs": job_list})
+
+@app.route('/api/datasets')
+def get_datasets():
+    """Get all processed datasets"""
+    dataset_list = []
+    for dataset_id, dataset in datasets.items():
+        dataset_list.append(dataset)
+    
+    return jsonify({"datasets": dataset_list})
 
 @app.route('/api/download/<session_id>/<file_type>')
 def download_file(session_id, file_type):
     """Download processed files"""
     file_type_map = {
-        "cleaned": "cleaned_data.csv",
+        "cleaned": "facilities_cleaned.csv",
         "geojson": "combined_data.geojson",
-        "report": "analysis_report.json",
-        "summary": "summary_report.txt"
+        "report": "reports/analysis_report.json",
+        "summary": "reports/summary_report.txt",
+        "map": "facilities_map.html"
     }
     
     if file_type not in file_type_map:
@@ -375,30 +470,6 @@ def download_file(session_id, file_type):
         return jsonify({"error": "File not found"}), 404
     
     return send_file(file_path, as_attachment=True)
-
-@app.route('/api/datasets')
-def list_datasets():
-    """List all processed datasets"""
-    datasets = []
-    
-    for session_id in os.listdir(app.config['PROCESSED_FOLDER']):
-        session_path = os.path.join(app.config['PROCESSED_FOLDER'], session_id)
-        result_path = os.path.join(session_path, "process_result.json")
-        
-        if os.path.exists(result_path):
-            with open(result_path, 'r', encoding='utf-8') as f:
-                result = json.load(f)
-            
-            if result.get('success'):
-                datasets.append({
-                    "session_id": session_id,
-                    "data_type": result.get('report', {}).get('data_type', 'unknown'),
-                    "processed_date": result.get('report', {}).get('processed_date', ''),
-                    "total_records": result.get('report', {}).get('total_records', 0),
-                    "has_geojson": os.path.exists(os.path.join(session_path, "combined_data.geojson"))
-                })
-    
-    return jsonify({"datasets": datasets})
 
 @app.route('/api/geojson/<session_id>')
 def get_geojson(session_id):
@@ -446,6 +517,10 @@ def kenya_geojson():
     kenya_geojson = fetch_kenya_geojson()
     return jsonify(kenya_geojson)
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True, host='0.0.0.0', port=5000)
