@@ -193,4 +193,4 @@ if __name__ == "__main__":
     # generate_report("https://example.com/facilities_cleaned.csv")
     
     # Or with local file:
-    generate_report()
+    generate_report("https://civicedkenya.vercel.app/shambles/facilities_cleaned.csv")
