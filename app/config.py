@@ -6,8 +6,8 @@ class Config:
     BASE_DIR = Path(__file__).parent
     
     # Upload settings
-    UPLOAD_FOLDER = BASE_DIR / 'uploads'
-    ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson', 'kml', 'topojson', 'wkt', 'png', 'pdf'}
+    UPLOAD_FOLDER = BASE_DIR / 'user_uploads'
+    ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson', 'kml', 'topojson', 'wkt', 'png', 'pdf', 'xlsx', 'xls'}
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size
     
     # Processing directories
@@ -26,10 +26,12 @@ class Config:
     # Secret key for session management
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-please-change-in-production'
     
+    # Kenya GeoJSON URL
+    KENYA_GEOJSON_URL = os.environ.get('KENYA_GEOJSON_URL') or 'https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson'
+    
     # Railway-specific settings
     @staticmethod
     def init_app(app):
         # Ensure upload directories exist
-        for directory in [Config.UPLOAD_FOLDER, Config.PROCESSED_DIR, 
-                         Config.REPORTS_DIR, Config.VISUALIZATIONS_DIR]:
+        for directory in [Config.UPLOAD_FOLDER, Config.PROCESSED_DIR, Config.REPORTS_DIR, Config.VISUALIZATIONS_DIR]:
             directory.mkdir(exist_ok=True)
