@@ -1,10 +1,14 @@
+
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "python"
+    "builder": "python",
+    "buildCommand": "cd app && pip install -r requirements.txt"
   },
   "deploy": {
-    "startCommand": "python app/main.py",
-    "restartPolicyType": "ON_FAILURE"
+    "startCommand": "cd app && python main.py",
+    "restartPolicyType": "ON_FAILURE",
+    "sleepApplication": false,
+    "cronSchedule": null
   }
 }

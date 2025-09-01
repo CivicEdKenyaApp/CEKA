@@ -1,2 +1,2 @@
 
-web: cd app && gunicorn main:app --bind 0.0.0.0:$PORT --workers 2 --timeout 300 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 --log-level info
+web: cd app && python -m gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --keep-alive 2 --max-requests 1000 --preload main:app

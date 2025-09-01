@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
@@ -28,13 +27,34 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Enhanced CORS configuration for all origins and methods
+    # Enhanced CORS configuration specifically for your domain
     CORS(app, 
-         origins=['*'],
+         origins=['https://civicedkenya.vercel.app', 'http://localhost:8080', 'http://localhost:3000', '*'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-         supports_credentials=True,
-         expose_headers=['Content-Disposition'])
+         supports_credentials=False,
+         expose_headers=['Content-Disposition'],
+         send_wildcard=True,
+         vary_header=False)
+    
+    # Add CORS headers manually as backup
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Origin,X-Requested-With')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'false')
+        return response
+    
+    # Handle preflight requests
+    @app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            response = jsonify({'status': 'ok'})
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization,Accept,Origin,X-Requested-With")
+            response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+            return response
     
     # Initialize configuration
     Config.init_app(app)
@@ -53,20 +73,18 @@ def create_app():
     def get_kenya_geojson():
         try:
             logger.info("Fetching Kenya GeoJSON data")
-            # Try to serve from local file first
             geojson_path = app.config['PROCESSED_DIR'] / 'kenya_healthcare_enhanced.geojson'
             
             if geojson_path.exists():
                 return send_file(geojson_path, mimetype='application/json')
             else:
-                # Return default Kenya boundaries if enhanced file doesn't exist
                 return jsonify({
                     "type": "FeatureCollection",
-                    "features": []
+                    "features": [],
+                    "message": "Default Kenya boundaries - no enhanced data available"
                 })
         except Exception as e:
             logger.error(f"Error serving Kenya GeoJSON: {str(e)}")
-            logger.error(traceback.format_exc())
             return jsonify({'error': f'Failed to load Kenya GeoJSON: {str(e)}'}), 500
     
     # Datasets endpoint
@@ -93,10 +111,9 @@ def create_app():
             })
         except Exception as e:
             logger.error(f"Error fetching datasets: {str(e)}")
-            logger.error(traceback.format_exc())
             return jsonify({'error': f'Failed to fetch datasets: {str(e)}'}), 500
     
-    # File upload endpoint
+    # File upload endpoint with improved error handling
     @app.route('/api/upload', methods=['POST', 'OPTIONS'])
     def upload_file():
         if request.method == 'OPTIONS':
