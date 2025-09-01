@@ -1,246 +1,443 @@
 
 import pandas as pd
 import geopandas as gpd
-import numpy as np
-from flask import current_app
-from .file_handler import FileHandler
+import json
+import os
 import logging
 import traceback
+from datetime import datetime
+from pathlib import Path
+from flask import current_app
+
+from .file_handler import FileHandler
+from .geo_analyzer import GeoAnalyzer
+from .report_generator import ReportGenerator
+from .visualization_engine import VisualizationEngine
 
 logger = logging.getLogger(__name__)
 
 class DataProcessor:
-    @staticmethod
-    def process_uploaded_files(files):
-        results = {
-            'success': [],
-            'failed': [],
-            'processed_data': {}
+    def __init__(self):
+        self.supported_formats = ['csv', 'json', 'geojson', 'kml', 'topojson', 'wkt', 'excel', 'png', 'pdf']
+        
+    def process_file(self, file_path, file_type):
+        """Main file processing method"""
+        try:
+            logger.info(f"Processing file: {file_path} of type: {file_type}")
+            
+            if file_type not in self.supported_formats:
+                return {
+                    'success': False,
+                    'error': f'Unsupported file type: {file_type}'
+                }
+            
+            # Read the file
+            raw_data = FileHandler.read_file(file_path, file_type)
+            
+            # Fix common issues
+            cleaned_data = FileHandler.fix_common_issues(raw_data, file_type)
+            
+            # Process based on file type
+            if file_type in ['csv', 'excel']:
+                return self._process_tabular_data(cleaned_data, file_path, file_type)
+            elif file_type in ['json']:
+                return self._process_json_data(cleaned_data, file_path)
+            elif file_type in ['geojson', 'kml', 'topojson', 'wkt']:
+                return self._process_geospatial_data(cleaned_data, file_path, file_type)
+            elif file_type in ['png', 'pdf']:
+                return self._process_image_pdf(cleaned_data, file_path, file_type)
+            else:
+                return {
+                    'success': False,
+                    'error': f'Processing not implemented for {file_type}'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error processing file: {str(e)}")
+            logger.error(traceback.format_exc())
+            return {
+                'success': False,
+                'error': f'Failed to process file: {str(e)}'
+            }
+    
+    def _process_tabular_data(self, data, file_path, file_type):
+        """Process CSV and Excel files"""
+        try:
+            logger.info(f"Processing tabular data with {len(data)} rows")
+            
+            # Basic statistics
+            stats = {
+                'total_rows': len(data),
+                'total_columns': len(data.columns),
+                'columns': list(data.columns),
+                'dtypes': {col: str(dtype) for col, dtype in data.dtypes.items()},
+                'null_counts': data.isnull().sum().to_dict(),
+                'memory_usage': data.memory_usage(deep=True).sum()
+            }
+            
+            # Check if this could be geospatial data
+            geo_columns = self._detect_geo_columns(data)
+            if geo_columns:
+                logger.info(f"Detected potential geo columns: {geo_columns}")
+                try:
+                    gdf = self._convert_to_geodataframe(data, geo_columns)
+                    if gdf is not None:
+                        return self._process_geospatial_data(gdf, file_path, 'csv_with_geo')
+                except Exception as e:
+                    logger.warning(f"Failed to convert to GeoDataFrame: {e}")
+            
+            # Save processed data
+            output_path = self._save_processed_data(data, file_path, 'processed_tabular')
+            
+            # Generate reports
+            report_path = self._generate_tabular_report(data, stats, file_path)
+            
+            return {
+                'success': True,
+                'data': {
+                    'type': 'tabular',
+                    'statistics': stats,
+                    'sample_data': data.head(10).to_dict('records'),
+                    'file_info': {
+                        'original_path': str(file_path),
+                        'processed_path': str(output_path)
+                    }
+                },
+                'report_path': report_path
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing tabular data: {str(e)}")
+            raise
+    
+    def _process_json_data(self, data, file_path):
+        """Process JSON files"""
+        try:
+            logger.info("Processing JSON data")
+            
+            # Analyze JSON structure
+            structure_info = self._analyze_json_structure(data)
+            
+            # Check if it's GeoJSON
+            if self._is_geojson(data):
+                logger.info("Detected GeoJSON format")
+                # Convert to GeoDataFrame and process as geospatial
+                try:
+                    if isinstance(data, dict):
+                        gdf = gpd.GeoDataFrame.from_features(data.get('features', []))
+                    else:
+                        gdf = gpd.GeoDataFrame.from_features(data)
+                    return self._process_geospatial_data(gdf, file_path, 'geojson')
+                except Exception as e:
+                    logger.warning(f"Failed to process as GeoJSON: {e}")
+            
+            # Save processed data
+            output_path = self._save_processed_data(data, file_path, 'processed_json')
+            
+            # Generate basic report
+            report_path = self._generate_json_report(data, structure_info, file_path)
+            
+            return {
+                'success': True,
+                'data': {
+                    'type': 'json',
+                    'structure': structure_info,
+                    'sample_data': self._get_json_sample(data),
+                    'file_info': {
+                        'original_path': str(file_path),
+                        'processed_path': str(output_path)
+                    }
+                },
+                'report_path': report_path
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing JSON data: {str(e)}")
+            raise
+    
+    def _process_geospatial_data(self, gdf, file_path, file_type):
+        """Process geospatial data"""
+        try:
+            logger.info(f"Processing geospatial data with {len(gdf)} features")
+            
+            # Ensure CRS is set
+            if gdf.crs is None:
+                gdf.crs = "EPSG:4326"
+                logger.info("Set default CRS to EPSG:4326")
+            
+            # Basic geospatial statistics
+            geo_stats = {
+                'total_features': len(gdf),
+                'geometry_types': gdf.geometry.type.value_counts().to_dict(),
+                'crs': str(gdf.crs),
+                'bounds': gdf.total_bounds.tolist(),
+                'columns': list(gdf.columns),
+                'has_valid_geometries': gdf.geometry.is_valid.all()
+            }
+            
+            # Perform spatial analysis
+            spatial_analysis = GeoAnalyzer.perform_spatial_analysis(gdf, gdf)
+            
+            # Save processed data
+            output_path = self._save_processed_geodata(gdf, file_path)
+            
+            # Generate comprehensive report
+            report_path, summary_path = ReportGenerator.generate_comprehensive_report(
+                gdf, gdf, spatial_analysis, current_app.config['REPORTS_DIR']
+            )
+            
+            # Create visualizations
+            viz_path = VisualizationEngine.create_interactive_map(
+                gdf, gdf, str(current_app.config['VISUALIZATIONS_DIR'] / 'interactive_map.html')
+            )
+            
+            heatmap_path = VisualizationEngine.create_heatmap(
+                gdf[gdf.geometry.type == 'Point'], 
+                str(current_app.config['VISUALIZATIONS_DIR'] / 'facility_heatmap.html')
+            )
+            
+            return {
+                'success': True,
+                'data': {
+                    'type': 'geospatial',
+                    'statistics': geo_stats,
+                    'spatial_analysis': spatial_analysis,
+                    'sample_features': self._get_geospatial_sample(gdf),
+                    'file_info': {
+                        'original_path': str(file_path),
+                        'processed_path': str(output_path)
+                    }
+                },
+                'report_path': report_path,
+                'visualization_path': viz_path,
+                'analysis': spatial_analysis
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing geospatial data: {str(e)}")
+            raise
+    
+    def _process_image_pdf(self, file_path, original_path, file_type):
+        """Process image and PDF files"""
+        try:
+            logger.info(f"Processing {file_type} file")
+            
+            # For now, just return file info
+            # Future: implement OCR, image analysis, etc.
+            file_stats = Path(file_path).stat()
+            
+            return {
+                'success': True,
+                'data': {
+                    'type': file_type,
+                    'file_info': {
+                        'original_path': str(original_path),
+                        'processed_path': str(file_path),
+                        'size': file_stats.st_size,
+                        'modified': file_stats.st_mtime
+                    },
+                    'message': f'{file_type.upper()} file received. Advanced processing will be implemented in future updates.'
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing {file_type}: {str(e)}")
+            raise
+    
+    def process_json_data(self, json_data):
+        """Process JSON data directly from API request"""
+        try:
+            logger.info("Processing JSON data from API request")
+            
+            # Create temporary file
+            temp_path = current_app.config['UPLOAD_FOLDER'] / f"temp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, indent=2)
+            
+            # Process the temporary file
+            result = self.process_file(temp_path, 'json')
+            
+            # Clean up temporary file
+            if temp_path.exists():
+                temp_path.unlink()
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error processing JSON data: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Failed to process JSON data: {str(e)}'
+            }
+    
+    def _detect_geo_columns(self, df):
+        """Detect potential geographic columns"""
+        geo_indicators = {
+            'latitude': ['lat', 'latitude', 'y', 'coord_y', 'lat_y'],
+            'longitude': ['lon', 'lng', 'longitude', 'x', 'coord_x', 'lon_x', 'lng_x'],
+            'geometry': ['geometry', 'geom', 'wkt', 'shape']
         }
         
-        for file in files:
-            try:
-                logger.info(f"Processing file: {file.filename}")
-                
-                file_path, filename = FileHandler.save_uploaded_file(file)
-                if not file_path:
-                    results['failed'].append({'file': file.filename, 'error': 'Invalid file type'})
-                    continue
-                
-                file_type = FileHandler.detect_file_type(file_path)
-                if file_type == 'unknown':
-                    results['failed'].append({'file': file.filename, 'error': 'Unknown file type'})
-                    continue
-                
-                data = FileHandler.read_file(file_path, file_type)
-                data = FileHandler.fix_common_issues(data, file_type)
-                
-                # Store processed data
-                results['processed_data'][filename] = {
-                    'data': data,
-                    'type': file_type,
-                    'original_name': file.filename
-                }
-                results['success'].append(file.filename)
-                
-                logger.info(f"Successfully processed file: {file.filename}")
-                
-            except Exception as e:
-                error_msg = f"Error processing file {file.filename}: {str(e)}"
-                logger.error(error_msg)
-                logger.error(traceback.format_exc())
-                results['failed'].append({'file': file.filename, 'error': str(e)})
+        detected = {}
+        for col in df.columns:
+            col_lower = col.lower()
+            for geo_type, indicators in geo_indicators.items():
+                if any(indicator in col_lower for indicator in indicators):
+                    detected[geo_type] = col
+                    break
         
-        return results
+        return detected
     
-    @staticmethod
-    def merge_geospatial_data(geojson_data, facility_data):
-        """Merge Kenya GeoJSON with healthcare facility data"""
+    def _convert_to_geodataframe(self, df, geo_columns):
+        """Convert DataFrame to GeoDataFrame"""
         try:
-            logger.info("Starting geospatial data merge")
+            if 'geometry' in geo_columns:
+                # Direct geometry column
+                from shapely import wkt
+                df['geometry'] = df[geo_columns['geometry']].apply(wkt.loads)
+                return gpd.GeoDataFrame(df, geometry='geometry', crs="EPSG:4326")
             
-            # Convert facility data to GeoDataFrame if it's not already
-            if not isinstance(facility_data, gpd.GeoDataFrame):
-                if hasattr(facility_data, 'longitude') and hasattr(facility_data, 'latitude'):
-                    geometry = gpd.points_from_xy(facility_data.longitude, facility_data.latitude)
-                    facility_gdf = gpd.GeoDataFrame(
-                        facility_data, 
-                        geometry=geometry,
-                        crs="EPSG:4326"
-                    )
-                else:
-                    logger.warning("Facility data does not have longitude/latitude columns")
-                    return geojson_data
-            else:
-                facility_gdf = facility_data
+            elif 'latitude' in geo_columns and 'longitude' in geo_columns:
+                # Lat/Lon columns
+                return gpd.GeoDataFrame(
+                    df, 
+                    geometry=gpd.points_from_xy(df[geo_columns['longitude']], df[geo_columns['latitude']]),
+                    crs="EPSG:4326"
+                )
             
-            # Ensure both have the same CRS
-            if geojson_data.crs != facility_gdf.crs:
-                facility_gdf = facility_gdf.to_crs(geojson_data.crs)
-            
-            # Perform spatial join to add administrative information to facilities
-            facilities_with_admin = gpd.sjoin(
-                facility_gdf, 
-                geojson_data, 
-                how="left", 
-                predicate="within"
-            )
-            
-            # Create combined GeoJSON
-            combined_features = geojson_data.copy()
-            
-            # Add facility points
-            for _, facility in facilities_with_admin.iterrows():
-                feature = {
-                    "type": "Feature",
-                    "geometry": facility.geometry.__geo_interface__,
-                    "properties": {
-                        "name": facility.get('name', 'Unknown'),
-                        "type": facility.get('type', 'Unknown'),
-                        "county": facility.get('county', 'Unknown'),
-                        "subcounty": facility.get('subcounty', 'Unknown'),
-                        "constituency": facility.get('constituency', 'Unknown'),
-                        "ward": facility.get('ward', 'Unknown'),
-                        "owner": facility.get('owner', 'Unknown'),
-                        "feature_type": "healthcare_facility"
-                    }
-                }
-                
-                # Use pd.concat instead of deprecated append
-                new_gdf = gpd.GeoDataFrame.from_features([feature], crs=geojson_data.crs)
-                combined_features = pd.concat([combined_features, new_gdf], ignore_index=True)
-            
-            logger.info("Geospatial data merge completed successfully")
-            return combined_features
+            return None
             
         except Exception as e:
-            error_msg = f"Error merging geospatial data: {str(e)}"
-            logger.error(error_msg)
-            logger.error(traceback.format_exc())
-            raise
-
-    @staticmethod
-    def analyze_data_quality(data, data_type):
-        """Analyze data quality and return metrics"""
-        try:
-            quality_metrics = {
-                'completeness': 0,
-                'consistency': 0,
-                'accuracy': 0,
-                'overall_score': 0,
-                'issues': []
-            }
-            
-            if data_type == 'csv' and hasattr(data, 'isnull'):
-                # Calculate completeness for CSV data
-                total_cells = data.size
-                missing_cells = data.isnull().sum().sum()
-                quality_metrics['completeness'] = ((total_cells - missing_cells) / total_cells) * 100
-                
-                # Check for consistency issues
-                inconsistencies = 0
-                for column in data.select_dtypes(include=['object']).columns:
-                    unique_values = data[column].nunique()
-                    if unique_values > len(data) * 0.8:  # Too many unique values
-                        inconsistencies += 1
-                        quality_metrics['issues'].append(f"High cardinality in column: {column}")
-                
-                quality_metrics['consistency'] = max(0, 100 - (inconsistencies * 10))
-                quality_metrics['accuracy'] = 90  # Placeholder - would need domain-specific rules
-                
-            elif data_type in ['geojson', 'kml'] and hasattr(data, 'geometry'):
-                # Analyze geospatial data quality
-                invalid_geometries = (~data.geometry.is_valid).sum()
-                total_features = len(data)
-                
-                quality_metrics['completeness'] = ((total_features - invalid_geometries) / total_features) * 100
-                quality_metrics['consistency'] = 95  # Assuming spatial data is generally consistent
-                quality_metrics['accuracy'] = 85   # Placeholder
-                
-                if invalid_geometries > 0:
-                    quality_metrics['issues'].append(f"{invalid_geometries} invalid geometries found")
-            
-            # Calculate overall score
-            quality_metrics['overall_score'] = (
-                quality_metrics['completeness'] * 0.4 +
-                quality_metrics['consistency'] * 0.3 +
-                quality_metrics['accuracy'] * 0.3
-            )
-            
-            return quality_metrics
-            
-        except Exception as e:
-            logger.error(f"Error analyzing data quality: {str(e)}")
+            logger.error(f"Error converting to GeoDataFrame: {e}")
+            return None
+    
+    def _analyze_json_structure(self, data):
+        """Analyze JSON data structure"""
+        if isinstance(data, dict):
             return {
-                'completeness': 0,
-                'consistency': 0,
-                'accuracy': 0,
-                'overall_score': 0,
-                'issues': [f"Error during analysis: {str(e)}"]
+                'type': 'object',
+                'keys': list(data.keys()),
+                'total_keys': len(data.keys()),
+                'nested_levels': self._count_nested_levels(data)
             }
-
-    @staticmethod
-    def generate_summary_statistics(data, data_type):
-        """Generate summary statistics for the data"""
-        try:
-            summary = {
-                'total_records': 0,
-                'data_type': data_type,
-                'columns': [],
-                'numeric_summary': {},
-                'categorical_summary': {}
-            }
-            
-            if data_type == 'csv' and hasattr(data, 'shape'):
-                summary['total_records'] = len(data)
-                summary['columns'] = list(data.columns) if hasattr(data, 'columns') else []
-                
-                # Numeric columns summary
-                numeric_cols = data.select_dtypes(include=[np.number]).columns
-                for col in numeric_cols:
-                    summary['numeric_summary'][col] = {
-                        'mean': float(data[col].mean()),
-                        'median': float(data[col].median()),
-                        'std': float(data[col].std()),
-                        'min': float(data[col].min()),
-                        'max': float(data[col].max()),
-                        'null_count': int(data[col].isnull().sum())
-                    }
-                
-                # Categorical columns summary
-                categorical_cols = data.select_dtypes(include=['object']).columns
-                for col in categorical_cols:
-                    value_counts = data[col].value_counts().head(10)
-                    summary['categorical_summary'][col] = {
-                        'unique_values': int(data[col].nunique()),
-                        'null_count': int(data[col].isnull().sum()),
-                        'top_values': dict(value_counts)
-                    }
-                    
-            elif data_type in ['geojson', 'kml'] and hasattr(data, '__len__'):
-                summary['total_records'] = len(data)
-                if hasattr(data, 'columns'):
-                    summary['columns'] = list(data.columns)
-                
-                # Calculate spatial bounds if possible
-                try:
-                    bounds = data.total_bounds
-                    summary['spatial_bounds'] = {
-                        'minx': float(bounds[0]),
-                        'miny': float(bounds[1]),
-                        'maxx': float(bounds[2]),
-                        'maxy': float(bounds[3])
-                    }
-                except:
-                    summary['spatial_bounds'] = None
-                    
-            return summary
-            
-        except Exception as e:
-            logger.error(f"Error generating summary statistics: {str(e)}")
+        elif isinstance(data, list):
             return {
-                'total_records': 0,
-                'data_type': data_type,
-                'columns': [],
-                'error': str(e)
+                'type': 'array',
+                'length': len(data),
+                'item_types': list(set(type(item).__name__ for item in data[:100])),
+                'sample_keys': list(data[0].keys()) if data and isinstance(data[0], dict) else []
             }
+        else:
+            return {
+                'type': type(data).__name__,
+                'value_sample': str(data)[:100]
+            }
+    
+    def _is_geojson(self, data):
+        """Check if data is GeoJSON format"""
+        return (isinstance(data, dict) and 
+                data.get('type') == 'FeatureCollection' and 
+                'features' in data)
+    
+    def _count_nested_levels(self, obj, level=0):
+        """Count maximum nesting levels in JSON"""
+        if isinstance(obj, dict):
+            return max([self._count_nested_levels(v, level + 1) for v in obj.values()] + [level])
+        elif isinstance(obj, list) and obj:
+            return max([self._count_nested_levels(item, level + 1) for item in obj[:10]] + [level])
+        else:
+            return level
+    
+    def _get_json_sample(self, data, max_items=5):
+        """Get sample of JSON data"""
+        if isinstance(data, dict):
+            return {k: v for k, v in list(data.items())[:max_items]}
+        elif isinstance(data, list):
+            return data[:max_items]
+        else:
+            return data
+    
+    def _get_geospatial_sample(self, gdf, max_features=5):
+        """Get sample of geospatial features"""
+        sample_gdf = gdf.head(max_features)
+        features = []
+        
+        for _, row in sample_gdf.iterrows():
+            feature = {
+                'type': 'Feature',
+                'geometry': row.geometry.__geo_interface__ if row.geometry else None,
+                'properties': {k: v for k, v in row.items() if k != 'geometry'}
+            }
+            features.append(feature)
+        
+        return {
+            'type': 'FeatureCollection',
+            'features': features
+        }
+    
+    def _save_processed_data(self, data, original_path, suffix):
+        """Save processed data"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{Path(original_path).stem}_{suffix}_{timestamp}.json"
+        output_path = current_app.config['PROCESSED_DIR'] / filename
+        
+        if isinstance(data, pd.DataFrame):
+            data.to_json(output_path, orient='records', indent=2)
+        else:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, default=str)
+        
+        logger.info(f"Saved processed data to: {output_path}")
+        return output_path
+    
+    def _save_processed_geodata(self, gdf, original_path):
+        """Save processed geospatial data"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{Path(original_path).stem}_processed_{timestamp}.geojson"
+        output_path = current_app.config['PROCESSED_DIR'] / filename
+        
+        gdf.to_file(output_path, driver='GeoJSON')
+        logger.info(f"Saved processed geodata to: {output_path}")
+        return output_path
+    
+    def _generate_tabular_report(self, df, stats, original_path):
+        """Generate report for tabular data"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        report_filename = f"tabular_report_{timestamp}.json"
+        report_path = current_app.config['REPORTS_DIR'] / report_filename
+        
+        report = {
+            'generated_date': datetime.now().isoformat(),
+            'original_file': str(original_path),
+            'statistics': stats,
+            'data_quality': {
+                'completeness': ((len(df) * len(df.columns)) - df.isnull().sum().sum()) / (len(df) * len(df.columns)) * 100,
+                'null_percentage': df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100
+            }
+        }
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2)
+        
+        return str(report_path)
+    
+    def _generate_json_report(self, data, structure_info, original_path):
+        """Generate report for JSON data"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        report_filename = f"json_report_{timestamp}.json"
+        report_path = current_app.config['REPORTS_DIR'] / report_filename
+        
+        report = {
+            'generated_date': datetime.now().isoformat(),
+            'original_file': str(original_path),
+            'structure_analysis': structure_info,
+            'size_info': {
+                'estimated_size_mb': len(str(data)) / (1024 * 1024)
+            }
+        }
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2)
+        
+        return str(report_path)
