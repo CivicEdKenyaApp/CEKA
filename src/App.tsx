@@ -11,7 +11,7 @@ import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
-import AdminDashboard from '@/pages/AdminDashboard';  
+import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
 import ResourceHub from '@/pages/ResourceHub';
@@ -44,16 +44,16 @@ import Settings from '@/pages/Settings';
 import AccountSettings from '@/pages/settings/AccountSettings';
 import NotificationSettings from '@/pages/settings/NotificationSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsConditions from '@/pages/TermsConditions';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/providers/AuthProvider';
 
 const ScrollToTop = () => {
   const location = useLocation();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
-
   return null;
 };
 
@@ -62,7 +62,6 @@ const AppContent: React.FC = () => {
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
 
   useEffect(() => {
-    // Show welcome tour for new authenticated users
     if (session) {
       const hasSeenTour = localStorage.getItem('ceka-welcome-tour-seen');
       if (!hasSeenTour) {
@@ -113,6 +112,8 @@ const AppContent: React.FC = () => {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/document/:id" element={<DocumentViewerPage />} />
         <Route path="/thumbnail-demo" element={<ThumbnailDemo />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
         <Route path="/settings" element={<SettingsLayout />}>
           <Route index element={<Settings />} />
           <Route path="account" element={<AccountSettings />} />
@@ -132,10 +133,7 @@ const App: React.FC = () => {
       <LanguageProvider>
         <AuthProvider>
           <ScrollListener>
-            <AuthModal 
-              open={false} 
-              onOpenChange={() => {}} 
-            />
+            <AuthModal open={false} onOpenChange={() => {}} />
             <AppContent />
           </ScrollListener>
         </AuthProvider>
