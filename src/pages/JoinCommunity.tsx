@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -12,29 +12,130 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2 } from 'lucide-react';
 
 const JoinCommunity = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { language } = useLanguage();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    county: '',
+    interests: '',
+    constitution: false,
+    legislation: false,
+    humanRights: false,
+    governance: false,
+    voterEducation: false,
+    communityProjects: false,
+  });
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({
+        ...prev,
+        [id]: checked
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [id]: value
+      }));
+    }
+  };
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [id]: checked
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Show success message
-    toast({
-      title: translate("Application Submitted!", language),
-      description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
-    });
-    
-    setFormSubmitted(true);
-    
-    // Redirect after a short delay
-    setTimeout(() => {
-      navigate('/community');
-    }, 3000);
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      toast({
+        title: translate("Validation Error", language),
+        description: translate("Please fill in all required fields.", language),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast({
+        title: translate("Terms Required", language),
+        description: translate("Please accept the terms and conditions to continue.", language),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare areas of interest
+      const areasOfInterest: string[] = [];
+      if (formData.constitution) areasOfInterest.push('constitution');
+      if (formData.legislation) areasOfInterest.push('legislation');
+      if (formData.humanRights) areasOfInterest.push('human-rights');
+      if (formData.governance) areasOfInterest.push('governance');
+      if (formData.voterEducation) areasOfInterest.push('voter-education');
+      if (formData.communityProjects) areasOfInterest.push('community-projects');
+
+      // Prepare submission data
+      const submissionData = {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        county: formData.county.trim() || null,
+        interests: formData.interests.trim() || null,
+        areas_of_interest: areasOfInterest,
+        terms_accepted: termsAccepted
+      };
+
+      // Call edge function to handle both database storage and email sending
+      const { data, error } = await supabase.functions.invoke('send-community-email', {
+        body: submissionData
+      });
+
+      if (error) {
+        console.error('Submission error:', error);
+        throw new Error(error.message || 'Failed to submit application');
+      }
+
+      // Show success message
+      toast({
+        title: translate("Application Submitted!", language),
+        description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
+      });
+      
+      setFormSubmitted(true);
+      
+      // Redirect after a delay
+      setTimeout(() => {
+        navigate('/community');
+      }, 3000);
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: translate("Submission Error", language),
+        description: translate("There was an error submitting your application. Please try again later.", language),
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const testimonials = [
@@ -155,30 +256,71 @@ const JoinCommunity = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">{translate("First Name", language)} *</Label>
-                        <Input id="firstName" required />
+                        <Input 
+                          id="firstName" 
+                          name="firstName"
+                          required 
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          maxLength={100}
+                          autoComplete="given-name"
+                          disabled={isSubmitting}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">{translate("Last Name", language)} *</Label>
-                        <Input id="lastName" required />
+                        <Input 
+                          id="lastName" 
+                          name="lastName"
+                          required 
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          maxLength={100}
+                          autoComplete="family-name"
+                          disabled={isSubmitting}
+                        />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="email">{translate("Email", language)} *</Label>
-                      <Input id="email" type="email" required />
+                      <Input 
+                        id="email" 
+                        name="email"
+                        type="email" 
+                        required 
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        maxLength={255}
+                        autoComplete="email"
+                        disabled={isSubmitting}
+                      />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="county">{translate("County", language)}</Label>
-                      <Input id="county" placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)} />
+                      <Input 
+                        id="county" 
+                        name="county"
+                        placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)}
+                        value={formData.county}
+                        onChange={handleInputChange}
+                        maxLength={100}
+                        disabled={isSubmitting}
+                      />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="interests">{translate("What interests you most about civic education?", language)}</Label>
                       <Textarea 
                         id="interests" 
+                        name="interests"
                         placeholder={translate("Share your interests or what you hope to gain from this community...", language)}
                         className="min-h-[100px]"
+                        value={formData.interests}
+                        onChange={handleInputChange}
+                        maxLength={2000}
+                        disabled={isSubmitting}
                       />
                     </div>
                     
@@ -186,38 +328,74 @@ const JoinCommunity = () => {
                       <Label className="text-base">{translate("Areas of Interest", language)}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="constitution" />
+                          <Checkbox 
+                            id="constitution" 
+                            name="constitution"
+                            checked={formData.constitution}
+                            onCheckedChange={(checked) => handleCheckboxChange('constitution', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
                           <label htmlFor="constitution" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Constitution", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="legislation" />
+                          <Checkbox 
+                            id="legislation" 
+                            name="legislation"
+                            checked={formData.legislation}
+                            onCheckedChange={(checked) => handleCheckboxChange('legislation', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
                           <label htmlFor="legislation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Legislation", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="human-rights" />
-                          <label htmlFor="human-rights" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          <Checkbox 
+                            id="humanRights" 
+                            name="humanRights"
+                            checked={formData.humanRights}
+                            onCheckedChange={(checked) => handleCheckboxChange('humanRights', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
+                          <label htmlFor="humanRights" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Human Rights", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="governance" />
+                          <Checkbox 
+                            id="governance" 
+                            name="governance"
+                            checked={formData.governance}
+                            onCheckedChange={(checked) => handleCheckboxChange('governance', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
                           <label htmlFor="governance" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Governance", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="voter-education" />
-                          <label htmlFor="voter-education" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          <Checkbox 
+                            id="voterEducation" 
+                            name="voterEducation"
+                            checked={formData.voterEducation}
+                            onCheckedChange={(checked) => handleCheckboxChange('voterEducation', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
+                          <label htmlFor="voterEducation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Voter Education", language)}
                           </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="community-projects" />
-                          <label htmlFor="community-projects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          <Checkbox 
+                            id="communityProjects" 
+                            name="communityProjects"
+                            checked={formData.communityProjects}
+                            onCheckedChange={(checked) => handleCheckboxChange('communityProjects', checked as boolean)}
+                            disabled={isSubmitting}
+                          />
+                          <label htmlFor="communityProjects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {translate("Community Projects", language)}
                           </label>
                         </div>
@@ -225,21 +403,41 @@ const JoinCommunity = () => {
                     </div>
                     
                     <div className="flex items-start space-x-2 pt-2">
-                      <Checkbox id="terms" required />
+                      <Checkbox 
+                        id="terms" 
+                        name="terms"
+                        required 
+                        checked={termsAccepted}
+                        onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                        disabled={isSubmitting}
+                      />
                       <div className="grid gap-1.5 leading-none">
                         <label
                           htmlFor="terms"
                           className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          {translate("I agree to the", language)} <a href="#" className="text-primary hover:underline">{translate("terms and conditions", language)}</a>
+                          {translate("I agree to the", language)} <a href="/terms" className="text-primary hover:underline">{translate("terms and conditions", language)}</a>
                         </label>
                       </div>
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full bg-kenya-green hover:bg-kenya-green/90">
-                      {translate("Join Now", language)}
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-kenya-green hover:bg-kenya-green/90"
+                      disabled={isSubmitting || !termsAccepted}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {translate("Submitting...", language)}
+                        </>
+                      ) : (
+                        <>
+                          {translate("Join Now", language)}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </form>
