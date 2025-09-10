@@ -14,6 +14,7 @@ import { translate } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2 } from 'lucide-react';
 import TermsModal from '@/components/TermsModal';
+import PrivacyModal from '@/components/PrivacyModal';
 
 const JoinCommunity = () => {
   const { toast } = useToast();
@@ -36,6 +37,7 @@ const JoinCommunity = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value, type } = e.target;
@@ -84,7 +86,6 @@ const JoinCommunity = () => {
     setIsSubmitting(true);
 
     try {
-      // Prepare areas of interest
       const areasOfInterest: string[] = [];
       if (formData.constitution) areasOfInterest.push('constitution');
       if (formData.legislation) areasOfInterest.push('legislation');
@@ -93,7 +94,6 @@ const JoinCommunity = () => {
       if (formData.voterEducation) areasOfInterest.push('voter-education');
       if (formData.communityProjects) areasOfInterest.push('community-projects');
 
-      // Prepare submission data
       const submissionData = {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
@@ -104,7 +104,6 @@ const JoinCommunity = () => {
         terms_accepted: termsAccepted
       };
 
-      // Call edge function to handle both database storage and email sending
       const { data, error } = await supabase.functions.invoke('send-community-email', {
         body: submissionData
       });
@@ -114,7 +113,6 @@ const JoinCommunity = () => {
         throw new Error(error.message || 'Failed to submit application');
       }
 
-      // Show success message
       toast({
         title: translate("Application Submitted!", language),
         description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
@@ -122,7 +120,6 @@ const JoinCommunity = () => {
       
       setFormSubmitted(true);
       
-      // Redirect to home page after a delay instead of /community
       setTimeout(() => {
         navigate('/');
       }, 3000);
@@ -425,6 +422,14 @@ const JoinCommunity = () => {
                           >
                             {translate("terms and conditions", language)}
                           </button>
+                          {" "}{translate("and", language)}{" "}
+                          <button
+                            type="button"
+                            className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
+                            onClick={() => setShowPrivacyModal(true)}
+                          >
+                            {translate("privacy policy", language)}
+                          </button>
                         </label>
                       </div>
                     </div>
@@ -462,11 +467,16 @@ const JoinCommunity = () => {
         </div>
       </div>
 
-      {/* Terms Modal */}
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
         onAccept={() => setTermsAccepted(true)}
+      />
+
+      <PrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onAccept={() => {}}
       />
     </Layout>
   );
