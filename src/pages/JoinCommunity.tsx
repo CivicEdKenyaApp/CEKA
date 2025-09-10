@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2 } from 'lucide-react';
+import TermsModal from '@/components/TermsModal';
 
 const JoinCommunity = () => {
   const { toast } = useToast();
@@ -35,6 +35,7 @@ const JoinCommunity = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value, type } = e.target;
@@ -121,9 +122,9 @@ const JoinCommunity = () => {
       
       setFormSubmitted(true);
       
-      // Redirect after a delay
+      // Redirect to home page after a delay instead of /community
       setTimeout(() => {
-        navigate('/community');
+        navigate('/');
       }, 3000);
 
     } catch (error) {
@@ -247,7 +248,7 @@ const JoinCommunity = () => {
                     <CheckCircle2 className="h-16 w-16 text-kenya-green mx-auto" />
                     <h3 className="text-xl font-bold">{translate("Welcome Aboard!", language)}</h3>
                     <p>{translate("Your application has been received. You are now part of the CEKA community!", language)}</p>
-                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the community page...", language)}</p>
+                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the home page...", language)}</p>
                   </div>
                 </CardContent>
               ) : (
@@ -416,7 +417,14 @@ const JoinCommunity = () => {
                           htmlFor="terms"
                           className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          {translate("I agree to the", language)} <a href="/terms" className="text-primary hover:underline">{translate("terms and conditions", language)}</a>
+                          {translate("I agree to the", language)}{" "}
+                          <button
+                            type="button"
+                            className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
+                            onClick={() => setShowTermsModal(true)}
+                          >
+                            {translate("terms and conditions", language)}
+                          </button>
                         </label>
                       </div>
                     </div>
@@ -453,6 +461,13 @@ const JoinCommunity = () => {
           </div>
         </div>
       </div>
+
+      {/* Terms Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </Layout>
   );
 };
