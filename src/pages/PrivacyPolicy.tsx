@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import MainLayout from "@/components/layout/MainLayout";
+import MainLayout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import { ArrowLeft, ChevronRight, Shield, Search, ThumbsUp, Lock } from "lucide-react";
@@ -108,7 +108,7 @@ const PrivacyPolicy = () => {
   const filteredSections = activeTab === "all" ? sections : sections.filter(section => section.category === activeTab);
 
   return (
-    <MainLayout>
+    <Layout>
       <motion.div className="container max-w-4xl py-8 px-4" {...pageTransition}>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
           <Button variant="ghost" onClick={() => navigate(-1)} className="w-fit">
@@ -230,7 +230,7 @@ const PrivacyPolicy = () => {
           </Link>
         </div>
       </motion.div>
-    </MainLayout>
+    </Layout>
   );
 };
 
