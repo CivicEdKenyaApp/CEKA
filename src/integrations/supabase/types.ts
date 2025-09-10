@@ -529,6 +529,54 @@ export type Database = {
           },
         ]
       }
+      community_members: {
+        Row: {
+          areas_of_interest: string[] | null
+          county: string | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          interests: string | null
+          last_name: string
+          source_ip: string | null
+          status: string | null
+          terms_accepted: boolean
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          areas_of_interest?: string[] | null
+          county?: string | null
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          interests?: string | null
+          last_name: string
+          source_ip?: string | null
+          status?: string | null
+          terms_accepted?: boolean
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          areas_of_interest?: string[] | null
+          county?: string | null
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          interests?: string | null
+          last_name?: string
+          source_ip?: string | null
+          status?: string | null
+          terms_accepted?: boolean
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       discussion_replies: {
         Row: {
           content: string
@@ -803,6 +851,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      processing_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_step: string | null
+          error_message: string | null
+          expires_at: string | null
+          id: string
+          input_files: Json | null
+          input_urls: Json | null
+          job_name: string
+          output_files: Json | null
+          processing_logs: Json | null
+          progress: number | null
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          input_files?: Json | null
+          input_urls?: Json | null
+          job_name: string
+          output_files?: Json | null
+          processing_logs?: Json | null
+          progress?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          input_files?: Json | null
+          input_urls?: Json | null
+          job_name?: string
+          output_files?: Json | null
+          processing_logs?: Json | null
+          progress?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1290,6 +1392,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_expired_processing_jobs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_admin_session: {
         Args: { p_email: string; p_user_id: string }
         Returns: {
@@ -1403,6 +1509,18 @@ export type Database = {
           status: string
         }[]
       }
+      get_processing_job_status: {
+        Args: { job_id: string }
+        Returns: {
+          current_step: string
+          error_message: string
+          expires_at: string
+          id: string
+          output_files: Json
+          progress: number
+          status: string
+        }[]
+      }
       get_resource_view_count: {
         Args: { p_resource_id: string; p_resource_type: string }
         Returns: number
@@ -1494,6 +1612,16 @@ export type Database = {
       }
       unfollow_bill: {
         Args: { bill_id: string; user_id: string }
+        Returns: undefined
+      }
+      update_processing_job_progress: {
+        Args: {
+          job_id: string
+          log_entry?: Json
+          new_progress: number
+          new_status?: string
+          new_step?: string
+        }
         Returns: undefined
       }
       update_user_profile: {
