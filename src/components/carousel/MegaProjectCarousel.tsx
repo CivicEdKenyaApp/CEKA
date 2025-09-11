@@ -40,7 +40,7 @@ interface MegaProjectCarouselProps {
 const getIconComponent = (iconName: string | undefined) => {
   if (!iconName) return null;
   const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
-  return IconComponent ? <IconComponent className="w-6 h-6" /> : null;
+  return IconComponent ? <IconComponent className="w-8 h-8 md:w-10 md:h-10" /> : null;
 };
 
 const getColorClasses = (slide: Slide, theme: string) => {
@@ -69,18 +69,18 @@ const getCtaClasses = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' 
       ? 'bg-gray-700 text-white hover:bg-gray-600' 
-      : 'bg-black/10 text-foreground hover:bg-black/20';
+      : 'bg-black/20 text-foreground hover:bg-black/30';
   }
   
-  return 'bg-white/10 text-white hover:bg-white/20';
+  return 'bg-white/20 text-white hover:bg-white/30';
 };
 
 const getBadgeColor = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
-    return theme === 'dark' ? 'bg-gray-700' : 'bg-black/10';
+    return theme === 'dark' ? 'bg-gray-700' : 'bg-black/20';
   }
   
-  return 'bg-background/80';
+  return 'bg-background/90';
 };
 
 const DRAG_BUFFER = 30;
@@ -108,18 +108,18 @@ export default function MegaProjectCarousel({
   
   const getItemWidth = () => {
     if (dimensions.width < 640) {
-      return dimensions.width * 0.85;
+      return dimensions.width * 0.82;
     } else if (dimensions.width < 768) {
-      return dimensions.width * 0.6;
+      return dimensions.width * 0.65;
     } else if (dimensions.width < 1024) {
-      return 350;
+      return 380;
     } else {
-      return 400;
+      return 420;
     }
   };
   
   const itemWidth = getItemWidth();
-  const gap = Math.max(16, itemWidth * 0.05);
+  const gap = Math.max(18, itemWidth * 0.045);
   const trackItemOffset = itemWidth + gap;
   
   const carouselItems = loop && slides.length > 1 ? [...slides, slides[0]] : slides;
@@ -335,7 +335,7 @@ export default function MegaProjectCarousel({
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-2xl p-4 md:p-6 transition-all flex flex-col justify-between relative overflow-hidden',
+                'rounded-2xl p-5 md:p-6 transition-all flex flex-col justify-between relative overflow-hidden',
                 getColorClasses(slide, theme),
                 theme === 'dark' ? 'shadow-lg' : 'shadow-md',
                 'hover:shadow-xl flex-shrink-0 group',
@@ -344,7 +344,7 @@ export default function MegaProjectCarousel({
               style={{
                 width: itemWidth,
                 height: round ? itemWidth : 'auto',
-                minHeight: round ? itemWidth : '320px',
+                minHeight: round ? itemWidth : '340px',
                 filter: isActive ? 'blur(0px)' : isAdjacent ? 'blur(2px)' : 'blur(4px)',
                 opacity: isActive ? 1 : isAdjacent ? 0.8 : 0.5,
                 scale: isActive ? 1 : isAdjacent ? 0.95 : 0.9,
@@ -369,7 +369,7 @@ export default function MegaProjectCarousel({
               
               {slide.badge && (
                 <div className={cn(
-                  "absolute top-3 right-3 text-xs font-medium px-2 py-1 rounded-full",
+                  "absolute top-4 right-4 text-sm font-semibold px-3 py-1.5 rounded-full",
                   getBadgeColor(slide, theme)
                 )}>
                   {slide.badge}
@@ -377,7 +377,7 @@ export default function MegaProjectCarousel({
               )}
               
               {slide.imageUrl && (
-                <div className="mb-3 md:mb-4 rounded-lg overflow-hidden h-28 md:h-32 bg-white/20 flex items-center justify-center">
+                <div className="mb-4 md:mb-5 rounded-lg overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
@@ -392,7 +392,7 @@ export default function MegaProjectCarousel({
                 <div className="flex-1">
                   {slide.iconName && (
                     <div className={cn(
-                      "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3 md:mb-4 bg-white/20 p-2",
+                      "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-4 md:mb-5 bg-white/20 p-2",
                       round && "mx-auto"
                     )}>
                       {getIconComponent(slide.iconName)}
@@ -400,9 +400,9 @@ export default function MegaProjectCarousel({
                   )}
                   
                   <div className={cn("flex flex-col", getTextColor(slide, theme))}>
-                    <h3 className="text-lg md:text-xl font-bold mb-2 group-hover:text-white transition-colors">{slide.title}</h3>
+                    <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 leading-tight group-hover:text-white transition-colors">{slide.title}</h3>
                     {slide.description && (
-                      <p className="text-xs md:text-sm opacity-90 mb-3 md:mb-4 line-clamp-3">{slide.description}</p>
+                      <p className="text-base md:text-lg opacity-90 mb-4 md:mb-5 line-clamp-3 leading-relaxed">{slide.description}</p>
                     )}
                   </div>
                 </div>
@@ -410,7 +410,7 @@ export default function MegaProjectCarousel({
                 {slide.ctaText && (
                   <button 
                     className={cn(
-                      "mt-3 md:mt-4 flex items-center justify-center gap-2 w-full py-2 md:py-3 rounded-lg font-medium transition-all text-sm md:text-base",
+                      "mt-4 md:mt-5 flex items-center justify-center gap-2 w-full py-3 md:py-4 rounded-lg font-medium transition-all text-base md:text-lg",
                       getCtaClasses(slide, theme)
                     )}
                     onClick={(e) => {
@@ -419,7 +419,7 @@ export default function MegaProjectCarousel({
                     }}
                   >
                     {slide.ctaText}
-                    <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 )}
               </div>
@@ -438,8 +438,8 @@ export default function MegaProjectCarousel({
               key={s.id}
               aria-label={`Go to slide ${i + 1}`}
               className={cn(
-                'h-2 w-2 md:h-3 md:w-3 rounded-full transition-all cursor-pointer',
-                currentIndex === i ? 'w-6 md:w-8 bg-kenya-green' : 'opacity-60 bg-gray-400',
+                'h-3 w-3 md:h-4 md:w-4 rounded-full transition-all cursor-pointer',
+                currentIndex === i ? 'w-8 md:w-10 bg-kenya-green' : 'opacity-60 bg-gray-400',
               )}
               animate={{
                 scale: currentIndex === i ? 1.2 : 1,
