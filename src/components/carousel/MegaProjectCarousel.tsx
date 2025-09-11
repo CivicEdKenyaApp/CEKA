@@ -3,7 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowRight, ExternalLink, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 type Slide = {
   id: string;
@@ -28,11 +28,30 @@ interface MegaProjectCarouselProps {
   supabaseTable?: string;
 }
 
-const colorClassMap: Record<Slide['color'], string> = {
-  'kenya-red': 'bg-gradient-to-br from-kenya-red/90 to-kenya-red/70 text-white',
-  'kenya-green': 'bg-gradient-to-br from-kenya-green/90 to-kenya-green/70 text-white',
-  'kenya-black': 'bg-gradient-to-br from-gray-900 to-black text-white',
-  'kenya-white': 'bg-gradient-to-br from-white to-gray-100 text-foreground border',
+// Color class mapping with dark mode support
+const getColorClasses = (color: Slide['color'], theme: string) => {
+  if (color === 'kenya-white') {
+    return theme === 'dark' 
+      ? 'bg-gray-800 text-white' // Dark mode alternative for white cards
+      : 'bg-gradient-to-br from-white to-gray-100 text-foreground border';
+  }
+  
+  return {
+    'kenya-red': 'bg-gradient-to-br from-kenya-red/90 to-kenya-red/70 text-white',
+    'kenya-green': 'bg-gradient-to-br from-kenya-green/90 to-kenya-green/70 text-white',
+    'kenya-black': 'bg-gradient-to-br from-gray-900 to-black text-white',
+  }[color];
+};
+
+// CTA button classes with dark mode support
+const getCtaClasses = (color: Slide['color'], theme: string) => {
+  if (color === 'kenya-white') {
+    return theme === 'dark' 
+      ? 'bg-gray-700 text-white hover:bg-gray-600' 
+      : 'bg-black/10 text-foreground hover:bg-black/20';
+  }
+  
+  return 'bg-white/10 text-white hover:bg-white/20';
 };
 
 const DRAG_BUFFER = 30;
@@ -250,7 +269,7 @@ export default function MegaProjectCarousel({
               key={`${slide.id}-${index}`}
               className={cn(
                 'rounded-2xl p-6 transition-all flex flex-col justify-between relative overflow-hidden',
-                colorClassMap[slide.color],
+                getColorClasses(slide.color, theme),
                 theme === 'dark' ? 'shadow-lg' : 'shadow-md',
                 'hover:shadow-xl flex-shrink-0 group',
                 round && 'rounded-full justify-center items-center text-center'
@@ -323,10 +342,8 @@ export default function MegaProjectCarousel({
                 {slide.ctaText && (
                   <button 
                     className={cn(
-                      "mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all group-hover:bg-white/20",
-                      slide.color === 'kenya-white' 
-                        ? 'bg-black/10 text-foreground hover:bg-black/20' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                      "mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all",
+                      getCtaClasses(slide.color, theme)
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
