@@ -212,6 +212,7 @@ export default function MegaProjectCarousel({
   const handleDragStart = useCallback((event: React.PointerEvent) => {
     const target = event.target as HTMLElement;
     
+    // Don't start drag if user clicks on interactive elements
     if (target.closest("button, a, input, textarea, select")) {
       return;
     }
@@ -246,10 +247,12 @@ export default function MegaProjectCarousel({
   const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
     
+    // If the click was on a button or link, just let it propagate
     if (target.closest("button, a")) {
       return;
     }
     
+    // Otherwise check drag vs click threshold
     if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
       slide.onClick?.();
     }
@@ -408,19 +411,24 @@ export default function MegaProjectCarousel({
                 </div>
                 
                 {slide.ctaText && (
-                  <button 
+                  <div 
                     className={cn(
-                      "mt-4 md:mt-5 flex items-center justify-center gap-2 w-full py-3 md:py-4 rounded-lg font-medium transition-all text-base md:text-lg",
+                      "mt-4 md:mt-5 w-full",
                       getCtaClasses(slide, theme)
                     )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      slide.onClick?.();
-                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
-                    {slide.ctaText}
-                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                    <button 
+                      className="w-full flex items-center justify-center gap-2 py-3 md:py-4 rounded-lg font-medium transition-all text-base md:text-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        slide.onClick?.();
+                      }}
+                    >
+                      {slide.ctaText}
+                      <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -430,22 +438,20 @@ export default function MegaProjectCarousel({
 
       {slides.length > 1 && (
         <div className={cn(
-          "mt-6 md:mt-8 flex items-center justify-center gap-2",
+          "mt-6 md:mt-8 flex items-center justify-center gap-3",
           round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
         )}>
-          {slides.map((s, i) => (
-            <motion.button
-              key={s.id}
+          {slides.map((_, i) => (
+            <button
+              key={i}
               aria-label={`Go to slide ${i + 1}`}
               className={cn(
-                'h-3 w-3 md:h-4 md:w-4 rounded-full transition-all cursor-pointer',
-                currentIndex === i ? 'w-8 md:w-10 bg-kenya-green' : 'opacity-60 bg-gray-400',
+                'h-3 w-3 md:h-4 md:w-4 rounded-full transition-all cursor-pointer border-2',
+                currentIndex === i 
+                  ? 'bg-kenya-green border-kenya-green scale-110' 
+                  : 'bg-gray-300 border-gray-400 opacity-70 hover:opacity-100'
               )}
-              animate={{
-                scale: currentIndex === i ? 1.2 : 1,
-              }}
               onClick={() => goToSlide(i)}
-              transition={{ duration: 0.15 }}
             />
           ))}
         </div>
