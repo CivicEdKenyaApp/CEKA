@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Download, Printer, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,6 +15,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const checkScroll = () => {
     if (contentRef.current) {
@@ -23,6 +24,26 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
       setHasScrolledToBottom(isAtBottom);
     }
   };
+
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setHasScrolledToBottom(false);
+      setIsAccepted(false);
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, handleClickOutside]);
 
   const handleAccept = () => {
     setIsAccepted(true);
@@ -50,51 +71,54 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70">
+      <div 
+        ref={modalRef}
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
+        <div className="flex items-center justify-between p-6 border-b dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {translate("Privacy Policy", language)}
           </h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-gray-900 dark:text-white" />
           </Button>
         </div>
 
         <div 
           ref={contentRef}
-          className="flex-1 overflow-y-auto p-6"
+          className="flex-1 overflow-y-auto p-6 dark:bg-gray-900"
           onScroll={checkScroll}
           id="privacy-modal-content"
         >
-          <div className="prose prose-sm max-w-none">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
             <p className="text-sm text-muted-foreground mb-4">
               <strong>{translate("Effective Date:", language)}</strong> September 10, 2025<br />
               <strong>{translate("Contact:", language)}</strong> civiceducationkenya@gmail.com
             </p>
 
-            <h3 className="font-semibold mt-4">{translate("Data Collection", language)}</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold mt-4 text-gray-900 dark:text-white">{translate("Data Collection", language)}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {translate("We collect information you provide directly, including name, email, county, and areas of interest. We also collect usage data and technical information to improve our services.", language)}
             </p>
 
-            <h3 className="font-semibold mt-4">{translate("Data Usage", language)}</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold mt-4 text-gray-900 dark:text-white">{translate("Data Usage", language)}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {translate("Your information helps us provide civic education services, manage your community membership, communicate updates, and ensure platform security.", language)}
             </p>
 
-            <h3 className="font-semibold mt-4">{translate("Data Sharing", language)}</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold mt-4 text-gray-900 dark:text-white">{translate("Data Sharing", language)}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {translate("We work with trusted providers like Supabase for data storage and payment processors for donations. We never sell your personal data.", language)}
             </p>
 
-            <h3 className="font-semibold mt-4">{translate("Your Rights", language)}</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold mt-4 text-gray-900 dark:text-white">{translate("Your Rights", language)}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {translate("You have the right to access, correct, or delete your personal information. Contact us at civiceducationkenya@gmail.com to exercise these rights.", language)}
             </p>
 
-            <h3 className="font-semibold mt-4">{translate("Data Security", language)}</h3>
-            <p className="text-sm">
+            <h3 className="font-semibold mt-4 text-gray-900 dark:text-white">{translate("Data Security", language)}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {translate("We implement industry-standard security measures including encryption and access controls to protect your information.", language)}
             </p>
 
@@ -104,7 +128,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
           </div>
         </div>
 
-        <div className="border-t p-6 bg-gray-50">
+        <div className="border-t p-6 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -115,7 +139,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
               />
               <label
                 htmlFor="privacy-acceptance"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900 dark:text-white"
               >
                 {translate("I have read and understand the Privacy Policy", language)}
               </label>
@@ -166,7 +190,7 @@ const Checkbox: React.FC<{
       onClick={() => onCheckedChange(!checked)}
       disabled={disabled}
       className={`h-4 w-4 rounded border flex items-center justify-center ${
-        checked ? 'bg-kenya-green border-kenya-green text-white' : 'border-gray-300'
+        checked ? 'bg-kenya-green border-kenya-green text-white' : 'border-gray-300 dark:border-gray-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {checked && (
