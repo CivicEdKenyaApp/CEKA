@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,11 +47,6 @@ const getIconComponent = (iconName: string | undefined) => {
 
 // Color class mapping with dark mode support
 const getColorClasses = (slide: Slide, theme: string) => {
-  // If custom gradients are provided, use them
-  if (slide.gradientFrom && slide.gradientTo) {
-    return `bg-gradient-to-br from-[${slide.gradientFrom}] to-[${slide.gradientTo}]`;
-  }
-  
   if (slide.color === 'kenya-white') {
     return theme === 'dark' 
       ? 'bg-gray-800' // Dark mode alternative for white cards
@@ -67,15 +62,6 @@ const getColorClasses = (slide: Slide, theme: string) => {
 
 // Text color classes
 const getTextColor = (slide: Slide, theme: string) => {
-  // If custom text colors are provided, use them
-  if (theme === 'dark' && slide.textColorDark) {
-    return `text-[${slide.textColorDark}]`;
-  }
-  if (theme === 'light' && slide.textColorLight) {
-    return `text-[${slide.textColorLight}]`;
-  }
-  
-  // Default text colors based on card color
   if (slide.color === 'kenya-white') {
     return theme === 'dark' ? 'text-white' : 'text-foreground';
   }
@@ -85,14 +71,6 @@ const getTextColor = (slide: Slide, theme: string) => {
 
 // CTA button classes with dark mode support
 const getCtaClasses = (slide: Slide, theme: string) => {
-  // If custom button colors are provided, use them
-  if (theme === 'dark' && slide.buttonColorDark) {
-    return `bg-[${slide.buttonColorDark}] text-white hover:opacity-90`;
-  }
-  if (theme === 'light' && slide.buttonColorLight) {
-    return `bg-[${slide.buttonColorLight}] text-white hover:opacity-90`;
-  }
-  
   if (slide.color === 'kenya-white') {
     return theme === 'dark' 
       ? 'bg-gray-700 text-white hover:bg-gray-600' 
@@ -104,11 +82,6 @@ const getCtaClasses = (slide: Slide, theme: string) => {
 
 // Badge color classes
 const getBadgeColor = (slide: Slide, theme: string) => {
-  if (slide.badgeColor) {
-    return `bg-${slide.badgeColor}`;
-  }
-  
-  // Default badge colors based on card color
   if (slide.color === 'kenya-white') {
     return theme === 'dark' ? 'bg-gray-700' : 'bg-black/10';
   }
@@ -160,7 +133,6 @@ export default function MegaProjectCarousel({
           .from(supabaseTable)
           .select('*')
           .eq('is_active', true)
-          .order('priority', { ascending: false, nullsFirst: false })
           .order('order_index', { ascending: true });
         
         if (error) throw error;
@@ -173,16 +145,6 @@ export default function MegaProjectCarousel({
           color: slide.color,
           imageUrl: slide.image_url,
           badge: slide.badge,
-          badgeColor: slide.badge_color,
-          iconName: slide.icon_name,
-          gradientFrom: slide.gradient_from,
-          gradientTo: slide.gradient_to,
-          textColorLight: slide.text_color_light,
-          textColorDark: slide.text_color_dark,
-          buttonColorLight: slide.button_color_light,
-          buttonColorDark: slide.button_color_dark,
-          animationType: slide.animation_type,
-          priority: slide.priority,
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
         
@@ -198,7 +160,109 @@ export default function MegaProjectCarousel({
     fetchSlides();
   }, [propSlides, supabaseTable]);
 
-  // Rest of the component remains the same with updated JSX to use the new properties
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    
+    if (autoPlayTimer.current) {
+      clearTimeout(autoPlayTimer.current);
+    }
+    
+    if (autoPlayMs > 0 && !isHovered && !isDragging) {
+      const isLastCard = currentIndex === slides.length - 1;
+      const delay = isLastCard ? autoPlayMs + 500 : autoPlayMs;
+      
+      autoPlayTimer.current = setTimeout(() => {
+        setCurrentIndex((prev) => {
+          if (prev === slides.length - 1) {
+            setCycleCount(c => c + 1);
+            return loop ? 0 : prev;
+          }
+          return prev + 1;
+        });
+      }, delay);
+    }
+    
+    return () => {
+      if (autoPlayTimer.current) {
+        clearTimeout(autoPlayTimer.current);
+      }
+    };
+  }, [autoPlayMs, isHovered, isDragging, loop, slides.length, currentIndex]);
+
+  // Add the missing handleDragStart function
+  const handleDragStart = useCallback((event) => {
+    setIsDragging(true);
+    dragStartX.current = event.clientX;
+  }, []);
+
+  // Add the missing handleDragEnd function
+  const handleDragEnd = useCallback((_, info) => {
+    setIsDragging(false);
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    if (Math.abs(offset) < DRAG_BUFFER && Math.abs(velocity) < VELOCITY_THRESHOLD) {
+      animate(x, -currentIndex * trackItemOffset, SPRING_OPTIONS);
+      return;
+    }
+
+    const direction = offset > 0 || velocity > 0 ? -1 : 1;
+
+    if (loop) {
+      const newIndex = (currentIndex + direction + slides.length) % slides.length;
+      if (newIndex === 0 && currentIndex === slides.length - 1) {
+        setCycleCount(c => c + 1);
+      }
+      setCurrentIndex(newIndex);
+    } else {
+      setCurrentIndex(prev => Math.max(0, Math.min(prev + direction, slides.length - 1)));
+    }
+  }, [currentIndex, loop, slides.length, trackItemOffset, x]);
+
+  // Add the missing handleCardClick function
+  const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
+    if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
+      slide.onClick?.();
+    }
+  }, [isDragging]);
+
+  // Add the missing goToSlide function
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={cn("flex items-center justify-center h-64", className)}>
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-kenya-green border-t-transparent rounded-full animate-spin mb-3"></div>
+          <div className="text-lg">Loading projects...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("flex items-center justify-center h-64", className)}>
+        <div className="text-center">
+          <div className="text-lg text-red-500 mb-2">Error loading projects</div>
+          <div className="text-sm text-muted-foreground">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (slides.length === 0) {
+    return (
+      <div className={cn("flex items-center justify-center h-64", className)}>
+        <div className="text-center">
+          <div className="text-lg mb-2">No projects available</div>
+          <div className="text-sm text-muted-foreground">Check back later for updates</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -338,7 +402,6 @@ export default function MegaProjectCarousel({
         })}
       </motion.div>
 
-      {/* Pagination dots */}
       {slides.length > 1 && (
         <div className={cn(
           "mt-8 flex items-center justify-center gap-2",
