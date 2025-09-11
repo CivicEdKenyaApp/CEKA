@@ -131,7 +131,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
       bottom: isMobile ? "80px" : "20px", // Position above BottomNavbar on mobile
       right: "20px" 
     },
-    visible: (expanded) => ({ 
+    visible: (expanded: boolean) => ({ 
       opacity: expanded ? 1 : isIdle ? 0.7 : 1, 
       scale: 1,
       bottom: expanded ? "50%" : isMobile ? "80px" : "30%", // Positioned at 30% from bottom on desktop
@@ -139,7 +139,7 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
       x: expanded ? "50%" : 0,
       y: expanded ? "50%" : 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 380,
         damping: 30,
         mass: 1
@@ -148,7 +148,12 @@ const DonationWidget = ({ onTimedOut }: { onTimedOut?: () => void }) => {
     exit: { 
       opacity: 0, 
       scale: 0.8,
-      transition: { duration: 0.3 }
+      transition: {
+        type: "spring" as const,
+        stiffness: 500,
+        damping: 30,
+        mass: 0.8
+      }
     }
   };
 
