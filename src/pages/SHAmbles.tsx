@@ -189,7 +189,7 @@ const SHAmbles: React.FC = () => {
         throw error;
       }
 
-      setProcessingJobs(jobs || []);
+      setProcessingJobs((jobs || []) as any);
     } catch (error) {
       console.error('Error fetching processing jobs:', error);
       toast({
@@ -419,7 +419,7 @@ const SHAmbles: React.FC = () => {
       });
 
       setShowProcessingStatus(true);
-      setSelectedJob(job);
+      setSelectedJob(job as any);
     } catch (error) {
       console.error('Error creating job:', error);
       toast({
@@ -846,7 +846,7 @@ const SHAmbles: React.FC = () => {
                   </CardContent>
                 </Card>
               }>
-                <FacilityStatistics geoJsonData={healthcareGeoJsonData} />
+                <FacilityStatistics />
               </Suspense>
 
               {/* Allocation Analysis */}
@@ -860,7 +860,7 @@ const SHAmbles: React.FC = () => {
                   </CardContent>
                 </Card>
               }>
-                <AllocationAnalysis geoJsonData={healthcareGeoJsonData} />
+                <AllocationAnalysis />
               </Suspense>
 
               {/* County Comparison */}
@@ -874,7 +874,7 @@ const SHAmbles: React.FC = () => {
                   </CardContent>
                 </Card>
               }>
-                <CountyComparison geoJsonData={healthcareGeoJsonData} />
+                <CountyComparison />
               </Suspense>
             </div>
           )}
@@ -936,7 +936,7 @@ const SHAmbles: React.FC = () => {
           {showUploadWizard && (
             <DataUploadWizard 
               onClose={() => setShowUploadWizard(false)}
-              onJobCreated={handleNewJobCreated}
+              onJobCreated={handleNewJobCreated as any}
             />
           )}
         </Suspense>
@@ -945,9 +945,9 @@ const SHAmbles: React.FC = () => {
         <Suspense fallback={null}>
           {showProcessingStatus && (
             <ProcessingStatus 
-              jobs={processingJobs}
-              selectedJob={selectedJob}
-              onSelectJob={setSelectedJob}
+              jobs={processingJobs as any}
+              selectedJob={selectedJob as any}
+              onSelectJob={setSelectedJob as any}
               onDownload={downloadFile}
               onClose={() => setShowProcessingStatus(false)}
             />
