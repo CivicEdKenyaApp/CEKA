@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import MainLayout from "@/components/layout/Layout";
+import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/animation-utils";
 import { ArrowLeft, ChevronRight, Shield, Search, ThumbsUp, Lock } from "lucide-react";
