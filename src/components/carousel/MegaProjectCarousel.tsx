@@ -31,25 +31,22 @@ interface MegaProjectCarouselProps {
   slides?: Slide[];
   className?: string;
   autoPlayMs?: number;
-  baseWidth?: number;
   pauseOnHover?: boolean;
   loop?: boolean;
   round?: boolean;
   supabaseTable?: string;
 }
 
-// Helper function to get Lucide icon by name
 const getIconComponent = (iconName: string | undefined) => {
   if (!iconName) return null;
   const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
   return IconComponent ? <IconComponent className="w-6 h-6" /> : null;
 };
 
-// Color class mapping with dark mode support
 const getColorClasses = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' 
-      ? 'bg-gray-800' // Dark mode alternative for white cards
+      ? 'bg-gray-800'
       : 'bg-gradient-to-br from-white to-gray-100 border';
   }
   
@@ -60,7 +57,6 @@ const getColorClasses = (slide: Slide, theme: string) => {
   }[slide.color];
 };
 
-// Text color classes
 const getTextColor = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' ? 'text-white' : 'text-foreground';
@@ -69,7 +65,6 @@ const getTextColor = (slide: Slide, theme: string) => {
   return 'text-white';
 };
 
-// CTA button classes with dark mode support
 const getCtaClasses = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' 
@@ -80,7 +75,6 @@ const getCtaClasses = (slide: Slide, theme: string) => {
   return 'bg-white/10 text-white hover:bg-white/20';
 };
 
-// Badge color classes
 const getBadgeColor = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' ? 'bg-gray-700' : 'bg-black/10';
@@ -91,14 +85,12 @@ const getBadgeColor = (slide: Slide, theme: string) => {
 
 const DRAG_BUFFER = 30;
 const VELOCITY_THRESHOLD = 500;
-const GAP = 20;
 const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 };
 
 export default function MegaProjectCarousel({ 
   slides: propSlides, 
   className, 
   autoPlayMs = 4500, 
-  baseWidth = 300,
   pauseOnHover = true,
   loop = true,
   round = false,
@@ -109,10 +101,26 @@ export default function MegaProjectCarousel({
   const [loading, setLoading] = useState(!propSlides);
   const [error, setError] = useState<string | null>(null);
   const [cycleCount, setCycleCount] = useState(0);
+  const [dimensions, setDimensions] = useState({ 
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800
+  });
   
-  const containerPadding = 16;
-  const itemWidth = 280;
-  const trackItemOffset = itemWidth + GAP;
+  const getItemWidth = () => {
+    if (dimensions.width < 640) {
+      return dimensions.width * 0.85;
+    } else if (dimensions.width < 768) {
+      return dimensions.width * 0.6;
+    } else if (dimensions.width < 1024) {
+      return 350;
+    } else {
+      return 400;
+    }
+  };
+  
+  const itemWidth = getItemWidth();
+  const gap = Math.max(16, itemWidth * 0.05);
+  const trackItemOffset = itemWidth + gap;
   
   const carouselItems = loop && slides.length > 1 ? [...slides, slides[0]] : slides;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -121,7 +129,19 @@ export default function MegaProjectCarousel({
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef(0);
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
-  const isSpecialTransition = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (propSlides) return;
@@ -189,11 +209,9 @@ export default function MegaProjectCarousel({
     };
   }, [autoPlayMs, isHovered, isDragging, loop, slides.length, currentIndex]);
 
-  // Update handleDragStart to ignore interactive elements
   const handleDragStart = useCallback((event: React.PointerEvent) => {
     const target = event.target as HTMLElement;
     
-    // Don't start drag if user clicks on interactive elements
     if (target.closest("button, a, input, textarea, select")) {
       return;
     }
@@ -202,7 +220,6 @@ export default function MegaProjectCarousel({
     dragStartX.current = event.clientX;
   }, []);
 
-  // Update handleDragEnd
   const handleDragEnd = useCallback((_, info) => {
     setIsDragging(false);
     const offset = info.offset.x;
@@ -226,16 +243,13 @@ export default function MegaProjectCarousel({
     }
   }, [currentIndex, loop, slides.length, trackItemOffset, x]);
 
-  // Update handleCardClick to ignore button clicks
   const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
     
-    // If the click was on a button or link, just let it propagate
     if (target.closest("button, a")) {
       return;
     }
     
-    // Otherwise check drag vs click threshold
     if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
       slide.onClick?.();
     }
@@ -280,12 +294,16 @@ export default function MegaProjectCarousel({
 
   return (
     <div
-      className={cn('relative overflow-hidden mx-auto', className, round && 'rounded-full')}
+      ref={containerRef}
+      className={cn(
+        'relative overflow-hidden mx-auto w-full max-w-6xl px-4', 
+        className, 
+        round && 'rounded-full'
+      )}
       onMouseEnter={() => pauseOnHover && setIsHovered(true)}
       onMouseLeave={() => pauseOnHover && setIsHovered(false)}
       style={{
-        width: `${baseWidth}px`,
-        ...(round && { height: `${baseWidth}px`, borderRadius: '50%' }),
+        ...(round && { height: `${itemWidth}px`, borderRadius: '50%' }),
       }}
     >
       <motion.div
@@ -298,16 +316,12 @@ export default function MegaProjectCarousel({
         style={{
           x,
           width: itemWidth,
-          gap: `${GAP}px`,
+          gap: `${gap}px`,
         }}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         animate={{ x: -currentIndex * trackItemOffset }}
-        transition={
-          isSpecialTransition.current 
-            ? { type: "spring", stiffness: 400, damping: 25, mass: 0.8 }
-            : SPRING_OPTIONS
-        }
+        transition={SPRING_OPTIONS}
       >
         {carouselItems.map((slide, index) => {
           const position = (index - currentIndex + slides.length) % slides.length;
@@ -321,7 +335,7 @@ export default function MegaProjectCarousel({
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-2xl p-6 transition-all flex flex-col justify-between relative overflow-hidden',
+                'rounded-2xl p-4 md:p-6 transition-all flex flex-col justify-between relative overflow-hidden',
                 getColorClasses(slide, theme),
                 theme === 'dark' ? 'shadow-lg' : 'shadow-md',
                 'hover:shadow-xl flex-shrink-0 group',
@@ -330,6 +344,7 @@ export default function MegaProjectCarousel({
               style={{
                 width: itemWidth,
                 height: round ? itemWidth : 'auto',
+                minHeight: round ? itemWidth : '320px',
                 filter: isActive ? 'blur(0px)' : isAdjacent ? 'blur(2px)' : 'blur(4px)',
                 opacity: isActive ? 1 : isAdjacent ? 0.8 : 0.5,
                 scale: isActive ? 1 : isAdjacent ? 0.95 : 0.9,
@@ -350,22 +365,19 @@ export default function MegaProjectCarousel({
               onPointerDown={(e) => e.preventDefault()}
               onClick={(e) => handleCardClick(slide, index, e)}
             >
-              {/* Background pattern overlay */}
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.3)_1px,_transparent_0)] bg-[length:20px_20px]"></div>
               
-              {/* Badge */}
               {slide.badge && (
                 <div className={cn(
-                  "absolute top-4 right-4 text-xs font-medium px-2 py-1 rounded-full",
+                  "absolute top-3 right-3 text-xs font-medium px-2 py-1 rounded-full",
                   getBadgeColor(slide, theme)
                 )}>
                   {slide.badge}
                 </div>
               )}
               
-              {/* Image if provided */}
               {slide.imageUrl && (
-                <div className="mb-4 rounded-lg overflow-hidden h-32 bg-white/20 flex items-center justify-center">
+                <div className="mb-3 md:mb-4 rounded-lg overflow-hidden h-28 md:h-32 bg-white/20 flex items-center justify-center">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
@@ -380,7 +392,7 @@ export default function MegaProjectCarousel({
                 <div className="flex-1">
                   {slide.iconName && (
                     <div className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-white/20 p-2",
+                      "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3 md:mb-4 bg-white/20 p-2",
                       round && "mx-auto"
                     )}>
                       {getIconComponent(slide.iconName)}
@@ -388,9 +400,9 @@ export default function MegaProjectCarousel({
                   )}
                   
                   <div className={cn("flex flex-col", getTextColor(slide, theme))}>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-white transition-colors">{slide.title}</h3>
+                    <h3 className="text-lg md:text-xl font-bold mb-2 group-hover:text-white transition-colors">{slide.title}</h3>
                     {slide.description && (
-                      <p className="text-sm opacity-90 mb-4 line-clamp-3">{slide.description}</p>
+                      <p className="text-xs md:text-sm opacity-90 mb-3 md:mb-4 line-clamp-3">{slide.description}</p>
                     )}
                   </div>
                 </div>
@@ -398,7 +410,7 @@ export default function MegaProjectCarousel({
                 {slide.ctaText && (
                   <button 
                     className={cn(
-                      "mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all",
+                      "mt-3 md:mt-4 flex items-center justify-center gap-2 w-full py-2 md:py-3 rounded-lg font-medium transition-all text-sm md:text-base",
                       getCtaClasses(slide, theme)
                     )}
                     onClick={(e) => {
@@ -407,7 +419,7 @@ export default function MegaProjectCarousel({
                     }}
                   >
                     {slide.ctaText}
-                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 )}
               </div>
@@ -418,7 +430,7 @@ export default function MegaProjectCarousel({
 
       {slides.length > 1 && (
         <div className={cn(
-          "mt-8 flex items-center justify-center gap-2",
+          "mt-6 md:mt-8 flex items-center justify-center gap-2",
           round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
         )}>
           {slides.map((s, i) => (
@@ -426,8 +438,8 @@ export default function MegaProjectCarousel({
               key={s.id}
               aria-label={`Go to slide ${i + 1}`}
               className={cn(
-                'h-3 w-3 rounded-full transition-all cursor-pointer',
-                currentIndex === i ? 'w-8 bg-kenya-green' : 'opacity-60 bg-gray-400',
+                'h-2 w-2 md:h-3 md:w-3 rounded-full transition-all cursor-pointer',
+                currentIndex === i ? 'w-6 md:w-8 bg-kenya-green' : 'opacity-60 bg-gray-400',
               )}
               animate={{
                 scale: currentIndex === i ? 1.2 : 1,
