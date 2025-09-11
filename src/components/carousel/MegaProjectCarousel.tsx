@@ -3,7 +3,7 @@ import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Image as ImageIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 type Slide = {
@@ -35,6 +35,7 @@ interface MegaProjectCarouselProps {
   loop?: boolean;
   round?: boolean;
   supabaseTable?: string;
+  imageBucket?: string;
 }
 
 const getIconComponent = (iconName: string | undefined) => {
@@ -94,7 +95,8 @@ export default function MegaProjectCarousel({
   pauseOnHover = true,
   loop = true,
   round = false,
-  supabaseTable = 'carousel_slides'
+  supabaseTable = 'carousel_slides',
+  imageBucket = 'carousel-images'
 }: MegaProjectCarouselProps) {
   const { theme } = useTheme();
   const [slides, setSlides] = useState<Slide[]>(propSlides || []);
@@ -131,6 +133,28 @@ export default function MegaProjectCarousel({
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Function to get proper image URL from Supabase storage
+  const getImageUrl = (imageUrl: string | undefined | null) => {
+    if (!imageUrl) return null;
+    
+    // If it's already a full URL, return it
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If it's a Supabase storage path, construct the URL
+    try {
+      const { data } = supabase.storage
+        .from(imageBucket)
+        .getPublicUrl(imageUrl);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error getting image URL:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setDimensions({
@@ -153,6 +177,7 @@ export default function MegaProjectCarousel({
           .from(supabaseTable)
           .select('*')
           .eq('is_active', true)
+          .order('priority', { ascending: false, nullsFirst: false })
           .order('order_index', { ascending: true });
         
         if (error) throw error;
@@ -163,7 +188,7 @@ export default function MegaProjectCarousel({
           description: slide.description,
           ctaText: slide.cta_text,
           color: slide.color,
-          imageUrl: slide.image_url,
+          imageUrl: getImageUrl(slide.image_url),
           badge: slide.badge,
           badgeColor: slide.badge_color,
           iconName: slide.icon_name,
@@ -386,17 +411,27 @@ export default function MegaProjectCarousel({
                 </div>
               )}
               
-              {slide.imageUrl && (
-                <div className="mb-4 md:mb-5 rounded-lg overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
+              {slide.imageUrl ? (
+                <div className="mb-4 md:mb-5 rounded-xl overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
-                    className="object-cover w-full h-full rounded-lg"
+                    className="object-cover w-full h-full"
                     onError={(e) => {
-                      console.error("Error loading image:", e.currentTarget.src);
-                      e.currentTarget.style.display = 'none';
+                      // If image fails to load, show a placeholder
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const placeholder = target.nextSibling as HTMLElement;
+                      if (placeholder) placeholder.style.display = 'flex';
                     }}
                   />
+                  <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-200/30">
+                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4 md:mb-5 rounded-xl h-36 md:h-40 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400" />
                 </div>
               )}
 
@@ -424,13 +459,13 @@ export default function MegaProjectCarousel({
                 {slide.ctaText && (
                   <div 
                     className={cn(
-                      "mt-4 md:mt-5 w-full",
+                      "mt-4 md:mt-5 w-full rounded-xl overflow-hidden",
                       getCtaClasses(slide, theme)
                     )}
                     onPointerDown={(e) => e.stopPropagation()}
                   >
                     <button 
-                      className="w-full flex items-center justify-center gap-2 py-3 md:py-4 rounded-full font-medium transition-all text-base md:text-lg"
+                      className="w-full flex items-center justify-center gap-2 py-3 md:py-4 font-medium transition-all text-base md:text-lg bg-transparent rounded-xl"
                       onClick={(e) => {
                         e.stopPropagation();
                         slide.onClick?.();
