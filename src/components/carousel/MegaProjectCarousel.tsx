@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
+import { ArrowRight, ExternalLink, ChevronRight } from 'lucide-react';
 
 type Slide = {
   id: string;
@@ -12,6 +13,8 @@ type Slide = {
   onClick?: () => void;
   color: 'kenya-red' | 'kenya-green' | 'kenya-black' | 'kenya-white';
   icon?: React.ReactNode;
+  imageUrl?: string;
+  badge?: string;
 };
 
 interface MegaProjectCarouselProps {
@@ -26,22 +29,22 @@ interface MegaProjectCarouselProps {
 }
 
 const colorClassMap: Record<Slide['color'], string> = {
-  'kenya-red': 'bg-kenya-red/20 text-foreground',
-  'kenya-green': 'bg-kenya-green/20 text-foreground',
-  'kenya-black': 'bg-black/20 text-white',
-  'kenya-white': 'bg-white/30 text-foreground',
+  'kenya-red': 'bg-gradient-to-br from-kenya-red/90 to-kenya-red/70 text-white',
+  'kenya-green': 'bg-gradient-to-br from-kenya-green/90 to-kenya-green/70 text-white',
+  'kenya-black': 'bg-gradient-to-br from-gray-900 to-black text-white',
+  'kenya-white': 'bg-gradient-to-br from-white to-gray-100 text-foreground border',
 };
 
 const DRAG_BUFFER = 30;
 const VELOCITY_THRESHOLD = 500;
-const GAP = 16;
+const GAP = 20;
 const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 };
 
 export default function MegaProjectCarousel({ 
   slides: propSlides, 
   className, 
   autoPlayMs = 4500, 
-  baseWidth = 280,
+  baseWidth = 300,
   pauseOnHover = true,
   loop = true,
   round = false,
@@ -54,7 +57,7 @@ export default function MegaProjectCarousel({
   const [cycleCount, setCycleCount] = useState(0);
   
   const containerPadding = 16;
-  const itemWidth = 250;
+  const itemWidth = 280;
   const trackItemOffset = itemWidth + GAP;
   
   const carouselItems = loop && slides.length > 1 ? [...slides, slides[0]] : slides;
@@ -86,6 +89,8 @@ export default function MegaProjectCarousel({
           description: slide.description,
           ctaText: slide.cta_text,
           color: slide.color,
+          imageUrl: slide.image_url,
+          badge: slide.badge,
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
         
@@ -109,14 +114,12 @@ export default function MegaProjectCarousel({
     }
     
     if (autoPlayMs > 0 && !isHovered && !isDragging) {
-      // Special handling for the last card (extended duration)
       const isLastCard = currentIndex === slides.length - 1;
       const delay = isLastCard ? autoPlayMs + 500 : autoPlayMs;
       
       autoPlayTimer.current = setTimeout(() => {
         setCurrentIndex((prev) => {
           if (prev === slides.length - 1) {
-            // Increment cycle count when we complete a full cycle
             setCycleCount(c => c + 1);
             return loop ? 0 : prev;
           }
@@ -161,7 +164,6 @@ export default function MegaProjectCarousel({
   }, [currentIndex, loop, slides.length, trackItemOffset, x]);
 
   const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
-    // Only trigger click if it wasn't a drag gesture
     if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
       slide.onClick?.();
     }
@@ -174,7 +176,10 @@ export default function MegaProjectCarousel({
   if (loading) {
     return (
       <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg">Loading slides...</div>
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-kenya-green border-t-transparent rounded-full animate-spin mb-3"></div>
+          <div className="text-lg">Loading projects...</div>
+        </div>
       </div>
     );
   }
@@ -182,7 +187,10 @@ export default function MegaProjectCarousel({
   if (error) {
     return (
       <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg text-red-500">Error: {error}</div>
+        <div className="text-center">
+          <div className="text-lg text-red-500 mb-2">Error loading projects</div>
+          <div className="text-sm text-muted-foreground">{error}</div>
+        </div>
       </div>
     );
   }
@@ -190,7 +198,10 @@ export default function MegaProjectCarousel({
   if (slides.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="text-lg">No slides available</div>
+        <div className="text-center">
+          <div className="text-lg mb-2">No projects available</div>
+          <div className="text-sm text-muted-foreground">Check back later for updates</div>
+        </div>
       </div>
     );
   }
@@ -231,7 +242,6 @@ export default function MegaProjectCarousel({
           const isActive = position === 0;
           const isAdjacent = Math.abs(position) === 1 || (loop && position === slides.length - 1);
           
-          // Special animation for first card on every 2nd cycle
           const isFirstCard = index === 0;
           const shouldSpecialAnimate = isFirstCard && cycleCount > 0 && cycleCount % 2 === 0 && isActive;
           
@@ -239,10 +249,10 @@ export default function MegaProjectCarousel({
             <motion.div
               key={`${slide.id}-${index}`}
               className={cn(
-                'rounded-xl p-6 backdrop-blur-sm border transition-all flex flex-col justify-between',
+                'rounded-2xl p-6 transition-all flex flex-col justify-between relative overflow-hidden',
                 colorClassMap[slide.color],
-                theme === 'dark' ? 'border-primary/20' : 'border-primary/10',
-                'hover:shadow-lg flex-shrink-0',
+                theme === 'dark' ? 'shadow-lg' : 'shadow-md',
+                'hover:shadow-xl flex-shrink-0 group',
                 round && 'rounded-full justify-center items-center text-center'
               )}
               style={{
@@ -268,33 +278,63 @@ export default function MegaProjectCarousel({
               onPointerDown={(e) => e.preventDefault()}
               onClick={(e) => handleCardClick(slide, index, e)}
             >
-              <div className={cn("flex flex-col h-full justify-center items-center text-center", 
-                round && "justify-center")}>
-                {slide.icon && (
-                  <div className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center mb-4",
-                    round && "mx-auto"
-                  )}>
-                    {slide.icon}
-                  </div>
-                )}
+              {/* Background pattern overlay */}
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.3)_1px,_transparent_0)] bg-[length:20px_20px]"></div>
+              
+              {/* Badge */}
+              {slide.badge && (
+                <div className="absolute top-4 right-4 bg-background/80 text-xs font-medium px-2 py-1 rounded-full">
+                  {slide.badge}
+                </div>
+              )}
+              
+              {/* Image if provided */}
+              {slide.imageUrl && (
+                <div className="mb-4 rounded-lg overflow-hidden h-32 bg-white/20 flex items-center justify-center">
+                  <img 
+                    src={slide.imageUrl} 
+                    alt={slide.title}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
+
+              <div className={cn("flex flex-col h-full justify-between", 
+                round && "justify-center items-center text-center")}>
                 
-                <div className="flex flex-col items-center">
-                  <h3 className="text-lg font-semibold mb-2">{slide.title}</h3>
-                  {slide.description && (
-                    <p className="text-sm opacity-90 mb-4">{slide.description}</p>
+                <div className="flex-1">
+                  {slide.icon && (
+                    <div className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-white/20 p-2",
+                      round && "mx-auto"
+                    )}>
+                      {slide.icon}
+                    </div>
                   )}
+                  
+                  <div className="flex flex-col">
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-white transition-colors">{slide.title}</h3>
+                    {slide.description && (
+                      <p className="text-sm opacity-90 mb-4 line-clamp-3">{slide.description}</p>
+                    )}
+                  </div>
                 </div>
                 
                 {slide.ctaText && (
                   <button 
-                    className="mt-auto mx-auto px-4 py-2 rounded-lg bg-background/60 border text-sm hover:bg-background/80 transition-colors"
+                    className={cn(
+                      "mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all group-hover:bg-white/20",
+                      slide.color === 'kenya-white' 
+                        ? 'bg-black/10 text-foreground hover:bg-black/20' 
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    )}
                     onClick={(e) => {
                       e.stopPropagation();
                       slide.onClick?.();
                     }}
                   >
                     {slide.ctaText}
+                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 )}
               </div>
@@ -305,7 +345,7 @@ export default function MegaProjectCarousel({
 
       {slides.length > 1 && (
         <div className={cn(
-          "mt-6 flex items-center justify-center gap-2",
+          "mt-8 flex items-center justify-center gap-2",
           round && "absolute bottom-4 left-1/2 transform -translate-x-1/2"
         )}>
           {slides.map((s, i) => (
@@ -313,15 +353,8 @@ export default function MegaProjectCarousel({
               key={s.id}
               aria-label={`Go to slide ${i + 1}`}
               className={cn(
-                'h-2.5 w-2.5 rounded-full transition-all cursor-pointer',
-                currentIndex === i ? 'w-6' : 'opacity-60',
-                i % 4 === 0
-                  ? 'bg-kenya-green'
-                  : i % 4 === 1
-                  ? 'bg-kenya-red'
-                  : i % 4 === 2
-                  ? 'bg-black'
-                  : 'bg-white border'
+                'h-3 w-3 rounded-full transition-all cursor-pointer',
+                currentIndex === i ? 'w-8 bg-kenya-green' : 'opacity-60 bg-gray-400',
               )}
               animate={{
                 scale: currentIndex === i ? 1.2 : 1,
