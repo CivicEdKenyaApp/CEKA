@@ -225,7 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
     let emailStatus = 'pending';
     try {
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: 'CEKA Community <noreply@civiceducationkenya.com>',
+        from: 'CEKA Community <onboarding@resend.dev>',
         to: ['civiceducationkenya@gmail.com'],
         subject: `🇰🇪 New CEKA Community Application: ${first_name} ${last_name}`,
         html: emailHtml,

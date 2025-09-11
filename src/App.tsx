@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import ScrollListener from '@/components/auth/ScrollListener';
 import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
+import SplashScreen from '@/components/SplashScreen';
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
@@ -60,15 +61,25 @@ const ScrollToTop = () => {
 const AppContent: React.FC = () => {
   const { session } = useAuth();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    if (session) {
+    // Hide splash screen after 4 seconds
+    const splashTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 4000);
+
+    return () => clearTimeout(splashTimer);
+  }, []);
+
+  useEffect(() => {
+    if (session && !showSplash) {
       const hasSeenTour = localStorage.getItem('ceka-welcome-tour-seen');
       if (!hasSeenTour) {
         setShowWelcomeTour(true);
       }
     }
-  }, [session]);
+  }, [session, showSplash]);
 
   const handleTourComplete = () => {
     localStorage.setItem('ceka-welcome-tour-seen', 'true');
@@ -77,6 +88,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
+      {showSplash && <SplashScreen />}
       <ScrollToTop />
       {showWelcomeTour && <WelcomeTour onComplete={handleTourComplete} />}
       <Routes>
