@@ -3,7 +3,7 @@ import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Image as ImageIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 type Slide = {
@@ -212,7 +212,6 @@ export default function MegaProjectCarousel({
   const handleDragStart = useCallback((event: React.PointerEvent) => {
     const target = event.target as HTMLElement;
     
-    // Don't start drag if user clicks on interactive elements
     if (target.closest("button, a, input, textarea, select")) {
       return;
     }
@@ -247,12 +246,10 @@ export default function MegaProjectCarousel({
   const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
     
-    // If the click was on a button or link, just let it propagate
     if (target.closest("button, a")) {
       return;
     }
     
-    // Otherwise check drag vs click threshold
     if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
       slide.onClick?.();
     }
@@ -379,13 +376,26 @@ export default function MegaProjectCarousel({
                 </div>
               )}
               
-              {slide.imageUrl && (
-                <div className="mb-4 md:mb-5 rounded-lg overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
+              {slide.imageUrl ? (
+                <div className="mb-4 md:mb-5 rounded-xl overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
                     className="object-cover w-full h-full"
+                    onError={(e) => {
+                      // If image fails to load, show a placeholder
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextSibling?.removeAttribute('style');
+                    }}
                   />
+                  <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-200/30">
+                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4 md:mb-5 rounded-xl h-36 md:h-40 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400" />
                 </div>
               )}
 
@@ -413,13 +423,13 @@ export default function MegaProjectCarousel({
                 {slide.ctaText && (
                   <div 
                     className={cn(
-                      "mt-4 md:mt-5 w-full",
+                      "mt-4 md:mt-5 w-full rounded-xl overflow-hidden",
                       getCtaClasses(slide, theme)
                     )}
                     onPointerDown={(e) => e.stopPropagation()}
                   >
                     <button 
-                      className="w-full flex items-center justify-center gap-2 py-3 md:py-4 rounded-lg font-medium transition-all text-base md:text-lg"
+                      className="w-full flex items-center justify-center gap-2 py-3 md:py-4 font-medium transition-all text-base md:text-lg bg-transparent"
                       onClick={(e) => {
                         e.stopPropagation();
                         slide.onClick?.();
