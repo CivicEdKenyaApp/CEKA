@@ -189,13 +189,20 @@ export default function MegaProjectCarousel({
     };
   }, [autoPlayMs, isHovered, isDragging, loop, slides.length, currentIndex]);
 
-  // Add the missing handleDragStart function
-  const handleDragStart = useCallback((event) => {
+  // Update handleDragStart to ignore interactive elements
+  const handleDragStart = useCallback((event: React.PointerEvent) => {
+    const target = event.target as HTMLElement;
+    
+    // Don't start drag if user clicks on interactive elements
+    if (target.closest("button, a, input, textarea, select")) {
+      return;
+    }
+    
     setIsDragging(true);
     dragStartX.current = event.clientX;
   }, []);
 
-  // Add the missing handleDragEnd function
+  // Update handleDragEnd
   const handleDragEnd = useCallback((_, info) => {
     setIsDragging(false);
     const offset = info.offset.x;
@@ -219,14 +226,21 @@ export default function MegaProjectCarousel({
     }
   }, [currentIndex, loop, slides.length, trackItemOffset, x]);
 
-  // Add the missing handleCardClick function
+  // Update handleCardClick to ignore button clicks
   const handleCardClick = useCallback((slide: Slide, index: number, event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    
+    // If the click was on a button or link, just let it propagate
+    if (target.closest("button, a")) {
+      return;
+    }
+    
+    // Otherwise check drag vs click threshold
     if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
       slide.onClick?.();
     }
   }, [isDragging]);
 
-  // Add the missing goToSlide function
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
   }, []);
