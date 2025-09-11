@@ -82,7 +82,7 @@ const Index = () => {
           .order('order_index', { ascending: true });
 
         if (error) throw error;
-        setCarouselSlides(data || []);
+        setCarouselSlides((data || []) as any);
       } catch (err: any) {
         setError(err.message);
         console.error('Error fetching carousel slides:', err);
@@ -134,7 +134,6 @@ const Index = () => {
           slides={formattedSlides}
           autoPlayMs={4500}
           className="container mx-auto"
-          baseWidth={1200}
         />
       </div>
       <FeaturedLegislation />

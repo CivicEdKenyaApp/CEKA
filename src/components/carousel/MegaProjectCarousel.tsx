@@ -40,7 +40,7 @@ interface MegaProjectCarouselProps {
 
 const getIconComponent = (iconName: string | undefined) => {
   if (!iconName) return null;
-  const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
+  const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
   return IconComponent ? <IconComponent className="w-8 h-8 md:w-10 md:h-10" /> : null;
 };
 
@@ -86,7 +86,7 @@ const getBadgeColor = (slide: Slide, theme: string) => {
 
 const DRAG_BUFFER = 30;
 const VELOCITY_THRESHOLD = 500;
-const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 };
+const SPRING_OPTIONS = { type: "spring" as const, stiffness: 300, damping: 30, mass: 0.8 };
 
 export default function MegaProjectCarousel({ 
   slides: propSlides, 
@@ -174,7 +174,7 @@ export default function MegaProjectCarousel({
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from(supabaseTable)
+          .from('carousel_slides')
           .select('*')
           .eq('is_active', true)
           .order('priority', { ascending: false, nullsFirst: false })
@@ -182,7 +182,7 @@ export default function MegaProjectCarousel({
         
         if (error) throw error;
         
-        const formattedSlides = data.map(slide => ({
+        const formattedSlides = (data || []).map((slide: any) => ({
           id: slide.id,
           title: slide.title,
           description: slide.description,
@@ -244,24 +244,16 @@ export default function MegaProjectCarousel({
     };
   }, [autoPlayMs, isHovered, isDragging, loop, slides.length, currentIndex]);
 
-  const handleDragStart = useCallback((event: React.PointerEvent) => {
-    const target = event.target as HTMLElement;
-    
-    if (target.closest("button, a, input, textarea, select")) {
-      return;
-    }
-    
+  const handleDragStart = useCallback(() => {
     setIsDragging(true);
-    dragStartX.current = event.clientX;
   }, []);
 
-  const handleDragEnd = useCallback((_, info) => {
+  const handleDragEnd = useCallback((_, info: any) => {
     setIsDragging(false);
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
     if (Math.abs(offset) < DRAG_BUFFER && Math.abs(velocity) < VELOCITY_THRESHOLD) {
-      animate(x, -currentIndex * trackItemOffset, SPRING_OPTIONS);
       return;
     }
 
@@ -285,7 +277,7 @@ export default function MegaProjectCarousel({
       return;
     }
     
-    if (Math.abs(event.clientX - dragStartX.current) < 10 && !isDragging) {
+    if (!isDragging) {
       slide.onClick?.();
     }
   }, [isDragging]);
@@ -392,10 +384,10 @@ export default function MegaProjectCarousel({
               transition={{
                 scale: shouldSpecialAnimate 
                   ? { duration: 0.6, ease: "easeInOut" } 
-                  : SPRING_OPTIONS,
+                  : { type: "spring" as const, stiffness: 300, damping: 30 },
                 rotate: shouldSpecialAnimate 
                   ? { duration: 0.6, ease: "easeInOut" }
-                  : SPRING_OPTIONS,
+                  : { type: "spring" as const, stiffness: 300, damping: 30 },
               }}
               onPointerDown={(e) => e.preventDefault()}
               onClick={(e) => handleCardClick(slide, index, e)}
