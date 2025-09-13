@@ -1,4 +1,4 @@
-# Dockerfile (place this file at the project root)
+# Dockerfile
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install build tools for packages that need compilation (optional, safe default)
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -15,15 +15,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements first to leverage Docker layer caching
 COPY ./app/requirements.txt /app/requirements.txt
 
-# Upgrade pip and install dependencies
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r /app/requirements.txt
+# Upgrade pip and install numpy first with a compatible version
+RUN pip install --upgrade pip
+RUN pip install "numpy>=1.21.0,<1.25.0"  # Use a version compatible with your pandas
+
+# Now install the rest of the requirements
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy application source
 COPY ./app /app
 
-# Expose a port (adjust if your app listens on a different port)
+# Expose a port
 EXPOSE 8080
 
-# Run your app (ensure app/main.py is the correct entrypoint)
+# Run your app
 CMD ["python", "main.py"]
