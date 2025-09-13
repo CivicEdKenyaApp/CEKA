@@ -419,7 +419,7 @@ const SHAmbles: React.FC = () => {
       });
 
       setShowProcessingStatus(true);
-      setSelectedJob(job as any);
+      setSelectedJob(job as ProcessingJob);
     } catch (error) {
       console.error('Error creating job:', error);
       toast({

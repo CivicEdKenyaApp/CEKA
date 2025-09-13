@@ -47,3 +47,21 @@ enable_confirmations = false
 
 [functions.send-community-email]
 verify_jwt = false
+
+[functions.kenya-geojson]
+verify_jwt = false
+
+[functions.process-datasets]
+verify_jwt = false
+
+[functions.upload-data]
+verify_jwt = false
+
+[functions.process-url]
+verify_jwt = false
+
+[functions.job-status]
+verify_jwt = false
+
+[functions.download-file]
+verify_jwt = false

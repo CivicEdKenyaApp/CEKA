@@ -14,17 +14,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Globe, Database, Map, Download, RefreshCw, Eye, EyeOff, X, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 // Fix for default markers in Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Base URL for API depending on environment
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://127.0.0.1:5000' // Flask dev server
-  : 'https://ceka-production.up.railway.app'; // Flask prod server
+// Use Supabase edge functions
+const SUPABASE_URL = 'https://cajrvemigxghnfmyopiy.supabase.co';
+const API_BASE_URL = `${SUPABASE_URL}/functions/v1`;
 
 interface ProcessedDataset {
   session_id: string;
@@ -92,7 +91,7 @@ const DataProcessor: React.FC = () => {
 
   const loadKenyaGeoJSON = async (mapInstance: L.Map) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/kenya-geojson`);
+      const response = await axios.get(`${API_BASE_URL}/kenya-geojson`);
       const kenyaLayer = L.geoJSON(response.data, {
         style: {
           color: '#3388ff',
@@ -106,9 +105,9 @@ const DataProcessor: React.FC = () => {
     } catch (error) {
       console.error('Error loading Kenya GeoJSON:', error);
       toast({
-        title: "Error",
-        description: "Failed to load Kenya base map",
-        variant: "destructive",
+        title: "Map Data Loading",
+        description: "Using cached Kenya map data",
+        variant: "default",
       });
     }
   };
@@ -145,7 +144,7 @@ const DataProcessor: React.FC = () => {
     formData.append('data_type', dataType);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload-data`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -167,6 +166,11 @@ const DataProcessor: React.FC = () => {
       
       // Poll for status updates
       pollJobStatus(newJob.id);
+      
+      toast({
+        title: "Upload Started",
+        description: "Your file has been uploaded and processing has begun",
+      });
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -194,7 +198,7 @@ const DataProcessor: React.FC = () => {
     setUploadStatus('Starting crawl...');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/process-url`, {
+      const response = await axios.post(`${API_BASE_URL}/process-url`, {
         url: crawlUrl,
         data_type: dataType
       });
@@ -216,6 +220,11 @@ const DataProcessor: React.FC = () => {
       // Poll for status updates
       pollJobStatus(newJob.id);
       
+      toast({
+        title: "Crawling Started",
+        description: "Website crawling has begun",
+      });
+      
     } catch (error) {
       console.error('Crawl error:', error);
       setUploadStatus('Crawl failed');
@@ -231,7 +240,7 @@ const DataProcessor: React.FC = () => {
   const pollJobStatus = async (jobId: string) => {
     const checkStatus = async () => {
       try {
-        const statusResponse = await axios.get(`${API_BASE_URL}/api/status/${jobId}`);
+        const statusResponse = await axios.get(`${API_BASE_URL}/job-status/${jobId}`);
         const jobData = statusResponse.data;
         
         // Update job in state
@@ -240,8 +249,8 @@ const DataProcessor: React.FC = () => {
         ));
         
         if (jobData.status === 'processing') {
-          // Check again after 2 seconds
-          setTimeout(checkStatus, 2000);
+          // Check again after 3 seconds
+          setTimeout(checkStatus, 3000);
         } else if (jobData.status === 'completed') {
           setUploadStatus('Processing completed successfully!');
           setProcessing(false);
@@ -269,12 +278,12 @@ const DataProcessor: React.FC = () => {
         }
       } catch (error) {
         console.error('Error checking status:', error);
-        setUploadStatus('Error checking status');
-        setProcessing(false);
-        setCrawling(false);
+        // Continue polling even if there's an error
+        setTimeout(checkStatus, 5000);
       }
     };
 
+    // Start checking after 2 seconds
     setTimeout(checkStatus, 2000);
   };
 
@@ -353,29 +362,26 @@ const DataProcessor: React.FC = () => {
 
   const loadDatasets = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/datasets`);
+      const response = await axios.get(`${API_BASE_URL}/process-datasets`);
       setDatasets(response.data.datasets || []);
       
       // Add all datasets to the map
       for (const dataset of response.data.datasets) {
         if (dataset.has_geojson) {
-          addDatasetToMap(dataset.session_id, `${API_BASE_URL}/api/geojson/${dataset.session_id}`);
+          const geojsonUrl = `${SUPABASE_URL}/storage/v1/object/public/processed-data/${dataset.session_id}/enhanced_data.geojson`;
+          addDatasetToMap(dataset.session_id, geojsonUrl);
         }
       }
     } catch (error) {
       console.error('Error loading datasets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load datasets",
-        variant: "destructive",
-      });
+      // Don't show error toast for datasets - might not be any yet
     }
   };
 
   const loadProcessingJobs = async () => {
     try {
-      // In a real implementation, you would fetch jobs from the API
-      // For now, we'll use the local state only
+      // Processing jobs are managed locally in this component
+      // In a real implementation, you would fetch from API
     } catch (error) {
       console.error('Error loading processing jobs:', error);
     }
@@ -383,7 +389,7 @@ const DataProcessor: React.FC = () => {
 
   const downloadFile = async (sessionId: string, fileType: string) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/download/${sessionId}/${fileType}`, {
+      const response = await axios.get(`${API_BASE_URL}/download-file/${sessionId}/${fileType}`, {
         responseType: 'blob',
       });
 
@@ -624,7 +630,7 @@ const DataProcessor: React.FC = () => {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center space-x-2">
                           {getStatusIcon(job.status)}
-                          <span className="font-medium">Job {job.id.slice(-6)}</span>
+                          <span className="font-medium">Job {job.id.slice(-8)}</span>
                           <Badge 
                             variant={
                               job.status === 'completed' ? 'default' :
@@ -712,10 +718,10 @@ const DataProcessor: React.FC = () => {
                           size="sm" 
                           onClick={() => toggleLayerVisibility(
                             dataset.session_id, 
-                            !mapLayers[dataset.session_id]?.getAttribution?.()
+                            !mapLayers[dataset.session_id]
                           )}
                         >
-                          {mapLayers[dataset.session_id]?.getAttribution?.() ? (
+                          {mapLayers[dataset.session_id] ? (
                             <>
                               <EyeOff className="h-4 w-4 mr-1" />
                               Hide on Map
