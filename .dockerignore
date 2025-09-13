@@ -1,0 +1,19 @@
+# .dockerignore (place at repo root)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+venv*/
+.env
+.git
+.gitignore
+.cache
+.pytest_cache
+.vscode/
+.DS_Store
+node_modules/
+*.sqlite3
+*.db
