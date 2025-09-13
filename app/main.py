@@ -243,6 +243,17 @@ def create_app():
     def internal_error(error):
         logger.error(f"Internal server error: {str(error)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+
+        # Root route
+    @app.route('/', methods=['GET'])
+    def root():
+        return jsonify({
+            'status': 'healthy',
+            'message': 'Welcome to CEKA Backend',
+            'version': '1.0.0'
+        })
+
     
     return app
 
