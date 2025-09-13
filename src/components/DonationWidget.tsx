@@ -17,8 +17,8 @@ const DONATION_OPTIONS = [
   },
   {
     name: 'M-Pesa',
-    number: '+254798903373',
-    description: 'Send to M-Pesa',
+    url: 'https://zenlipa.co.ke/me/civic-education-kenya',
+    description: 'Secure M-Pesa donation via ZenLipa',
     icon: '📱'
   }
 ];
@@ -38,6 +38,7 @@ const DonationWidget: React.FC<DonationWidgetProps> = ({ onTimedOut, isVisible: 
   const [isHovering, setIsHovering] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [opacity, setOpacity] = useState(1);
+  const [redirecting, setRedirecting] = useState(false);
   
   const widgetMountTimeRef = useRef<number>(Date.now());
   const visibilityTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -119,13 +120,18 @@ const DonationWidget: React.FC<DonationWidgetProps> = ({ onTimedOut, isVisible: 
     }
   };
 
-  const handleMpesa = () => {
-    navigator.clipboard.writeText('+254798903373');
+  const handleMpesaRedirect = () => {
+    setRedirecting(true);
     toast({
-      title: "M-Pesa number copied",
-      description: "Number copied to clipboard. You can proceed to send your MPesa donation there via 'Send Money'",
-      duration: 3000,
+      title: "Redirecting to Secure Payment",
+      description: "You will be taken to ZenLipa for M-Pesa processing",
+      duration: 2500,
     });
+    
+    setTimeout(() => {
+      window.open('https://zenlipa.co.ke/me/civic-education-kenya', '_blank', 'noopener,noreferrer');
+      setRedirecting(false);
+    }, 800);
   };
 
   if (hasTimedOut || !isVisible) return null;
@@ -255,11 +261,25 @@ const DonationWidget: React.FC<DonationWidgetProps> = ({ onTimedOut, isVisible: 
                   </div>
                   {option.name === 'M-Pesa' ? (
                     <button
-                      onClick={handleMpesa}
-                      className="relative z-10 px-4 py-2 text-sm rounded-lg flex items-center bg-white/10 dark:bg-gray-800/10 hover:bg-white/20 dark:hover:bg-gray-700/20 backdrop-blur-sm transition-all duration-300 text-gray-700 dark:text-gray-300 hover:scale-105 shadow-lg"
+                      onClick={handleMpesaRedirect}
+                      disabled={redirecting}
+                      className={`relative z-10 px-4 py-2 text-sm rounded-lg flex items-center backdrop-blur-sm transition-all duration-300 shadow-lg ${
+                        redirecting
+                          ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-white/10 dark:bg-gray-800/10 hover:bg-white/20 dark:hover:bg-gray-700/20 text-gray-700 dark:text-gray-300 hover:scale-105'
+                      }`}
                     >
-                      <span className="mr-2">Copy</span>
-                      <Copy className="h-3 w-3" />
+                      {redirecting ? (
+                        <span className="flex items-center">
+                          <span className="mr-2">Redirecting</span>
+                          <div className="h-3 w-3 border-2 border-t-transparent border-current rounded-full animate-spin" />
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <span className="mr-2">Donate</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </span>
+                      )}
                     </button>
                   ) : (
                     <a
