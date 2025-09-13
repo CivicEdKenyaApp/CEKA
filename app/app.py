@@ -36,7 +36,7 @@ UPLOAD_FOLDER = 'user_uploads'
 PROCESSED_FOLDER = 'processed_data'
 SCRIPTS_FOLDER = 'scripts'
 ALLOWED_EXTENSIONS = {'csv', 'json', 'geojson', 'xlsx', 'xls', 'txt'}
-KENYA_GEOJSON_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/public/data/kenya_counties.geojson"
+KENYA_GEOJSON_URL = "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/public/healthcare%20data/kenya_healthcare_enhanced.geojson"
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
