@@ -1,22 +1,119 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Civic Education Kenya App</title>
-    <meta name="description" content="A Civic Education Kenya Project" />
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>The Civic Education Kenya App - Empowering Citizens Through Education</title>
+    <meta name="description" content="Comprehensive civic education platform for Kenyan citizens. Learn about governance, rights, responsibilities, and participate in democracy through interactive tools and resources." />
     <meta name="author" content="CEKA" />
+    <meta name="keywords" content="civic education, Kenya, democracy, governance, citizen rights, civic participation, constitutional education, political education, civic awareness" />
+    
+    <!-- Essential SEO Tags -->
+    <link rel="canonical" href="https://civicedkenya.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
 
-    <meta property="og:title" content="The Civic Education Kenya App" />
-    <meta property="og:description" content="A Civic Education Kenya Project" />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:title" content="The Civic Education Kenya App - Empowering Citizens Through Education" />
+    <meta property="og:description" content="Comprehensive civic education platform for Kenyan citizens. Learn about governance, rights, responsibilities, and participate in democracy through interactive tools and resources." />
     <meta property="og:image" content="https://ugc.production.linktr.ee/da2bd069-4a8d-45ff-b9f9-ba70718473d5_the-civic-education-kenya-app-official-logo.png?io=true&size=avatar-v3_0" />
+    <meta property="og:url" content="https://civicedkenya.vercel.app/" />
+    <meta property="og:site_name" content="Civic Education Kenya" />
+    <meta property="og:locale" content="en_KE" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@civicedkenya" />
+    <meta name="twitter:creator" content="@civicedkenya" />
+    <meta name="twitter:title" content="The Civic Education Kenya App - Empowering Citizens" />
+    <meta name="twitter:description" content="Comprehensive civic education platform for Kenyan citizens. Learn governance, rights, and democratic participation." />
     <meta name="twitter:image" content="https://ugc.production.linktr.ee/da2bd069-4a8d-45ff-b9f9-ba70718473d5_the-civic-education-kenya-app-official-logo.png?io=true&size=avatar-v3_0" />
     
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.imgur.com/NvBmNPk.png" />
+    <meta name="theme-color" content="#0E1726" />
+    <meta name="msapplication-TileColor" content="#0E1726" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Apple PWA Specific -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Civic Ed Kenya" />
+
+    <!-- Preload logo images with proper as attribute -->
+    <link rel="preload" href="/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png" as="image" fetchpriority="high" />
+    <link rel="preload" href="/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png" as="image" fetchpriority="high" />
+
+    <!-- Structured Data for Better SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Civic Education Kenya",
+          "alternateName": "CEKA",
+          "url": "https://civicedkenya.vercel.app",
+          "logo": "https://ugc.production.linktr.ee/da2bd069-4a8d-45ff-b9f9-ba70718473d5_the-civic-education-kenya-app-official-logo.png?io=true&size=avatar-v3_0",
+          "description": "Comprehensive civic education platform empowering Kenyan citizens through interactive learning about governance, rights, and democratic participation.",
+          "foundingDate": "2024",
+          "areaServed": {
+            "@type": "Country",
+            "name": "Kenya"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "availableLanguage": "English"
+          },
+          "sameAs": [
+            "https://twitter.com/civicedkenya"
+          ],
+          "knowsAbout": [
+            "Civic Education",
+            "Kenyan Constitution",
+            "Democratic Participation",
+            "Governance",
+            "Citizen Rights"
+          ]
+        },
+        {
+          "@type": "WebApplication",
+          "name": "The Civic Education Kenya App",
+          "description": "Interactive platform for civic education in Kenya, featuring educational resources, tools, and community engagement features.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web Browser, iOS, Android",
+          "url": "https://civicedkenya.vercel.app",
+          "featureList": [
+            "Constitutional Education",
+            "Governance Learning",
+            "Civic Participation Tools",
+            "Interactive Resources",
+            "Community Engagement",
+            "Democratic Education"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "name": "Civic Education Kenya",
+          "url": "https://civicedkenya.vercel.app",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://civicedkenya.vercel.app/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       
@@ -44,16 +141,41 @@
     ">
   </head>
   
-  <!-- Favicon and App Icons -->
-  <link rel="icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="https://i.imgur.com/NvBmNPk.png" />
-  <meta name="theme-color" content="#0E1726" />
-
-  <!-- Preload logo images with proper as attribute -->
-  <link rel="preload" href="/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png" as="image" fetchpriority="high" />
-  <link rel="preload" href="/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png" as="image" fetchpriority="high" />
-
   <body>
+    <!-- Hidden SEO Content for Crawlers -->
+    <div style="position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;">
+        <h1>Civic Education Kenya - Empowering Citizens Through Education</h1>
+        <h2>Interactive Platform for Democratic Participation and Governance Learning</h2>
+        
+        <p>The Civic Education Kenya App (CEKA) is a comprehensive digital platform designed to empower Kenyan citizens through accessible, interactive civic education. Our mission is to strengthen democracy by ensuring every citizen understands their rights, responsibilities, and role in governance.</p>
+
+        <h2>Platform Features</h2>
+        <p>Discover interactive learning modules covering the Kenyan Constitution, governance structures, electoral processes, and citizen participation. Access educational resources, community forums, civic participation tools, and real-time information about democratic processes in Kenya.</p>
+
+        <h2>Educational Content</h2>
+        <p>Comprehensive curriculum covering constitutional law, human rights, government structure, electoral systems, public participation, accountability mechanisms, and civic duties. Content designed for learners of all levels, from students to adult citizens seeking to enhance their civic knowledge.</p>
+
+        <h2>Community Engagement</h2>
+        <p>Connect with fellow citizens, participate in discussions about governance issues, share experiences, and collaborate on civic initiatives. Our platform fosters informed dialogue and collective action for positive change in Kenya.</p>
+
+        <h2>Key Topics Covered</h2>
+        <ul>
+            <li>Kenyan Constitution and Bill of Rights</li>
+            <li>Structure of Government - Executive, Legislative, Judiciary</li>
+            <li>Electoral Processes and Voting Rights</li>
+            <li>Public Participation and Citizen Engagement</li>
+            <li>Accountability and Transparency in Governance</li>
+            <li>County Government and Devolution</li>
+            <li>Anti-Corruption and Ethics</li>
+            <li>Access to Information and Freedom of Expression</li>
+            <li>Gender Equality and Social Justice</li>
+            <li>Youth Participation in Democracy</li>
+        </ul>
+
+        <h2>Target Audience</h2>
+        <p>Students, educators, civil society organizations, government officials, community leaders, youth groups, women's organizations, religious institutions, media practitioners, and all Kenyan citizens committed to strengthening democracy and good governance.</p>
+    </div>
+
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
