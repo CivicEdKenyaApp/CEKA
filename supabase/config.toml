@@ -65,3 +65,12 @@ verify_jwt = false
 
 [functions.download-file]
 verify_jwt = false
+
+[functions.get-signed-upload-url]
+verify_jwt = false
+
+[functions.create-processing-job]
+verify_jwt = false
+
+[functions.server-upload]
+verify_jwt = false

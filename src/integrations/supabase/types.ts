@@ -370,43 +370,73 @@ export type Database = {
       }
       carousel_slides: {
         Row: {
+          animation_type: string | null
+          badge_color: string | null
+          button_color_dark: string | null
+          button_color_light: string | null
           color: string | null
           created_at: string | null
           cta_text: string | null
           description: string | null
+          gradient_from: string | null
+          gradient_to: string | null
+          icon_name: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
           link_url: string | null
           order_index: number | null
+          priority: number | null
+          text_color_dark: string | null
+          text_color_light: string | null
           title: string
           type: string | null
           updated_at: string | null
         }
         Insert: {
+          animation_type?: string | null
+          badge_color?: string | null
+          button_color_dark?: string | null
+          button_color_light?: string | null
           color?: string | null
           created_at?: string | null
           cta_text?: string | null
           description?: string | null
+          gradient_from?: string | null
+          gradient_to?: string | null
+          icon_name?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
           order_index?: number | null
+          priority?: number | null
+          text_color_dark?: string | null
+          text_color_light?: string | null
           title: string
           type?: string | null
           updated_at?: string | null
         }
         Update: {
+          animation_type?: string | null
+          badge_color?: string | null
+          button_color_dark?: string | null
+          button_color_light?: string | null
           color?: string | null
           created_at?: string | null
           cta_text?: string | null
           description?: string | null
+          gradient_from?: string | null
+          gradient_to?: string | null
+          icon_name?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           link_url?: string | null
           order_index?: number | null
+          priority?: number | null
+          text_color_dark?: string | null
+          text_color_light?: string | null
           title?: string
           type?: string | null
           updated_at?: string | null
