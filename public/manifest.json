@@ -1,0 +1,107 @@
+{
+  "name": "The Civic Education Kenya App - Empowering Citizens",
+  "short_name": "Civic Ed Kenya",
+  "description": "Comprehensive civic education platform for Kenyan citizens. Learn governance, rights, and democratic participation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0E1726",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "government", "reference"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.imgur.com/NvBmNPk.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple-touch-icon"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Civic Education Kenya Mobile Interface"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Civic Education Kenya Desktop Interface"
+    }
+  ],
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Constitution",
+      "short_name": "Constitution",
+      "description": "Learn about the Kenyan Constitution",
+      "url": "/constitution",
+      "icons": [
+        {
+          "src": "/icons/constitution-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Governance",
+      "short_name": "Governance",
+      "description": "Explore governance structures",
+      "url": "/governance",
+      "icons": [
+        {
+          "src": "/icons/governance-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Rights",
+      "short_name": "Rights",
+      "description": "Understand your rights as a citizen",
+      "url": "/rights",
+      "icons": [
+        {
+          "src": "/icons/rights-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Participate",
+      "short_name": "Participate",
+      "description": "Tools for civic participation",
+      "url": "/participate",
+      "icons": [
+        {
+          "src": "/icons/participate-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
