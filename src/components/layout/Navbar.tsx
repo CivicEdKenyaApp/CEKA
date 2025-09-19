@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -50,7 +48,6 @@ const Navbar = () => {
   const { unreadCount } = useNotifications();
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
