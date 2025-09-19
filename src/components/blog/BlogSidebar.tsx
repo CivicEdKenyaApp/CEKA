@@ -32,7 +32,7 @@ export function BlogSidebar() {
       title: "CEKA Mobile App",
       description: "Access civic education on the go with our mobile app",
       icon: Smartphone,
-      action: "Download Now",
+      action: "Explore",
       link: "/",
       color: "bg-blue-500"
     },
@@ -48,8 +48,8 @@ export function BlogSidebar() {
       title: "WANTAM App",
       description: "Explore our other civic engagement platform",
       icon: Users,
-      action: "Explore",
-      link: "/",
+      action: "Download Now",
+      link: "https://juzqumvamllubshomuge.supabase.co/storage/v1/object/sign/apps/Signed%20APK%20-%20Prod%20Ready/The%20WANTAM%20App.apk?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wZThlZDg5OC05N2JkLTRhNmEtYjUwZS0zMTU5M2U4NmMwOTIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcHBzL1NpZ25lZCBBUEsgLSBQcm9kIFJlYWR5L1RoZSBXQU5UQU0gQXBwLmFwayIsImlhdCI6MTc1MTg1ODk4NSwiZXhwIjoxNzgzMzk0OTg1fQ.YtzhIZwgFOakwF7qZuo7jiq2t9B4A2OMO6WXvu1Ow-c",
       color: "bg-green-500"
     }
   ];
