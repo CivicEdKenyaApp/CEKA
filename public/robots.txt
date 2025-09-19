@@ -1,14 +1,96 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Block private/admin areas
+Disallow: /auth
+Disallow: /admin/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /notifications
+Disallow: /resources/upload
+Disallow: /resources/pending
+
+# Block development/config files
+Disallow: /src/
+Disallow: /supabase/
+Disallow: /components.json
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /bun.lockb
+Disallow: /tsconfig.json
+Disallow: /tsconfig.app.json
+Disallow: /tsconfig.node.json
+Disallow: /vite.config.ts
+Disallow: /tailwind.config.ts
+Disallow: /postcss.config.js
+Disallow: /eslint.config.js
+Disallow: /*.md$
+
+# Explicitly allow critical civic content
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /resources
+Allow: /resources/*
+Allow: /resource-hub
+Allow: /legislative-tracker
+Allow: /legislative-tracker/*
+Allow: /legislation/*
+Allow: /bill/*
+Allow: /reject-finance-bill
+Allow: /shambles
+Allow: /volunteer
+Allow: /volunteer/*
+Allow: /advocacy-toolkit
+Allow: /advocacy-toolkit/*
+Allow: /join-community
+Allow: /constitution
+Allow: /legal
+Allow: /feedback
+Allow: /discussion/*
+Allow: /campaign/*
+Allow: /search
+Allow: /document/*
+Allow: /privacy
+Allow: /terms
+
+# Allow multilingual content
+Allow: /en/
+Allow: /sw/
+Allow: /asl/
+Allow: /br/
+
+# Allow social media and RSS
+Allow: /feed
+Allow: /rss
+Allow: /api/og/
+Allow: /api/share/
+
+# Sitemap locations
+Sitemap: https://ceka.lovable.app/sitemap.xml
+Sitemap: https://civicedkenya.vercel.app/sitemap.xml
+Sitemap: https://preview--ceka.lovable.app/sitemap.xml
+
+# Crawl delay for respectful server usage
+Crawl-delay: 1
+
+# Special bot handling for civic content
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: Bingbot
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Crawl-delay: 1
+
+# Block aggressive crawlers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
