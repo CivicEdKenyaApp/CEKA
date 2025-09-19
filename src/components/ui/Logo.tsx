@@ -18,7 +18,7 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
         <div className="w-8 h-8 flex items-center justify-center relative">
           <motion.img 
             src="/logo-colored.png"
-            alt="CEKA Logo" 
+            alt="CEKA Logo Light" 
             className="h-8 w-8 object-contain absolute"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ 
@@ -29,7 +29,7 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
           />
           <motion.img 
             src="/logo-white.png"
-            alt="CEKA Logo" 
+            alt="CEKA Logo Dark" 
             className="h-8 w-8 object-contain absolute"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ 
