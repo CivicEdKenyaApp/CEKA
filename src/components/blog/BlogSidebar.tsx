@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,21 +11,18 @@ import {
   BookOpen, 
   MessageSquare,
   ExternalLink,
-  Bell,
   Heart,
-  Star,
-  Loader2
+  Star
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 
 export function BlogSidebar() {
   const { toast } = useToast();
   const { language } = useLanguage();
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   
   const appFeatures = [
     {
@@ -86,7 +83,7 @@ export function BlogSidebar() {
     "Public Participation", "Accountability", "Transparency", "Legislation"
   ];
 
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email.trim()) {
@@ -98,34 +95,8 @@ export function BlogSidebar() {
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('subscribe-newsletter', {
-        body: { email: email.trim().toLowerCase() }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to subscribe');
-      }
-
-      toast({
-        title: translate("Subscribed!", language),
-        description: translate("You've been added to our newsletter list.", language),
-      });
-      
-      setEmail('');
-      
-    } catch (error) {
-      console.error('Subscription error:', error);
-      toast({
-        title: translate("Subscription Error", language),
-        description: translate("There was an error subscribing. Please try again later.", language),
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Navigate to join-community with email as query parameter
+    navigate(`/join-community?email=${encodeURIComponent(email.trim())}`);
   };
 
   return (
@@ -211,45 +182,35 @@ export function BlogSidebar() {
         </CardContent>
       </Card>
 
-      {/* Newsletter Signup */}
+      {/* Email Signup */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-kenya-green" />
-            Stay Updated
+            <Heart className="h-5 w-5 text-kenya-green" />
+            Join Our Community
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Get notified about new posts and civic education updates.
+            Get started by entering your email to join our community.
           </p>
-          <form onSubmit={handleNewsletterSubmit} className="space-y-2">
+          <form onSubmit={handleEmailSubmit} className="space-y-2">
             <input
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-kenya-green"
-              disabled={isSubmitting}
             />
             <Button 
               type="submit" 
-              size="sm" 
               className="w-full bg-kenya-green hover:bg-kenya-green/90"
-              disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Subscribing...
-                </>
-              ) : (
-                'Subscribe'
-              )}
+              Continue to Join
             </Button>
           </form>
           <p className="text-xs text-muted-foreground">
-            We respect your privacy. Unsubscribe anytime.
+            We'll use this email to create your community account.
           </p>
         </CardContent>
       </Card>
