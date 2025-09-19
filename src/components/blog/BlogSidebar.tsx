@@ -1,10 +1,8 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
   Download, 
   Smartphone, 
@@ -15,10 +13,20 @@ import {
   ExternalLink,
   Bell,
   Heart,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export function BlogSidebar() {
+  const { toast } = useToast();
+  const { language } = useLanguage();
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const appFeatures = [
     {
       title: "CEKA Mobile App",
@@ -77,6 +85,48 @@ export function BlogSidebar() {
     "Civic Education", "Governance", "Democracy", "Constitutional Rights",
     "Public Participation", "Accountability", "Transparency", "Legislation"
   ];
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: translate("Email Required", language),
+        description: translate("Please enter your email address.", language),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscribe-newsletter', {
+        body: { email: email.trim().toLowerCase() }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to subscribe');
+      }
+
+      toast({
+        title: translate("Subscribed!", language),
+        description: translate("You've been added to our newsletter list.", language),
+      });
+      
+      setEmail('');
+      
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast({
+        title: translate("Subscription Error", language),
+        description: translate("There was an error subscribing. Please try again later.", language),
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -173,16 +223,31 @@ export function BlogSidebar() {
           <p className="text-sm text-muted-foreground">
             Get notified about new posts and civic education updates.
           </p>
-          <div className="space-y-2">
+          <form onSubmit={handleNewsletterSubmit} className="space-y-2">
             <input
               type="email"
               placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-kenya-green"
+              disabled={isSubmitting}
             />
-            <Button size="sm" className="w-full bg-kenya-green hover:bg-kenya-green/90">
-              Subscribe
+            <Button 
+              type="submit" 
+              size="sm" 
+              className="w-full bg-kenya-green hover:bg-kenya-green/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Subscribing...
+                </>
+              ) : (
+                'Subscribe'
+              )}
             </Button>
-          </div>
+          </form>
           <p className="text-xs text-muted-foreground">
             We respect your privacy. Unsubscribe anytime.
           </p>
