@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search } from 'lucide-react';
-import Logo from '@/components/ui/Logo';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, Sun, Moon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ const Navbar = () => {
   const { unreadCount } = useNotifications();
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,6 +126,40 @@ const Navbar = () => {
     { code: 'br', name: 'Braille' },
   ];
 
+  const logoVariants = {
+    light: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.6
+      }
+    },
+    dark: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.6
+      }
+    }
+  };
+
+  const logoVariantsDark = {
+    light: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.6
+      }
+    },
+    dark: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.6
+      }
+    }
+  };
+
   return (
     <>
       <nav
@@ -133,8 +169,29 @@ const Navbar = () => {
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center">
-              <Logo className="h-8 w-auto" />
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 flex items-center justify-center relative">
+                <motion.img 
+                  src="/logo-colored.png"
+                  alt="Recall254 Logo Light"
+                  className="w-10 h-10 object-cover rounded-full absolute"
+                  variants={logoVariants}
+                  initial="light"
+                  animate={theme === 'light' ? 'light' : 'dark'}
+                />
+                <motion.img 
+                  src="/logo-white.png"
+                  alt="Recall254 Logo Dark"
+                  className="w-10 h-10 object-cover rounded-full absolute"
+                  variants={logoVariantsDark}
+                  initial="light"
+                  animate={theme === 'light' ? 'light' : 'dark'}
+                />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground">Recall254</h1>
+                <p className="text-xs text-muted-foreground">by CEKA</p>
+              </div>
             </Link>
 
             <div className="hidden md:flex space-x-1">
