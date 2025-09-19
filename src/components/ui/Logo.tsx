@@ -53,7 +53,7 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
           <motion.img 
             src="/logo-colored.png"
             alt="CEKA Logo Light"
-            className="h-8 w-8 object-cover absolute"
+            className="h-8 w-8 object-contain absolute"
             variants={logoVariants}
             initial="light"
             animate={theme === 'light' ? 'light' : 'dark'}
@@ -61,7 +61,7 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
           <motion.img 
             src="/logo-white.png"
             alt="CEKA Logo Dark"
-            className="h-8 w-8 object-cover absolute"
+            className="h-8 w-8 object-contain absolute"
             variants={logoVariantsDark}
             initial="light"
             animate={theme === 'light' ? 'light' : 'dark'}
@@ -70,9 +70,7 @@ const Logo = ({ variant = 'full', className }: LogoProps) => {
       )}
       
       {(variant === 'full' || variant === 'text-only') && (
-        <div className="flex flex-col">
-          <span className="font-bold text-kenya-green">CEKA</span>
-        </div>
+        <span className="font-bold text-foreground">CEKA</span>
       )}
     </Link>
   );
