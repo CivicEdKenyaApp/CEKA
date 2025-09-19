@@ -1,33 +1,5 @@
 User-agent: *
-Allow: /
-
-# Block private/admin areas
-Disallow: /auth
-Disallow: /admin/
-Disallow: /profile
-Disallow: /profile/
-Disallow: /settings/
-Disallow: /notifications
-Disallow: /resources/upload
-Disallow: /resources/pending
-
-# Block development/config files
-Disallow: /src/
-Disallow: /supabase/
-Disallow: /components.json
-Disallow: /package.json
-Disallow: /package-lock.json
-Disallow: /bun.lockb
-Disallow: /tsconfig.json
-Disallow: /tsconfig.app.json
-Disallow: /tsconfig.node.json
-Disallow: /vite.config.ts
-Disallow: /tailwind.config.ts
-Disallow: /postcss.config.js
-Disallow: /eslint.config.js
-Disallow: /*.md$
-
-# Explicitly allow critical civic content
+Crawl-delay: 1
 Allow: /
 Allow: /blog
 Allow: /blog/*
@@ -54,43 +26,281 @@ Allow: /search
 Allow: /document/*
 Allow: /privacy
 Allow: /terms
-
-# Allow multilingual content
+Allow: /thumbnail-demo
 Allow: /en/
 Allow: /sw/
 Allow: /asl/
 Allow: /br/
-
-# Allow social media and RSS
 Allow: /feed
 Allow: /rss
 Allow: /api/og/
 Allow: /api/share/
 
-# Sitemap locations
-Sitemap: https://ceka.lovable.app/sitemap.xml
-Sitemap: https://civicedkenya.vercel.app/sitemap.xml
-Sitemap: https://preview--ceka.lovable.app/sitemap.xml
+# Block private/admin areas
+Disallow: /auth
+Disallow: /admin/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /notifications
+Disallow: /resources/upload
+Disallow: /resources/pending
 
-# Crawl delay for respectful server usage
-Crawl-delay: 1
+Disallow: /auth
+Disallow: /admin/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /notifications
+Disallow: /resources/upload
+Disallow: /resources/pending
 
-# Special bot handling for civic content
+# Block development/config files
+Disallow: /src/
+Disallow: /supabase/
+Disallow: /components.json
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /bun.lockb
+Disallow: /tsconfig.json
+Disallow: /tsconfig.app.json
+Disallow: /tsconfig.node.json
+Disallow: /vite.config.ts
+Disallow: /tailwind.config.ts
+Disallow: /postcss.config.js
+Disallow: /eslint.config.js
+Disallow: /*.md$
+Disallow: /?debug
+Disallow: /?sessionid=
+Disallow: /?utm_
+Disallow: /.env
+Disallow: /.git
+Disallow: /node_modules/
+Disallow: /*.__*
+Disallow: /*?sort=
+Disallow: /*?order=
+Disallow: /*?page=
+Disallow: /*?limit=
+Disallow: /*?*filter=
+
+# Social Media Bots - Optimized for Civic Engagement
+User-agent: FacebookExternalHit
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog
+Allow: /blog/*
+Allow: /bill/*
+Allow: /legislation/*
+Allow: /legislative-tracker/*
+Allow: /resources/*
+Allow: /constitution
+Allow: /legal
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: Facebot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: Twitterbot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog
+Allow: /blog/*
+Allow: /legislative-tracker/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: LinkedInBot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog
+Allow: /blog/*
+Allow: /resources/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: Pinterestbot
+Allow: /
+Allow: /api/og/
+Allow: /blog
+Allow: /blog/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+
+User-agent: WhatsApp
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog/*
+Allow: /constitution
+
+User-agent: TelegramBot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog/*
+Allow: /constitution
+
+User-agent: Discordbot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog/*
+Allow: /constitution
+
+User-agent: Applebot
+Allow: /
+Allow: /api/og/
+Allow: /api/share/
+Allow: /blog
+Allow: /blog/*
+Allow: /constitution
+
+# Major Search Engines
 User-agent: Googlebot
 Crawl-delay: 1
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /resources
+Allow: /resources/*
+Allow: /legislative-tracker
+Allow: /legislative-tracker/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+Disallow: /profile
+Disallow: /src/
+Disallow: /supabase/
 
 User-agent: Bingbot
 Crawl-delay: 1
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /resources
+Allow: /resources/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
+Disallow: /profile
 
 User-agent: DuckDuckBot
 Crawl-delay: 1
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /constitution
+Disallow: /auth
+Disallow: /admin/
 
-# Block aggressive crawlers
+# Block Non-English Search Engines
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: Yandex
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: Exabot
+Disallow: /
+
+# Block SEO/Analysis Tools
 User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
 Disallow: /
 
 User-agent: MJ12bot
 Disallow: /
 
-User-agent: DotBot
+User-agent: BLEXBot
 Disallow: /
+
+User-agent: Screaming Frog SEO Spider
+Disallow: /
+
+User-agent: Sitebulb
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: rogerbot
+Disallow: /
+
+User-agent: sistrix
+Disallow: /
+
+User-agent: openindexspider
+Disallow: /
+
+# Block Automated Tools & Scripts
+User-agent: python-requests
+Disallow: /
+
+User-agent: libwww-perl
+Disallow: /
+
+User-agent: Wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: Go-http-client
+Disallow: /
+
+# Block Monitoring Services
+User-agent: UptimeRobot
+Disallow: /
+
+User-agent: Pingdom
+Disallow: /
+
+User-agent: Dotcom-Monitor
+Disallow: /
+
+User-agent: NewRelic
+Disallow: /
+
+User-agent: Datadog
+Disallow: /
+
+User-agent: StatusCake
+Disallow: /
+
+# Sitemap Locations
+Sitemap: https://ceka.lovable.app/sitemap.xml
+Sitemap: https://civicedkenya.vercel.app/sitemap.xml
+Sitemap: https://preview--ceka.lovable.app/sitemap.xml
