@@ -19,19 +19,19 @@
       "type": "image/x-icon"
     },
     {
-      "src": "/lovable-uploads/60eebae9-7ca2-4cb0-823d-bcecccb0027f.png",
+      "src": "/logo-white.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png",
+      "src": "/logo-colored.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://i.imgur.com/NvBmNPk.png",
+      "src": "/logo-white.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "apple-touch-icon"
