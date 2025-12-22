@@ -209,6 +209,17 @@ export default function MegaProjectCarousel({
           priority: slide.priority,
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
+
+          // === ADD DEBUGGING CODE RIGHT HERE ===
+      console.log('Checking image URLs:');
+      formattedSlides.forEach((slide, index) => {
+        console.log(`Slide ${index} (${slide.title}):`, {
+          originalPath: data?.[index]?.image_url,
+          generatedUrl: slide.imageUrl,
+          existsInStorage: slide.imageUrl ? 'Need to check' : 'No URL'
+        });
+      });
+    // === END DEBUGGING CODE ===
         
         console.log('Formatted slides with image URLs:', formattedSlides); // Debug log
         setSlides(formattedSlides);
