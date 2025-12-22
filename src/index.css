@@ -1,10 +1,6 @@
 /* ===== UNIFIED CEKA + NASAKA IEBC CSS ===== */
 /* Import Leaflet CSS for OpenStreetMap */
 @import 'leaflet/dist/leaflet.css';
-@import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
-
-/* Import OpenLayers CSS for MapTiler */
-@import 'ol/ol.css';
 
 @tailwind base;
 @tailwind components;
