@@ -181,24 +181,22 @@ const RLSTestPanel: React.FC = () => {
 
   const testJobRetrieval = async () => {
     try {
-      let jobs: ProcessingJob[] = [];
-      
       if (user) {
-        jobs = await getUserProcessingJobs();
+        const userJobsResult = await getUserProcessingJobs();
         addTestResult({
           test: 'User Jobs Retrieval Test',
           status: 'success',
-          message: `Retrieved ${jobs.length} user jobs`,
-          details: jobs.slice(0, 3) // Show first 3 jobs
+          message: `Retrieved ${userJobsResult.jobs.length} user jobs`,
+          details: userJobsResult.jobs.slice(0, 3)
         });
       }
       
-      const publicJobs = await getPublicProcessingJobs();
+      const publicJobsResult = await getPublicProcessingJobs();
       addTestResult({
         test: 'Public Jobs Retrieval Test',
         status: 'success',
-        message: `Retrieved ${publicJobs.length} public jobs`,
-        details: publicJobs.slice(0, 3) // Show first 3 jobs
+        message: `Retrieved ${publicJobsResult.jobs.length} public jobs`,
+        details: publicJobsResult.jobs.slice(0, 3)
       });
     } catch (error: any) {
       addTestResult({

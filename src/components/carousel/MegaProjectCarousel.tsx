@@ -170,7 +170,7 @@ export default function MegaProjectCarousel({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // CORRECTED: Fetch slides with proper image URL handling
+  // Fetch slides with proper image URL handling
   useEffect(() => {
     if (propSlides) return;
     
@@ -178,7 +178,7 @@ export default function MegaProjectCarousel({
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from(supabaseTable)
+          .from('carousel_slides')
           .select('*')
           .eq('is_active', true)
           .order('priority', { ascending: false, nullsFirst: false })
@@ -186,15 +186,33 @@ export default function MegaProjectCarousel({
         
         if (error) throw error;
         
-        console.log('Fetched slides data:', data); // Debug log
+        interface CarouselSlideData {
+          id: string;
+          title: string;
+          description?: string;
+          cta_text?: string;
+          color?: string;
+          image_url?: string;
+          badge?: string;
+          badge_color?: string;
+          icon_name?: string;
+          gradient_from?: string;
+          gradient_to?: string;
+          text_color_light?: string;
+          text_color_dark?: string;
+          button_color_light?: string;
+          button_color_dark?: string;
+          animation_type?: string;
+          priority?: number;
+          link_url?: string;
+        }
         
-        const formattedSlides = (data || []).map((slide: any) => ({
+        const formattedSlides = (data || []).map((slide: CarouselSlideData) => ({
           id: slide.id,
           title: slide.title,
           description: slide.description,
           ctaText: slide.cta_text,
-          color: slide.color,
-          // CORRECTED: Use slide.image_url (with underscore) from database
+          color: (slide.color || 'kenya-green') as 'kenya-red' | 'kenya-green' | 'kenya-black' | 'kenya-white',
           imageUrl: getImageUrl(slide.image_url),
           badge: slide.badge,
           badgeColor: slide.badge_color,
@@ -209,19 +227,7 @@ export default function MegaProjectCarousel({
           priority: slide.priority,
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
-
-          // === ADD DEBUGGING CODE RIGHT HERE ===
-      console.log('Checking image URLs:');
-      formattedSlides.forEach((slide, index) => {
-        console.log(`Slide ${index} (${slide.title}):`, {
-          originalPath: data?.[index]?.image_url,
-          generatedUrl: slide.imageUrl,
-          existsInStorage: slide.imageUrl ? 'Need to check' : 'No URL'
-        });
-      });
-    // === END DEBUGGING CODE ===
         
-        console.log('Formatted slides with image URLs:', formattedSlides); // Debug log
         setSlides(formattedSlides);
       } catch (err: any) {
         setError(err.message);
