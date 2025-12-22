@@ -3,7 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
   MapPin, CheckCircle, Clock, ExternalLink, AlertTriangle, RefreshCw,
-  Menu, X, Home, Info, Smartphone, Users, BarChart, ArrowRight, Search, Navigation
+  Menu, X, Home, Info, Smartphone, Users, BarChart, ArrowRight, Search,
+  Navigation, ChevronLeft, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -69,28 +70,67 @@ const NasakaPage: React.FC = () => {
       </Helmet>
 
       <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300">
-        {/* Ghost Header - Fixed at top */}
+        {/* Enhanced Ghost Header with Frosted Glass */}
         <header className="fixed top-0 left-0 right-0 z-40 safe-top">
           <div className="container mx-auto px-4 py-3">
-            <div className="glass-light dark:glass-dark rounded-2xl shadow-ios-high dark:shadow-ios-high-dark px-4 py-3 flex items-center justify-between">
+            <div className="bg-white/85 dark:bg-ios-surface-dark/85 backdrop-blur-xl border border-white/40 dark:border-ios-border rounded-2xl shadow-ios-low dark:shadow-ios-low-dark px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-ios-blue rounded-lg flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-foreground text-sm">Nasaka IEBC</h1>
-                  <p className="text-xs text-muted-foreground">IEBC Office Finder</p>
+                {/* Home Button with Nasaka Logo */}
+                <Link to="/">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full w-10 h-10 bg-transparent hover:bg-black/5 dark:hover:bg-white/10 transition-colors group"
+                    aria-label="Go back to CEKA homepage"
+                  >
+                    <div className="relative">
+                      <ChevronLeft className="w-5 h-5 text-foreground group-hover:text-ios-blue transition-colors" />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-dark flex items-center justify-center">
+                        <img 
+                          src="/nasaka.svg" 
+                          alt="Nasaka IEBC"
+                          className="w-4 h-4 invert"
+                        />
+                      </div>
+                    </div>
+                  </Button>
+                </Link>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-dark flex items-center justify-center">
+                    <img 
+                      src="/nasaka.svg" 
+                      alt="Nasaka IEBC Logo"
+                      className="w-5 h-5 invert"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-foreground text-sm">Nasaka IEBC</h1>
+                    <p className="text-xs text-muted-foreground">IEBC Office Finder</p>
+                  </div>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full w-10 h-10 glass-light dark:glass-dark"
-                onClick={toggleSidebar}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
+              
+              {/* Status Indicator & Menu */}
+              <div className="flex items-center space-x-3">
+                {/* iOS Style Loaded Indicator */}
+                {iframeLoaded && (
+                  <div className="hidden md:flex items-center space-x-1 px-3 py-1.5 rounded-full bg-ios-green/10 border border-ios-green/20">
+                    <Check className="w-3 h-3 text-ios-green" />
+                    <span className="text-xs font-medium text-ios-green">Loaded</span>
+                  </div>
+                )}
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full w-10 h-10 bg-transparent hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  onClick={toggleSidebar}
+                  aria-label="Open menu"
+                >
+                  <Menu className="w-5 h-5 text-foreground" />
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -98,7 +138,7 @@ const NasakaPage: React.FC = () => {
         {/* Main Content - Iframe Container */}
         <section className="pt-20 pb-8 safe-area">
           <div className="container mx-auto px-4">
-            {/* Status Indicator */}
+            {/* Status Indicator - Mobile Only */}
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Interactive Registration Center Map</h2>
@@ -107,12 +147,17 @@ const NasakaPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="mt-4 md:mt-0 flex items-center gap-3">
+              <div className="mt-4 md:mt-0 flex items-center gap-3 md:hidden">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <div className={`w-3 h-3 rounded-full mr-2 ${
                     iframeLoaded ? 'bg-ios-green' : iframeError ? 'bg-ios-red' : 'bg-ios-yellow animate-pulse'
                   }`}></div>
-                  {iframeLoaded ? 'Loaded' : iframeError ? 'Connection Error' : 'Loading...'}
+                  {iframeLoaded ? (
+                    <div className="flex items-center">
+                      <Check className="w-3 h-3 mr-1 text-ios-green" />
+                      <span className="text-ios-green">Loaded</span>
+                    </div>
+                  ) : iframeError ? 'Connection Error' : 'Loading...'}
                 </div>
                 {iframeError && (
                   <Button variant="outline" size="sm" onClick={handleRetry} className="rounded-full">
@@ -185,22 +230,22 @@ const NasakaPage: React.FC = () => {
 
             {/* Quick Stats Bar */}
             <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border">
+              <div className="bg-white/50 dark:bg-ios-surface-dark/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border/50">
                 <Users className="w-6 h-6 text-ios-blue mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">20k+</p>
                 <p className="text-xs text-muted-foreground">Active Users</p>
               </div>
-              <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border">
+              <div className="bg-white/50 dark:bg-ios-surface-dark/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border/50">
                 <BarChart className="w-6 h-6 text-ios-green mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">500k</p>
                 <p className="text-xs text-muted-foreground">Organic Reach</p>
               </div>
-              <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border">
+              <div className="bg-white/50 dark:bg-ios-surface-dark/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border/50">
                 <Smartphone className="w-6 h-6 text-ios-orange mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">Soon</p>
                 <p className="text-xs text-muted-foreground">Play Store App</p>
               </div>
-              <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border">
+              <div className="bg-white/50 dark:bg-ios-surface-dark/50 backdrop-blur-sm rounded-xl p-4 text-center border border-border/50">
                 <CheckCircle className="w-6 h-6 text-ios-purple mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">3 Steps</p>
                 <p className="text-xs text-muted-foreground">Tap, Search, Go</p>
@@ -212,7 +257,7 @@ const NasakaPage: React.FC = () => {
         {/* Floating Action Button */}
         <button
           onClick={toggleSidebar}
-          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-ios-blue text-white shadow-ios-high dark:shadow-ios-high-dark flex items-center justify-center hover:bg-ios-blue/90 transition-all duration-300 animate-float"
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-dark text-white shadow-ios-high dark:shadow-ios-high-dark flex items-center justify-center hover:from-ios-blue/90 hover:to-ios-blue-dark/90 transition-all duration-300 animate-float"
           aria-label="Open info sidebar"
         >
           <Info className="w-6 h-6" />
@@ -224,24 +269,36 @@ const NasakaPage: React.FC = () => {
             isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
         >
-          {/* Backdrop */}
+          {/* Backdrop with Blur */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setIsSidebarOpen(false)}
           />
 
-          {/* Sidebar Content */}
+          {/* Sidebar Content with Frosted Glass */}
           <div
-            className={`absolute top-0 right-0 h-full w-full max-w-md bg-white dark:bg-ios-surface-dark shadow-2xl transition-transform duration-300 ${
+            className={`absolute top-0 right-0 h-full w-full max-w-md bg-white/95 dark:bg-ios-surface-dark/95 backdrop-blur-xl shadow-2xl transition-transform duration-300 ${
               isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
-            {/* Sidebar Header */}
-            <div className="glass-light dark:glass-dark p-6 border-b border-border">
+            {/* Sidebar Header with Enhanced Frosted Glass */}
+            <div className="bg-white/90 dark:bg-ios-surface-dark/90 backdrop-blur-lg border-b border-border/50 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-ios-blue rounded-lg flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-white" />
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-dark flex items-center justify-center">
+                      <img 
+                        src="/nasaka.svg" 
+                        alt="Nasaka IEBC Logo"
+                        className="w-6 h-6 invert"
+                      />
+                    </div>
+                    {/* Home indicator on logo */}
+                    <Link to="/">
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-foreground/90 backdrop-blur-sm flex items-center justify-center hover:bg-ios-blue transition-colors">
+                        <Home className="w-3 h-3 text-background" />
+                      </div>
+                    </Link>
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Nasaka IEBC</h2>
@@ -251,7 +308,7 @@ const NasakaPage: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full bg-transparent hover:bg-black/5 dark:hover:bg-white/10"
                   onClick={() => setIsSidebarOpen(false)}
                   aria-label="Close sidebar"
                 >
@@ -312,7 +369,7 @@ const NasakaPage: React.FC = () => {
                     href="https://www.iebc.or.ke"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-kenya-green/10 flex items-center justify-center">
@@ -326,7 +383,7 @@ const NasakaPage: React.FC = () => {
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-ios-blue/10 flex items-center justify-center">
@@ -340,12 +397,12 @@ const NasakaPage: React.FC = () => {
               </div>
 
               {/* Call to Action */}
-              <div className="bg-ios-blue/5 border border-ios-blue/20 rounded-xl p-4">
+              <div className="bg-gradient-to-br from-ios-blue/5 to-ios-blue-dark/5 border border-ios-blue/20 rounded-xl p-4">
                 <h4 className="font-semibold text-foreground mb-2">Coming Soon to Play Store</h4>
                 <p className="text-sm text-muted-foreground mb-3">
                   Get the Nasaka IEBC app for faster access and offline functionality.
                 </p>
-                <Button className="w-full bg-ios-blue hover:bg-ios-blue/90 text-white rounded-full">
+                <Button className="w-full bg-gradient-to-br from-ios-blue to-ios-blue-dark hover:from-ios-blue/90 hover:to-ios-blue-dark/90 text-white rounded-full">
                   <Smartphone className="w-4 h-4 mr-2" />
                   Notify Me When Available
                 </Button>
@@ -353,41 +410,6 @@ const NasakaPage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <footer className="mt-12 border-t border-border pt-8 safe-bottom">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="mb-4 md:mb-0">
-                <p className="text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} Civic Education Kenya (CEKA). All rights reserved.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  This is an independent civic project. For official procedures, consult IEBC directly.
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <a
-                  href="mailto:civiceducationkenya@gmail.com"
-                  className="text-sm text-ios-blue hover:underline"
-                >
-                  Contact
-                </a>
-                <a
-                  href="https://x.com/CivicEdKenya"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-ios-blue hover:underline"
-                >
-                  Twitter
-                </a>
-                <Link to="/privacy" className="text-sm text-ios-blue hover:underline">
-                  Privacy
-                </Link>
-              </div>
-            </div>
-          </div>
-        </footer>
       </main>
     </>
   );
