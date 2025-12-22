@@ -90,7 +90,7 @@ const NasakaPage: React.FC = () => {
                 </Link>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-ios-surface-dark flex items-center justify-center shadow-md border border-border/50">
+                  <div className="w-8 h-8 rounded-lg bg-white/40 dark:bg-ios-surface-dark/40 flex items-center justify-center shadow-md border border-border/50">
                     <img 
                       src="/nasaka.svg" 
                       alt="Nasaka IEBC Logo"
@@ -113,7 +113,9 @@ const NasakaPage: React.FC = () => {
               {/* Right Section - All buttons grouped together */}
               <div className="flex items-center space-x-2">
                 {/* Theme Toggle */}
-                <ThemeToggle />
+                <div className="rounded-full w-10 h-10 bg-white/40 dark:bg-ios-surface-dark/40 hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 backdrop-blur-sm transition-all duration-300 border border-white/40 dark:border-ios-border/50">
+                  <ThemeToggle />
+                </div>
                 
                 {/* iOS Style Loaded Indicator */}
                 {iframeLoaded && (
@@ -246,22 +248,22 @@ const NasakaPage: React.FC = () => {
 
             {/* Quick Stats Bar */}
             <div className="mt-10 mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/40 dark:bg-white/10 backdrop-blur-xl border border-white/30 dark:border-ios-border/50 shadow-lg shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
+              <div className="bg-white/40 dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-border/50 dark:border-border shadow-lg shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
                 <Users className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">20k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Active Users</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-white/40 dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/50 dark:border-border shadow-sm shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
                 <BarChart className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">500k</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-white/40 dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-border/50 dark:border-border shadow-lg shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
                 <Smartphone className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">Soon</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Play Store App</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-white/40 dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/50 dark:border-border shadow-sm shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
                 <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">3 Steps</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Tap, Search, Go</p>
