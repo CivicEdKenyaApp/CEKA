@@ -133,27 +133,30 @@ export default function MegaProjectCarousel({
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Function to get proper image URL from Supabase storage
-  const getImageUrl = (imageUrl: string | undefined | null) => {
-    if (!imageUrl) return null;
+  // CORRECTED: Function to get proper image URL from Supabase storage
+  const getImageUrl = useCallback((imagePath: string | undefined | null) => {
+    if (!imagePath) return null;
     
     // If it's already a full URL, return it
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
     }
     
     // If it's a Supabase storage path, construct the URL
     try {
+      // Remove leading slash if present
+      const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
       const { data } = supabase.storage
         .from(imageBucket)
-        .getPublicUrl(imageUrl);
+        .getPublicUrl(cleanPath);
       
+      console.log('Image URL generated:', data.publicUrl); // Debug log
       return data.publicUrl;
     } catch (error) {
       console.error('Error getting image URL:', error);
       return null;
     }
-  };
+  }, [imageBucket]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -167,6 +170,7 @@ export default function MegaProjectCarousel({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // CORRECTED: Fetch slides with proper image URL handling
   useEffect(() => {
     if (propSlides) return;
     
@@ -174,7 +178,7 @@ export default function MegaProjectCarousel({
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('carousel_slides')
+          .from(supabaseTable)
           .select('*')
           .eq('is_active', true)
           .order('priority', { ascending: false, nullsFirst: false })
@@ -182,12 +186,15 @@ export default function MegaProjectCarousel({
         
         if (error) throw error;
         
+        console.log('Fetched slides data:', data); // Debug log
+        
         const formattedSlides = (data || []).map((slide: any) => ({
           id: slide.id,
           title: slide.title,
           description: slide.description,
           ctaText: slide.cta_text,
           color: slide.color,
+          // CORRECTED: Use slide.image_url (with underscore) from database
           imageUrl: getImageUrl(slide.image_url),
           badge: slide.badge,
           badgeColor: slide.badge_color,
@@ -203,8 +210,9 @@ export default function MegaProjectCarousel({
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
         
+        console.log('Formatted slides with image URLs:', formattedSlides); // Debug log
         setSlides(formattedSlides);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
         console.error('Error fetching carousel slides:', err);
       } finally {
@@ -213,7 +221,7 @@ export default function MegaProjectCarousel({
     };
     
     fetchSlides();
-  }, [propSlides, supabaseTable]);
+  }, [propSlides, supabaseTable, getImageUrl]);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -404,20 +412,23 @@ export default function MegaProjectCarousel({
               )}
               
               {slide.imageUrl ? (
-                <div className="mb-4 md:mb-5 rounded-xl overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center">
+                <div className="mb-4 md:mb-5 rounded-xl overflow-hidden h-36 md:h-40 bg-white/20 flex items-center justify-center relative">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
                     className="object-cover w-full h-full"
                     onError={(e) => {
-                      // If image fails to load, show a placeholder
+                      console.error('Image failed to load:', slide.imageUrl);
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
-                      const placeholder = target.nextSibling as HTMLElement;
-                      if (placeholder) placeholder.style.display = 'flex';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        const placeholder = parent.querySelector('.image-placeholder') as HTMLElement;
+                        if (placeholder) placeholder.style.display = 'flex';
+                      }
                     }}
                   />
-                  <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-200/30">
+                  <div className="image-placeholder hidden absolute inset-0 flex items-center justify-center bg-gray-200/30">
                     <ImageIcon className="w-10 h-10 text-gray-400" />
                   </div>
                 </div>
