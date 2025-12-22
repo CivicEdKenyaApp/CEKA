@@ -1,16 +1,24 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, RefreshCw, Menu, X } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
+import { MapPin, CheckCircle, Clock, ExternalLink, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const NasakaPage: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [iframeMounted, setIframeMounted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const NASAKA_URL = 'https://recall254.vercel.app';
+
+  // Delay mounting the iframe to ensure container is ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIframeMounted(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleIframeLoad = useCallback(() => {
     setIframeLoaded(true);
@@ -25,38 +33,14 @@ const NasakaPage: React.FC = () => {
   const handleRetry = useCallback(() => {
     setIframeError(false);
     setIframeLoaded(false);
-    if (iframeRef.current) {
-      iframeRef.current.src = NASAKA_URL;
-    }
-    setShowMenu(false);
+    setIframeMounted(false);
+    setTimeout(() => {
+      setIframeMounted(true);
+    }, 100);
   }, []);
-
-  const handleOpenInNewTab = useCallback(() => {
-    window.open(NASAKA_URL, '_blank', 'noopener,noreferrer');
-    setShowMenu(false);
-  }, []);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const menu = document.getElementById('mobile-menu');
-      const menuButton = document.getElementById('menu-button');
-      
-      if (showMenu && 
-          menu && 
-          menuButton &&
-          !menu.contains(event.target as Node) &&
-          !menuButton.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMenu]);
 
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>Nasaka IEBC - Find Registration Centers | CEKA</title>
         <meta 
@@ -65,152 +49,184 @@ const NasakaPage: React.FC = () => {
         />
       </Helmet>
 
-      {/* Minimal Header - Mobile Only */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm">
-        <div className="flex items-center justify-between p-4">
-          <Link 
-            to="/"
-            className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span className="text-sm font-medium">Back to CEKA</span>
-          </Link>
-          
-          <button
-            id="menu-button"
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-            aria-label="Menu"
-          >
-            {showMenu ? <X size={20} className="text-white" /> : <Menu size={20} className="text-white" />}
-          </button>
-        </div>
-
-        {/* Floating Menu */}
-        {showMenu && (
-          <div 
-            id="mobile-menu"
-            className="absolute top-full right-4 mt-2 w-48 bg-black/90 backdrop-blur-lg rounded-xl shadow-2xl border border-white/10 overflow-hidden animate-fade-in"
-          >
-            <div className="p-2">
-              <button
-                onClick={handleRetry}
-                className="w-full flex items-center px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <RefreshCw size={18} className="mr-3" />
-                <span>Reload Map</span>
-              </button>
-              
-              <button
-                onClick={handleOpenInNewTab}
-                className="w-full flex items-center px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors mt-1"
-              >
-                <ExternalLink size={18} className="mr-3" />
-                <span>Open in New Tab</span>
-              </button>
-              
-              <div className="border-t border-white/10 mt-2 pt-2">
-                <Link
-                  to="/"
-                  className="flex items-center px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-                  onClick={() => setShowMenu(false)}
-                >
-                  <ArrowLeft size={18} className="mr-3" />
-                  <span>Home</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Minimal Controls */}
-      <div className="hidden lg:block fixed top-6 left-6 z-40">
-        <div className="flex items-center space-x-3">
-          <Link
-            to="/"
-            className="group flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 border border-white/20"
-          >
-            <ArrowLeft size={18} className="text-white group-hover:scale-110 transition-transform" />
-            <span className="text-white text-sm font-medium">CEKA Home</span>
-          </Link>
-          
-          <button
-            onClick={handleOpenInNewTab}
-            className="group flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 border border-white/20"
-          >
-            <ExternalLink size={18} className="text-white group-hover:scale-110 transition-transform" />
-            <span className="text-white text-sm font-medium">Open in New Tab</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Iframe Container */}
-      <div className="w-full h-screen">
-        {/* Loading Overlay */}
-        {!iframeLoaded && !iframeError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-kenya-green to-emerald-700 z-30">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white mx-auto mb-6"></div>
-              <h2 className="text-2xl font-bold text-white mb-2">Loading IEBC Map</h2>
-              <p className="text-white/80 max-w-md">
-                Loading the Nasaka IEBC registration center finder...
+      <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+        {/* Header Section */}
+        <section className="bg-gradient-to-r from-kenya-green via-kenya-green/90 to-emerald-700 text-white">
+          <div className="container mx-auto px-4 py-12">
+            <div className="max-w-4xl mx-auto">
+              <nav className="flex items-center space-x-2 text-sm text-white/80 mb-4">
+                <Link to="/" className="hover:text-white transition-colors">Home</Link>
+                <span>/</span>
+                <span className="text-white font-medium">Nasaka IEBC</span>
+              </nav>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">Nasaka IEBC: Find an IEBC Office Near You</h1>
+              <p className="text-lg opacity-90">
+                Find the closest IEBC registration center and verify your voter registration status
               </p>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* Error Overlay */}
-        {iframeError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-red-600 to-red-800 z-30">
-            <div className="text-center max-w-md p-6">
-              <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <X size={32} className="text-white" />
+        {/* Main Content */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            {/* Status Indicator */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Interactive Registration Center Map</h2>
+                <p className="text-muted-foreground mt-1">
+                  Locate the nearest IEBC office and check registration hours
+                </p>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Unable to Load</h2>
-              <p className="text-white/90 mb-8">
-                The IEBC registration center map could not be loaded. This might be due to network issues or the service being temporarily unavailable.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handleRetry}
-                  className="px-6 py-3 bg-white text-kenya-green font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={handleOpenInNewTab}
-                  className="px-6 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  Open Directly
-                </button>
+              
+              <div className="mt-4 md:mt-0 flex items-center gap-3">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <div className={`w-3 h-3 rounded-full mr-2 ${
+                    iframeLoaded ? 'bg-green-500' : iframeError ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
+                  }`}></div>
+                  {iframeLoaded ? 'Loaded' : iframeError ? 'Connection Error' : 'Loading...'}
+                </div>
+                {iframeError && (
+                  <Button variant="outline" size="sm" onClick={handleRetry}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Iframe Container */}
+            <div className="bg-card rounded-xl shadow-lg overflow-hidden border border-border">
+              {/* Loading State */}
+              {!iframeLoaded && !iframeError && (
+                <div className="h-96 flex flex-col items-center justify-center bg-muted/30">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kenya-green mb-4"></div>
+                  <p className="text-foreground">Loading Nasaka IEBC registration center finder...</p>
+                  <p className="text-sm text-muted-foreground mt-2">This may take a few moments</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {iframeError && (
+                <div className="h-96 flex flex-col items-center justify-center p-8 bg-muted/30">
+                  <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-8 h-8 text-destructive" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Unable to Load Registration Center Finder</h3>
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
+                    The Nasaka IEBC registration center finder is temporarily unavailable. This could be due to network issues or the external service being down.
+                  </p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <Button onClick={handleRetry} variant="outline">
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Try Again
+                    </Button>
+                    <a 
+                      href={NASAKA_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="bg-kenya-green hover:bg-kenya-green/90 text-white">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open Directly
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Iframe - Only mount when ready and hide if error */}
+              {iframeMounted && !iframeError && (
+                <iframe
+                  ref={iframeRef}
+                  src={NASAKA_URL}
+                  className={`w-full transition-opacity duration-300 ${iframeLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+                  style={{ 
+                    height: iframeLoaded ? 'calc(100vh - 200px)' : '1px',
+                    minHeight: iframeLoaded ? '600px' : '1px'
+                  }}
+                  title="Nasaka IEBC Registration Center Finder"
+                  onLoad={handleIframeLoad}
+                  onError={handleIframeError}
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                  allow="geolocation"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              )}
+            </div>
+
+            {/* Instructions Section */}
+            <div className="mt-8 grid md:grid-cols-3 gap-6">
+              <div className="bg-card p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-kenya-green/10 rounded-lg flex items-center justify-center mb-4">
+                  <MapPin className="w-6 h-6 text-kenya-green" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Find Registration Centers</h3>
+                <p className="text-muted-foreground text-sm">
+                  Locate the nearest IEBC registration center by entering your location or allowing browser geolocation.
+                </p>
+              </div>
+
+              <div className="bg-card p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
+                  <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Verify Voter Status</h3>
+                <p className="text-muted-foreground text-sm">
+                  Check your voter registration details and ensure your information is up to date.
+                </p>
+              </div>
+
+              <div className="bg-card p-6 rounded-xl border border-border hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Registration Hours</h3>
+                <p className="text-muted-foreground text-sm">
+                  View operating hours and plan your visit to complete your voter registration.
+                </p>
+              </div>
+            </div>
+
+            {/* Additional Information */}
+            <div className="mt-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-amber-800 dark:text-amber-200">Important Notice</h4>
+                  <p className="text-amber-700 dark:text-amber-300 mt-1">
+                    This tool is embedded from the official Nasaka IEBC platform. For official voter registration 
+                    and verification, please visit IEBC offices directly with your national ID or passport.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-4">
+                    <a 
+                      href="https://www.iebc.or.ke"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm text-amber-800 dark:text-amber-200 hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Official IEBC Website
+                    </a>
+                    <a 
+                      href="https://verify.iebc.or.ke/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm text-amber-800 dark:text-amber-200 hover:underline"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      IEBC Verify Registration
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Iframe */}
-        <iframe
-          ref={iframeRef}
-          src={NASAKA_URL}
-          className="w-full h-full border-none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-          }}
-          title="Nasaka IEBC Registration Center Finder"
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
-          allow="geolocation; camera; microphone"
-          referrerPolicy="strict-origin-when-cross-origin"
-          loading="eager"
-        />
-      </div>
-    </Layout>
+        </section>
+      </main>
+    </>
   );
 };
 
