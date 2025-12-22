@@ -96,7 +96,7 @@ export default function MegaProjectCarousel({
   loop = true,
   round = false,
   supabaseTable = 'carousel_slides',
-  imageBucket = 'carousel-images'
+  imageBucket = 'carousel_thumbnails'
 }: MegaProjectCarouselProps) {
   const { theme } = useTheme();
   const [slides, setSlides] = useState<Slide[]>(propSlides || []);
