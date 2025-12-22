@@ -178,7 +178,7 @@ export default function MegaProjectCarousel({
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('carousel_slides')
+          .from(supabaseTable)
           .select('*')
           .eq('is_active', true)
           .order('priority', { ascending: false, nullsFirst: false })
@@ -186,16 +186,17 @@ export default function MegaProjectCarousel({
         
         if (error) throw error;
         
-        console.log('Fetched slides data:', data);
+        console.log('Fetched slides data:', data); // Debug log
         
-        const formattedSlides = (data || []).map((slide) => ({
+        const formattedSlides = (data || []).map((slide: any) => ({
           id: slide.id,
           title: slide.title,
           description: slide.description,
           ctaText: slide.cta_text,
-          color: slide.color as Slide['color'],
+          color: slide.color,
+          // CORRECTED: Use slide.image_url (with underscore) from database
           imageUrl: getImageUrl(slide.image_url),
-          badge: slide.type,
+          badge: slide.badge,
           badgeColor: slide.badge_color,
           iconName: slide.icon_name,
           gradientFrom: slide.gradient_from,
@@ -208,6 +209,17 @@ export default function MegaProjectCarousel({
           priority: slide.priority,
           onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
         }));
+
+          // === ADD DEBUGGING CODE RIGHT HERE ===
+      console.log('Checking image URLs:');
+      formattedSlides.forEach((slide, index) => {
+        console.log(`Slide ${index} (${slide.title}):`, {
+          originalPath: data?.[index]?.image_url,
+          generatedUrl: slide.imageUrl,
+          existsInStorage: slide.imageUrl ? 'Need to check' : 'No URL'
+        });
+      });
+    // === END DEBUGGING CODE ===
         
         console.log('Formatted slides with image URLs:', formattedSlides); // Debug log
         setSlides(formattedSlides);

@@ -247,7 +247,7 @@ export async function uploadFileDirectly(
     if (result.error) {
       throw new StorageError(
         result.error.message,
-        'STORAGE_ERROR',
+        result.error.statusCode?.toString(),
         result.error
       );
     }
@@ -436,8 +436,8 @@ export async function updateProcessingJob(
   updates: Partial<ProcessingJob>
 ): Promise<ProcessingJob> {
   try {
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id;
+    const { data: user } = await supabase.auth.getUser();
+    const userId = user?.id;
 
     // Add audit log entry
     const updatedJob = {
@@ -455,7 +455,7 @@ export async function updateProcessingJob(
       ]
     };
 
-    const { data: jobData, error } = await supabase
+    const { data, error } = await supabase
       .from('processing_jobs')
       .update(updatedJob)
       .eq('id', jobId)
@@ -470,7 +470,7 @@ export async function updateProcessingJob(
       );
     }
 
-    return jobData as ProcessingJob;
+    return data as ProcessingJob;
   } catch (error) {
     if (error instanceof StorageError) {
       throw error;
