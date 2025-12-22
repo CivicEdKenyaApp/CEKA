@@ -43,7 +43,7 @@ import ResourceUpload from '@/pages/ResourceUpload';
 import PendingResources from '@/pages/PendingResources';
 import ThumbnailDemo from '@/pages/ThumbnailDemo';
 import SettingsLayout from '@/pages/settings/SettingsLayout';
-import Settings from '@/pages/settings/Settings';
+import Settings from '@/pages/Settings';
 import AccountSettings from '@/pages/settings/AccountSettings';
 import NotificationSettings from '@/pages/settings/NotificationSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
