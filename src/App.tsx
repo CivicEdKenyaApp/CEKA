@@ -23,7 +23,7 @@ import BillDetail from '@/pages/BillDetail';
 import RejectFinanceBill from '@/pages/RejectFinanceBill';
 import SHAmbles from '@/pages/SHAmbles';
 import PeoplesAuditPage from '@/pages/PeoplesAuditPage';
-import NasakaIEBCPage from '@/pages/NasakaIEBCPage'; // NEW IMPORT
+import NasakaPage from '@/pages/NasakaPage';
 import Volunteer from '@/pages/Volunteer';
 import VolunteerApplication from '@/pages/VolunteerApplication';
 import UserProfile from '@/pages/UserProfile';
@@ -43,7 +43,7 @@ import ResourceUpload from '@/pages/ResourceUpload';
 import PendingResources from '@/pages/PendingResources';
 import ThumbnailDemo from '@/pages/ThumbnailDemo';
 import SettingsLayout from '@/pages/settings/SettingsLayout';
-import Settings from '@/pages/Settings';
+import Settings from '@/pages/settings/Settings';
 import AccountSettings from '@/pages/settings/AccountSettings';
 import NotificationSettings from '@/pages/settings/NotificationSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
@@ -66,10 +66,10 @@ const AppContent: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    // Hide splash screen after 4 seconds
+    // Hide splash screen after 2 seconds
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 4000);
+    }, 2000);
 
     return () => clearTimeout(splashTimer);
   }, []);
@@ -110,10 +110,10 @@ const AppContent: React.FC = () => {
         <Route path="/bill/:id" element={<BillDetail />} />
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
         <Route path="/shambles" element={<SHAmbles />} />
-        {/* NEW ROUTES - ADDED HERE */}
-        <Route path="/nasaka" element={<NasakaIEBCPage />} />
+        {/* NEW PAGES ADDED HERE */}
         <Route path="/peoples-audit" element={<PeoplesAuditPage />} />
-        {/* END NEW ROUTES */}
+        <Route path="/nasaka" element={<NasakaPage />} />
+        {/* END NEW PAGES */}
         <Route path="/volunteer" element={<Volunteer />} />
         <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
         <Route path="/profile" element={<UserProfile />} />
