@@ -260,13 +260,17 @@ const NasakaPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Floating Action Button with Blue Icon */}
+        {/* Floating Action Button with Proper Dark/Light Mode */}
         <button
           onClick={toggleSidebar}
-          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-800 text-white shadow-lg shadow-ios-blue/30 dark:shadow-ios-blue-800/40 flex items-center justify-center hover:shadow-xl hover:shadow-ios-blue/40 dark:hover:shadow-ios-blue-800/50 transition-all duration-300 animate-float backdrop-blur-sm border border-ios-blue/30"
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-800 shadow-lg shadow-ios-blue/30 dark:shadow-ios-blue-800/40 flex items-center justify-center hover:shadow-xl hover:shadow-ios-blue/40 dark:hover:shadow-ios-blue-800/50 transition-all duration-300 animate-float backdrop-blur-sm border border-ios-blue/30"
           aria-label="Open info sidebar"
         >
-          <Info className="w-6 h-6 text-ios-blue" />
+          <Info className="w-6 h-6 text-white dark:text-white" 
+            style={{ 
+              filter: 'none'
+            }} 
+          />
         </button>
 
         {/* Full-Screen Sidebar / Overlay */}
@@ -277,27 +281,30 @@ const NasakaPage: React.FC = () => {
         >
           {/* Backdrop with Enhanced Blur */}
           <div
-            className="absolute inset-0 bg-ios-blue/20 dark:bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-ios-blue/20 backdrop-blur-md dark:bg-ios-blue-900/30"
             onClick={() => setIsSidebarOpen(false)}
           />
 
-          {/* Sidebar Content with Enhanced Frosted Glass */}
+          {/* Sidebar Content with Enhanced Frosted Glass - Full Dark Mode Support */}
           <div
-            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-black/40 border-l border-ios-blue/20 dark:border-ios-border transition-transform duration-300 ${
+            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-ios-blue-800/30 border-l border-ios-blue/20 dark:border-ios-blue-800/30 transition-transform duration-300 ${
               isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
-            {/* Sidebar Header with Enhanced Frosted Glass */}
-            <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-lg border-b border-ios-blue/20 dark:border-ios-border p-6">
+            {/* Sidebar Header with Enhanced Frosted Glass - Dark Mode Ready */}
+            <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue-900/20 dark:via-ios-blue-900/15 dark:to-ios-blue-900/10 backdrop-blur-lg border-b border-ios-blue/20 dark:border-ios-blue-800/30 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-800 flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-800 dark:from-ios-blue-800 dark:to-ios-blue-900 flex items-center justify-center shadow-md">
                       <img 
                         src="/nasaka.svg" 
                         alt="Nasaka IEBC Logo"
                         className="w-6 h-6"
-                        style={{ filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)' }}
+                        style={{ 
+                          filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)',
+                          filter: 'var(--logo-filter-light)'
+                        }}
                       />
                     </div>
                   </div>
@@ -309,7 +316,7 @@ const NasakaPage: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-white/20 border border-ios-blue/30 dark:border-ios-border"
+                  className="rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-white/20 border border-ios-blue/30 dark:border-ios-blue-light/30"
                   onClick={() => setIsSidebarOpen(false)}
                   aria-label="Close sidebar"
                 >
@@ -318,7 +325,7 @@ const NasakaPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Sidebar Body */}
+            {/* Sidebar Body - Full Dark Mode Support */}
             <div className="p-6 overflow-y-auto h-[calc(100vh-140px)] green-scrollbar">
               {/* Description */}
               <div className="mb-8">
@@ -332,8 +339,8 @@ const NasakaPage: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-ios-blue dark:text-ios-blue-light mb-4">3 Simple Steps</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 border border-ios-blue/20 dark:border-ios-blue/30">
-                    <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue/30 flex items-center justify-center">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue-900/10 dark:to-transparent border border-ios-blue/20 dark:border-ios-blue-800/30">
+                    <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-800/20 flex items-center justify-center">
                       <span className="text-ios-blue dark:text-ios-blue-light font-bold">1</span>
                     </div>
                     <div>
@@ -341,8 +348,8 @@ const NasakaPage: React.FC = () => {
                       <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">Open the map and allow location access</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-green/5 to-transparent dark:from-ios-green/10 border border-ios-green/20 dark:border-ios-green/30">
-                    <div className="w-8 h-8 rounded-full bg-ios-green/20 dark:bg-ios-green/30 flex items-center justify-center">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-green/5 to-transparent dark:from-ios-green-900/10 dark:to-transparent border border-ios-green/20 dark:border-ios-green-800/30">
+                    <div className="w-8 h-8 rounded-full bg-ios-green/20 dark:bg-ios-green-800/20 flex items-center justify-center">
                       <span className="text-ios-green dark:text-ios-green-light font-bold">2</span>
                     </div>
                     <div>
@@ -350,8 +357,8 @@ const NasakaPage: React.FC = () => {
                       <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">Find your nearest IEBC office</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-orange/5 to-transparent dark:from-ios-orange/10 border border-ios-orange/20 dark:border-ios-orange/30">
-                    <div className="w-8 h-8 rounded-full bg-ios-orange/20 dark:bg-ios-orange/30 flex items-center justify-center">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-orange/5 to-transparent dark:from-ios-orange-900/10 dark:to-transparent border border-ios-orange/20 dark:border-ios-orange-800/30">
+                    <div className="w-8 h-8 rounded-full bg-ios-orange/20 dark:bg-ios-orange-800/20 flex items-center justify-center">
                       <span className="text-ios-orange dark:text-ios-orange-light font-bold">3</span>
                     </div>
                     <div>
@@ -370,10 +377,10 @@ const NasakaPage: React.FC = () => {
                     href="https://www.iebc.or.ke"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 border border-kenya-green/20 dark:border-kenya-green/30 hover:bg-gradient-to-r hover:from-kenya-green/10 dark:hover:from-kenya-green/20 hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-kenya-green/20 dark:border-kenya-green-800/30 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green-800/20 dark:hover:to-transparent transition-all duration-300"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green-800/20 flex items-center justify-center">
                         <ExternalLink className="w-4 h-4 text-kenya-green dark:text-kenya-green-light" />
                       </div>
                       <span className="text-ios-blue dark:text-ios-blue-light">IEBC Official Website</span>
@@ -384,10 +391,10 @@ const NasakaPage: React.FC = () => {
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 border border-ios-blue/20 dark:border-ios-blue/30 hover:bg-gradient-to-r hover:from-ios-blue/10 dark:hover:from-ios-blue/20 hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue-900/10 dark:to-transparent border border-ios-blue/20 dark:border-ios-blue-800/30 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue-800/20 dark:hover:to-transparent transition-all duration-300"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-800/20 flex items-center justify-center">
                         <CheckCircle className="w-4 h-4 text-ios-blue dark:text-ios-blue-light" />
                       </div>
                       <span className="text-ios-blue dark:text-ios-blue-light">Verify Voter Registration</span>
@@ -397,10 +404,10 @@ const NasakaPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Call to Action - Now Links to Community Page */}
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 border border-ios-blue/20 dark:border-ios-blue/30 rounded-xl p-4">
+              {/* Call to Action - Enhanced Contrast */}
+              <div className="bg-gradient-to-br from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue-900/20 dark:via-ios-blue-900/15 dark:to-ios-blue-900/10 border border-ios-blue/30 dark:border-ios-blue-800/40 rounded-xl p-4">
                 <h4 className="font-semibold text-ios-blue dark:text-ios-blue-light mb-2">Coming Soon to Play Store</h4>
-                <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70 mb-3">
+                <p className="text-sm text-ios-blue/80 dark:text-ios-blue-light/80 mb-3">
                   Be a member. Stay informed when it drops.
                 </p>
                 <a
@@ -409,7 +416,7 @@ const NasakaPage: React.FC = () => {
                   rel="noopener noreferrer"
                   className="block w-full"
                 >
-                  <Button className="w-full bg-gradient-to-r from-ios-blue to-ios-blue-800 hover:from-ios-blue/90 hover:to-ios-blue-800/90 text-white rounded-full shadow-md shadow-ios-blue/30 dark:shadow-ios-blue/20">
+                  <Button className="w-full bg-gradient-to-r from-ios-blue to-ios-blue-800 dark:from-ios-blue-800 dark:to-ios-blue-900 hover:from-ios-blue/90 hover:to-ios-blue-800/90 dark:hover:from-ios-blue-800/90 dark:hover:to-ios-blue-900/90 text-white rounded-full shadow-md shadow-ios-blue/30 dark:shadow-ios-blue-800/40">
                     <Smartphone className="w-4 h-4 mr-2" />
                     Join CEKA Community
                   </Button>
