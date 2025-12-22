@@ -266,7 +266,7 @@ const NasakaPage: React.FC = () => {
           className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-800 shadow-lg shadow-ios-blue/30 dark:shadow-ios-blue-800/40 flex items-center justify-center hover:shadow-xl hover:shadow-ios-blue/40 dark:hover:shadow-ios-blue-800/50 transition-all duration-300 animate-float backdrop-blur-sm border border-ios-blue/30"
           aria-label="Open info sidebar"
         >
-          <Info className="w-6 h-6 text-white dark:text-white" 
+          <Info className="w-6 h-6 text-ios-blue dark:text-white" 
             style={{ 
               filter: 'none'
             }} 
