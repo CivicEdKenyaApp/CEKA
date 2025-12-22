@@ -89,7 +89,8 @@ const NasakaPage: React.FC = () => {
                         <img 
                           src="/nasaka.svg" 
                           alt="Nasaka IEBC"
-                          className="w-4 h-4 invert brightness-0"
+                          className="w-4 h-4"
+                          style={{ filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)' }}
                         />
                       </div>
                     </div>
@@ -101,7 +102,8 @@ const NasakaPage: React.FC = () => {
                     <img 
                       src="/nasaka.svg" 
                       alt="Nasaka IEBC Logo"
-                      className="w-5 h-5 invert brightness-0"
+                      className="w-5 h-5"
+                      style={{ filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)' }}
                     />
                   </div>
                   <div>
@@ -303,7 +305,8 @@ const NasakaPage: React.FC = () => {
                       <img 
                         src="/nasaka.svg" 
                         alt="Nasaka IEBC Logo"
-                        className="w-6 h-6 invert brightness-0"
+                        className="w-6 h-6"
+                        style={{ filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)' }}
                       />
                     </div>
                     {/* Home indicator on logo */}
