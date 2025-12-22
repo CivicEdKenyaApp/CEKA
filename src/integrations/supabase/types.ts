@@ -20,7 +20,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string
           user_agent: string | null
@@ -31,7 +31,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type: string
           user_agent?: string | null
@@ -42,7 +42,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string
           user_agent?: string | null
@@ -1012,7 +1012,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string
           resource_type: string
           user_agent: string | null
@@ -1023,7 +1023,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id: string
           resource_type: string
           user_agent?: string | null
@@ -1034,7 +1034,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string
           resource_type?: string
           user_agent?: string | null
@@ -1418,14 +1418,8 @@ export type Database = {
         Args: { motivation: string; opportunity_id: string; user_id: string }
         Returns: undefined
       }
-      cleanup_expired_admin_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_processing_jobs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_admin_sessions: { Args: never; Returns: undefined }
+      cleanup_expired_processing_jobs: { Args: never; Returns: undefined }
       create_admin_session: {
         Args: { p_email: string; p_user_id: string }
         Returns: {
@@ -1481,7 +1475,7 @@ export type Database = {
         Returns: undefined
       }
       get_advocacy_toolkit: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           id: string
@@ -1489,7 +1483,7 @@ export type Database = {
         }[]
       }
       get_all_learning_materials: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           id: string
@@ -1498,7 +1492,7 @@ export type Database = {
         }[]
       }
       get_all_providers: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           id: string
@@ -1523,14 +1517,22 @@ export type Database = {
           title: string
         }[]
       }
-      get_followed_bills: {
-        Args: Record<PropertyKey, never> | { user_id: string }
-        Returns: {
-          bill_id: string
-          summary: string
-          title: string
-        }[]
-      }
+      get_followed_bills:
+        | {
+            Args: never
+            Returns: {
+              bill_id: number
+              bill_name: string
+            }[]
+          }
+        | {
+            Args: { user_id: string }
+            Returns: {
+              bill_id: string
+              summary: string
+              title: string
+            }[]
+          }
       get_my_volunteer_applications: {
         Args: { user_id: string }
         Returns: {
@@ -1556,7 +1558,7 @@ export type Database = {
         Returns: number
       }
       get_upcoming_events: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           end_time: string
@@ -1576,16 +1578,13 @@ export type Database = {
           username: string
         }[]
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       link_community_profile: {
         Args: { p_auth_user_id: string; p_profile_id: string }
         Returns: undefined
       }
       list_open_volunteer_opportunities: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           id: string
