@@ -6,6 +6,7 @@ import {
   Menu, X, Home, Info, Smartphone, Users, BarChart, ArrowRight, Search,
   Navigation, ChevronLeft, Check
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 
 const NasakaPage: React.FC = () => {
@@ -109,8 +110,11 @@ const NasakaPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Status Indicator & Menu */}
-              <div className="flex items-center space-x-3">
+              {/* Right Section - All buttons grouped together */}
+              <div className="flex items-center space-x-2">
+                {/* Theme Toggle */}
+                <ThemeToggle />
+                
                 {/* iOS Style Loaded Indicator */}
                 {iframeLoaded && (
                   <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border border-green-500/30 dark:border-green-500/50 shadow-sm">
@@ -119,6 +123,7 @@ const NasakaPage: React.FC = () => {
                   </div>
                 )}
                 
+                {/* Menu Button */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -134,7 +139,7 @@ const NasakaPage: React.FC = () => {
         </header>
 
         {/* Main Content - Iframe Container */}
-        <section className="pt-24 pb-12 safe-area">
+        <section className="pt-28 pb-12 safe-area">
           <div className="container mx-auto px-4">
             {/* Status Indicator - Mobile Only */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
@@ -241,23 +246,23 @@ const NasakaPage: React.FC = () => {
 
             {/* Quick Stats Bar */}
             <div className="mt-10 mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-white/40 dark:bg-white/10 backdrop-blur-xl border border-white/30 dark:border-ios-border/50 shadow-lg shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
                 <Users className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">20k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Active Users</p>
               </div>
               <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <BarChart className="w-6 h-6 text-ios-green dark:text-ios-green-light mx-auto mb-2" />
+                <BarChart className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">500k</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
               <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <Smartphone className="w-6 h-6 text-ios-orange dark:text-ios-orange-light mx-auto mb-2" />
+                <Smartphone className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">Soon</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Play Store App</p>
               </div>
               <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <CheckCircle className="w-6 h-6 text-ios-purple dark:text-ios-purple-light mx-auto mb-2" />
+                <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">3 Steps</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Tap, Search, Go</p>
               </div>
