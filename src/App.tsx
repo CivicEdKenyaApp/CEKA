@@ -23,7 +23,7 @@ import BillDetail from '@/pages/BillDetail';
 import RejectFinanceBill from '@/pages/RejectFinanceBill';
 import SHAmbles from '@/pages/SHAmbles';
 import PeoplesAuditPage from '@/pages/PeoplesAuditPage';
-import NasakaPage from '@/pages/NasakaPage';
+import NasakaPage from '@/pages/NasakaIEBCPage';
 import Volunteer from '@/pages/Volunteer';
 import VolunteerApplication from '@/pages/VolunteerApplication';
 import UserProfile from '@/pages/UserProfile';
