@@ -95,6 +95,21 @@ const Navbar = () => {
       path: '/legislative-tracker',
       dropdown: [
         { 
+          name: translate('Nasaka IEBC', language), 
+          path: '/nasaka',
+          description: translate('Find the closest IEBC registration center', language)
+        },
+        { 
+          name: translate('Peoples-Audit', language), 
+          path: '/peoples-audit',
+          description: translate('Breakdown of the economic state of the nation', language)
+        },
+        { 
+          name: translate('SHAmbles', language), 
+          path: '/shambles',
+          description: translate('Investigation and accountability tracking', language)
+        },
+        { 
           name: translate('Legislative Bill Tracker', language), 
           path: '/legislative-tracker',
           description: translate('Track bills and legislative progress', language)
@@ -103,12 +118,7 @@ const Navbar = () => {
           name: translate('Reject Finance Bill', language), 
           path: '/reject-finance-bill',
           description: translate('Campaign against problematic legislation', language)
-        },
-        { 
-          name: translate('SHAmbles', language), 
-          path: '/shambles',
-          description: translate('Investigation and accountability tracking', language)
-        }
+        }      
       ]
     },
     { name: translate('Join Us', language), path: '/join-community' },
