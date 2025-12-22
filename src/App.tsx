@@ -22,6 +22,8 @@ import LegislationDetail from '@/pages/LegislationDetail';
 import BillDetail from '@/pages/BillDetail';
 import RejectFinanceBill from '@/pages/RejectFinanceBill';
 import SHAmbles from '@/pages/SHAmbles';
+import PeoplesAuditPage from '@/pages/PeoplesAuditPage';
+import NasakaIEBCPage from '@/pages/NasakaIEBCPage'; // NEW IMPORT
 import Volunteer from '@/pages/Volunteer';
 import VolunteerApplication from '@/pages/VolunteerApplication';
 import UserProfile from '@/pages/UserProfile';
@@ -108,6 +110,10 @@ const AppContent: React.FC = () => {
         <Route path="/bill/:id" element={<BillDetail />} />
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
         <Route path="/shambles" element={<SHAmbles />} />
+        {/* NEW ROUTES - ADDED HERE */}
+        <Route path="/nasaka" element={<NasakaIEBCPage />} />
+        <Route path="/peoples-audit" element={<PeoplesAuditPage />} />
+        {/* END NEW ROUTES */}
         <Route path="/volunteer" element={<Volunteer />} />
         <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
         <Route path="/profile" element={<UserProfile />} />
