@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from "npm:resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +18,43 @@ interface CommunityMemberRequest {
   interests?: string;
   areas_of_interest: string[];
   terms_accepted: boolean;
+}
+
+// Send email using Resend API directly via fetch
+async function sendEmailWithResend(
+  to: string[],
+  subject: string,
+  html: string
+): Promise<{ data?: any; error?: any }> {
+  if (!RESEND_API_KEY) {
+    return { error: { message: 'RESEND_API_KEY not configured' } };
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'CEKA Community <onboarding@resend.dev>',
+        to,
+        subject,
+        html,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { error: errorData };
+    }
+
+    const data = await response.json();
+    return { data };
+  } catch (error) {
+    return { error: { message: (error as Error).message } };
+  }
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -170,33 +206,33 @@ const handler = async (req: Request): Promise<Response> => {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">🇰🇪 CEKA</div>
+                <div class="logo">CEKA</div>
                 <h1 style="margin: 0;">New Community Member Application</h1>
                 <p style="margin: 5px 0 0 0;">Civic Education Kenya Alliance</p>
             </div>
             <div class="content">
                 <div class="field">
-                    <div class="field-label">👤 Full Name</div>
+                    <div class="field-label">Full Name</div>
                     <div class="field-value">${first_name} ${last_name}</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">📧 Email Address</div>
+                    <div class="field-label">Email Address</div>
                     <div class="field-value">${email}</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">📍 County</div>
+                    <div class="field-label">County</div>
                     <div class="field-value">${county || 'Not provided'}</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">💭 Interests in Civic Education</div>
+                    <div class="field-label">Interests in Civic Education</div>
                     <div class="field-value">${interests || 'Not provided'}</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">🎯 Areas of Interest</div>
+                    <div class="field-label">Areas of Interest</div>
                     <div class="field-value">${areasOfInterestText}</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">📅 Submission Date</div>
+                    <div class="field-label">Submission Date</div>
                     <div class="field-value">${new Date().toLocaleString('en-KE', { 
                       timeZone: 'Africa/Nairobi',
                       year: 'numeric',
@@ -207,7 +243,7 @@ const handler = async (req: Request): Promise<Response> => {
                     })} (EAT)</div>
                 </div>
                 <div class="field">
-                    <div class="field-label">🔒 IP Address</div>
+                    <div class="field-label">IP Address</div>
                     <div class="field-value">${source_ip}</div>
                 </div>
             </div>
@@ -224,17 +260,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email notification
     let emailStatus = 'pending';
     try {
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: 'CEKA Community <onboarding@resend.dev>',
-        to: ['civiceducationkenya@gmail.com'],
-        subject: `🇰🇪 New CEKA Community Application: ${first_name} ${last_name}`,
-        html: emailHtml,
-        headers: {
-          'X-Priority': '2',
-          'X-MSMail-Priority': 'High',
-          'Importance': 'high'
-        }
-      });
+      const { data: emailData, error: emailError } = await sendEmailWithResend(
+        ['civiceducationkenya@gmail.com'],
+        `New CEKA Community Application: ${first_name} ${last_name}`,
+        emailHtml
+      );
 
       if (emailError) {
         console.error('Email sending error:', emailError);
