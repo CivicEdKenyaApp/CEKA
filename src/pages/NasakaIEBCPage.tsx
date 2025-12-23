@@ -20,6 +20,7 @@ const NasakaPage: React.FC = () => {
 
   const NASAKA_URL = 'https://recall254.vercel.app';
   const COMMUNITY_URL = 'https://civicedkenya.vercel.app/join-community';
+  const ANDROID_APP_URL = 'https://linktr.ee/civiceducationke';
 
   // Delay mounting the iframe to ensure container is ready
   useEffect(() => {
@@ -65,6 +66,17 @@ const NasakaPage: React.FC = () => {
   }, []);
 
   const toggleSidebar = useCallback(() => setIsSidebarOpen(prev => !prev), []);
+
+  // Handle touch events for Android card
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    target.classList.add('scale-[0.98]', 'shadow-sm');
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    target.classList.remove('scale-[0.98]', 'shadow-sm');
+  }, []);
 
   return (
     <>
@@ -115,7 +127,7 @@ const NasakaPage: React.FC = () => {
                       <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
                       <span>IEBC</span>
                     </h1>
-                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">IEBC Office Finder</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">Find IEBC Offices Near You</p>
                   </div>
                 </div>
               </div>
@@ -156,9 +168,19 @@ const NasakaPage: React.FC = () => {
             {/* Status Indicator - Mobile Only */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-foreground dark:text-foreground">Interactive Registration Center Map</h2>
+                <h2 className="text-2xl font-bold text-foreground dark:text-foreground">
+                  <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
+                  <span>IEBC </span>
+                  </h2>
+
+                  <h2 className="text-xl font-bold text-foreground dark:text-foreground">
+                      <span>Kenya's</span>
+                      <span className="text-ios-blue dark:text-ios-blue-light">IEBC</span>{' '}
+                      <span>Office Locator</span>
+                  </h2>
+                
                 <p className="text-muted-foreground dark:text-muted-foreground mt-1">
-                  Locate the nearest IEBC office and check registration hours
+                  Use Our Tool to Find & Verify IEBC Offices Near You in Seconds
                 </p>
               </div>
 
@@ -268,11 +290,71 @@ const NasakaPage: React.FC = () => {
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">500k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
-              <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
-                <MapPinCheck className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">Android</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">App Available</p>
-              </div>
+              
+              {/* Interactive Android App Card */}
+              <a
+                href={ANDROID_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-2xl transition-all duration-300 transform-gpu"
+              >
+                <div 
+                  className="
+                    bg-gradient-to-br from-white/40 via-white/20 to-transparent 
+                    dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent 
+                    backdrop-blur-xl border border-white/30 dark:border-border 
+                    shadow-lg shadow-black/20 
+                    hover:shadow-xl hover:shadow-ios-blue/30 dark:hover:shadow-ios-blue-light/30
+                    active:shadow-sm active:scale-[0.98]
+                    transition-all duration-300 ease-out
+                    transform-gpu
+                    rounded-2xl p-4 text-center
+                    hover:bg-gradient-to-br hover:from-white/50 hover:via-white/30 hover:to-transparent 
+                    dark:hover:from-ios-blue/30 dark:hover:via-ios-blue/20 dark:hover:to-transparent
+                    hover:-translate-y-0.5
+                    active:translate-y-0 active:scale-[0.98]
+                    select-none
+                  "
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseDown={(e) => {
+                    e.currentTarget.classList.add('scale-[0.98]', 'shadow-sm');
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.classList.remove('scale-[0.98]', 'shadow-sm');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.classList.remove('scale-[0.98]', 'shadow-sm');
+                  }}
+                >
+                  <MapPinCheck className="
+                    w-6 h-6 text-ios-blue dark:text-ios-blue-light 
+                    mx-auto mb-2 
+                    transition-all duration-300
+                    group-hover:scale-110 group-hover:text-ios-blue-700 dark:group-hover:text-ios-blue-light
+                    group-active:scale-95
+                  " />
+                  <p className="
+                    text-2xl font-bold text-foreground dark:text-foreground
+                    transition-all duration-300
+                    group-hover:text-ios-blue dark:group-hover:text-ios-blue-light
+                  ">
+                    Android
+                  </p>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                      App Available
+                    </p>
+                    <ExternalLink className="
+                      w-3 h-3 text-muted-foreground dark:text-muted-foreground
+                      opacity-0 group-hover:opacity-100
+                      transition-all duration-300
+                      group-hover:translate-x-0.5
+                    " />
+                  </div>
+                </div>
+              </a>
+
               <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">3 Steps</p>
@@ -285,7 +367,7 @@ const NasakaPage: React.FC = () => {
         {/* Floating Action Button with Proper Dark/Light Mode */}
         <button
           onClick={toggleSidebar}
-          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue shadow-lg shadow-ios-blue/30 dark:shadow-ios-blue-light/30 flex items-center justify-center hover:shadow-xl hover:shadow-ios-blue/40 dark:hover:shadow-ios-blue-light/40 transition-all duration-300 animate-float backdrop-blur-sm border border-ios-blue/30 dark:border-ios-blue-light/30"
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue shadow-lg shadow-ios-blue/30 dark:shadow-ios-blue-light/30 flex items-center justify-center hover:shadow-xl hover:shadow-ios-blue/40 dark:hover:shadow-ios-blue-light/40 transition-all duration-300 animate-float backdrop-blur-sm border border-ios-blue/30 dark:border-ios-blue-light/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
           aria-label="Open info sidebar"
         >
           <Info className="w-6 h-6 text-white" />
@@ -336,7 +418,7 @@ const NasakaPage: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full bg-white/40 dark:bg-ios-surface-dark/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 border border-border/30 dark:border-border/50"
+                  className="rounded-full bg-white/40 dark:bg-ios-surface-dark/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 border border-border/30 dark:border-border/50 focus:ring-2 focus:ring-ios-blue dark:focus:ring-ios-blue-light"
                   onClick={() => setIsSidebarOpen(false)}
                   aria-label="Close sidebar"
                 >
@@ -397,7 +479,7 @@ const NasakaPage: React.FC = () => {
                     href="https://www.iebc.or.ke"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kenya-green dark:focus-visible:ring-kenya-green-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
@@ -411,7 +493,7 @@ const NasakaPage: React.FC = () => {
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
@@ -420,6 +502,24 @@ const NasakaPage: React.FC = () => {
                       <span className="text-foreground dark:text-foreground">Verify Voter Registration</span>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
+                  </a>
+                  
+                  {/* Android App Download Link in Sidebar */}
+                  <a
+                    href={ANDROID_APP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-purple/5 to-transparent dark:from-ios-purple/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-purple/10 hover:to-transparent dark:hover:from-ios-purple/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-purple dark:focus-visible:ring-ios-purple-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark group"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-ios-purple/20 dark:bg-ios-purple/30 flex items-center justify-center">
+                        <MapPinCheck className="w-4 h-4 text-ios-purple dark:text-ios-purple-light group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                      <span className="text-foreground dark:text-foreground group-hover:text-ios-purple dark:group-hover:text-ios-purple-light transition-colors duration-300">
+                        Download Android App
+                      </span>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground dark:text-muted-foreground group-hover:text-ios-purple dark:group-hover:text-ios-purple-light transition-colors duration-300" />
                   </a>
                 </div>
               </div>
@@ -434,9 +534,9 @@ const NasakaPage: React.FC = () => {
                   href={COMMUNITY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full"
+                  className="block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-full"
                 >
-                  <Button className="w-full bg-gradient-to-r from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue hover:from-ios-blue/90 hover:to-ios-blue-800/90 dark:hover:from-ios-blue-light/90 dark:hover:to-ios-blue/90 text-white rounded-full shadow-md shadow-ios-blue/30 dark:shadow-ios-blue-light/30">
+                  <Button className="w-full bg-gradient-to-r from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue hover:from-ios-blue/90 hover:to-ios-blue-800/90 dark:hover:from-ios-blue-light/90 dark:hover:to-ios-blue/90 text-white rounded-full shadow-md shadow-ios-blue/30 dark:shadow-ios-blue-light/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                     <MapPinCheck className="w-4 h-4 mr-2" />
                     Join CEKA Community
                   </Button>
