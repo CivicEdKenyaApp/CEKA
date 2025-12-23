@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
   MapPin, CheckCircle, Clock, ExternalLink, AlertTriangle, RefreshCw,
-  Menu, X, Home, Info, Smartphone, Users, BarChart, ArrowRight, Search,
+  Menu, X, Home, Info, MapPinCheck, Users, BarChart, ArrowRight, Search,
   Navigation, ChevronLeft, Check
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -69,14 +69,14 @@ const NasakaPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Nasaka IEBC - Find Registration Centers | CEKA</title>
+        <title>Nasaka IEBC - Find IEBC Offices Near You | 2025 © Civic Education Kenya (CEKA)</title>
         <meta
           name="description"
-          content="Find the closest IEBC registration center. Check your voter registration status and locate polling stations near you."
+          content="Find Your Nearest IEBC Office. Allow location access to find the closest IEBC registration center and get turn-by-turn navigation."
         />
         <meta
           name="keywords"
-          content="IEBC, voter registration, polling station, Kenya election, Nasaka IEBC, civic education"
+          content="IEBC, voter registration, polling station, Kenya election, Nasaka IEBC, civic education, Nasaka, CEKA, Civic Education Kenya"
         />
       </Helmet>
 
@@ -265,13 +265,13 @@ const NasakaPage: React.FC = () => {
               </div>
               <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <BarChart className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">500k</p>
+                <p className="text-2xl font-bold text-foreground dark:text-foreground">500k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
               <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
-                <Smartphone className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">Soon</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">Play Store App</p>
+                <MapPinCheck className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
+                <p className="text-2xl font-bold text-foreground dark:text-foreground">Android</p>
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground">App Available</p>
               </div>
               <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
