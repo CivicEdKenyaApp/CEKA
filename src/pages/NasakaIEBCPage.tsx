@@ -78,6 +78,17 @@ const NasakaPage: React.FC = () => {
     target.classList.remove('scale-[0.98]', 'shadow-sm');
   }, []);
 
+  // Handle touch events for logo containers
+  const handleLogoTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    target.classList.add('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+  }, []);
+
+  const handleLogoTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    target.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -112,16 +123,49 @@ const NasakaPage: React.FC = () => {
                 </Link>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-ios-surface-dark flex items-center justify-center shadow-md border border-border/50">
-                    <img 
-                      src="/nasaka.svg" 
-                      alt="Nasaka IEBC Logo"
-                      className="w-5 h-5"
-                      style={{ 
-                        filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)'
+                  {/* Clickable Nasaka Logo with Glassmorphism */}
+                  <a
+                    href={NASAKA_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-lg transition-all duration-300"
+                  >
+                    <div 
+                      className="
+                        w-8 h-8 rounded-lg 
+                        bg-white/40 dark:bg-ios-surface-dark/40 
+                        backdrop-blur-sm 
+                        flex items-center justify-center 
+                        shadow-md border border-white/40 dark:border-ios-border/50
+                        transition-all duration-300 ease-out
+                        group-hover:bg-white/60 dark:group-hover:bg-ios-surface-dark/60
+                        group-hover:shadow-lg group-hover:shadow-ios-blue/20 dark:group-hover:shadow-ios-blue-light/20
+                        group-hover:scale-105
+                        group-active:scale-95 group-active:shadow-sm
+                        group-hover:border-ios-blue/30 dark:group-hover:border-ios-blue-light/40
+                      "
+                      onTouchStart={handleLogoTouchStart}
+                      onTouchEnd={handleLogoTouchEnd}
+                      onMouseDown={(e) => {
+                        e.currentTarget.classList.add('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
                       }}
-                    />
-                  </div>
+                      onMouseUp={(e) => {
+                        e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+                      }}
+                    >
+                      <img 
+                        src="/nasaka.svg" 
+                        alt="Nasaka IEBC Logo"
+                        className="w-5 h-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
+                        style={{ 
+                          filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)'
+                        }}
+                      />
+                    </div>
+                  </a>
                   <div>
                     <h1 className="font-bold text-foreground dark:text-foreground text-sm">
                       <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
@@ -389,18 +433,49 @@ const NasakaPage: React.FC = () => {
             <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-lg border-b border-border/30 dark:border-border/50 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-ios-surface-dark flex items-center justify-center shadow-md border border-border/50">
+                  {/* Clickable Nasaka Logo in Sidebar with Glassmorphism */}
+                  <a
+                    href={NASAKA_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-lg transition-all duration-300"
+                  >
+                    <div 
+                      className="
+                        w-10 h-10 rounded-lg 
+                        bg-white/40 dark:bg-ios-surface-dark/40 
+                        backdrop-blur-sm 
+                        flex items-center justify-center 
+                        shadow-md border border-white/40 dark:border-ios-border/50
+                        transition-all duration-300 ease-out
+                        group-hover:bg-white/60 dark:group-hover:bg-ios-surface-dark/60
+                        group-hover:shadow-lg group-hover:shadow-ios-blue/20 dark:group-hover:shadow-ios-blue-light/20
+                        group-hover:scale-105
+                        group-active:scale-95 group-active:shadow-sm
+                        group-hover:border-ios-blue/30 dark:group-hover:border-ios-blue-light/40
+                      "
+                      onTouchStart={handleLogoTouchStart}
+                      onTouchEnd={handleLogoTouchEnd}
+                      onMouseDown={(e) => {
+                        e.currentTarget.classList.add('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+                      }}
+                      onMouseUp={(e) => {
+                        e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
+                      }}
+                    >
                       <img 
                         src="/nasaka.svg" 
                         alt="Nasaka IEBC Logo"
-                        className="w-6 h-6"
+                        className="w-6 h-6 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                         style={{ 
                           filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)'
                         }}
                       />
                     </div>
-                  </div>
+                  </a>
                   <div>
                     <h2 className="text-xl font-bold text-foreground dark:text-foreground">
                       <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
@@ -473,29 +548,33 @@ const NasakaPage: React.FC = () => {
                     href="https://recall254.vercel.app/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
-                        <ExternalLink className="w-4 h-4 text-kenya-green dark:text-kenya-green-light" />
+                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                        <ExternalLink className="w-4 h-4 text-ios-blue dark:text-ios-blue-light transition-all duration-300 group-hover:text-ios-blue-700 dark:group-hover:text-ios-blue-light" />
                       </div>
-                      <span className="text-foreground dark:text-foreground">Nasaka Official Website</span>
+                      <span className="text-foreground dark:text-foreground transition-colors duration-300 group-hover:text-ios-blue dark:group-hover:text-ios-blue-light">
+                        Nasaka Official Website
+                      </span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground transition-all duration-300 group-hover:text-ios-blue dark:group-hover:text-ios-blue-light group-hover:translate-x-1" />
                   </a>
                   <a
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kenya-green dark:focus-visible:ring-kenya-green-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kenya-green dark:focus-visible:ring-kenya-green-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-ios-blue dark:text-ios-blue-light" />
+                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                        <CheckCircle className="w-4 h-4 text-kenya-green dark:text-kenya-green-light transition-all duration-300 group-hover:text-kenya-green-700 dark:group-hover:text-kenya-green-light" />
                       </div>
-                      <span className="text-foreground dark:text-foreground">Verify Voter Registration</span>
+                      <span className="text-foreground dark:text-foreground transition-colors duration-300 group-hover:text-kenya-green dark:group-hover:text-kenya-green-light">
+                        Verify Voter Registration
+                      </span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground transition-all duration-300 group-hover:text-kenya-green dark:group-hover:text-kenya-green-light group-hover:translate-x-1" />
                   </a>
                   
                   {/* Android App Download Link in Sidebar */}
@@ -503,17 +582,17 @@ const NasakaPage: React.FC = () => {
                     href={ANDROID_APP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-purple/5 to-transparent dark:from-ios-purple/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-purple/10 hover:to-transparent dark:hover:from-ios-purple/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-purple dark:focus-visible:ring-ios-purple-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
-                        <MapPinCheck className="w-4 h-4 text-ios-purple dark:text-ios-purple-light group-hover:scale-110 transition-transform duration-300" />
+                      <div className="w-8 h-8 rounded-full bg-ios-purple/20 dark:bg-ios-purple/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                        <MapPinCheck className="w-4 h-4 text-ios-purple dark:text-ios-purple-light transition-all duration-300 group-hover:scale-125" />
                       </div>
-                      <span className="text-foreground dark:text-foreground group-hover:text-ios-purple dark:group-hover:text-ios-purple-light transition-colors duration-300">
+                      <span className="text-foreground dark:text-foreground transition-colors duration-300 group-hover:text-ios-purple dark:group-hover:text-ios-purple-light">
                         Download Android App
                       </span>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-muted-foreground dark:text-muted-foreground group-hover:text-ios-purple dark:group-hover:text-ios-purple-light transition-colors duration-300" />
+                    <ExternalLink className="w-4 h-4 text-muted-foreground dark:text-muted-foreground transition-all duration-300 group-hover:text-ios-purple dark:group-hover:text-ios-purple-light group-hover:translate-x-1" />
                   </a>
                 </div>
               </div>
