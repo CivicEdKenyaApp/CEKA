@@ -169,16 +169,10 @@ const NasakaPage: React.FC = () => {
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-foreground dark:text-foreground">
-                  <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
-                  <span>IEBC </span>
-                  </h2>
-
-                  <h2 className="text-xl font-bold text-foreground dark:text-foreground">
-                      <span>Kenya's</span>
-                      <span className="text-ios-blue dark:text-ios-blue-light"> IEBC</span>{' '}
-                      <span>Office Locator</span>
-                  </h2>
-                
+                  <span>Kenya's</span>
+                  <span className="text-ios-blue dark:text-ios-blue-light"> IEBC</span>{' '}
+                  <span>Office Locator Tool</span>
+                </h2>
                 <p className="text-muted-foreground dark:text-muted-foreground mt-1">
                   Use Our Tool to Find & Verify IEBC Offices Near You in Seconds
                 </p>
