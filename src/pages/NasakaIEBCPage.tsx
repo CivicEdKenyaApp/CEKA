@@ -81,9 +81,9 @@ const NasakaPage: React.FC = () => {
       </Helmet>
 
       {/* FIXED: Background and padding now on same main element */}
-      <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300 pt-28 pb-12 safe-area">
+      <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300 pb-12 safe-area">
         {/* Enhanced Header with Light Blue Frosted Glass */}
-        <header className="fixed top-0 left-0 right-0 z-40 safe-top">
+        <header className="sticky top-0 z-40 safe-top">
           <div className="container mx-auto px-4 py-3">
             <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-xl border border-white/30 dark:border-ios-border/50 shadow-lg shadow-ios-blue/10 dark:shadow-ios-blue/20 rounded-2xl px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3">
