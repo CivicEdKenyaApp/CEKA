@@ -175,7 +175,7 @@ const NasakaPage: React.FC = () => {
 
                   <h2 className="text-xl font-bold text-foreground dark:text-foreground">
                       <span>Kenya's</span>
-                      <span className="text-ios-blue dark:text-ios-blue-light">IEBC</span>{' '}
+                      <span className="text-ios-blue dark:text-ios-blue-light"> IEBC</span>{' '}
                       <span>Office Locator</span>
                   </h2>
                 
