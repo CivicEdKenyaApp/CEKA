@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const NasakaPage: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
@@ -15,6 +16,7 @@ const NasakaPage: React.FC = () => {
   const [iframeMounted, setIframeMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { theme, syncThemeToIframe } = useTheme();
 
   const NASAKA_URL = 'https://recall254.vercel.app';
   const COMMUNITY_URL = 'https://civicedkenya.vercel.app/join-community';
@@ -26,6 +28,13 @@ const NasakaPage: React.FC = () => {
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Sync theme when iframe loads
+  useEffect(() => {
+    if (iframeLoaded && iframeRef.current) {
+      syncThemeToIframe(iframeRef.current);
+    }
+  }, [iframeLoaded, theme, syncThemeToIframe]);
 
   // Close sidebar on Escape key
   useEffect(() => {

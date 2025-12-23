@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { BarChart3, FileText, Database, ExternalLink, AlertTriangle, RefreshCw, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const PeoplesAuditPage: React.FC = () => {
   const [activeView, setActiveView] = useState<'sankey' | 'dashboard'>('sankey');
@@ -10,6 +11,7 @@ const PeoplesAuditPage: React.FC = () => {
   const [iframeError, setIframeError] = useState(false);
   const [iframeMounted, setIframeMounted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { theme, syncThemeToIframe } = useTheme();
 
   const RENDER_BASE_URL = 'https://peoples-audit.onrender.com';
 
@@ -28,6 +30,13 @@ const PeoplesAuditPage: React.FC = () => {
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Sync theme when iframe loads
+  useEffect(() => {
+    if (iframeLoaded && iframeRef.current) {
+      syncThemeToIframe(iframeRef.current);
+    }
+  }, [iframeLoaded, theme, syncThemeToIframe]);
 
   // Reset iframe state when view changes
   useEffect(() => {
