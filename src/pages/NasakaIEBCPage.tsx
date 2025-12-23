@@ -437,7 +437,7 @@ const NasakaPage: React.FC = () => {
                   className="block w-full"
                 >
                   <Button className="w-full bg-gradient-to-r from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue hover:from-ios-blue/90 hover:to-ios-blue-800/90 dark:hover:from-ios-blue-light/90 dark:hover:to-ios-blue/90 text-white rounded-full shadow-md shadow-ios-blue/30 dark:shadow-ios-blue-light/30">
-                    <Smartphone className="w-4 h-4 mr-2" />
+                    <MapPinCheck className="w-4 h-4 mr-2" />
                     Join CEKA Community
                   </Button>
                 </a>
