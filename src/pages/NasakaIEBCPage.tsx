@@ -255,7 +255,7 @@ const NasakaPage: React.FC = () => {
 
             {/* Quick Stats Bar */}
             <div className="mt-10 mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/40 dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
+              <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <Users className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">20k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Active Users</p>
