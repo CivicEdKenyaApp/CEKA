@@ -80,7 +80,7 @@ const NasakaPage: React.FC = () => {
         />
       </Helmet>
 
-      <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300">
+      <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300 pt-28 pb-12 safe-area">
         {/* Enhanced Header with Light Blue Frosted Glass */}
         <header className="fixed top-0 left-0 right-0 z-40 safe-top">
           <div className="container mx-auto px-4 py-3">
@@ -150,7 +150,7 @@ const NasakaPage: React.FC = () => {
         </header>
 
         {/* Main Content - Iframe Container */}
-        <section className="pt-28 pb-12 safe-area">
+        <section>
           <div className="container mx-auto px-4">
             {/* Status Indicator - Mobile Only */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
