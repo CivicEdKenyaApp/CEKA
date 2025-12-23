@@ -122,7 +122,9 @@ const NasakaPage: React.FC = () => {
               {/* Right Section - All buttons grouped together */}
               <div className="flex items-center space-x-2">
                 {/* Theme Toggle */}
-                <ThemeToggle />
+                <div className="rounded-lg w-10 h-10 bg-white/40 dark:bg-ios-surface-dark/40 hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 backdrop-blur-sm transition-all duration-300 border border-white/40 dark:border-ios-border/50">
+                  <ThemeToggle />
+                </div>
                 
                 {/* iOS Style Loaded Indicator */}
                 {iframeLoaded && (
