@@ -80,6 +80,7 @@ const NasakaPage: React.FC = () => {
         />
       </Helmet>
 
+      {/* FIXED: Background and padding now on same main element */}
       <main className="min-h-screen bg-ios-bg dark:bg-ios-bg-dark transition-colors duration-300 pt-28 pb-12 safe-area">
         {/* Enhanced Header with Light Blue Frosted Glass */}
         <header className="fixed top-0 left-0 right-0 z-40 safe-top">
@@ -149,7 +150,7 @@ const NasakaPage: React.FC = () => {
           </div>
         </header>
 
-        {/* Main Content - Iframe Container */}
+        {/* FIXED: Section now has no padding - padding moved to main element */}
         <section>
           <div className="container mx-auto px-4">
             {/* Status Indicator - Mobile Only */}
