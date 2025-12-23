@@ -81,7 +81,7 @@ const NasakaPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Nasaka IEBC - Find IEBC Offices Near You | 2025 © Civic Education Kenya (CEKA)</title>
+        <title>Nasaka IEBC - Find IEBC Offices Near You | by CEKA © 2025</title>
         <meta
           name="description"
           content="Find Your Nearest IEBC Office. Allow location access to find the closest IEBC registration center and get turn-by-turn navigation."
@@ -127,7 +127,7 @@ const NasakaPage: React.FC = () => {
                       <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
                       <span>IEBC</span>
                     </h1>
-                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">Find IEBC Offices Near You</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">IEBC Office Finder</p>
                   </div>
                 </div>
               </div>
@@ -427,7 +427,7 @@ const NasakaPage: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-foreground dark:text-foreground mb-3">About <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span> IEBC</h3>
                 <p className="text-muted-foreground dark:text-muted-foreground">
-                  Nasaka IEBC is an independent civic platform that helps Kenyan citizens find official IEBC registration centers, verify office locations, and access electoral services with interactive maps and directions. Our mission is to make voter registration accessible to everyone.
+                  Nasaka IEBC is an independent civic platform by Civic Education Kenya (CEKA) that helps Kenyan citizens find official IEBC registration centers, verify office locations, and access electoral services with ease via interactive maps and directions. Our mission is to make voter registration accessible to everyone.
                 </p>
               </div>
 
@@ -470,16 +470,16 @@ const NasakaPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground dark:text-foreground mb-4">Official Links</h3>
                 <div className="space-y-2">
                   <a
-                    href="https://www.iebc.or.ke"
+                    href="https://recall254.vercel.app/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kenya-green dark:focus-visible:ring-kenya-green-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
                         <ExternalLink className="w-4 h-4 text-kenya-green dark:text-kenya-green-light" />
                       </div>
-                      <span className="text-foreground dark:text-foreground">IEBC Official Website</span>
+                      <span className="text-foreground dark:text-foreground">Nasaka Official Website</span>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
                   </a>
@@ -487,10 +487,10 @@ const NasakaPage: React.FC = () => {
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kenya-green dark:focus-visible:ring-kenya-green-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
                         <CheckCircle className="w-4 h-4 text-ios-blue dark:text-ios-blue-light" />
                       </div>
                       <span className="text-foreground dark:text-foreground">Verify Voter Registration</span>
@@ -503,10 +503,10 @@ const NasakaPage: React.FC = () => {
                     href={ANDROID_APP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-purple/5 to-transparent dark:from-ios-purple/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-purple/10 hover:to-transparent dark:hover:from-ios-purple/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-purple dark:focus-visible:ring-ios-purple-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ios-purple/20 dark:bg-ios-purple/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
                         <MapPinCheck className="w-4 h-4 text-ios-purple dark:text-ios-purple-light group-hover:scale-110 transition-transform duration-300" />
                       </div>
                       <span className="text-foreground dark:text-foreground group-hover:text-ios-purple dark:group-hover:text-ios-purple-light transition-colors duration-300">
@@ -520,7 +520,7 @@ const NasakaPage: React.FC = () => {
 
               {/* Call to Action - Enhanced Contrast */}
               <div className="bg-gradient-to-br from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 border border-ios-blue/30 dark:border-ios-blue-light/40 rounded-xl p-4">
-                <h4 className="font-semibold text-foreground dark:text-foreground mb-2">Coming Soon to Play Store</h4>
+                <h4 className="font-semibold text-foreground dark:text-foreground mb-2">Coming Soon to Play Stores</h4>
                 <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">
                   Be a member. Stay informed when it drops.
                 </p>
