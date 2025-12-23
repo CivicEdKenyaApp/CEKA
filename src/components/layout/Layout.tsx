@@ -32,7 +32,7 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
   return (
     <div className="flex min-h-screen flex-col relative">
       <Navbar />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 pt-20 pb-16 md:pb-0">{children}</main>
       <Footer />
       {!hideBottomNav && <BottomNavbar />}
       
