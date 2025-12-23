@@ -6,7 +6,6 @@ import {
   Menu, X, Home, Info, Smartphone, Users, BarChart, ArrowRight, Search,
   Navigation, ChevronLeft, Check
 } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 
 const NasakaPage: React.FC = () => {
@@ -85,12 +84,12 @@ const NasakaPage: React.FC = () => {
                     className="rounded-full w-10 h-10 bg-white/40 dark:bg-ios-surface-dark/40 hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 backdrop-blur-sm transition-all duration-300 group border border-white/40 dark:border-ios-border/50"
                     aria-label="Go back to CEKA homepage"
                   >
-                    <ChevronLeft className="w-5 h-5 text-foreground dark:text-foreground group-hover:text-ios-blue dark:group-hover:text-ios-blue-light transition-colors" />
+                    <ChevronLeft className="w-5 h-5 text-ios-blue dark:text-ios-blue-light group-hover:text-ios-blue-800 dark:group-hover:text-ios-blue-light transition-colors" />
                   </Button>
                 </Link>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-ios-surface-dark flex items-center justify-center shadow-md border border-border/50">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue flex items-center justify-center shadow-md">
                     <img 
                       src="/nasaka.svg" 
                       alt="Nasaka IEBC Logo"
@@ -101,20 +100,14 @@ const NasakaPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <h1 className="font-bold text-foreground dark:text-foreground text-sm">
-                      <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
-                      <span>IEBC</span>
-                    </h1>
-                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">IEBC Office Finder</p>
+                    <h1 className="font-bold text-ios-blue dark:text-ios-blue-light text-sm">Nasaka IEBC</h1>
+                    <p className="text-xs text-ios-blue/70 dark:text-ios-blue-light/70">IEBC Office Finder</p>
                   </div>
                 </div>
               </div>
               
-              {/* Right Section - All buttons grouped together */}
-              <div className="flex items-center space-x-2">
-                {/* Theme Toggle */}
-                <ThemeToggle />
-                
+              {/* Status Indicator & Menu */}
+              <div className="flex items-center space-x-3">
                 {/* iOS Style Loaded Indicator */}
                 {iframeLoaded && (
                   <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border border-green-500/30 dark:border-green-500/50 shadow-sm">
@@ -123,7 +116,6 @@ const NasakaPage: React.FC = () => {
                   </div>
                 )}
                 
-                {/* Menu Button */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -131,7 +123,7 @@ const NasakaPage: React.FC = () => {
                   onClick={toggleSidebar}
                   aria-label="Open menu"
                 >
-                  <Menu className="w-5 h-5 text-foreground dark:text-foreground" />
+                  <Menu className="w-5 h-5 text-ios-blue dark:text-ios-blue-light" />
                 </Button>
               </div>
             </div>
@@ -139,13 +131,13 @@ const NasakaPage: React.FC = () => {
         </header>
 
         {/* Main Content - Iframe Container */}
-        <section className="pt-28 pb-12 safe-area">
+        <section className="pt-20 pb-8 safe-area">
           <div className="container mx-auto px-4">
             {/* Status Indicator - Mobile Only */}
-            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between">
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-foreground dark:text-foreground">Interactive Registration Center Map</h2>
-                <p className="text-muted-foreground dark:text-muted-foreground mt-1">
+                <h2 className="text-2xl font-bold text-ios-blue dark:text-ios-blue-light">Interactive Registration Center Map</h2>
+                <p className="text-ios-blue/70 dark:text-ios-blue-light/70 mt-1">
                   Locate the nearest IEBC office and check registration hours
                 </p>
               </div>
@@ -161,9 +153,9 @@ const NasakaPage: React.FC = () => {
                       <span className="text-green-600 dark:text-green-400 font-medium">Loaded</span>
                     </div>
                   ) : iframeError ? (
-                    <span className="text-ios-red dark:text-ios-red">Connection Error</span>
+                    <span className="text-ios-red">Connection Error</span>
                   ) : (
-                    <span className="text-ios-yellow dark:text-ios-yellow">Loading...</span>
+                    <span className="text-ios-yellow">Loading...</span>
                   )}
                 </div>
                 {iframeError && (
@@ -171,9 +163,9 @@ const NasakaPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={handleRetry} 
-                    className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-border dark:border-border"
+                    className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-ios-blue/30 dark:border-ios-blue-light/30"
                   >
-                    <RefreshCw className="w-4 h-4 mr-2 text-foreground dark:text-foreground" />
+                    <RefreshCw className="w-4 h-4 mr-2" />
                     Retry
                   </Button>
                 )}
@@ -181,13 +173,13 @@ const NasakaPage: React.FC = () => {
             </div>
 
             {/* Iframe Container */}
-            <div className="bg-gradient-to-b from-white to-ios-blue/5 dark:from-ios-surface-dark dark:to-ios-blue/10 rounded-2xl shadow-ios-high dark:shadow-ios-high-dark overflow-hidden border border-border dark:border-border">
+            <div className="bg-gradient-to-b from-white to-ios-blue/5 dark:from-ios-surface-dark dark:to-ios-blue/10 rounded-2xl shadow-ios-high dark:shadow-ios-high-dark overflow-hidden border border-ios-blue/20 dark:border-ios-blue/30">
               {/* Loading State */}
               {!iframeLoaded && !iframeError && (
                 <div className="h-96 flex flex-col items-center justify-center bg-gradient-to-br from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent">
                   <div className="animate-spin rounded-full h-12 w-12 border-4 border-ios-blue/20 border-t-ios-blue border-r-ios-blue dark:border-ios-blue-light/20 dark:border-t-ios-blue-light dark:border-r-ios-blue-light mb-4"></div>
-                  <p className="text-foreground dark:text-foreground">Loading Nasaka IEBC registration center finder...</p>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">This may take a few moments</p>
+                  <p className="text-ios-blue dark:text-ios-blue-light">Loading Nasaka IEBC registration center finder...</p>
+                  <p className="text-sm text-ios-blue/60 dark:text-ios-blue-light/60 mt-2">This may take a few moments</p>
                 </div>
               )}
 
@@ -197,17 +189,17 @@ const NasakaPage: React.FC = () => {
                   <div className="w-16 h-16 bg-ios-red/20 dark:bg-ios-red/30 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
                     <AlertTriangle className="w-8 h-8 text-ios-red" />
                   </div>
-                  <h3 className="text-xl font-bold text-foreground dark:text-foreground mb-2">Unable to Load Registration Center Finder</h3>
-                  <p className="text-muted-foreground dark:text-muted-foreground text-center max-w-md mb-6">
+                  <h3 className="text-xl font-bold text-ios-blue dark:text-ios-blue-light mb-2">Unable to Load Registration Center Finder</h3>
+                  <p className="text-ios-blue/70 dark:text-ios-blue-light/70 text-center max-w-md mb-6">
                     The Nasaka IEBC registration center finder is temporarily unavailable. This could be due to network issues or the external service being down.
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center">
                     <Button 
                       onClick={handleRetry} 
                       variant="outline" 
-                      className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-border dark:border-border"
+                      className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-ios-blue/30 dark:border-ios-blue-light/30"
                     >
-                      <RefreshCw className="w-4 h-4 mr-2 text-foreground dark:text-foreground" />
+                      <RefreshCw className="w-4 h-4 mr-2" />
                       Try Again
                     </Button>
                     <a
@@ -231,7 +223,7 @@ const NasakaPage: React.FC = () => {
                   src={NASAKA_URL}
                   className={`w-full transition-opacity duration-300 ${iframeLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                   style={{
-                    height: iframeLoaded ? 'calc(100vh - 320px)' : '1px',
+                    height: iframeLoaded ? 'calc(100vh - 280px)' : '1px',
                     minHeight: iframeLoaded ? '600px' : '1px'
                   }}
                   title="Nasaka IEBC Registration Center Finder"
@@ -245,26 +237,26 @@ const NasakaPage: React.FC = () => {
             </div>
 
             {/* Quick Stats Bar */}
-            <div className="mt-10 mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/40 dark:bg-white/10 backdrop-blur-xl border border-white/30 dark:border-ios-border/50 shadow-lg shadow-black/20 dark:shadow-white/20 rounded-2xl p-4 text-center">
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-ios-blue/20 dark:border-ios-blue/30 shadow-sm">
                 <Users className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">20k+</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">Active Users</p>
+                <p className="text-2xl font-bold text-ios-blue dark:text-ios-blue-light">20k+</p>
+                <p className="text-xs text-ios-blue/70 dark:text-ios-blue-light/70">Active Users</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <BarChart className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">500k</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
+              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-ios-blue/20 dark:border-ios-blue/30 shadow-sm">
+                <BarChart className="w-6 h-6 text-ios-green dark:text-ios-green-light mx-auto mb-2" />
+                <p className="text-2xl font-bold text-ios-blue dark:text-ios-blue-light">500k</p>
+                <p className="text-xs text-ios-blue/70 dark:text-ios-blue-light/70">Organic Reach</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <Smartphone className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">Soon</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">Play Store App</p>
+              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-ios-blue/20 dark:border-ios-blue/30 shadow-sm">
+                <Smartphone className="w-6 h-6 text-ios-orange dark:text-ios-orange-light mx-auto mb-2" />
+                <p className="text-2xl font-bold text-ios-blue dark:text-ios-blue-light">Soon</p>
+                <p className="text-xs text-ios-blue/70 dark:text-ios-blue-light/70">Play Store App</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
-                <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground dark:text-foreground">3 Steps</p>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground">Tap, Search, Go</p>
+              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-ios-blue/20 dark:border-ios-blue/30 shadow-sm">
+                <CheckCircle className="w-6 h-6 text-ios-purple dark:text-ios-purple-light mx-auto mb-2" />
+                <p className="text-2xl font-bold text-ios-blue dark:text-ios-blue-light">3 Steps</p>
+                <p className="text-xs text-ios-blue/70 dark:text-ios-blue-light/70">Tap, Search, Go</p>
               </div>
             </div>
           </div>
@@ -293,16 +285,16 @@ const NasakaPage: React.FC = () => {
 
           {/* Sidebar Content with Enhanced Frosted Glass - Full Dark Mode Support */}
           <div
-            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-ios-blue-light/20 border-l border-border/30 dark:border-border/50 transition-transform duration-300 ${
+            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-ios-blue-light/20 border-l border-ios-blue/20 dark:border-ios-blue-light/30 transition-transform duration-300 ${
               isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
             {/* Sidebar Header with Enhanced Frosted Glass - Dark Mode Ready */}
-            <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-lg border-b border-border/30 dark:border-border/50 p-6">
+            <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-lg border-b border-ios-blue/20 dark:border-ios-blue-light/30 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-ios-surface-dark flex items-center justify-center shadow-md border border-border/50">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-ios-blue to-ios-blue-800 dark:from-ios-blue-light dark:to-ios-blue flex items-center justify-center shadow-md">
                       <img 
                         src="/nasaka.svg" 
                         alt="Nasaka IEBC Logo"
@@ -314,21 +306,18 @@ const NasakaPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-foreground dark:text-foreground">
-                      <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span>{' '}
-                      <span>IEBC</span>
-                    </h2>
-                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">by Civic Education Kenya</p>
+                    <h2 className="text-xl font-bold text-ios-blue dark:text-ios-blue-light">Nasaka IEBC</h2>
+                    <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">by Civic Education Kenya</p>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full bg-white/40 dark:bg-ios-surface-dark/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 border border-border/30 dark:border-border/50"
+                  className="rounded-full bg-white/40 dark:bg-ios-surface-dark/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 border border-ios-blue/30 dark:border-ios-blue-light/30"
                   onClick={() => setIsSidebarOpen(false)}
                   aria-label="Close sidebar"
                 >
-                  <X className="w-5 h-5 text-foreground dark:text-foreground" />
+                  <X className="w-5 h-5 text-ios-blue dark:text-ios-blue-light" />
                 </Button>
               </div>
             </div>
@@ -337,41 +326,41 @@ const NasakaPage: React.FC = () => {
             <div className="p-6 overflow-y-auto h-[calc(100vh-140px)] green-scrollbar dark:green-scrollbar">
               {/* Description */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground dark:text-foreground mb-3">About <span className="text-ios-blue dark:text-ios-blue-light">Nasaka</span> IEBC</h3>
-                <p className="text-muted-foreground dark:text-muted-foreground">
+                <h3 className="text-lg font-semibold text-ios-blue dark:text-ios-blue-light mb-3">About Nasaka IEBC</h3>
+                <p className="text-ios-blue/80 dark:text-ios-blue-light/80">
                   Nasaka IEBC is an independent civic platform that helps Kenyan citizens find official IEBC registration centers, verify office locations, and access electoral services with interactive maps and directions. Our mission is to make voter registration accessible to everyone.
                 </p>
               </div>
 
               {/* Simple Steps */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground dark:text-foreground mb-4">3 Simple Steps</h3>
+                <h3 className="text-lg font-semibold text-ios-blue dark:text-ios-blue-light mb-4">3 Simple Steps</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-ios-blue/20 dark:border-ios-blue-light/30">
                     <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
                       <span className="text-ios-blue dark:text-ios-blue-light font-bold">1</span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground dark:text-foreground">Tap</p>
-                      <p className="text-sm text-muted-foreground dark:text-muted-foreground">Open the map and allow location access</p>
+                      <p className="font-medium text-ios-blue dark:text-ios-blue-light">Tap</p>
+                      <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">Open the map and allow location access</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-green/5 to-transparent dark:from-ios-green/10 dark:to-transparent border border-border/30 dark:border-border/50">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-green/5 to-transparent dark:from-ios-green/10 dark:to-transparent border border-ios-green/20 dark:border-ios-green-light/30">
                     <div className="w-8 h-8 rounded-full bg-ios-green/20 dark:bg-ios-green-light/20 flex items-center justify-center">
                       <span className="text-ios-green dark:text-ios-green-light font-bold">2</span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground dark:text-foreground">Search</p>
-                      <p className="text-sm text-muted-foreground dark:text-muted-foreground">Find your nearest IEBC office</p>
+                      <p className="font-medium text-ios-blue dark:text-ios-blue-light">Search</p>
+                      <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">Find your nearest IEBC office</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-orange/5 to-transparent dark:from-ios-orange/10 dark:to-transparent border border-border/30 dark:border-border/50">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-ios-orange/5 to-transparent dark:from-ios-orange/10 dark:to-transparent border border-ios-orange/20 dark:border-ios-orange-light/30">
                     <div className="w-8 h-8 rounded-full bg-ios-orange/20 dark:bg-ios-orange-light/20 flex items-center justify-center">
                       <span className="text-ios-orange dark:text-ios-orange-light font-bold">3</span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground dark:text-foreground">Go</p>
-                      <p className="text-sm text-muted-foreground dark:text-muted-foreground">Get directions and register to vote</p>
+                      <p className="font-medium text-ios-blue dark:text-ios-blue-light">Go</p>
+                      <p className="text-sm text-ios-blue/70 dark:text-ios-blue-light/70">Get directions and register to vote</p>
                     </div>
                   </div>
                 </div>
@@ -379,43 +368,43 @@ const NasakaPage: React.FC = () => {
 
               {/* Important Links */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground dark:text-foreground mb-4">Official Links</h3>
+                <h3 className="text-lg font-semibold text-ios-blue dark:text-ios-blue-light mb-4">Official Links</h3>
                 <div className="space-y-2">
                   <a
                     href="https://www.iebc.or.ke"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-kenya-green/5 to-transparent dark:from-kenya-green/10 dark:to-transparent border border-kenya-green/20 dark:border-kenya-green-light/30 hover:bg-gradient-to-r hover:from-kenya-green/10 hover:to-transparent dark:hover:from-kenya-green/20 dark:hover:to-transparent transition-all duration-300"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-kenya-green/20 dark:bg-kenya-green-light/20 flex items-center justify-center">
                         <ExternalLink className="w-4 h-4 text-kenya-green dark:text-kenya-green-light" />
                       </div>
-                      <span className="text-foreground dark:text-foreground">IEBC Official Website</span>
+                      <span className="text-ios-blue dark:text-ios-blue-light">IEBC Official Website</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
+                    <ArrowRight className="w-4 h-4 text-ios-blue/50 dark:text-ios-blue-light/50" />
                   </a>
                   <a
                     href="https://verify.iebc.or.ke/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-border/30 dark:border-border/50 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent border border-ios-blue/20 dark:border-ios-blue-light/30 hover:bg-gradient-to-r hover:from-ios-blue/10 hover:to-transparent dark:hover:from-ios-blue/20 dark:hover:to-transparent transition-all duration-300"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-ios-blue/20 dark:bg-ios-blue-light/20 flex items-center justify-center">
                         <CheckCircle className="w-4 h-4 text-ios-blue dark:text-ios-blue-light" />
                       </div>
-                      <span className="text-foreground dark:text-foreground">Verify Voter Registration</span>
+                      <span className="text-ios-blue dark:text-ios-blue-light">Verify Voter Registration</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
+                    <ArrowRight className="w-4 h-4 text-ios-blue/50 dark:text-ios-blue-light/50" />
                   </a>
                 </div>
               </div>
 
               {/* Call to Action - Enhanced Contrast */}
               <div className="bg-gradient-to-br from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 border border-ios-blue/30 dark:border-ios-blue-light/40 rounded-xl p-4">
-                <h4 className="font-semibold text-foreground dark:text-foreground mb-2">Coming Soon to Play Store</h4>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">
+                <h4 className="font-semibold text-ios-blue dark:text-ios-blue-light mb-2">Coming Soon to Play Store</h4>
+                <p className="text-sm text-ios-blue/80 dark:text-ios-blue-light/80 mb-3">
                   Be a member. Stay informed when it drops.
                 </p>
                 <a
