@@ -260,17 +260,17 @@ const NasakaPage: React.FC = () => {
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">20k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Active Users</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <BarChart className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">500k</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <Smartphone className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">Soon</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Play Store App</p>
               </div>
-              <div className="bg-gradient-to-br from-ios-blue/10 via-ios-blue/5 to-transparent dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-sm rounded-xl p-4 text-center border border-border/50 dark:border-border shadow-sm">
+              <div className="bg-gradient-to-br from-white/40 via-white/20 to-transparent dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent backdrop-blur-xl border border-white/30 dark:border-border shadow-lg shadow-black/20 rounded-2xl p-4 text-center">
                 <CheckCircle className="w-6 h-6 text-ios-blue dark:text-ios-blue-light mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">3 Steps</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Tap, Search, Go</p>
