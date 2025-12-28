@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in process-url function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -186,7 +186,7 @@ async function simulateCrawling(supabaseClient: any, jobId: string, url: string,
       .update({
         status: 'failed',
         current_step: 'Crawling failed',
-        error_message: error.message || 'Unknown error during crawling',
+        error_message: error instanceof Error ? error.message : 'Unknown error during crawling',
         updated_at: new Date().toISOString()
       })
       .eq('id', jobId);
