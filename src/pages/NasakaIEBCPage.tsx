@@ -99,7 +99,7 @@ const NasakaPage: React.FC = () => {
         />
         <meta
           name="keywords"
-          content="IEBC office, voter registration Kenya, where to register to vote, register as a voter, registering to vote, go and register, where to find IEBC, IEBC office near me, nearest IEBC office, IEBC constituency office, get registered Kenya, how to register as a voter, check voter registration, IEBC voter verification, transfer voter registration, IEBC contacts, IEBC office hours, IEBC office Nairobi, IEBC office Mombasa, IEBC office Kisumu, IEBC office Nakuru, IEBC office Eldoret, IEBC office Westlands, IEBC office Kasarani, IEBC office Embakasi, voter registration center, where to find IEBC office, visit IEBC constituency office, IEBC, voter registration, polling station, Kenya election, Nasaka IEBC, civic education, Nasaka, CEKA, Civic Education Kenya"
+          content="IEBC, voter registration, polling station, Kenya election, Nasaka IEBC, civic education, Nasaka, CEKA, Civic Education Kenya"
         />
       </Helmet>
 
