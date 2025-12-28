@@ -15,6 +15,8 @@ app = Flask(__name__)
 # CORS Configuration - Fixed to allow requests from your frontend
 CORS(app, origins=[
     "https://civicedkenya.vercel.app",   # your production frontend
+    "https://civiceducationkenya.com",
+    "https://www.civiceducationkenya.com",
     "http://localhost:3000"              # local dev React frontend
 ])
 
