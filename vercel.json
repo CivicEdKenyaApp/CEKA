@@ -5,8 +5,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
-        "buildCommand": "npm run build"
+        "distDir": "dist"
       }
     }
   ],
@@ -65,10 +64,6 @@
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
         },
@@ -82,11 +77,11 @@
         },
         {
           "key": "Strict-Transport-Security",
-          "value": "max-age=31536000; includeSubDomains; preload"
+          "value": "max-age=31536000; includeSubDomains"
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://vercel.live https://*.vercel.live https://www.googletagmanager.com https://www.google-analytics.com https://*.vercel.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com https://vercel.live https://*.vercel.live https://*.vercel.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co https://vercel.live https://*.vercel.live https://api.vercel.com https://*.clerk.accounts.dev https://*.clerk.dev; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },
@@ -95,20 +90,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://vercel.live https://*.vercel.live https://www.googletagmanager.com https://www.google-analytics.com https://*.vercel.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com https://vercel.live https://*.vercel.live https://*.vercel.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co https://vercel.live https://*.vercel.live https://api.vercel.com https://*.clerk.accounts.dev https://*.clerk.dev; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://peoples-audit.onrender.com https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr https://*.vercel.app; frame-ancestors 'self'; upgrade-insecure-requests;"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://peoples-audit.onrender.com"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob: https:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },
@@ -136,10 +118,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800"
-        },
-        {
-          "key": "Content-Type",
-          "value": "application/manifest+json"
         }
       ]
     },
@@ -158,10 +136,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800"
-        },
-        {
-          "key": "Content-Type",
-          "value": "text/plain"
         }
       ]
     },
@@ -171,10 +145,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600"
-        },
-        {
-          "key": "Content-Type",
-          "value": "application/xml"
         }
       ]
     }
@@ -187,21 +157,6 @@
       "destination": "https://ceka-production.up.railway.app/api/:path*"
     }
   ],
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 10,
-      "memory": 1024
-    },
-    "api/**/*.ts": {
-      "maxDuration": 10,
-      "memory": 1024
-    }
-  },
-  "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "devCommand": "npm run dev",
-  "regions": ["nairobi1"],
   "env": {
     "VITE_APP_TITLE": "Civic Education Kenya",
     "VITE_APP_DESCRIPTION": "Community-driven, open-source non-profit equipping Kenyans with clear, usable civic knowledge — from plain-language bill summaries and how-to guides to tools that make participation and accountability practical.",
@@ -217,41 +172,8 @@
     "VITE_APP_COUNTRY_CODE": "KE",
     "VITE_APP_TIMEZONE": "Africa/Nairobi"
   },
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "develop": true,
-      "preview": true
-    },
-    "autoAlias": true
-  },
-  "crons": [
-    {
-      "path": "/api/cron/daily",
-      "schedule": "0 9 * * *"
-    }
-  ],
-  "public": true,
-  "github": {
-    "enabled": true,
-    "autoAlias": true,
-    "silent": true
-  },
   "alias": [
     "civiceducationkenya.com",
     "www.civiceducationkenya.com"
-  ],
-  "scope": "civiceducationkenya",
-  "project": {
-    "id": "prj_civicedkenya_XXXXXXXXXXXXXXXXXXXXXXXX",
-    "name": "civiceducationkenya",
-    "framework": "vite",
-    "devCommand": "npm run dev",
-    "installCommand": "npm install",
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist"
-  },
-  "analytics": {
-    "id": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
+  ]
 }
