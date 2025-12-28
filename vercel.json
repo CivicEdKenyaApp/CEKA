@@ -1,123 +1,83 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": ".next"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/_next/static/(?:[^/]+/pages|chunks|runtime|css|media)/(.+)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
-    },
-    {
-      "src": "/static/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
-    },
-    {
-      "src": "/sw.js",
-      "headers": {
-        "Cache-Control": "public, max-age=0, must-revalidate",
-        "Service-Worker-Allowed": "/"
-      },
-      "continue": true
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1",
-      "headers": {
-        "X-DNS-Prefetch-Control": "on",
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY",
-        "X-XSS-Protection": "1; mode=block",
-        "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload"
-      }
-    }
-  ],
   "redirects": [
     {
       "source": "https://civickedkenya.vercel.app/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "http://civickedkenya.vercel.app/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "https://civicedkenya.vercel.app/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "http://civicedkenya.vercel.app/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "https://www.civiceducationkenya.com/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "http://www.civiceducationkenya.com/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     },
     {
       "source": "http://civiceducationkenya.com/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
-      "permanent": true,
-      "statusCode": 301
-    },
-    {
-      "source": "/old-path",
-      "destination": "/",
-      "permanent": true,
-      "statusCode": 301
-    },
-    {
-      "source": "/legacy",
-      "destination": "/",
-      "permanent": true,
-      "statusCode": 301
-    },
-    {
-      "source": "/civickedkenya",
-      "destination": "/",
-      "permanent": true,
-      "statusCode": 301
-    },
-    {
-      "source": "/civicedkenya",
-      "destination": "/",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     }
   ],
   "headers": [
     {
+      "source": "/peoples-audit",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://*.vercel.app https://*.vercel.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://civiceducationkenya.com https://*.civiceducationkenya.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://*.vercel.app https://*.vercel.com https://ugc.production.linktr.ee https://i.imgur.com https://*.imgur.com; font-src 'self' data: https://fonts.gstatic.com https://civiceducationkenya.com https://*.civiceducationkenya.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://api.vercel.com; media-src 'self' blob: https://civiceducationkenya.com https://*.civiceducationkenya.com; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr https://*.vercel.app https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOW-FROM https://peoples-audit.onrender.com"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://*.vercel.app https://*.vercel.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://civiceducationkenya.com https://*.civiceducationkenya.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://*.vercel.app https://*.vercel.com https://ugc.production.linktr.ee https://i.imgur.com https://*.imgur.com; font-src 'self' data: https://fonts.gstatic.com https://civiceducationkenya.com https://*.civiceducationkenya.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live https://api.vercel.com; media-src 'self' blob: https://civiceducationkenya.com https://*.civiceducationkenya.com; object-src 'none'; frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr https://*.vercel.app https://civiceducationkenya.com https://*.civiceducationkenya.com https://vercel.live https://*.vercel.live; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;"
+        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -141,15 +101,6 @@
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=31536000; includeSubDomains; preload"
-        }
-      ]
-    },
-    {
-      "source": "/peoples-audit",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr https://*.vercel.app; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;"
         }
       ]
     },
@@ -206,78 +157,19 @@
           "value": "public, max-age=3600"
         }
       ]
-    },
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
     }
   ],
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "https://ceka-production.up.railway.app/api/:path*"
-    },
-    {
-      "source": "/auth/:path*",
-      "destination": "/api/auth/:path*"
-    },
-    {
-      "source": "/blog/:slug",
-      "destination": "/"
-    },
-    {
-      "source": "/resources/:id",
-      "destination": "/"
-    },
-    {
-      "source": "/legislation/:id",
-      "destination": "/"
-    },
-    {
-      "source": "/bill/:id",
-      "destination": "/"
-    },
-    {
-      "source": "/discussion/:id",
-      "destination": "/"
-    },
-    {
-      "source": "/campaign/:id",
-      "destination": "/"
-    },
-    {
-      "source": "/document/:id",
-      "destination": "/"
     }
   ],
   "trailingSlash": false,
   "cleanUrls": true,
   "github": {
     "silent": true,
-    "autoAlias": true,
-    "enabled": true,
-    "autoJobCancelation": true
+    "autoAlias": true
   },
   "env": {
     "NEXT_PUBLIC_SITE_URL": "https://civiceducationkenya.com",
@@ -316,195 +208,7 @@
     "NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF": "$VERCEL_GIT_COMMIT_REF",
     "NEXT_PUBLIC_VERCEL_GIT_COMMIT_MESSAGE": "$VERCEL_GIT_COMMIT_MESSAGE",
     "NEXT_PUBLIC_VERCEL_GIT_COMMIT_AUTHOR_NAME": "$VERCEL_GIT_COMMIT_AUTHOR_NAME",
-    "NEXT_PUBLIC_VERCEL_GIT_COMMIT_AUTHOR_LOGIN": "$VERCEL_GIT_COMMIT_AUTHOR_LOGIN",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://cajrvemigxghnfmyopiy.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhanJ2ZW1pZ3hnaG5mbXlvcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDEwMzUxNzUsImV4cCI6MjAxNjYxMTE3NX0.Q7iEOCCyDuG6tU0YcvYYTklETIsrw2VURi52bJkD0z4",
-    "NEXT_PUBLIC_OPENAI_API_KEY": "$OPENAI_API_KEY",
-    "NEXT_PUBLIC_RAILWAY_API_URL": "https://ceka-production.up.railway.app",
-    "NEXT_PUBLIC_MAPBOX_TOKEN": "$MAPBOX_TOKEN",
-    "NEXT_PUBLIC_GOOGLE_MAPS_KEY": "$GOOGLE_MAPS_KEY",
-    "NEXT_PUBLIC_STRIPE_PUBLIC_KEY": "$STRIPE_PUBLIC_KEY",
-    "NEXT_PUBLIC_SENTRY_DSN": "$SENTRY_DSN",
-    "NEXT_PUBLIC_LOGROCKET_ID": "$LOGROCKET_ID",
-    "NEXT_PUBLIC_HOTJAR_ID": "$HOTJAR_ID",
-    "NEXT_PUBLIC_CRISP_WEBSITE_ID": "$CRISP_WEBSITE_ID",
-    "NEXT_PUBLIC_INTERCOM_APP_ID": "$INTERCOM_APP_ID",
-    "NEXT_PUBLIC_FIREBASE_API_KEY": "$FIREBASE_API_KEY",
-    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "$FIREBASE_AUTH_DOMAIN",
-    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "$FIREBASE_PROJECT_ID",
-    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "$FIREBASE_STORAGE_BUCKET",
-    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "$FIREBASE_MESSAGING_SENDER_ID",
-    "NEXT_PUBLIC_FIREBASE_APP_ID": "$FIREBASE_APP_ID",
-    "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID": "$FIREBASE_MEASUREMENT_ID",
-    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "$CLOUDINARY_CLOUD_NAME",
-    "NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET": "$CLOUDINARY_UPLOAD_PRESET",
-    "NEXT_PUBLIC_TINYMCE_API_KEY": "$TINYMCE_API_KEY",
-    "NEXT_PUBLIC_EMAILJS_SERVICE_ID": "$EMAILJS_SERVICE_ID",
-    "NEXT_PUBLIC_EMAILJS_TEMPLATE_ID": "$EMAILJS_TEMPLATE_ID",
-    "NEXT_PUBLIC_EMAILJS_PUBLIC_KEY": "$EMAILJS_PUBLIC_KEY",
-    "NEXT_PUBLIC_RECAPTCHA_SITE_KEY": "$RECAPTCHA_SITE_KEY",
-    "NEXT_PUBLIC_HCAPTCHA_SITE_KEY": "$HCAPTCHA_SITE_KEY",
-    "NEXT_PUBLIC_TURNSTILE_SITE_KEY": "$TURNSTILE_SITE_KEY",
-    "NEXT_PUBLIC_UMAMI_WEBSITE_ID": "$UMAMI_WEBSITE_ID",
-    "NEXT_PUBLIC_PLAUSIBLE_DOMAIN": "$PLAUSIBLE_DOMAIN",
-    "NEXT_PUBLIC_FATHOM_SITE_ID": "$FATHOM_SITE_ID",
-    "NEXT_PUBLIC_POSTHOG_API_KEY": "$POSTHOG_API_KEY",
-    "NEXT_PUBLIC_POSTHOG_HOST": "$POSTHOG_HOST",
-    "NEXT_PUBLIC_MIXPANEL_TOKEN": "$MIXPANEL_TOKEN",
-    "NEXT_PUBLIC_AMPLITUDE_API_KEY": "$AMPLITUDE_API_KEY",
-    "NEXT_PUBLIC_SEGMENT_WRITE_KEY": "$SEGMENT_WRITE_KEY",
-    "NEXT_PUBLIC_FULLSTORY_ORG_ID": "$FULLSTORY_ORG_ID",
-    "NEXT_PUBLIC_PIRATE_METRICS_API_KEY": "$PIRATE_METRICS_API_KEY",
-    "NEXT_PUBLIC_HEAP_APP_ID": "$HEAP_APP_ID",
-    "NEXT_PUBLIC_KOALA_API_KEY": "$KOALA_API_KEY",
-    "NEXT_PUBLIC_USERLEAP_API_KEY": "$USERLEAP_API_KEY",
-    "NEXT_PUBLIC_USABILLA_API_KEY": "$USABILLA_API_KEY",
-    "NEXT_PUBLIC_QUALAROO_API_KEY": "$QUALAROO_API_KEY",
-    "NEXT_PUBLIC_DELIGHTFUL_API_KEY": "$DELIGHTFUL_API_KEY",
-    "NEXT_PUBLIC_SURVEYSPARROW_API_KEY": "$SURVEYSPARROW_API_KEY",
-    "NEXT_PUBLIC_TYPEFORM_UID": "$TYPEFORM_UID",
-    "NEXT_PUBLIC_JOTFORM_API_KEY": "$JOTFORM_API_KEY",
-    "NEXT_PUBLIC_FORMSPREE_FORM_ID": "$FORMSPREE_FORM_ID",
-    "NEXT_PUBLIC_NETLIFY_FORM_HANDLER": "$NETLIFY_FORM_HANDLER",
-    "NEXT_PUBLIC_BUTTONDOWN_API_KEY": "$BUTTONDOWN_API_KEY",
-    "NEXT_PUBLIC_CONVERTKIT_API_KEY": "$CONVERTKIT_API_KEY",
-    "NEXT_PUBLIC_MAILCHIMP_API_KEY": "$MAILCHIMP_API_KEY",
-    "NEXT_PUBLIC_REVUE_API_KEY": "$REVUE_API_KEY",
-    "NEXT_PUBLIC_SUBSTACK_API_KEY": "$SUBSTACK_API_KEY",
-    "NEXT_PUBLIC_GHOST_API_KEY": "$GHOST_API_KEY",
-    "NEXT_PUBLIC_BUTTRCMS_API_KEY": "$BUTTRCMS_API_KEY",
-    "NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN": "$CONTENTFUL_ACCESS_TOKEN",
-    "NEXT_PUBLIC_CONTENTFUL_SPACE_ID": "$CONTENTFUL_SPACE_ID",
-    "NEXT_PUBLIC_SANITY_PROJECT_ID": "$SANITY_PROJECT_ID",
-    "NEXT_PUBLIC_SANITY_DATASET": "$SANITY_DATASET",
-    "NEXT_PUBLIC_SANITY_TOKEN": "$SANITY_TOKEN",
-    "NEXT_PUBLIC_PRISMIC_ACCESS_TOKEN": "$PRISMIC_ACCESS_TOKEN",
-    "NEXT_PUBLIC_PRISMIC_REPOSITORY_NAME": "$PRISMIC_REPOSITORY_NAME",
-    "NEXT_PUBLIC_STRAPI_API_URL": "$STRAPI_API_URL",
-    "NEXT_PUBLIC_STRAPI_API_TOKEN": "$STRAPI_API_TOKEN",
-    "NEXT_PUBLIC_DIRECTUS_URL": "$DIRECTUS_URL",
-    "NEXT_PUBLIC_DIRECTUS_TOKEN": "$DIRECTUS_TOKEN",
-    "NEXT_PUBLIC_PAYPAL_CLIENT_ID": "$PAYPAL_CLIENT_ID",
-    "NEXT_PUBLIC_MOLLIE_PROFILE_ID": "$MOLLIE_PROFILE_ID",
-    "NEXT_PUBLIC_PADDLE_VENDOR_ID": "$PADDLE_VENDOR_ID",
-    "NEXT_PUBLIC_BRAINTREE_TOKENIZATION_KEY": "$BRAINTREE_TOKENIZATION_KEY",
-    "NEXT_PUBLIC_SQUARE_APPLICATION_ID": "$SQUARE_APPLICATION_ID",
-    "NEXT_PUBLIC_SQUARE_LOCATION_ID": "$SQUARE_LOCATION_ID",
-    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "$RAZORPAY_KEY_ID",
-    "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY": "$PAYSTACK_PUBLIC_KEY",
-    "NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY": "$FLUTTERWAVE_PUBLIC_KEY",
-    "NEXT_PUBLIC_MONNIFY_API_KEY": "$MONNIFY_API_KEY",
-    "NEXT_PUBLIC_CHAPA_PUBLIC_KEY": "$CHAPA_PUBLIC_KEY",
-    "NEXT_PUBLIC_PESAPAL_CONSUMER_KEY": "$PESAPAL_CONSUMER_KEY",
-    "NEXT_PUBLIC_PESAPAL_CONSUMER_SECRET": "$PESAPAL_CONSUMER_SECRET",
-    "NEXT_PUBLIC_SAFARICOM_CONSUMER_KEY": "$SAFARICOM_CONSUMER_KEY",
-    "NEXT_PUBLIC_SAFARICOM_CONSUMER_SECRET": "$SAFARICOM_CONSUMER_SECRET",
-    "NEXT_PUBLIC_EQUITEL_API_KEY": "$EQUITEL_API_KEY",
-    "NEXT_PUBLIC_TALA_API_KEY": "$TALA_API_KEY",
-    "NEXT_PUBLIC_BRANCH_KEY": "$BRANCH_KEY",
-    "NEXT_PUBLIC_APPSFLYER_DEV_KEY": "$APPSFLYER_DEV_KEY",
-    "NEXT_PUBLIC_ADJUST_APP_TOKEN": "$ADJUST_APP_TOKEN",
-    "NEXT_PUBLIC_KOCHAVA_GUID": "$KOCHAVA_GUID",
-    "NEXT_PUBLIC_TUNE_APPLICATION_ID": "$TUNE_APPLICATION_ID",
-    "NEXT_PUBLIC_APPNEXUS_PUBLISHER_ID": "$APPNEXUS_PUBLISHER_ID",
-    "NEXT_PUBLIC_MOPUB_AD_UNIT_ID": "$MOPUB_AD_UNIT_ID",
-    "NEXT_PUBLIC_ADMOB_APP_ID": "$ADMOB_APP_ID",
-    "NEXT_PUBLIC_FACEBOOK_AUDIENCE_NETWORK_PLACEMENT_ID": "$FACEBOOK_AUDIENCE_NETWORK_PLACEMENT_ID",
-    "NEXT_PUBLIC_UNITY_ADS_GAME_ID": "$UNITY_ADS_GAME_ID",
-    "NEXT_PUBLIC_VUNGLE_APP_ID": "$VUNGLE_APP_ID",
-    "NEXT_PUBLIC_IRONSOURCE_APP_KEY": "$IRONSOURCE_APP_KEY",
-    "NEXT_PUBLIC_CHARTBOOST_APP_ID": "$CHARTBOOST_APP_ID",
-    "NEXT_PUBLIC_ADCOLONY_APP_ID": "$ADCOLONY_APP_ID",
-    "NEXT_PUBLIC_INMOBI_ACCOUNT_ID": "$INMOBI_ACCOUNT_ID",
-    "NEXT_PUBLIC_TAPJOY_SDK_KEY": "$TAPJOY_SDK_KEY",
-    "NEXT_PUBLIC_APPLOVIN_SDK_KEY": "$APPLOVIN_SDK_KEY",
-    "NEXT_PUBLIC_OGURY_ASSET_KEY": "$OGURY_ASSET_KEY",
-    "NEXT_PUBLIC_YANDEX_MOBILE_ADS_APP_ID": "$YANDEX_MOBILE_ADS_APP_ID",
-    "NEXT_PUBLIC_PANGEA_ADS_APP_ID": "$PANGEA_ADS_APP_ID",
-    "NEXT_PUBLIC_VERIZON_MEDIA_DSP_PUBLISHER_ID": "$VERIZON_MEDIA_DSP_PUBLISHER_ID",
-    "NEXT_PUBLIC_TEADS_PUBLISHER_ID": "$TEADS_PUBLISHER_ID",
-    "NEXT_PUBLIC_SMAATO_PUBLISHER_ID": "$SMAATO_PUBLISHER_ID",
-    "NEXT_PUBLIC_NEXAGE_PUBLISHER_ID": "$NEXAGE_PUBLISHER_ID",
-    "NEXT_PUBLIC_MOBFOX_PUBLISHER_ID": "$MOBFOX_PUBLISHER_ID",
-    "NEXT_PUBLIC_PUBNATIVE_APP_TOKEN": "$PUBNATIVE_APP_TOKEN",
-    "NEXT_PUBLIC_AMAZON_ADS_APP_KEY": "$AMAZON_ADS_APP_KEY",
-    "NEXT_PUBLIC_MICROSOFT_ADVERTISING_PUBLISHER_ID": "$MICROSOFT_ADVERTISING_PUBLISHER_ID",
-    "NEXT_PUBLIC_YAHOO_GEMINI_PUBLISHER_ID": "$YAHOO_GEMINI_PUBLISHER_ID",
-    "NEXT_PUBLIC_VERVE_PUBLISHER_ID": "$VERVE_PUBLISHER_ID",
-    "NEXT_PUBLIC_AERSERV_PUBLISHER_ID": "$AERSERV_PUBLISHER_ID",
-    "NEXT_PUBLIC_INNERACTIVE_PUBLISHER_ID": "$INNERACTIVE_PUBLISHER_ID",
-    "NEXT_PUBLIC_TREMOR_VIDEO_PUBLISHER_ID": "$TREMOR_VIDEO_PUBLISHER_ID",
-    "NEXT_PUBLIC_RHYTHMONE_PUBLISHER_ID": "$RHYTHMONE_PUBLISHER_ID",
-    "NEXT_PUBLIC_SPOTX_PUBLISHER_ID": "$SPOTX_PUBLISHER_ID",
-    "NEXT_PUBLIC_THE_TRADE_DESK_PUBLISHER_ID": "$THE_TRADE_DESK_PUBLISHER_ID",
-    "NEXT_PUBLIC_DV360_PUBLISHER_ID": "$DV360_PUBLISHER_ID",
-    "NEXT_PUBLIC_XANDR_PUBLISHER_ID": "$XANDR_PUBLISHER_ID",
-    "NEXT_PUBLIC_MAGNITE_PUBLISHER_ID": "$MAGNITE_PUBLISHER_ID",
-    "NEXT_PUBLIC_OPENX_PUBLISHER_ID": "$OPENX_PUBLISHER_ID",
-    "NEXT_PUBLIC_PUBMATIC_PUBLISHER_ID": "$PUBMATIC_PUBLISHER_ID",
-    "NEXT_PUBLIC_RUBICON_PROJECT_PUBLISHER_ID": "$RUBICON_PROJECT_PUBLISHER_ID",
-    "NEXT_PUBLIC_SOVRN_PUBLISHER_ID": "$SOVRN_PUBLISHER_ID",
-    "NEXT_PUBLIC_TRIPLELIFT_PUBLISHER_ID": "$TRIPLELIFT_PUBLISHER_ID",
-    "NEXT_PUBLIC_SHARETHROUGH_PUBLISHER_ID": "$SHARETHROUGH_PUBLISHER_ID",
-    "NEXT_PUBLIC_NATIVE_PUBLISHER_ID": "$NATIVE_PUBLISHER_ID",
-    "NEXT_PUBLIC_TABOOLA_PUBLISHER_ID": "$TABOOLA_PUBLISHER_ID",
-    "NEXT_PUBLIC_OUTBRAIN_PUBLISHER_ID": "$OUTBRAIN_PUBLISHER_ID",
-    "NEXT_PUBLIC_REVCONTENT_PUBLISHER_ID": "$REVCONTENT_PUBLISHER_ID",
-    "NEXT_PUBLIC_ZERGNET_PUBLISHER_ID": "$ZERGNET_PUBLISHER_ID",
-    "NEXT_PUBLIC_CONTENT_AD_PUBLISHER_ID": "$CONTENT_AD_PUBLISHER_ID",
-    "NEXT_PUBLIC_ADBLADE_PUBLISHER_ID": "$ADBLADE_PUBLISHER_ID",
-    "NEXT_PUBLIC_PULSEPOINT_PUBLISHER_ID": "$PULSEPOINT_PUBLISHER_ID",
-    "NEXT_PUBLIC_YIELDLAB_PUBLISHER_ID": "$YIELDLAB_PUBLISHER_ID",
-    "NEXT_PUBLIC_SONOBI_PUBLISHER_ID": "$SONOBI_PUBLISHER_ID",
-    "NEXT_PUBLIC_UNDERTONE_PUBLISHER_ID": "$UNDERTONE_PUBLISHER_ID",
-    "NEXT_PUBLIC_VIDAZOO_PUBLISHER_ID": "$VIDAZOO_PUBLISHER_ID",
-    "NEXT_PUBLIC_UNRULY_PUBLISHER_ID": "$UNRULY_PUBLISHER_ID",
-    "NEXT_PUBLIC_STROER_PUBLISHER_ID": "$STROER_PUBLISHER_ID",
-    "NEXT_PUBLIC_GRUPA_PUBLISHER_ID": "$GRUPA_PUBLISHER_ID",
-    "NEXT_PUBLIC_IPONWEB_PUBLISHER_ID": "$IPONWEB_PUBLISHER_ID",
-    "NEXT_PUBLIC_APPNEXUS_PUBLISHER_ID": "$APPNEXUS_PUBLISHER_ID",
-    "NEXT_PUBLIC_BRIGHTROLL_PUBLISHER_ID": "$BRIGHTROLL_PUBLISHER_ID",
-    "NEXT_PUBLIC_LIVERAIL_PUBLISHER_ID": "$LIVERAIL_PUBLISHER_ID",
-    "NEXT_PUBLIC_TUBEMOGUL_PUBLISHER_ID": "$TUBEMOGUL_PUBLISHER_ID",
-    "NEXT_PUBLIC_SPOTIFY_PUBLISHER_ID": "$SPOTIFY_PUBLISHER_ID",
-    "NEXT_PUBLIC_SOUNDCLOUD_PUBLISHER_ID": "$SOUNDCLOUD_PUBLISHER_ID",
-    "NEXT_PUBLIC_DEEZER_PUBLISHER_ID": "$DEEZER_PUBLISHER_ID",
-    "NEXT_PUBLIC_TIDAL_PUBLISHER_ID": "$TIDAL_PUBLISHER_ID",
-    "NEXT_PUBLIC_PANDORA_PUBLISHER_ID": "$PANDORA_PUBLISHER_ID",
-    "NEXT_PUBLIC_IHEART_PUBLISHER_ID": "$IHEART_PUBLISHER_ID",
-    "NEXT_PUBLIC_TUNEIN_PUBLISHER_ID": "$TUNEIN_PUBLISHER_ID",
-    "NEXT_PUBLIC_RADIOCOM_PUBLISHER_ID": "$RADIOCOM_PUBLISHER_ID",
-    "NEXT_PUBLIC_AUDIOBOOM_PUBLISHER_ID": "$AUDIOBOOM_PUBLISHER_ID",
-    "NEXT_PUBLIC_ACAST_PUBLISHER_ID": "$ACAST_PUBLISHER_ID",
-    "NEXT_PUBLIC_STITCHER_PUBLISHER_ID": "$STITCHER_PUBLISHER_ID",
-    "NEXT_PUBLIC_PODBEAN_PUBLISHER_ID": "$PODBEAN_PUBLISHER_ID",
-    "NEXT_PUBLIC_BUZZSPROUT_PUBLISHER_ID": "$BUZZSPROUT_PUBLISHER_ID",
-    "NEXT_PUBLIC_TRANSISTOR_PUBLISHER_ID": "$TRANSISTOR_PUBLISHER_ID",
-    "NEXT_PUBLIC_SIMPLECAST_PUBLISHER_ID": "$SIMPLECAST_PUBLISHER_ID",
-    "NEXT_PUBLIC_ANCHOR_PUBLISHER_ID": "$ANCHOR_PUBLISHER_ID",
-    "NEXT_PUBLIC_BREAKER_PUBLISHER_ID": "$BREAKER_PUBLISHER_ID",
-    "NEXT_PUBLIC_CASTBOX_PUBLISHER_ID": "$CASTBOX_PUBLISHER_ID",
-    "NEXT_PUBLIC_GOOGLE_PODCASTS_PUBLISHER_ID": "$GOOGLE_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_APPLE_PODCASTS_PUBLISHER_ID": "$APPLE_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_SPOTIFY_PODCASTS_PUBLISHER_ID": "$SPOTIFY_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_AMAZON_MUSIC_PUBLISHER_ID": "$AMAZON_MUSIC_PUBLISHER_ID",
-    "NEXT_PUBLIC_YOUTUBE_MUSIC_PUBLISHER_ID": "$YOUTUBE_MUSIC_PUBLISHER_ID",
-    "NEXT_PUBLIC_DEEZER_PODCASTS_PUBLISHER_ID": "$DEEZER_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_TIDAL_PODCASTS_PUBLISHER_ID": "$TIDAL_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_PANDORA_PODCASTS_PUBLISHER_ID": "$PANDORA_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_IHEARTRADIO_PODCASTS_PUBLISHER_ID": "$IHEARTRADIO_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_TUNEIN_PODCASTS_PUBLISHER_ID": "$TUNEIN_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_RADIOCOM_PODCASTS_PUBLISHER_ID": "$RADIOCOM_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_AUDIOBOOM_PODCASTS_PUBLISHER_ID": "$AUDIOBOOM_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_ACAST_PODCASTS_PUBLISHER_ID": "$ACAST_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_STITCHER_PODCASTS_PUBLISHER_ID": "$STITCHER_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_PODBEAN_PODCASTS_PUBLISHER_ID": "$PODBEAN_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_BUZZSPROUT_PODCASTS_PUBLISHER_ID": "$BUZZSPROUT_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_TRANSISTOR_PODCASTS_PUBLISHER_ID": "$TRANSISTOR_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_SIMPLECAST_PODCASTS_PUBLISHER_ID": "$SIMPLECAST_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_ANCHOR_PODCASTS_PUBLISHER_ID": "$ANCHOR_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_BREAKER_PODCASTS_PUBLISHER_ID": "$BREAKER_PODCASTS_PUBLISHER_ID",
-    "NEXT_PUBLIC_CASTBOX_PODCASTS_PUBLISHER_ID": "$CASTBOX_PODCASTS_PUBLISHER_ID"
+    "NEXT_PUBLIC_VERCEL_GIT_COMMIT_AUTHOR_LOGIN": "$VERCEL_GIT_COMMIT_AUTHOR_LOGIN"
   },
   "regions": ["nairobi1"],
   "crons": [
@@ -519,18 +223,6 @@
     {
       "path": "/api/cron/monthly",
       "schedule": "0 9 1 * *"
-    },
-    {
-      "path": "/api/cron/hourly",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/quarterly",
-      "schedule": "0 9 1 */3 *"
-    },
-    {
-      "path": "/api/cron/yearly",
-      "schedule": "0 9 1 1 *"
     }
   ],
   "functions": {
@@ -548,21 +240,11 @@
       "maxDuration": 10,
       "memory": 1024,
       "runtime": "python3.9"
-    },
-    "api/**/*.go": {
-      "maxDuration": 10,
-      "memory": 1024,
-      "runtime": "go1.x"
-    },
-    "api/**/*.rs": {
-      "maxDuration": 10,
-      "memory": 1024,
-      "runtime": "rust1.x"
     }
   },
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
+  "outputDirectory": "build",
   "devCommand": "npm run dev",
   "framework": "nextjs",
   "git": {
@@ -571,26 +253,6 @@
       "develop": true,
       "staging": true,
       "preview": true
-    }
-  },
-  "project": {
-    "id": "prj_civicedkenya_XXXXXXXXXXXXXXXXXXXXXXXX",
-    "name": "civiceducationkenya",
-    "framework": "nextjs",
-    "devCommand": "npm run dev",
-    "installCommand": "npm install",
-    "buildCommand": "npm run build",
-    "outputDirectory": ".next",
-    "rootDirectory": null,
-    "analytics": {
-      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    },
-    "protectionBypass": {
-      "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX": {
-        "createdAt": 1735430400000,
-        "createdBy": "civiceducationkenya",
-        "scope": "automation-bypass"
-      }
     }
   }
 }
