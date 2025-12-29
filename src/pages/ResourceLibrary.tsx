@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+// src/pages/ResourceLibrary.tsx
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Search, Filter, Download, Book, FileText, Video, Image as ImageIcon, 
@@ -6,7 +7,6 @@ import {
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-
 import { Input } from '@/components/ui/input';
 import {
   Card,
@@ -30,6 +30,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 // Resource type definition
 interface Resource {
@@ -37,7 +38,6 @@ interface Resource {
   title: string;
   description: string;
   type: 'pdf' | 'video' | 'image' | 'audio' | 'link';
-
   category: string;
   url: string;
   thumbnail?: string;
@@ -256,19 +256,11 @@ const mockResources: Resource[] = [
   }
 ];
 
-// Extract unique categories for filtering
-const allCategories = Array.from(new Set(mockResources.map(resource => resource.category)));
-const allTypes = Array.from(new Set(mockResources.map(resource => resource.type)));
-
 const ResourceLibrary = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
   const { language } = useLanguage();
-
-  // State for filters and search
-
-
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -277,10 +269,80 @@ const ResourceLibrary = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [dbResources, setDbResources] = useState<Resource[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load resources from Supabase
+  useEffect(() => {
+    const loadDbResources = async () => {
+      if (searchTerm.trim()) {
+        setIsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('resources')
+            .select('*')
+            .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+            .limit(20);
+
+          if (error) throw error;
+
+          const mappedResources: Resource[] = (data || []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            type: item.type,
+            category: item.category,
+            url: item.url || `/resources/${item.id}`,
+            thumbnail: item.thumbnail_url,
+            dateAdded: new Date(item.created_at).toISOString().split('T')[0],
+            author: item.uploadedBy,
+            views: 0,
+            downloads: 0,
+            tags: [],
+            featured: false
+          }));
+
+          setDbResources(mappedResources);
+        } catch (error) {
+          console.error('Error loading resources from Supabase:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load resources from database",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setDbResources([]);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      loadDbResources();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, toast]);
+
+  const allResources = useMemo(() => {
+    const combined = [...mockResources, ...dbResources];
+    
+    // Remove duplicates by ID
+    const uniqueIds = new Set();
+    return combined.filter(resource => {
+      if (uniqueIds.has(resource.id)) return false;
+      uniqueIds.add(resource.id);
+      return true;
+    });
+  }, [mockResources, dbResources]);
+
+  const allCategories = Array.from(new Set(allResources.map(resource => resource.category)));
+  const allTypes = Array.from(new Set(allResources.map(resource => resource.type)));
 
   // Filter and sort resources based on current state
   const filteredResources = useMemo(() => {
-    let filtered = mockResources;
+    let filtered = allResources;
     
     // Apply search term filter
     if (searchTerm) {
@@ -320,7 +382,7 @@ const ResourceLibrary = () => {
           : b.title.localeCompare(a.title);
       }
     });
-  }, [mockResources, searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
+  }, [allResources, searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
 
   // Group resources by category for the tabbed interface
   const resourcesByCategory = useMemo(() => {
@@ -364,15 +426,8 @@ const ResourceLibrary = () => {
       description: `Downloading ${selectedResources.length} resources.`,
     });
 
-
-
-
-
-
-    // In a real application, this would initiate actual downloads
     console.log("Downloading resources:", selectedResources);
   };
-
 
   // Get type icon based on resource type
   const getTypeIcon = (type: string) => {
@@ -398,25 +453,6 @@ const ResourceLibrary = () => {
     setSortBy('date');
     setSortDirection('desc');
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // Render resource card based on view mode
   const renderResourceCard = (resource: Resource) => {
@@ -559,23 +595,6 @@ const ResourceLibrary = () => {
             <p className="text-muted-foreground mt-1">
               {translate("Browse and download educational resources on civic education", language)}
             </p>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           </div>
           
           <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -616,9 +635,6 @@ const ResourceLibrary = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
-
-
-
                   </div>
                 </div>
                 
@@ -765,36 +781,6 @@ const ResourceLibrary = () => {
                   </div>
                 </CardFooter>
               </Card>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             )}
           </div>
           
@@ -842,7 +828,13 @@ const ResourceLibrary = () => {
               </TabsList>
               
               <TabsContent value="all" className="mt-0">
-                {filteredResources.length === 0 ? (
+                {isLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : filteredResources.length === 0 ? (
                   <div className="text-center py-12">
                     <h3 className="text-lg font-medium">No resources match your filters</h3>
                     <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
@@ -860,7 +852,13 @@ const ResourceLibrary = () => {
               
               {allCategories.map((category) => (
                 <TabsContent key={category} value={category} className="mt-0">
-                  {resourcesByCategory[category]?.length === 0 ? (
+                  {isLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
+                      ))}
+                    </div>
+                  ) : resourcesByCategory[category]?.length === 0 ? (
                     <div className="text-center py-12">
                       <h3 className="text-lg font-medium">No {category} resources match your filters</h3>
                       <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
