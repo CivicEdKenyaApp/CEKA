@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { searchService, SearchResult } from '@/services/searchService';
+import { searchService, SearchResult } from '@/lib/searchService';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SearchResults = () => {
