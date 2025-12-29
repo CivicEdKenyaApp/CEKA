@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { searchService, SearchSuggestion as SearchSuggestionType } from '@/services/searchService';
+import { searchService, SearchSuggestion as SearchSuggestionType } from '@/lib/searchService';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
