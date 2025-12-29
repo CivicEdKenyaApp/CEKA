@@ -184,13 +184,6 @@ const SearchSuggestion: React.FC<SearchSuggestionProps> = ({
             </button>
           )}
         </div>
-        
-        {!isMobile && (
-          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground px-1">
-            <span>Press Enter to search</span>
-            <span>Esc to close</span>
-          </div>
-        )}
       </form>
 
       <AnimatePresence>
