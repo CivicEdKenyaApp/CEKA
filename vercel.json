@@ -1,10 +1,14 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://ceka-production.up.railway.app/api/:path*"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
+
   "redirects": [
     {
       "source": "/(.*)",
@@ -15,21 +19,16 @@
         }
       ],
       "destination": "https://civiceducationkenya.com/$1",
-      "statusCode": 308
+      "permanent": true
     }
   ],
+
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
@@ -40,7 +39,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in; manifest-src 'self'; media-src 'self' blob: https:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://*.onrender.com https://*.render.com https://*.vercel.app https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob: https:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://*.onrender.com https://*.render.com https://recall254.vercel.app https://rejectfinancebill2025.vercel.app https://*.vercel.app https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },
@@ -52,30 +51,16 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
-    },
-    {
-      "source": "/favicon.ico",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=604800, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=604800"
-        },
-        {
-          "key": "Content-Type",
-          "value": "application/manifest+json"
-        }
-      ]
     }
   ],
+
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ceka-production.up.railway.app/api/:path*"
+    }
+  ]
 }
