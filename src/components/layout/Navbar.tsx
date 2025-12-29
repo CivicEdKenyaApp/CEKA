@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 import AuthModal from '@/components/auth/AuthModal';
 
 type NavItem = {
@@ -43,7 +42,6 @@ const Navbar = () => {
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchPosition, setSearchPosition] = useState({ x: 0, width: 0 });
   
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -57,30 +55,10 @@ const Navbar = () => {
   const { unreadCount } = useNotifications();
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
-  const searchControls = useAnimation();
 
-  // Get search button position for centering
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (searchButtonRef.current && isMobile) {
-      const updatePosition = () => {
-        const rect = searchButtonRef.current?.getBoundingClientRect();
-        if (rect) {
-          setSearchPosition({
-            x: rect.left + rect.width / 2,
-            width: rect.width
-          });
-        }
-      };
-
-      updatePosition();
-      window.addEventListener('resize', updatePosition);
-      return () => window.removeEventListener('resize', updatePosition);
-    }
-  }, [isMobile]);
-
-  // Prevent body scroll when mobile menu or search is open
-  useEffect(() => {
-    if (isMobile && (isOpen || (showSearch && isSearchFocused))) {
+    if (isMobile && isOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     } else {
@@ -92,7 +70,7 @@ const Navbar = () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [isOpen, isMobile, showSearch, isSearchFocused]);
+  }, [isOpen, isMobile]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,13 +92,7 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        if (isMobile && showSearch) {
-          if (!isSearchFocused) {
-            setShowSearch(false);
-          }
-        } else {
-          setShowSearch(false);
-        }
+        setShowSearch(false);
       }
     };
 
@@ -128,49 +100,26 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMobile, showSearch, isSearchFocused]);
-
-  // Handle escape key to close search
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showSearch) {
-        setShowSearch(false);
-        if (searchInputRef.current) {
-          searchInputRef.current.blur();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [showSearch]);
+  }, []);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedQuery = searchQuery?.trim?.() || '';
-    if (trimmedQuery) {
-      navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       setShowSearch(false);
-      setIsSearchFocused(false);
     }
   }, [searchQuery, navigate]);
 
   const handleSearchButtonClick = useCallback(() => {
     if (isMobile) {
-      // On mobile, toggle full-screen search overlay
       setShowSearch(!showSearch);
       if (!showSearch) {
         setTimeout(() => {
           searchInputRef.current?.focus();
         }, 100);
-      } else {
-        setIsSearchFocused(false);
       }
     } else {
-      // On desktop, toggle the simple search panel
       setShowSearch(!showSearch);
       if (!showSearch) {
         setTimeout(() => {
@@ -182,14 +131,7 @@ const Navbar = () => {
 
   const handleSearchFocus = useCallback(() => {
     setIsSearchFocused(true);
-    if (isMobile) {
-      searchControls.start({
-        y: 0,
-        opacity: 1,
-        transition: { type: "spring", damping: 25, stiffness: 300 }
-      });
-    }
-  }, [isMobile, searchControls]);
+  }, []);
 
   const handleSearchBlur = useCallback(() => {
     setIsSearchFocused(false);
@@ -254,7 +196,6 @@ const Navbar = () => {
     { code: 'br', name: 'Braille' },
   ];
 
-  // Enhanced hamburger button animation variants
   const hamburgerVariants = {
     menu: {
       opacity: 1,
@@ -285,66 +226,6 @@ const Navbar = () => {
     }
   };
 
-  // iOS-inspired search animations
-  const mobileSearchVariants = {
-    hidden: {
-      y: -100,
-      opacity: 0,
-      transition: {
-        duration: 0.2,
-        ease: [0.4, 0, 1, 1]
-      }
-    },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 300,
-        mass: 0.8
-      }
-    }
-  };
-
-  const desktopSearchVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.95,
-      y: -10,
-      transition: {
-        duration: 0.15,
-        ease: [0.4, 0, 1, 1]
-      }
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 400,
-        mass: 0.8
-      }
-    }
-  };
-
-  // Calculate centered position for mobile search
-  const getMobileSearchPosition = () => {
-    if (!isMobile) return {};
-    
-    const viewportWidth = window.innerWidth;
-    const panelWidth = Math.min(viewportWidth * 0.9, 400); // 90% of viewport or 400px max
-    const leftPosition = Math.max(16, (viewportWidth - panelWidth) / 2);
-    
-    return {
-      left: `${leftPosition}px`,
-      width: `${panelWidth}px`,
-      transform: 'none'
-    };
-  };
-
   return (
     <>
       <nav
@@ -358,33 +239,43 @@ const Navbar = () => {
               <Logo className="h-8 w-auto" />
             </Link>
 
-            {/* Desktop Navigation - Previous Implementation */}
+            {/* Desktop Navigation - Enhanced Implementation */}
             <div className="hidden md:flex space-x-1">
               {allNavItems.map((item) =>
                 item.dropdown ? (
-                  <div key={item.name} className="relative group">
+                  <div key={item.name} className="relative group" style={{ zIndex: 10000 }}>
                     <button
-                      className={`px-3 py-2 rounded-md text-sm font-medium flex items-center hover:bg-muted ${
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center hover:bg-muted/70 transition-all duration-200 ${
                         location.pathname === item.path || 
                         item.dropdown?.some(subItem => location.pathname === subItem.path)
-                          ? 'text-primary'
-                          : 'text-foreground/80'
-                      }`}
+                          ? 'text-primary bg-muted/40'
+                          : 'text-foreground/90 hover:text-primary'
+                      } group/dropdown`}
+                      style={{ backdropFilter: 'blur(10px)' }}
                     >
-                      {item.name}
-                      <ChevronDown className="ml-1 h-4 w-4" />
+                      <span className="flex items-center">
+                        {item.name}
+                        <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70 group-hover/dropdown:opacity-100 transition-all duration-200 group-hover/dropdown:translate-y-0.5" />
+                      </span>
+                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-primary/50 rounded-full opacity-0 group-hover/dropdown:opacity-100 transition-opacity duration-300"></span>
                     </button>
-                    <div className="absolute left-0 mt-1 w-80 origin-top-left rounded-md bg-popover shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="py-2">
+                    <div className="absolute left-0 mt-2 w-80 origin-top-left rounded-2xl bg-popover/95 backdrop-blur-xl shadow-ios-high border border-border/50 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10000] overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-popover/90 to-transparent z-10 pointer-events-none"></div>
+                      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-popover/90 to-transparent z-10 pointer-events-none"></div>
+                      
+                      <div className="py-2 max-h-[320px] overflow-y-auto green-scrollbar" style={{ zIndex: 10000 }}>
                         {item.dropdown.map((subItem) => (
                           <Link
                             key={subItem.name}
                             to={subItem.path}
-                            className="block px-4 py-3 hover:bg-muted transition-colors"
+                            className="block px-4 py-3 hover:bg-muted/50 transition-colors group/subitem relative"
                           >
-                            <div className="font-medium text-sm">{subItem.name}</div>
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-sm">{subItem.name}</div>
+                              <ChevronRight className="h-3.5 w-3.5 opacity-0 -translate-x-2 group-hover/subitem:opacity-70 group-hover/subitem:translate-x-0 transition-all duration-200" />
+                            </div>
                             {subItem.description && (
-                              <div className="text-xs text-muted-foreground mt-1">
+                              <div className="text-xs text-muted-foreground mt-1 pr-4">
                                 {subItem.description}
                               </div>
                             )}
@@ -397,11 +288,12 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-muted flex items-center ${
-                      isActive(item.path) ? 'text-primary' : 'text-foreground/80'
+                    className={`px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-muted/70 flex items-center transition-all duration-200 ${
+                      isActive(item.path) ? 'text-primary bg-muted/40' : 'text-foreground/90 hover:text-primary'
                     }`}
+                    style={{ backdropFilter: 'blur(10px)' }}
                   >
-                    {item.icon && <item.icon className="h-4 w-4 mr-1" />}
+                    {item.icon && <item.icon className="h-4 w-4 mr-2" />}
                     {item.name}
                   </Link>
                 )
@@ -409,7 +301,7 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Desktop Search Button and Panel - Previous Implementation */}
+              {/* Desktop Search */}
               {!isMobile ? (
                 <div className="relative" ref={searchRef}>
                   <Button
@@ -440,7 +332,7 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                // Mobile Search Button - triggers centered dropdown
+                // Mobile Search Button
                 <div className="relative" ref={searchRef}>
                   <Button
                     ref={searchButtonRef}
@@ -454,7 +346,7 @@ const Navbar = () => {
                     <Search className="h-5 w-5" />
                   </Button>
                   
-                  {/* Mobile Search Dropdown - Centered below button */}
+                  {/* Mobile Search Dropdown */}
                   <AnimatePresence>
                     {showSearch && (
                       <motion.div
@@ -503,7 +395,6 @@ const Navbar = () => {
                               </div>
                             </form>
                             
-                            {/* Quick search suggestions */}
                             <div className="mt-3 space-y-2">
                               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
                                 Try searching for:
@@ -640,7 +531,7 @@ const Navbar = () => {
                 </>
               )}
 
-              {/* Enhanced Mobile Hamburger Button with Buttery Animation */}
+              {/* Mobile Hamburger Button */}
               <div className="md:hidden relative z-50">
                 <button
                   onClick={() => setIsOpen(!isOpen)}
@@ -648,7 +539,6 @@ const Navbar = () => {
                   aria-label={isOpen ? "Close menu" : "Open menu"}
                   aria-expanded={isOpen}
                 >
-                  {/* Fixed size container to prevent layout shift */}
                   <div className="relative w-6 h-6">
                     <AnimatePresence mode="wait" initial={false}>
                       {isOpen ? (
@@ -679,7 +569,6 @@ const Navbar = () => {
                     </AnimatePresence>
                   </div>
                   
-                  {/* Subtle pulse effect when changing states */}
                   <motion.div
                     className="absolute inset-0 rounded-xl bg-primary/10"
                     initial={false}
@@ -692,12 +581,11 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Enhanced Mobile Menu with iOS-inspired Design */}
+        {/* Mobile Menu */}
         {isMobile && (
           <AnimatePresence>
             {isOpen && !showSearch && (
               <>
-                {/* Backdrop overlay */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -707,7 +595,6 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                 />
                 
-                {/* Mobile Menu Panel */}
                 <motion.div
                   ref={mobileMenuRef}
                   initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -726,11 +613,9 @@ const Navbar = () => {
                     WebkitOverflowScrolling: 'touch'
                   }}
                 >
-                  {/* Gradient fade effects */}
                   <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/95 to-transparent z-10 pointer-events-none"></div>
                   <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/95 to-transparent z-10 pointer-events-none"></div>
                   
-                  {/* Scrollable content */}
                   <div 
                     className="py-6 overflow-y-auto green-scrollbar"
                     style={{
@@ -762,7 +647,6 @@ const Navbar = () => {
                                 {item.name}
                               </div>
                               <div className="flex items-center">
-                                {/* Subtle indicator for dropdown content */}
                                 <span className="text-xs text-muted-foreground mr-2">
                                   {item.dropdown?.length || 0} items
                                 </span>
@@ -775,7 +659,6 @@ const Navbar = () => {
                               </div>
                             </button>
                             
-                            {/* Animated dropdown content */}
                             <AnimatePresence>
                               {isDropdownExpanded && (
                                 <motion.div
@@ -858,7 +741,6 @@ const Navbar = () => {
 
                     <div className="border-t border-border/30 my-4 mx-4"></div>
 
-                    {/* User section */}
                     <div className="px-4 py-2">
                       {user ? (
                         <Link 
@@ -884,7 +766,6 @@ const Navbar = () => {
                       )}
                     </div>
 
-                    {/* Language section */}
                     <div className="px-4 py-2">
                       <div className="flex items-center text-foreground/90 mb-3 px-4">
                         <Globe className="h-4 w-4 mr-3" />
@@ -918,7 +799,6 @@ const Navbar = () => {
                       </div>
                     </div>
 
-                    {/* Settings section */}
                     <div className="px-4 py-2 pb-6">
                       <div className="flex items-center text-foreground/90 mb-3 px-4">
                         <Settings className="h-4 w-4 mr-3" />
@@ -944,7 +824,7 @@ const Navbar = () => {
                             to="/settings/account"
                             onClick={() => setIsOpen(false)}
                             className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
-                        >
+                          >
                             Account
                           </Link>
                         )}
