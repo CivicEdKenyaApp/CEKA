@@ -43,6 +43,7 @@ const Navbar = () => {
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchPosition, setSearchPosition] = useState({ x: 0, width: 0 });
   
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,25 @@ const Navbar = () => {
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
   const searchControls = useAnimation();
+
+  // Get search button position for centering
+  useEffect(() => {
+    if (searchButtonRef.current && isMobile) {
+      const updatePosition = () => {
+        const rect = searchButtonRef.current?.getBoundingClientRect();
+        if (rect) {
+          setSearchPosition({
+            x: rect.left + rect.width / 2,
+            width: rect.width
+          });
+        }
+      };
+
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      return () => window.removeEventListener('resize', updatePosition);
+    }
+  }, [isMobile]);
 
   // Prevent body scroll when mobile menu or search is open
   useEffect(() => {
@@ -95,7 +115,6 @@ const Navbar = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         if (isMobile && showSearch) {
-          // On mobile, only close search if it's not focused
           if (!isSearchFocused) {
             setShowSearch(false);
           }
@@ -311,6 +330,21 @@ const Navbar = () => {
     }
   };
 
+  // Calculate centered position for mobile search
+  const getMobileSearchPosition = () => {
+    if (!isMobile) return {};
+    
+    const viewportWidth = window.innerWidth;
+    const panelWidth = Math.min(viewportWidth * 0.9, 400); // 90% of viewport or 400px max
+    const leftPosition = Math.max(16, (viewportWidth - panelWidth) / 2);
+    
+    return {
+      left: `${leftPosition}px`,
+      width: `${panelWidth}px`,
+      transform: 'none'
+    };
+  };
+
   return (
     <>
       <nav
@@ -411,9 +445,9 @@ const Navbar = () => {
                         animate="visible"
                         exit="hidden"
                         variants={desktopSearchVariants}
-                        className="absolute top-full right-0 mt-2 w-96 max-w-[90vw] bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high p-4 z-[10000]"
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-96 max-w-[90vw] bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high p-4 z-[10000]"
                         style={{
-                          transformOrigin: 'top right',
+                          transformOrigin: 'top center',
                           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)'
                         }}
                       >
@@ -453,18 +487,101 @@ const Navbar = () => {
                   </AnimatePresence>
                 </div>
               ) : (
-                // Mobile Search Button - triggers full-screen overlay
-                <Button
-                  ref={searchButtonRef}
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSearchButtonClick}
-                  className="h-10 w-10 hover:bg-muted/70 backdrop-blur-sm"
-                  aria-label="Search"
-                  aria-expanded={showSearch}
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
+                // Mobile Search Button - triggers centered dropdown
+                <div className="relative" ref={searchRef}>
+                  <Button
+                    ref={searchButtonRef}
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSearchButtonClick}
+                    className="h-10 w-10 hover:bg-muted/70 backdrop-blur-sm"
+                    aria-label="Search"
+                    aria-expanded={showSearch}
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                  
+                  {/* Mobile Search Dropdown - Centered below button */}
+                  <AnimatePresence>
+                    {showSearch && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{
+                          type: "spring",
+                          damping: 25,
+                          stiffness: 300,
+                          mass: 0.8
+                        }}
+                        className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[10002]"
+                        style={{
+                          width: 'calc(100vw - 2rem)',
+                          maxWidth: '400px',
+                        }}
+                      >
+                        <div className="bg-background/95 backdrop-blur-3xl border border-border/50 rounded-2xl shadow-ios-high overflow-hidden">
+                          <div className="p-4">
+                            <form onSubmit={handleSearch}>
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  ref={searchInputRef}
+                                  type="search"
+                                  placeholder={translate("Search...", language)}
+                                  value={searchQuery || ''}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  onFocus={handleSearchFocus}
+                                  onBlur={handleSearchBlur}
+                                  className="w-full bg-background/80 backdrop-blur-xl border-border/50 pl-10 pr-10 py-4 text-base rounded-xl"
+                                  autoFocus
+                                  aria-label="Search input"
+                                />
+                                {searchQuery && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                                    aria-label="Clear search"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </form>
+                            
+                            {/* Quick search suggestions */}
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                Try searching for:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {['Voting', 'Constitution', 'Rights', 'Elections'].map((term) => (
+                                  <button
+                                    key={term}
+                                    onClick={() => {
+                                      setSearchQuery(term);
+                                      searchInputRef.current?.focus();
+                                    }}
+                                    className="px-3 py-1.5 text-sm bg-muted/50 backdrop-blur-sm rounded-lg hover:bg-muted/70 transition-all duration-200"
+                                  >
+                                    {term}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Backdrop to close when clicking outside */}
+                          <div
+                            className="fixed inset-0 z-[-1]"
+                            onClick={handleMobileSearchClose}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               )}
 
               <ThemeToggle />
@@ -622,104 +739,6 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-
-        {/* Mobile Full-Screen Search Overlay - iOS Inspired */}
-        <AnimatePresence>
-          {isMobile && showSearch && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-background/95 backdrop-blur-3xl z-[10001]"
-                onClick={handleMobileSearchClose}
-              />
-              
-              <motion.div
-                ref={searchRef}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={mobileSearchVariants}
-                className="fixed top-0 left-0 right-0 z-[10002] bg-background/95 backdrop-blur-3xl border-b border-border/50 shadow-ios-high overflow-hidden"
-                style={{
-                  WebkitOverflowScrolling: 'touch',
-                  height: isSearchFocused ? '100vh' : 'auto',
-                }}
-              >
-                <div className="container mx-auto px-4 py-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleMobileSearchClose}
-                      className="h-12 w-12 hover:bg-muted/70 backdrop-blur-sm rounded-xl"
-                      aria-label="Close search"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                    
-                    <form onSubmit={handleSearch} className="flex-1">
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          ref={searchInputRef}
-                          type="search"
-                          placeholder={translate("Search resources, discussions, campaigns...", language)}
-                          value={searchQuery || ''}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onFocus={handleSearchFocus}
-                          onBlur={handleSearchBlur}
-                          className="w-full bg-background/80 backdrop-blur-xl border-border/50 pl-12 pr-12 py-6 text-base rounded-2xl"
-                          autoFocus
-                          aria-label="Search input"
-                        />
-                        {searchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 h-6 w-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                            aria-label="Clear search"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </form>
-                  </div>
-                  
-                  {/* Search suggestions/placeholder */}
-                  {!isSearchFocused && (
-                    <div className="px-4 py-6">
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                          Quick Searches
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {['Voting', 'Constitution', 'Elections', 'Rights'].map((term) => (
-                            <button
-                              key={term}
-                              onClick={() => {
-                                setSearchQuery(term);
-                                setTimeout(() => {
-                                  searchInputRef.current?.focus();
-                                }, 50);
-                              }}
-                              className="px-4 py-2.5 bg-muted/50 backdrop-blur-sm rounded-xl text-sm font-medium hover:bg-muted/70 transition-all duration-200"
-                            >
-                              {term}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
 
         {/* Enhanced Mobile Menu with iOS-inspired Design */}
         {isMobile && (
