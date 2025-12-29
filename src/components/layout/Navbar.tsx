@@ -195,9 +195,11 @@ const Navbar = () => {
                         {item.name}
                         <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70 group-hover/dropdown:opacity-100 transition-all duration-200 group-hover/dropdown:translate-y-0.5" />
                       </span>
+                      {/* Subtle dot hint for dropdown */}
                       <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-primary/50 rounded-full opacity-0 group-hover/dropdown:opacity-100 transition-opacity duration-300"></span>
                     </button>
                     <div className="absolute left-0 mt-2 w-80 origin-top-left rounded-2xl bg-popover/95 backdrop-blur-xl shadow-ios-high border border-border/50 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10000] overflow-hidden">
+                      {/* Gradient fade effect */}
                       <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-popover/90 to-transparent z-10 pointer-events-none"></div>
                       <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-popover/90 to-transparent z-10 pointer-events-none"></div>
                       
