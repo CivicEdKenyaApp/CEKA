@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { BarChart3, FileText, Database, ExternalLink, AlertTriangle, RefreshCw, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
+import Layout from '@/components/layout/Layout';
 
 const PeoplesAuditPage: React.FC = () => {
   const [activeView, setActiveView] = useState<'sankey' | 'dashboard'>('sankey');
@@ -16,11 +17,9 @@ const PeoplesAuditPage: React.FC = () => {
   const RENDER_BASE_URL = 'https://peoples-audit.onrender.com';
 
   const getIframeUrl = () => {
-    if (activeView === 'sankey') {
-      return `${RENDER_BASE_URL}/sankey`;
-    } else {
-      return `${RENDER_BASE_URL}/dashboard`;
-    }
+    const path = activeView === 'sankey' ? '/sankey' : '/dashboard';
+    // Add theme as URL parameter for cross-origin theme sync fallback
+    return `${RENDER_BASE_URL}${path}?theme=${theme}`;
   };
 
   // Delay mounting the iframe to ensure container is ready
@@ -69,7 +68,7 @@ const PeoplesAuditPage: React.FC = () => {
   }, []);
 
   return (
-    <>
+    <Layout>
       <Helmet>
         <title>People's Audit - Economic Analysis | CEKA</title>
         <meta 
@@ -78,7 +77,7 @@ const PeoplesAuditPage: React.FC = () => {
         />
       </Helmet>
 
-      <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
         {/* Header Section */}
         <section className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white">
           <div className="container mx-auto px-4 py-12">
@@ -196,13 +195,13 @@ const PeoplesAuditPage: React.FC = () => {
                   src={getIframeUrl()}
                   className={`w-full transition-opacity duration-300 ${iframeLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                   style={{ 
-                    height: iframeLoaded ? 'calc(100vh - 300px)' : '1px',
+                    height: iframeLoaded ? 'calc(100vh - 350px)' : '1px',
                     minHeight: iframeLoaded ? '600px' : '1px'
                   }}
                   title={`People's Audit ${activeView === 'sankey' ? 'Sankey Diagram' : 'Dashboard'}`}
                   onLoad={handleIframeLoad}
                   onError={handleIframeError}
-                  sandbox="allow-scripts allow-same-origin"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                   referrerPolicy="strict-origin-when-cross-origin"
                 />
               )}
@@ -295,8 +294,8 @@ const PeoplesAuditPage: React.FC = () => {
             </div>
           </div>
         </section>
-      </main>
-    </>
+      </div>
+    </Layout>
   );
 };
 
