@@ -42,9 +42,12 @@ const Navbar = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +56,22 @@ const Navbar = () => {
   const { unreadCount } = useNotifications();
   const { language, setLanguage } = useLanguage();
   const isMobile = useIsMobile();
+
+  // Desktop search variants
+  const desktopSearchVariants = {
+    hidden: { opacity: 0, y: -10, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        damping: 25, 
+        stiffness: 400, 
+        mass: 0.8 
+      }
+    }
+  };
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -70,6 +89,7 @@ const Navbar = () => {
     };
   }, [isOpen, isMobile]);
 
+  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setShowBg(window.scrollY > 10);
@@ -82,10 +102,53 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile menu on navigation
   useEffect(() => {
     setIsOpen(false);
     setExpandedDropdown(null);
   }, [location.pathname]);
+
+  // Close search panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showSearch && 
+        searchRef.current && 
+        !searchRef.current.contains(event.target as Node) &&
+        searchButtonRef.current && 
+        !searchButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowSearch(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearch]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K for search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+        setTimeout(() => {
+          if (searchInputRef.current) {
+            searchInputRef.current.focus();
+          }
+        }, 100);
+      }
+      
+      // Escape to close search
+      if (e.key === 'Escape' && showSearch) {
+        setShowSearch(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showSearch]);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -138,10 +201,35 @@ const Navbar = () => {
     { code: 'br', name: 'Braille' },
   ];
 
-  const handleSearch = useCallback((query: string) => {
-    navigate(`/search?q=${encodeURIComponent(query)}`);
-    setShowSearch(false);
-  }, [navigate]);
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query)}`);
+      setShowSearch(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch(searchQuery);
+  };
+
+  const handleSearchButtonClick = () => {
+    setShowSearch(!showSearch);
+    setTimeout(() => {
+      if (showSearch && searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 100);
+  };
+
+  const handleSearchFocus = () => {
+    // Optional: Add any focus-specific logic
+  };
+
+  const handleSearchBlur = () => {
+    // Optional: Add any blur-specific logic
+  };
 
   const hamburgerVariants = {
     menu: {
@@ -177,7 +265,7 @@ const Navbar = () => {
               <Logo className="h-8 w-auto" />
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Enhanced with subtle hints */}
             <div className="hidden md:flex space-x-1">
               {allNavItems.map((item) =>
                 item.dropdown ? (
@@ -241,12 +329,96 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Desktop Search */}
-              {!isMobile && (
-                <div className="relative">
-                  <SearchSuggestion onSearch={handleSearch} className="w-96" />
+              {/* Desktop Search Button and Panel */}
+              {!isMobile ? (
+                <div className="relative" ref={searchRef}>
+                  <Button
+                    ref={searchButtonRef}
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSearchButtonClick}
+                    className="h-10 w-10 hover:bg-muted/70 backdrop-blur-sm transition-all duration-200"
+                    style={{ zIndex: 10000 }}
+                    aria-label="Search"
+                    aria-expanded={showSearch}
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                  
+                  <AnimatePresence>
+                    {showSearch && (
+                      <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={desktopSearchVariants}
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-96 max-w-[90vw] bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high p-4 z-[10000]"
+                        style={{
+                          transformOrigin: 'top center',
+                          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                        }}
+                      >
+                        <form onSubmit={handleSearchSubmit} className="space-y-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              ref={searchInputRef}
+                              type="search"
+                              placeholder={translate("Search resources, discussions, campaigns...", language)}
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onFocus={handleSearchFocus}
+                              onBlur={handleSearchBlur}
+                              className="w-full bg-transparent backdrop-blur-sm pl-9 pr-10 py-6 text-base"
+                              autoFocus
+                              aria-label="Search input"
+                            />
+                            {searchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                                aria-label="Clear search"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Press Enter to search</span>
+                            <span>Esc to close</span>
+                          </div>
+                        </form>
+                        
+                        {/* Optional: Add search suggestions here */}
+                        <div className="mt-4 pt-4 border-t border-border/30">
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-muted-foreground mb-2">Quick Searches:</div>
+                            <div className="flex flex-wrap gap-2">
+                              {['Finance Bill', 'Elections', 'Climate', 'Healthcare'].map((term) => (
+                                <button
+                                  key={term}
+                                  onClick={() => {
+                                    setSearchQuery(term);
+                                    setTimeout(() => {
+                                      if (searchInputRef.current) {
+                                        searchInputRef.current.focus();
+                                      }
+                                    }, 10);
+                                  }}
+                                  className="px-3 py-1.5 text-xs bg-muted/50 hover:bg-muted rounded-lg transition-colors"
+                                >
+                                  {term}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              )}
+              ) : null}
 
               <ThemeToggle />
 
@@ -449,13 +621,57 @@ const Navbar = () => {
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
                     
-                    <div className="flex-1">
-                      <SearchSuggestion
-                        isMobile
-                        onSearch={handleSearch}
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder={translate("Search resources, discussions, campaigns...", language)}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSearch(searchQuery);
+                        }}
+                        className="w-full bg-background/80 backdrop-blur-sm pl-9 pr-10 py-6 text-base"
                         autoFocus
-                        className="w-full"
+                        aria-label="Search input"
                       />
+                      {searchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                          aria-label="Clear search"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleSearch(searchQuery)}
+                      className="h-12 bg-primary hover:bg-primary/90 backdrop-blur-sm"
+                    >
+                      Search
+                    </Button>
+                  </div>
+                  
+                  {/* Mobile search suggestions */}
+                  <div className="space-y-3">
+                    <div className="text-xs font-medium text-muted-foreground">Popular Searches:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {['Finance Bill 2024', 'Election Results', 'Climate Action', 'Healthcare Reform', 'Education Budget'].map((term) => (
+                        <button
+                          key={term}
+                          onClick={() => {
+                            setSearchQuery(term);
+                            handleSearch(term);
+                          }}
+                          className="px-4 py-2.5 text-sm bg-muted/50 hover:bg-muted rounded-xl transition-colors"
+                        >
+                          {term}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
