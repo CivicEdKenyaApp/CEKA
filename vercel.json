@@ -1,19 +1,57 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/:path*",
-      "destination": "https://ceka-production.up.railway.app/api/:path*"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist",
+        "buildCommand": "npm run build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "redirects": [
     {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.civiceducationkenya.com"
-        }
-      ],
+      "source": "https://civickedkenya.vercel.app/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://civickedkenya.vercel.app/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "https://civicedkenya.vercel.app/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://civicedkenya.vercel.app/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "https://www.civiceducationkenya.com/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://www.civiceducationkenya.com/(.*)",
+      "destination": "https://civiceducationkenya.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "http://civiceducationkenya.com/(.*)",
       "destination": "https://civiceducationkenya.com/$1",
       "permanent": true
     }
@@ -27,6 +65,14 @@
           "value": "nosniff"
         },
         {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
         },
@@ -36,11 +82,33 @@
         },
         {
           "key": "Strict-Transport-Security",
-          "value": "max-age=31536000; includeSubDomains"
+          "value": "max-age=31536000; includeSubDomains; preload"
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in; manifest-src 'self'; media-src 'self' blob: https:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://*.onrender.com https://*.render.com https://*.vercel.app https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+        }
+      ]
+    },
+    {
+      "source": "/peoples-audit",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://*.supabase.co https://*.supabase.in https://ceka-production.up.railway.app https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: *.tile.openstreetmap.org *.googleapis.com *.googleusercontent.com https://ugc.production.linktr.ee https://i.imgur.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://*.googleapis.com https://ceka-production.up.railway.app wss://*.supabase.co wss://*.supabase.in https://cajrvemigxghnfmyopiy.supabase.co; media-src 'self' blob: https:; object-src 'none'; frame-src 'self' https://peoples-audit.onrender.com https://www.youtube.com https://player.vimeo.com https://*.supabase.co https://umap.openstreetmap.fr https://*.vercel.app; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://peoples-audit.onrender.com; upgrade-insecure-requests;"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOW-FROM https://peoples-audit.onrender.com"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
@@ -54,11 +122,11 @@
       ]
     },
     {
-      "source": "/favicon.ico",
+      "source": "/(.*\\.(js|css|woff2|woff|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp|avif))",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=604800, immutable"
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
@@ -74,8 +142,113 @@
           "value": "application/manifest+json"
         }
       ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        },
+        {
+          "key": "Content-Type",
+          "value": "text/plain"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/xml"
+        }
+      ]
     }
   ],
+  "trailingSlash": false,
   "cleanUrls": true,
-  "trailingSlash": false
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ceka-production.up.railway.app/api/:path*"
+    }
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 10,
+      "memory": 1024
+    },
+    "api/**/*.ts": {
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  },
+  "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "devCommand": "npm run dev",
+  "regions": ["nairobi1"],
+  "env": {
+    "VITE_APP_TITLE": "Civic Education Kenya",
+    "VITE_APP_DESCRIPTION": "Community-driven, open-source non-profit equipping Kenyans with clear, usable civic knowledge — from plain-language bill summaries and how-to guides to tools that make participation and accountability practical.",
+    "VITE_APP_URL": "https://civiceducationkenya.com",
+    "VITE_APP_API_URL": "https://ceka-production.up.railway.app",
+    "VITE_APP_SUPABASE_URL": "https://cajrvemigxghnfmyopiy.supabase.co",
+    "VITE_APP_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhanJ2ZW1pZ3hnaG5mbXlvcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgwOTQwNzIsImV4cCI6MjA0MzY3MDA3Mn0.W3I5e8jTbCFScT1qJYlq2iQ0v_d-93r2KQJxW9W9W9A",
+    "VITE_APP_GOOGLE_ANALYTICS_ID": "G-XXXXXXXXXX",
+    "VITE_APP_GTM_ID": "GTM-XXXXXXX",
+    "VITE_APP_CONTACT_EMAIL": "civiceducationkenya@gmail.com",
+    "VITE_APP_TWITTER_HANDLE": "@CivicEdKE",
+    "VITE_APP_GITHUB_ORG": "civicedkenya",
+    "VITE_APP_COUNTRY_CODE": "KE",
+    "VITE_APP_TIMEZONE": "Africa/Nairobi",
+    "VITE_APP_VERSION": "1.0.0",
+    "VITE_APP_BUILD_TIME": "$VERCEL_GIT_COMMIT_TIMESTAMP",
+    "VITE_APP_GIT_COMMIT": "$VERCEL_GIT_COMMIT_SHA",
+    "VITE_APP_GIT_BRANCH": "$VERCEL_GIT_COMMIT_REF",
+    "VITE_APP_GIT_REPO": "$VERCEL_GIT_REPO_SLUG",
+    "VITE_APP_GIT_REPO_OWNER": "$VERCEL_GIT_REPO_OWNER",
+    "VITE_APP_VERCEL_ENV": "$VERCEL_ENV"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "develop": true,
+      "preview": true
+    },
+    "autoAlias": true
+  },
+  "crons": [
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "github": {
+    "enabled": true,
+    "autoAlias": true,
+    "silent": true
+  },
+  "alias": [
+    "civiceducationkenya.com",
+    "www.civiceducationkenya.com"
+  ],
+  "scope": "civiceducationkenya",
+  "analytics": {
+    "id": "$VERCEL_ANALYTICS_ID"
+  }
 }
