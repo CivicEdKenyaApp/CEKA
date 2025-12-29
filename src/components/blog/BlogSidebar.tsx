@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Download, 
   Smartphone, 
-  MapPin, 
+  MapPin,
+  Scale,
   Users, 
   BookOpen, 
   MessageSquare,
