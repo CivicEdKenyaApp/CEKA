@@ -1,339 +1,342 @@
-
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, FileText, Book, Scale, ChevronRight, Calendar, User } from 'lucide-react';
 import ResourceCard from '@/components/resources/ResourceCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-
-// Mock data for search results - this would be replaced with actual API calls
-const mockResources = [
-  {
-    id: 1,
-    title: "Understanding the Constitution of Kenya",
-    description: "A comprehensive guide to the Kenyan Constitution",
-    type: "pdf",
-    category: "Constitution",
-    imageUrl: "/placeholder.svg",
-  },
-  {
-    id: 2,
-    title: "How Laws are Made in Kenya",
-    description: "The legislative process explained",
-    type: "video",
-    category: "Lawmaking",
-    imageUrl: "/placeholder.svg",
-  },
-  {
-    id: 3,
-    title: "Your Rights as a Kenyan Citizen",
-    description: "Know your constitutional rights",
-    type: "infographic",
-    category: "Rights",
-    imageUrl: "/placeholder.svg",
-  }
-];
-
-const mockDiscussions = [
-  {
-    id: 1,
-    title: "Discussion on Kenyan constitutional reforms",
-    author: "Jane Mwangi",
-    date: "2025-04-05",
-    content: "What are your thoughts on the proposed constitutional amendments?",
-    replies: 12
-  },
-  {
-    id: 2,
-    title: "Public participation in county governance",
-    author: "David Omondi",
-    date: "2025-04-03",
-    content: "How can we improve public participation at the county level?",
-    replies: 8
-  }
-];
-
-const mockCampaigns = [
-  {
-    id: 1,
-    title: "Youth Civic Education Initiative",
-    organizer: "Kenya Youth Network",
-    participants: 145,
-    description: "A campaign to educate youth on their civic rights and responsibilities"
-  },
-  {
-    id: 2,
-    title: "Digital Rights Awareness",
-    organizer: "Digital Kenya Coalition",
-    participants: 89,
-    description: "Promoting awareness about digital rights and internet freedom"
-  }
-];
+import { useSearch } from '@/hooks/useSearch';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
-  const [searchTerm, setSearchTerm] = useState(query);
   const [activeTab, setActiveTab] = useState('all');
+  const [page, setPage] = useState(1);
   const { language } = useLanguage();
-  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    query: searchQuery,
+    setQuery,
+    results,
+    isLoading,
+    total,
+    hasMore,
+    performSearch,
+    clearSearch,
+    suggestions
+  } = useSearch({
+    initialQuery: query,
+    limit: 20
+  });
 
   useEffect(() => {
-    setSearchTerm(query);
-    
-    // Simulate API loading
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [query]);
+    if (query) {
+      setQuery(query);
+      performSearch(query, 1);
+    }
+  }, [query, performSearch, setQuery]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would update the URL search params here
-    window.history.pushState({}, '', `/search?q=${encodeURIComponent(searchTerm)}`);
+    if (searchQuery.trim()) {
+      window.history.pushState({}, '', `/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      performSearch(searchQuery.trim(), 1);
+    }
   };
-  
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    performSearch(searchQuery, nextPage);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const types = tab === 'all' ? undefined : [tab as 'resource' | 'bill' | 'blog'];
+    performSearch(searchQuery, 1, types);
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'resource':
+        return <FileText className="h-4 w-4 mr-2" />;
+      case 'bill':
+        return <Scale className="h-4 w-4 mr-2" />;
+      case 'blog':
+        return <Book className="h-4 w-4 mr-2" />;
+      default:
+        return <FileText className="h-4 w-4 mr-2" />;
+    }
+  };
+
+  const renderResultItem = (result: any) => {
+    return (
+      <motion.div
+        key={`${result.type}-${result.id}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-card rounded-xl border hover:border-primary/50 transition-all duration-200 hover:shadow-md overflow-hidden"
+      >
+        <div className="p-5">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="flex items-center gap-1">
+                  {getTypeIcon(result.type)}
+                  {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+                </Badge>
+                {result.category && (
+                  <Badge variant="secondary" className="text-xs">
+                    {result.category}
+                  </Badge>
+                )}
+              </div>
+              
+              <Link to={result.url} className="group">
+                <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                  {result.title}
+                </h3>
+              </Link>
+              
+              <p className="text-muted-foreground mb-3 line-clamp-2">
+                {result.description}
+              </p>
+              
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                {result.date && (
+                  <div className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {new Date(result.date).toLocaleDateString()}
+                  </div>
+                )}
+                {result.author && (
+                  <div className="flex items-center">
+                    <User className="h-3 w-3 mr-1" />
+                    {result.author}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="ml-2 flex-shrink-0"
+            >
+              <Link to={result.url}>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Filter results by type for tabs
+  const filteredResults = activeTab === 'all' 
+    ? results 
+    : results.filter(r => r.type === activeTab);
+
+  const resourceResults = results.filter(r => r.type === 'resource');
+  const billResults = results.filter(r => r.type === 'bill');
+  const blogResults = results.filter(r => r.type === 'blog');
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
-        <h1 className="text-3xl font-bold mb-2">{translate("Search Results", language)}</h1>
-        <p className="text-muted-foreground mb-6">
-          {query ? (
-            translate(`Showing results for: "${query}"`, language)
-          ) : (
-            translate("Search for resources, discussions, and campaigns", language)
-          )}
-        </p>
-        
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="relative max-w-lg mb-8">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={translate("Search...", language)}
-                className="pl-9"
-              />
-            </div>
-            <Button type="submit">{translate("Search", language)}</Button>
-            <Button type="button" variant="outline" className="px-3">
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="sr-only">Filters</span>
-            </Button>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">{translate("Search Results", language)}</h1>
+            <p className="text-muted-foreground">
+              {query ? (
+                translate(`Showing ${total} results for: "${query}"`, language)
+              ) : (
+                translate("Search for resources, bills, and blog posts", language)
+              )}
+            </p>
           </div>
-        </form>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">{translate("All Results", language)}</TabsTrigger>
-            <TabsTrigger value="resources">{translate("Resources", language)}</TabsTrigger>
-            <TabsTrigger value="discussions">{translate("Discussions", language)}</TabsTrigger>
-            <TabsTrigger value="campaigns">{translate("Campaigns", language)}</TabsTrigger>
-          </TabsList>
           
-          <TabsContent value="all" className="space-y-10">
-            {/* Resources Section */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">{translate("Resources", language)}</h2>
-                <Button variant="link" asChild>
-                  <a href={`/resources?search=${encodeURIComponent(query)}`}>
-                    {translate("View all resources", language)}
-                  </a>
-                </Button>
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="relative mb-8">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={translate("Search resources, bills, blogs...", language)}
+                  className="pl-10 py-6 text-base rounded-2xl"
+                />
+                
+                {/* Quick suggestions dropdown */}
+                <AnimatePresence>
+                  {suggestions.length > 0 && searchQuery.length >= 2 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high z-50 overflow-hidden"
+                    >
+                      <div className="p-2">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+                          Quick Suggestions
+                        </div>
+                        {suggestions.slice(0, 5).map((suggestion) => (
+                          <button
+                            key={`${suggestion.type}-${suggestion.id}`}
+                            onClick={() => {
+                              setQuery(suggestion.title);
+                              performSearch(suggestion.title, 1);
+                            }}
+                            className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-between group"
+                          >
+                            <div className="flex items-center">
+                              {getTypeIcon(suggestion.type)}
+                              <span className="font-medium">{suggestion.title}</span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="px-8 rounded-2xl"
+                disabled={isLoading}
+              >
+                {isLoading ? "Searching..." : translate("Search", language)}
+              </Button>
+            </div>
+          </form>
+          
+          {/* Results Tabs */}
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="mb-6 bg-background/50 backdrop-blur-sm border border-border/50 rounded-2xl p-1">
+              <TabsTrigger value="all" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {translate("All Results", language)} ({total})
+              </TabsTrigger>
+              <TabsTrigger value="resource" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {translate("Resources", language)} ({resourceResults.length})
+              </TabsTrigger>
+              <TabsTrigger value="bill" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {translate("Bills", language)} ({billResults.length})
+              </TabsTrigger>
+              <TabsTrigger value="blog" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {translate("Blog Posts", language)} ({blogResults.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="mt-0">
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-4">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
+                    <Skeleton key={i} className="h-32 w-full rounded-xl" />
                   ))}
                 </div>
-              ) : mockResources.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mockResources.map(resource => (
-                    <ResourceCard key={resource.id} resource={resource} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">{translate("No resources found matching your search.", language)}</p>
-              )}
-            </div>
-            
-            <Separator />
-            
-            {/* Discussions Section */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">{translate("Discussions", language)}</h2>
-                <Button variant="link" asChild>
-                  <a href={`/community?search=${encodeURIComponent(query)}`}>
-                    {translate("View all discussions", language)}
-                  </a>
-                </Button>
-              </div>
-              
-              {isLoading ? (
+              ) : filteredResults.length > 0 ? (
                 <div className="space-y-4">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              ) : mockDiscussions.length > 0 ? (
-                <div className="space-y-4">
-                  {mockDiscussions.map(discussion => (
-                    <div key={discussion.id} className="p-4 border rounded-lg">
-                      <h3 className="font-semibold text-lg">
-                        <a href={`/community/discussions/${discussion.id}`} className="hover:text-kenya-green">
-                          {discussion.title}
-                        </a>
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1 mb-2">
-                        {translate("By", language)} {discussion.author} • {new Date(discussion.date).toLocaleDateString()}
-                      </p>
-                      <p className="text-muted-foreground">{discussion.content}</p>
+                  {filteredResults.map(renderResultItem)}
+                  
+                  {hasMore && (
+                    <div className="flex justify-center pt-6">
+                      <Button
+                        onClick={handleLoadMore}
+                        variant="outline"
+                        size="lg"
+                        className="rounded-2xl"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Loading..." : "Load More Results"}
+                      </Button>
                     </div>
-                  ))}
+                  )}
                 </div>
               ) : (
-                <p className="text-muted-foreground">{translate("No discussions found matching your search.", language)}</p>
-              )}
-            </div>
-            
-            <Separator />
-            
-            {/* Campaigns Section */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">{translate("Campaigns", language)}</h2>
-                <Button variant="link" asChild>
-                  <a href={`/community?tab=campaigns&search=${encodeURIComponent(query)}`}>
-                    {translate("View all campaigns", language)}
-                  </a>
-                </Button>
-              </div>
-              
-              {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-40 bg-muted/50 rounded-lg animate-pulse"></div>
-                  ))}
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+                    <Search className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No results found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Try adjusting your search terms or browse by category
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {['Constitution', 'Elections', 'Governance', 'Rights'].map((term) => (
+                      <Button
+                        key={term}
+                        variant="outline"
+                        onClick={() => {
+                          setQuery(term);
+                          performSearch(term, 1);
+                        }}
+                        className="rounded-xl"
+                      >
+                        {term}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              ) : mockCampaigns.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockCampaigns.map(campaign => (
-                    <div key={campaign.id} className="p-4 border rounded-lg">
-                      <h3 className="font-semibold text-lg">
-                        <a href={`/community/campaigns/${campaign.id}`} className="hover:text-kenya-green">
-                          {campaign.title}
-                        </a>
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1 mb-2">
-                        {translate("Organized by", language)} {campaign.organizer} • 
-                        {campaign.participants} {translate("participants", language)}
-                      </p>
-                      <p className="text-muted-foreground">{campaign.description}</p>
+              )}
+            </TabsContent>
+            
+            {['resource', 'bill', 'blog'].map((type) => (
+              <TabsContent key={type} value={type} className="mt-0">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map(i => (
+                      <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : filteredResults.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredResults.map(renderResultItem)}
+                    
+                    {hasMore && (
+                      <div className="flex justify-center pt-6">
+                        <Button
+                          onClick={handleLoadMore}
+                          variant="outline"
+                          size="lg"
+                          className="rounded-2xl"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Loading..." : "Load More Results"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+                      {getTypeIcon(type)}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">{translate("No campaigns found matching your search.", language)}</p>
-              )}
-            </div>
-          </TabsContent>
-          
-          {/* Resources Tab Content */}
-          <TabsContent value="resources">
-            {/* Full resources search results would go here */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : mockResources.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[...mockResources, ...mockResources].map((resource, index) => (
-                  <ResourceCard key={`${resource.id}-${index}`} resource={{...resource, id: `${resource.id}-${index}`}} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">{translate("No resources found matching your search.", language)}</p>
-            )}
-          </TabsContent>
-          
-          {/* Discussions Tab Content */}
-          <TabsContent value="discussions">
-            {/* Full discussions search results would go here */}
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : mockDiscussions.length > 0 ? (
-              <div className="space-y-4">
-                {[...mockDiscussions, ...mockDiscussions].map((discussion, index) => (
-                  <div key={`${discussion.id}-${index}`} className="p-4 border rounded-lg">
-                    <h3 className="font-semibold text-lg">
-                      <a href={`/community/discussions/${discussion.id}`} className="hover:text-kenya-green">
-                        {discussion.title}
-                      </a>
+                    <h3 className="text-lg font-medium mb-2">
+                      No {type === 'resource' ? 'resources' : type === 'bill' ? 'bills' : 'blog posts'} found
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1 mb-2">
-                      {translate("By", language)} {discussion.author} • {new Date(discussion.date).toLocaleDateString()}
+                    <p className="text-muted-foreground">
+                      Try searching in all categories or use different keywords
                     </p>
-                    <p className="text-muted-foreground">{discussion.content}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">{translate("No discussions found matching your search.", language)}</p>
-            )}
-          </TabsContent>
-          
-          {/* Campaigns Tab Content */}
-          <TabsContent value="campaigns">
-            {/* Full campaigns search results would go here */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-40 bg-muted/50 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : mockCampaigns.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[...mockCampaigns, ...mockCampaigns].map((campaign, index) => (
-                  <div key={`${campaign.id}-${index}`} className="p-4 border rounded-lg">
-                    <h3 className="font-semibold text-lg">
-                      <a href={`/community/campaigns/${campaign.id}`} className="hover:text-kenya-green">
-                        {campaign.title}
-                      </a>
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1 mb-2">
-                      {translate("Organized by", language)} {campaign.organizer} • 
-                      {campaign.participants} {translate("participants", language)}
-                    </p>
-                    <p className="text-muted-foreground">{campaign.description}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">{translate("No campaigns found matching your search.", language)}</p>
-            )}
-          </TabsContent>
-        </Tabs>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
       </div>
     </Layout>
   );
