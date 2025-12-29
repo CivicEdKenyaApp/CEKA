@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Download, 
   Smartphone, 
-  Scale, 
+  MapPin, 
   Users, 
   BookOpen, 
   MessageSquare,
@@ -31,23 +31,23 @@ export function BlogSidebar() {
       icon: Smartphone,
       action: "Explore",
       link: "/",
+      color: "bg-green-500"
+    },
+    {
+      title: "Nasaka IEBC",
+      description: "Find IEBC Offices near you",
+      icon: MapPin,
+      action: "Learn More",
+      link: "/nasaka",
       color: "bg-blue-500"
     },
     {
-      title: "Reject Finance Bill",
-      description: "Learn about and take action on the Finance Bill",
-      icon: Scale,
-      action: "Learn More",
-      link: "/reject-finance-bill",
-      color: "bg-red-500"
-    },
-    {
-      title: "WANTAM App",
-      description: "Explore our other civic engagement platform",
+      title: "Follow us on our Instagram",
+      description: "Engage with us on our civic engagement platform on Instagram",
       icon: Users,
-      action: "Download Now",
-      link: "https://juzqumvamllubshomuge.supabase.co/storage/v1/object/sign/apps/Signed%20APK%20-%20Prod%20Ready/The%20WANTAM%20App.apk?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wZThlZDg5OC05N2JkLTRhNmEtYjUwZS0zMTU5M2U4NmMwOTIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcHBzL1NpZ25lZCBBUEsgLSBQcm9kIFJlYWR5L1RoZSBXQU5UQU0gQXBwLmFwayIsImlhdCI6MTc1MTg1ODk4NSwiZXhwIjoxNzgzMzk0OTg1fQ.YtzhIZwgFOakwF7qZuo7jiq2t9B4A2OMO6WXvu1Ow-c",
-      color: "bg-green-500"
+      action: "Visit Now",
+      link: "https://www.instagram.com/civiceducationke/",
+      color: "bg-red-500"
     }
   ];
 
