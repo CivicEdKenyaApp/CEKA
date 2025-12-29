@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight, XCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -42,11 +42,9 @@ const Navbar = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [searchAnimationState, setSearchAnimationState] = useState<'idle' | 'entering' | 'exiting'>('idle');
   
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,22 +70,6 @@ const Navbar = () => {
     };
   }, [isOpen, isMobile]);
 
-  // Prevent body scroll when mobile search is open
-  useEffect(() => {
-    if (isMobile && showSearch) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else if (isMobile && !showSearch) {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [showSearch, isMobile]);
-
   useEffect(() => {
     const handleScroll = () => {
       setShowBg(window.scrollY > 10);
@@ -108,10 +90,6 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        if (isMobile) {
-          // On mobile, we use the close button instead of click outside
-          return;
-        }
         setShowSearch(false);
       }
     };
@@ -120,32 +98,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMobile]);
-
-  // Handle escape key to close search
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showSearch) {
-        setShowSearch(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [showSearch]);
-
-  // Focus search input when it opens
-  useEffect(() => {
-    if (showSearch && searchInputRef.current) {
-      // Small delay to ensure animation completes
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, isMobile ? 300 : 100);
-      return () => clearTimeout(timer);
-    }
-  }, [showSearch, isMobile]);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,209 +191,6 @@ const Navbar = () => {
     }
   };
 
-  // Search overlay animation variants for mobile
-  const searchOverlayVariants = {
-    hidden: {
-      opacity: 0,
-      y: -20,
-      scale: 0.95,
-      transition: {
-        duration: 0.2,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 400,
-        mass: 0.8
-      }
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      scale: 0.95,
-      transition: {
-        duration: 0.15,
-        ease: [0.4, 0, 1, 1]
-      }
-    }
-  };
-
-  // Search backdrop animation variants
-  const searchBackdropVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: {
-        duration: 0.2,
-        ease: "easeOut"
-      }
-    },
-    exit: {
-      opacity: 0,
-      transition: {
-        duration: 0.15,
-        ease: "easeIn"
-      }
-    }
-  };
-
-  // Handle search button click with smooth animation
-  const handleSearchButtonClick = () => {
-    if (!showSearch) {
-      setSearchAnimationState('entering');
-      setShowSearch(true);
-      // Reset animation state after animation completes
-      setTimeout(() => setSearchAnimationState('idle'), 300);
-    } else {
-      setSearchAnimationState('exiting');
-      // Wait for exit animation before hiding
-      setTimeout(() => {
-        setShowSearch(false);
-        setSearchAnimationState('idle');
-      }, 150);
-    }
-  };
-
-  // Close mobile search
-  const closeMobileSearch = () => {
-    setSearchAnimationState('exiting');
-    setTimeout(() => {
-      setShowSearch(false);
-      setSearchAnimationState('idle');
-    }, 150);
-  };
-
-  // Desktop search popover component
-  const DesktopSearchPopover = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-      className="absolute top-full right-0 mt-2 w-[min(400px,90vw)] bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high p-4 z-[10000]"
-      style={{
-        maxWidth: 'min(400px, calc(100vw - 2rem))',
-        right: '0',
-        left: 'auto',
-        transformOrigin: 'top right'
-      }}
-    >
-      <form onSubmit={handleSearch} className="relative">
-        <Input
-          ref={searchInputRef}
-          type="search"
-          placeholder={translate("Search articles, tools, resources...", language)}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-transparent backdrop-blur-sm pl-3 pr-10 py-3"
-          autoFocus
-        />
-        <button
-          type="button"
-          onClick={() => setShowSearch(false)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Close search"
-        >
-          <XCircle className="h-5 w-5" />
-        </button>
-      </form>
-    </motion.div>
-  );
-
-  // Mobile search overlay component
-  const MobileSearchOverlay = () => (
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        variants={searchBackdropVariants}
-        className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[100]"
-        onClick={closeMobileSearch}
-      />
-      
-      {/* Search overlay */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        variants={searchOverlayVariants}
-        className="fixed top-0 left-0 right-0 z-[101] bg-background/95 backdrop-blur-3xl border-b border-border/50 shadow-ios-high"
-        style={{
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
-          paddingBottom: '1rem'
-        }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-3">
-            <form onSubmit={handleSearch} className="flex-1">
-              <div className="relative">
-                <Input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={translate("Search...", language)}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.value)}
-                  className="w-full bg-background/80 backdrop-blur-sm border-border/70 pl-4 pr-12 py-3 rounded-2xl"
-                  autoFocus
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className={`text-muted-foreground hover:text-foreground transition-all duration-200 ${searchQuery ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}
-                    aria-label="Clear search"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeMobileSearch}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Close search"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            </form>
-            
-            {/* Search button */}
-            <Button
-              type="submit"
-              onClick={handleSearch}
-              disabled={!searchQuery.trim()}
-              className={`bg-primary hover:bg-primary/90 backdrop-blur-sm transition-all duration-200 ${searchQuery.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-95'}`}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          {/* Recent searches or suggestions could go here */}
-          {searchQuery && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 pt-4 border-t border-border/30"
-            >
-              <div className="text-sm text-muted-foreground">
-                Searching for: <span className="font-medium text-foreground">{searchQuery}</span>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
-    </>
-  );
-
   return (
     <>
       <nav
@@ -518,29 +268,30 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Search Component - Enhanced with responsive behavior */}
               <div className="relative" ref={searchRef}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleSearchButtonClick}
-                  className={`h-10 w-10 hover:bg-muted/70 backdrop-blur-sm transition-all duration-200 ${
-                    showSearch ? 'bg-primary/10 text-primary' : ''
-                  }`}
+                  onClick={() => setShowSearch(!showSearch)}
+                  className="h-10 w-10 hover:bg-muted/70 backdrop-blur-sm"
                   style={{ zIndex: 10000 }}
-                  aria-label={showSearch ? "Close search" : "Open search"}
-                  aria-expanded={showSearch}
                 >
                   <Search className="h-5 w-5" />
                 </Button>
                 
-                {/* Desktop Search Popover */}
-                {!isMobile && (
-                  <AnimatePresence>
-                    {showSearch && (
-                      <DesktopSearchPopover />
-                    )}
-                  </AnimatePresence>
+                {showSearch && (
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-ios-high p-4 z-[10000]">
+                    <form onSubmit={handleSearch}>
+                      <Input
+                        type="search"
+                        placeholder={translate("Search...", language)}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-transparent backdrop-blur-sm"
+                        autoFocus
+                      />
+                    </form>
+                  </div>
                 )}
               </div>
 
@@ -965,13 +716,6 @@ const Navbar = () => {
           )}
         </div>
       </nav>
-
-      {/* Mobile Search Overlay - Rendered as portal-like fixed overlay */}
-      <AnimatePresence>
-        {isMobile && showSearch && (
-          <MobileSearchOverlay />
-        )}
-      </AnimatePresence>
 
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </>
