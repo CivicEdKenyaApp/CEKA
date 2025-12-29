@@ -26,7 +26,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translate } from '@/lib/utils';
 import AuthModal from '@/components/auth/AuthModal';
-import SearchSuggestion from '@/components/search/SearchSuggestion';
+import SearchSuggestion from '@/components/SearchSuggestion';
 
 type NavItem = {
   name: string;
