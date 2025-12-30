@@ -76,6 +76,16 @@ const getCtaClasses = (slide: Slide, theme: string) => {
   return 'bg-white/20 text-white hover:bg-white/30';
 };
 
+const getHoverTextColor = (slide: Slide, theme: string) => {
+  // For white slides, keep readable text on hover
+  if (slide.color === 'kenya-white') {
+    return theme === 'dark' 
+      ? 'group-hover:text-gray-100' 
+      : 'group-hover:text-gray-900';
+  }
+  return 'group-hover:text-white';
+};
+
 const getBadgeColor = (slide: Slide, theme: string) => {
   if (slide.color === 'kenya-white') {
     return theme === 'dark' ? 'bg-gray-700' : 'bg-black/20';
@@ -469,7 +479,7 @@ export default function MegaProjectCarousel({
                   )}
                   
                   <div className={cn("flex flex-col", getTextColor(slide, theme))}>
-                    <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 leading-tight group-hover:text-white transition-colors">{slide.title}</h3>
+                    <h3 className={cn("text-xl md:text-2xl font-bold mb-3 md:mb-4 leading-tight transition-colors", getHoverTextColor(slide, theme))}>{slide.title}</h3>
                     {slide.description && (
                       <p className="text-base md:text-lg opacity-90 mb-4 md:mb-5 line-clamp-3 leading-relaxed">{slide.description}</p>
                     )}

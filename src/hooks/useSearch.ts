@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { searchService, SearchSuggestion, SearchResult, SearchResponse } from '@/lib/searchService';
+import { searchService, SearchSuggestion, SearchResult } from '@/lib/searchService';
 import { useToast } from '@/components/ui/use-toast';
 
 interface UseSearchOptions {
@@ -18,8 +18,9 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Real-time suggestions with debouncing [citation:7]
+  // Real-time suggestions with debouncing
   useEffect(() => {
     if (query.trim().length < 2) {
       setSuggestions([]);
@@ -27,16 +28,31 @@ export function useSearch(options: UseSearchOptions = {}) {
     }
 
     setIsLoading(true);
-    searchService.debouncedSearch(query, (newSuggestions) => {
-      setSuggestions(newSuggestions);
-      setIsLoading(false);
+    
+    // Clear previous timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    
+    // Set new debounced search
+    const timer = setTimeout(async () => {
+      try {
+        const newSuggestions = await searchService.getSuggestions(query, limit);
+        setSuggestions(newSuggestions);
+      } catch (error) {
+        console.error('Error getting suggestions:', error);
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
     }, debounceDelay);
+    
+    setDebounceTimer(timer);
 
     return () => {
-      // Cleanup if component unmounts
-      setSuggestions([]);
+      if (timer) clearTimeout(timer);
     };
-  }, [query, debounceDelay]);
+  }, [query, debounceDelay, limit]);
 
   // Perform full search
   const performSearch = useCallback(async (searchQuery: string, page: number = 1, types?: ('resource' | 'bill' | 'blog')[]) => {
@@ -48,19 +64,26 @@ export function useSearch(options: UseSearchOptions = {}) {
 
     setIsLoading(true);
     try {
-      const response: SearchResponse = await searchService.fullSearch(searchQuery, {
-        page,
-        limit: 20,
-        types
-      });
+      const searchResults = await searchService.searchAll(searchQuery, limit);
+      
+      // Filter by types if specified
+      const filteredResults = types 
+        ? searchResults.filter(r => types.includes(r.type as 'resource' | 'bill' | 'blog'))
+        : searchResults;
 
-      setResults(response.results);
-      setTotal(response.total);
-      setHasMore(response.hasMore);
+      setResults(filteredResults);
+      setTotal(filteredResults.length);
+      setHasMore(false); // searchAll returns limited results
       
       // Update suggestions based on full search
-      if (response.suggestions.length > 0) {
-        setSuggestions(response.suggestions);
+      if (filteredResults.length > 0) {
+        const newSuggestions = filteredResults.map(r => ({
+          id: r.id,
+          title: r.title,
+          type: r.type,
+          category: r.category
+        }));
+        setSuggestions(newSuggestions);
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -74,7 +97,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, limit]);
 
   // Clear search
   const clearSearch = useCallback(() => {

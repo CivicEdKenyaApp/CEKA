@@ -101,6 +101,7 @@ const Index = () => {
     description: slide.description ? translate(slide.description, language) : undefined,
     ctaText: slide.cta_text ? translate(slide.cta_text, language) : undefined,
     color: slide.color,
+    imageUrl: slide.image_url,
     onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
   }));
 
