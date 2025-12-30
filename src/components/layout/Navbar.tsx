@@ -148,19 +148,19 @@ const Navbar = () => {
       opacity: 1,
       rotate: 0,
       scale: 1,
-      transition: { duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }
+      transition: { duration: 0.2, ease: "easeOut" as const }
     },
     close: {
       opacity: 1,
       rotate: 90,
       scale: 1,
-      transition: { duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }
+      transition: { duration: 0.2, ease: "easeOut" as const }
     },
     exit: {
       opacity: 0,
       rotate: -90,
       scale: 0.8,
-      transition: { duration: 0.15, ease: [0.4, 0, 1, 1] }
+      transition: { duration: 0.15, ease: "easeIn" as const }
     }
   };
 
