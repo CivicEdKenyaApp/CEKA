@@ -172,13 +172,14 @@ CEKA is designed for easy deployment across multiple platforms:
 - **[GitHub Pages](https://pages.github.com/)**
 
 ### Backend Deployment
+- **[Supabase](https://supabase.com/)** + Auth 
 - **[Railway](https://railway.app/)**
 - **[Heroku](https://heroku.com/)**
 - **[AWS](https://aws.amazon.com/)**
 
 ### Database
-- **[MongoDB Atlas](https://www.mongodb.com/atlas)** (Recommended)
-- **[Supabase](https://supabase.com/)**
+- **[MongoDB Atlas](https://www.mongodb.com/atlas)** 
+- **[Supabase](https://supabase.com/)** (Recommended - Postgres)
 
 See our [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.
 
@@ -217,7 +218,7 @@ CEKA takes user privacy and security seriously:
 - **🔍 Content Moderation** - AI-powered moderation with human oversight
 - **📊 Privacy-First Analytics** - No personal data tracking or sharing
 
-For security issues, please email: [security@ceka.app](mailto:security@ceka.app)
+For security issues, please email: [contact@civiceducationkenya.com](mailto:contact@civiceducationkenya.com)
 
 ---
 
@@ -227,7 +228,7 @@ For security issues, please email: [security@ceka.app](mailto:security@ceka.app)
 - **📖 Documentation**: [docs.ceka.app](https://docs.ceka.app)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/CivicEdKenyaApp/CEKA/discussions)
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/CivicEdKenyaApp/CEKA/issues)
-- **📧 Email**: [civiceducationkenya@gmail.com](mailto:civiceducationkenya@gmail.com)
+- **📧 Email**: [civiceducationkenya@gmail.com](mailto:contact@civiceducationkenya.com)
 
 ### Stay Connected
 - **📱 Instagram**: [@civiceducationke](https://instagram.com/civiceducationke)
@@ -321,13 +322,13 @@ CEKA exists thanks to the contributions of:
 ## 📈 Impact Metrics
 
 Since launch, CEKA has:
-- 📊 **X,XXX Active Users** across Kenya
-- 📚 **XXX Civic Resources** in our database  
-- 🏛️ **XXX Bills Tracked** in our legislative tracker
-- 🤝 **XXX Community Contributions** from citizens
-- 🌍 **XX Countries** exploring CEKA adaptation
+- 📊 **40,000 Active Users** across Kenya
+- 📚 **00's of Civic Resources** in our database  
+- 🏛️ **15 Bills Tracked** in our legislative tracker
+- 🤝 **Dozens of Community Contributions** from citizens
+- 🌍 **4 Countries** exploring CEKA adaptation
 
-*Updated monthly - see [impact dashboard](https://ceka.app/impact) for real-time metrics.*
+*Updated monthly - see [impact dashboard](https://civiceducationkenya.com/impact) for real-time metrics.*
 
 ---
 
@@ -335,7 +336,7 @@ Since launch, CEKA has:
 
 **Built with ❤️ for Kenya and democracy worldwide**
 
-[🌟 Star this repo](https://github.com/CivicEdKenyaApp/CEKA) | [🍴 Fork for your country](https://github.com/CivicEdKenyaApp/CEKA/fork) | [📧 Get in touch](mailto:civiceducationkenya@gmail.com)
+[🌟 Star this repo](https://github.com/CivicEdKenyaApp/CEKA) | [🍴 Fork for your country](https://github.com/CivicEdKenyaApp/CEKA/fork) | [📧 Get in touch](mailto:contact@civiceducationkenya.com)
 
 ---
 
