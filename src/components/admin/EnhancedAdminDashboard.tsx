@@ -5,21 +5,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Users, 
-  FileText, 
-  Calendar, 
-  Activity, 
-  Bell, 
-  Shield, 
-  BarChart3, 
+import {
+  Users,
+  FileText,
+  Calendar,
+  Activity,
+  Bell,
+  Shield,
+  BarChart3,
   Settings,
   TrendingUp,
   Eye,
   MessageSquare,
   UserCheck,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from 'lucide-react';
 import { adminService, AdminDashboardStats, UserActivityStats, ModerationQueueItem } from '@/services/adminService';
 import { AdminSessionManager } from './AdminSessionManager';
@@ -35,23 +36,23 @@ const EnhancedAdminDashboard = () => {
 
   useEffect(() => {
     loadDashboardData();
-    
+
     // Set up periodic refresh every 5 minutes
     const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       const [dashboardStats, userActivity, queue] = await Promise.all([
         adminService.getDashboardStats(),
         adminService.getUserActivityStats(),
         adminService.getModerationQueue()
       ]);
-      
+
       setStats(dashboardStats);
       setActivityStats(userActivity);
       setModerationQueue(queue);
@@ -96,13 +97,19 @@ const EnhancedAdminDashboard = () => {
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Enhanced Admin Dashboard</h1>
-          <p className="text-muted-foreground">Comprehensive system management and analytics</p>
+          <h1 className="text-3xl font-black tracking-tighter">Tactical Command</h1>
+          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Live Platform Intelligence & Audit</p>
         </div>
-        <Button onClick={handleUpdateMetrics} variant="outline">
-          <Activity className="mr-2 h-4 w-4" />
-          Update Metrics
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => adminService.generateWeeklyReport()} variant="outline" className="rounded-2xl h-12 font-bold border-2 gap-2">
+            <Download className="h-4 w-4" />
+            Weekly Intelligence (.json)
+          </Button>
+          <Button onClick={handleUpdateMetrics} className="rounded-2xl h-12 font-bold bg-primary shadow-xl shadow-primary/20 gap-2">
+            <Activity className="h-4 w-4" />
+            Recalibrate Metrics
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">

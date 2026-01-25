@@ -22,6 +22,7 @@ import EventsCalendar from '@/pages/EventsCalendar';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
+import OAuthConsent from '@/pages/OAuthConsent';
 import LegislativeTracker from '@/pages/LegislativeTracker';
 import LegislativeTrackerDetail from '@/pages/LegislativeTrackerDetail';
 import LegislationDetail from '@/pages/LegislationDetail';
@@ -136,6 +137,7 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         <Route path="/resource-hub" element={<Navigate to="/resources" replace />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
         <Route path="/legislative-tracker" element={<LegislativeTracker />} />
         <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
         <Route path="/legislation/:id" element={<LegislationDetail />} />
@@ -143,7 +145,9 @@ const AppContent = () => {
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
         <Route path="/shambles" element={<SHAmbles />} />
         <Route path="/peoples-audit" element={<PeoplesAuditPage />} />
-        <Route path="/nasaka" element={<NasakaPage />} />
+        <Route path="/nasaka" element={<Navigate to="/nasaka-iebc" replace />} />
+        <Route path="/nasaka-iebc" element={<NasakaPage />} />
+        <Route path="/civic-calendar" element={<Navigate to="/calendar" replace />} />
         {/* Volunteer routes redirect to join-community */}
         <Route path="/volunteer" element={<Navigate to="/join-community?tab=volunteer" replace />} />
         <Route path="/volunteer/apply/:id" element={<Navigate to="/join-community?tab=volunteer" replace />} />

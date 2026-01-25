@@ -1,130 +1,75 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Globe } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 
 const Footer = () => {
   const { language } = useLanguage();
-
-  // Nairobi Kenya Google Maps URL
   const nairobiMapUrl = "https://www.google.com/maps/place/Nairobi,+Kenya/@-1.2833099,36.8085756,12z";
 
   return (
-    <footer className="bg-muted py-8 mt-12 mb-16 md:mb-0">
-      <div className="container grid gap-8 md:grid-cols-4">
-        <div className="space-y-3">
-          <Logo variant="full" />
-          <p className="text-sm text-muted-foreground">
-            {translate('Empowering Kenyan citizens with civic knowledge and tools for meaningful participation.', language)}
+    <footer className="bg-slate-50 dark:bg-[#0A0A0B] py-16 mt-20 border-t border-slate-200 dark:border-white/5 pb-24 md:pb-16">
+      <div className="container grid gap-12 md:grid-cols-4 px-6">
+        <div className="space-y-6">
+          <Logo variant="full" className="h-10 w-auto" />
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+            {translate('Empowering Kenyan citizens with civic knowledge and tools for meaningful participation in national governance.', language)}
           </p>
-          <div className="flex items-center space-x-3">
-            <a href="https://www.facebook.com/profile.php?id=61561994025207" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-              </svg>
-              <span className="sr-only">Facebook</span>
-            </a>
-            <a href="https://x.com/civicedkenya" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-              </svg>
-              <span className="sr-only">Twitter</span>
-            </a>
-            <a href="https://www.instagram.com/civiceducationke/" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-              </svg>
-              <span className="sr-only">Instagram</span>
-            </a>
-            <a href="https://linktr.ee/civiceducationke/" target="_blank" rel="noopener noreferrer" className="hover:text-kenya-green text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-              <span className="sr-only">Website</span>
-            </a>
+          <div className="flex items-center gap-4">
+            <a href="https://facebook.com/civicedkenya" target="_blank" className="h-10 w-10 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center hover:text-primary transition-colors shadow-sm"><Facebook className="h-5 w-5" /></a>
+            <a href="https://twitter.com/civicedkenya" target="_blank" className="h-10 w-10 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center hover:text-primary transition-colors shadow-sm"><Twitter className="h-5 w-5" /></a>
+            <a href="https://instagram.com/civicedkenya" target="_blank" className="h-10 w-10 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center hover:text-primary transition-colors shadow-sm"><Instagram className="h-5 w-5" /></a>
+            <a href="https://linktr.ee/civicedkenya" target="_blank" className="h-10 w-10 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center hover:text-primary transition-colors shadow-sm"><Globe className="h-5 w-5" /></a>
           </div>
         </div>
 
         <div>
-          <h4 className="font-medium text-base mb-3">{translate('Quick Links', language)}</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/" className="hover:text-kenya-green">{translate('Home', language)}</Link></li>
-            <li><Link to="/blog" className="hover:text-kenya-green">{translate('Blog', language)}</Link></li>
-            <li><Link to="/resources" className="hover:text-kenya-green">{translate('Resource Hub', language)}</Link></li>
-            <li><Link to="/legislative-tracker" className="hover:text-kenya-green">{translate('Legislative Tracker', language)}</Link></li>
-            <li><Link to="/community" className="hover:text-kenya-green">{translate('Community', language)}</Link></li>
-            <li><Link to="/join-community" className="hover:text-kenya-green">{translate('Join & Volunteer', language)}</Link></li>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Discover</h4>
+          <ul className="space-y-4 text-sm font-medium">
+            <li><Link to="/legislative-tracker" className="hover:text-primary transition-colors">Legislative Tracker</Link></li>
+            <li><Link to="/resources" className="hover:text-primary transition-colors">Resource library</Link></li>
+            <li><Link to="/blog" className="hover:text-primary transition-colors">Civic Blog</Link></li>
+            <li><Link to="/nasaka-iebc" className="hover:text-primary transition-colors">Nasaka IEBC</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-medium text-base mb-3">{translate('Resources', language)}</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/resources?category=Constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
-            <li><Link to="/resources?type=image" className="hover:text-kenya-green">{translate('Infographic', language)}</Link></li>
-            <li><Link to="/resources?type=video" className="hover:text-kenya-green">{translate('Videos', language)}</Link></li>
-            <li><Link to="/resources?type=pdf" className="hover:text-kenya-green">{translate('Documents', language)}</Link></li>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Engage</h4>
+          <ul className="space-y-4 text-sm font-medium">
+            <li><Link to="/community" className="hover:text-primary transition-colors">Community Hub</Link></li>
+            <li><Link to="/calendar" className="hover:text-primary transition-colors">Events Calendar</Link></li>
+            <li><Link to="/join-community" className="hover:text-primary transition-colors">Join & Support</Link></li>
+            <li><Link to="/shambles" className="hover:text-primary transition-colors">SHAmbles Tracker</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-medium text-base mb-3">{translate('Contact', language)}</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <a href="mailto:civiceducationkenya@gmail.com" className="hover:text-kenya-green">
-                Email Us Here
-              </a>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Contact</h4>
+          <ul className="space-y-4 text-sm">
+            <li className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-primary" />
+              <a href="mailto:civiceducationkenya@gmail.com" className="hover:text-primary transition-colors">Email Us Here</a>
             </li>
-            <li className="flex items-start gap-2">
-              <Phone className="h-4 w-4 mt-1" />
-              <div className="flex flex-col space-y-1 text-sm">
-                <a href="tel:+254798903333" className="hover:text-kenya-green" aria-label="Call +254798903333">
-                  Call: +254798903333
-                </a>
-                <a href="sms:+254798903333" className="hover:text-kenya-green" aria-label="Text +254798903333">
-                  Text Us
-                </a>
-                <a
-                  href="https://wa.me/254798903373"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-kenya-green"
-                  aria-label="Chat on WhatsApp"
-                >
-                  WhatsApp Chat
-                </a>
-              </div>
+            <li className="flex items-center gap-3">
+              <Phone className="h-4 w-4 text-primary" />
+              <a href="tel:+254798903333" className="hover:text-primary transition-colors">+254 798 903 333</a>
             </li>
-
-            <li className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <a
-                href={nairobiMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-kenya-green"
-              >
-                Nairobi, Kenya
-              </a>
+            <li className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-primary" />
+              <a href={nairobiMapUrl} target="_blank" className="hover:text-primary transition-colors underline-offset-4 decoration-primary/20">Nairobi, Kenya</a>
             </li>
           </ul>
         </div>
       </div>
 
-      <div className="container mt-8 pt-4 border-t border-border">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. {translate('All rights reserved.', language)}</p>
-          <div className="flex gap-4">
-            <Link to="/privacy" className="hover:text-kenya-green">{translate('Privacy Policy', language)}</Link>
-            <Link to="/terms" className="hover:text-kenya-green">{translate('Terms of Service', language)}</Link>
+      <div className="container mt-16 pt-8 border-t border-slate-200 dark:border-white/5 px-6">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-muted-foreground/60">
+          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. Built for the people.</p>
+          <div className="flex gap-8">
+            <Link to="/privacy" className="hover:text-primary transition-colors uppercase tracking-widest">Privacy</Link>
+            <Link to="/terms" className="hover:text-primary transition-colors uppercase tracking-widest">Terms</Link>
           </div>
         </div>
       </div>

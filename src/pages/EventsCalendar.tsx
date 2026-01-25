@@ -66,46 +66,7 @@ const EventsCalendar = () => {
         .lte('event_date', end);
 
       if (error) throw error;
-
-      if (!data || data.length === 0) {
-        // High-quality fallback events for WOW factor
-        const today = new Date();
-        const sampleEvents: CivicEvent[] = [
-          {
-            id: 'e1',
-            title: 'National Civic Awareness Forum',
-            description: 'A nationwide dialogue on the impact of constitutional amendments on local governance.',
-            event_date: format(addDays(today, 2), 'yyyy-MM-dd'),
-            start_time: '10:00',
-            end_time: '13:00',
-            category: 'Forum',
-            color: 'gold'
-          },
-          {
-            id: 'e2',
-            title: 'Youth Leadership Workshop',
-            description: 'Empowering the next generation of Kenyan leaders through practical civic engagement training.',
-            event_date: format(addDays(today, 5), 'yyyy-MM-dd'),
-            start_time: '14:00',
-            end_time: '17:00',
-            category: 'Workshop',
-            color: 'kenya-green'
-          },
-          {
-            id: 'e3',
-            title: 'Legislative Tracker Webinar',
-            description: 'Learn how to use our new bill tracking tools to hold your representatives accountable.',
-            event_date: format(addDays(today, -1), 'yyyy-MM-dd'),
-            start_time: '11:00',
-            end_time: '12:00',
-            category: 'Webinar',
-            color: 'ios-blue'
-          }
-        ];
-        setEvents(sampleEvents);
-      } else {
-        setEvents(data);
-      }
+      setEvents(data || []);
     } catch (err) {
       console.error('Error fetching events:', err);
     } finally {

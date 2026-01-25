@@ -1,145 +1,195 @@
 import React, { useState, useEffect } from 'react';
-import Stepper, { Step } from '@/components/ui/stepper/Stepper';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, ChevronLeft, Check, Sparkles, Map, MessageSquare, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, FileText, Users, Upload, Settings, Sparkles, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface WelcomeTourProps {
   onComplete: () => void;
 }
 
+const slides = [
+  {
+    title: "Welcome to CEKA",
+    subtitle: "Kenya's Civic Digital Commons",
+    description: "Empowering citizens with knowledge, legislative tracking, and a unified community voices platform.",
+    icon: Sparkles,
+    color: "bg-primary",
+    image: "/lovable-uploads/ceka-logo.png"
+  },
+  {
+    title: "Legislative Tracker",
+    subtitle: "Monitor the Pulse of Parliament",
+    description: "Track bills from proposal to enactment. Understand the laws that shape our future with real-time updates.",
+    icon: Shield,
+    color: "bg-kenya-green",
+    image: null
+  },
+  {
+    title: "Resource Hub",
+    subtitle: "Knowledge is Power",
+    description: "Access a verified library of civic documents, infographics, and educational media stored securely for you.",
+    icon: Zap,
+    color: "bg-gold",
+    image: null
+  },
+  {
+    title: "Community & Actions",
+    subtitle: "Your Voice, Amplified",
+    description: "Join discussions, participate in campaigns, and connect with other active citizens in real-time.",
+    icon: MessageSquare,
+    color: "bg-kenya-red",
+    image: null
+  }
+];
+
 const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [direction, setDirection] = useState(0);
 
-  useEffect(() => {
-    // Smooth entrance animation
-    setTimeout(() => setIsVisible(true), 100);
-  }, []);
-
-  const tourSteps = [
-    {
-      icon: BookOpen,
-      title: "Welcome to CEKA!",
-      subtitle: "Your Civic Education Hub",
-      description: "Discover Kenya's premier platform for civic education. We're here to empower citizens with knowledge and foster meaningful civic engagement.",
-      gradient: "from-kenya-green/20 to-emerald-100/20"
-    },
-    {
-      icon: FileText,
-      title: "Rich Educational Library",
-      subtitle: "Knowledge at Your Fingertips",
-      description: "Explore our comprehensive collection of civic education materials, policy documents, and interactive learning resources designed for all levels.",
-      gradient: "from-blue-500/20 to-cyan-100/20"
-    },
-    {
-      icon: Users,
-      title: "Vibrant Community",
-      subtitle: "Connect & Engage",
-      description: "Join thousands of engaged citizens in meaningful discussions. Share perspectives, learn from others, and build a stronger democratic community.",
-      gradient: "from-purple-500/20 to-pink-100/20"
-    },
-    {
-      icon: Upload,
-      title: "Share Your Voice",
-      subtitle: "Contribute & Impact",
-      description: "Become a content creator! Upload resources, write insightful blog posts, and help shape the future of civic education in Kenya.",
-      gradient: "from-orange-500/20 to-yellow-100/20"
-    },
-    {
-      icon: Settings,
-      title: "Tailored Experience",
-      subtitle: "Make It Yours",
-      description: "Customize your dashboard, set notification preferences, and create a personalized learning journey that fits your civic interests.",
-      gradient: "from-teal-500/20 to-green-100/20"
+  const nextSlide = () => {
+    if (currentSlide === slides.length - 1) {
+      onComplete();
+    } else {
+      setDirection(1);
+      setCurrentSlide(prev => prev + 1);
     }
-  ];
+  };
 
-  const handleComplete = () => {
-    setIsVisible(false);
-    setTimeout(onComplete, 300);
+  const prevSlide = () => {
+    if (currentSlide > 0) {
+      setDirection(-1);
+      setCurrentSlide(prev => prev - 1);
+    }
+  };
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0,
+      scale: 0.9
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0,
+      scale: 0.9
+    })
   };
 
   return (
-    <div className={`fixed inset-0 bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <Card className={`w-full max-w-3xl shadow-2xl border-0 bg-white/95 backdrop-blur-sm transform transition-all duration-500 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-8'}`}>
-        <CardHeader className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-kenya-green/10 to-emerald-200/20" />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-kenya-green/10 rounded-xl">
-                <Sparkles className="h-6 w-6 text-kenya-green" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4 font-sans">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="w-full max-w-2xl bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-[40px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] flex flex-col md:flex-row h-[600px] md:h-[480px]"
+      >
+        {/* Left Visual Side (Mobile Top) */}
+        <div className={cn(
+          "w-full md:w-5/12 p-8 flex flex-col items-center justify-center transition-colors duration-700",
+          slides[currentSlide].color
+        )}>
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentSlide}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="flex flex-col items-center text-center text-white"
+            >
+              <div className="bg-white/20 p-6 rounded-[32px] mb-6 backdrop-blur-md shadow-lg border border-white/10">
+                {React.createElement(slides[currentSlide].icon, { className: "h-16 w-16" })}
               </div>
+              <Badge variant="outline" className="text-white border-white/30 px-3 h-6 mb-4 bg-white/10 font-bold tracking-[0.2em] text-[10px] uppercase">
+                Step {currentSlide + 1} of {slides.length}
+              </Badge>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Right Content Side (Mobile Bottom) */}
+        <div className="w-full md:w-7/12 bg-white dark:bg-[#1C1C1E] p-10 flex flex-col justify-between relative">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentSlide}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", damping: 30, stiffness: 250 }}
+              className="space-y-4"
+            >
               <div>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-kenya-green to-emerald-600 bg-clip-text text-transparent">
-                  Getting Started
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Let's explore what makes CEKA special
-                </p>
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-1 underline decoration-primary/20 underline-offset-4">
+                  {slides[currentSlide].subtitle}
+                </h3>
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                  {slides[currentSlide].title}
+                </h2>
               </div>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm md:text-base">
+                {slides[currentSlide].description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="flex flex-col gap-6 pt-8">
+            {/* Progress Dots */}
+            <div className="flex items-center gap-2 justify-center md:justify-start">
+              {slides.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={cn(
+                    "h-1.5 transition-all duration-300 rounded-full",
+                    idx === currentSlide ? "bg-primary w-8" : "bg-slate-200 dark:bg-slate-800 w-1.5"
+                  )}
+                />
+              ))}
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-medium">
-                {tourSteps.length} steps
-              </span>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between gap-4">
+              <Button
+                variant="ghost"
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className="rounded-full h-12 w-12 text-slate-400 disabled:opacity-0 transition-opacity"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+
+              <Button
+                onClick={nextSlide}
+                className="flex-1 rounded-2xl h-14 bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all group"
+              >
+                {currentSlide === slides.length - 1 ? (
+                  <span className="flex items-center gap-2">Start Exploring <Check className="h-5 w-5" /></span>
+                ) : (
+                  <span className="flex items-center gap-2">Continue <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
+                )}
+              </Button>
             </div>
           </div>
-        </CardHeader>
-        
-        <CardContent className="p-8">
-          <Stepper
-            initialStep={1}
-            onFinalStepCompleted={handleComplete}
-            backButtonText="Previous"
-            nextButtonText="Next"
-          >
-            {tourSteps.map((stepData, index) => {
-              const IconComponent = stepData.icon;
-              return (
-                <Step key={index}>
-                  <div className="text-center space-y-6 py-4">
-                    {/* Icon with animated background */}
-                    <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${stepData.gradient} rounded-2xl rotate-3 animate-pulse`} />
-                      <div className="relative p-4 bg-white rounded-2xl shadow-lg">
-                        <IconComponent className="h-12 w-12 text-kenya-green" />
-                      </div>
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="space-y-3 max-w-lg mx-auto">
-                      <div className="space-y-1">
-                        <h2 className="text-2xl font-bold text-gray-900">
-                          {stepData.title}
-                        </h2>
-                        <p className="text-kenya-green font-semibold text-lg">
-                          {stepData.subtitle}
-                        </p>
-                      </div>
-                      <p className="text-gray-600 leading-relaxed text-base">
-                        {stepData.description}
-                      </p>
-                    </div>
 
-                    {/* Progress indicator */}
-                    <div className="flex justify-center mt-8">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
-                        <div className="w-2 h-2 bg-kenya-green rounded-full animate-bounce" />
-                        <span className="text-sm text-gray-500 font-medium">
-                          {index === tourSteps.length - 1 ? "Ready to explore!" : "Continue tour"}
-                        </span>
-                        {index < tourSteps.length - 1 && (
-                          <ArrowRight className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Step>
-              );
-            })}
-          </Stepper>
-        </CardContent>
-      </Card>
+          {/* Skip for now (iOS style floating) */}
+          <button
+            onClick={onComplete}
+            className="absolute top-6 right-8 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+          >
+            Skip Intro
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };
