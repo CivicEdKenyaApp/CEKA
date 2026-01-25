@@ -72,14 +72,15 @@ const CommunityChat = () => {
         else setLoading(true);
 
         try {
+            // FIXED: Using explicit foreign key notation to satisfy PostgREST schema cache
             let query = supabase
                 .from('chat_messages')
                 .select(`
-          *,
-          profile:profiles!user_id (id, full_name, avatar_url, username)
-        `)
+                    *,
+                    profile:profiles!chat_messages_user_id_fkey (id, full_name, avatar_url, username)
+                `)
                 .eq('room_id', roomId)
-                .is('parent_id', null) // Only top-level assembly
+                .is('parent_id', null)
                 .order('created_at', { ascending: false })
                 .limit(PAGE_SIZE);
 
@@ -89,27 +90,50 @@ const CommunityChat = () => {
 
             const { data, error } = await query;
 
-            if (error) throw error;
+            if (error) {
+                console.error('PGRST Error:', error);
+                // Fallback attempt without alias if necessary
+                const { data: retryData } = await supabase
+                    .from('chat_messages')
+                    .select('*, profiles(id, full_name, avatar_url, username)')
+                    .eq('room_id', roomId)
+                    .is('parent_id', null)
+                    .order('created_at', { ascending: false })
+                    .limit(PAGE_SIZE);
+
+                if (retryData) {
+                    const mapped = (retryData as any[]).map(m => ({ ...m, profile: m.profiles }));
+                    setMessages(mapped.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
+                    return;
+                }
+                throw error;
+            }
 
             if (data) {
                 const sorted = (data as any[]).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-                if (cursor) {
-                    setMessages(prev => [...sorted, ...prev]);
-                    setHasMoreOlder(data.length === PAGE_SIZE);
-                } else {
-                    setMessages(sorted);
-                    setHasMoreOlder(data.length === PAGE_SIZE);
-                }
+                setMessages(prev => cursor ? [...sorted, ...prev] : sorted);
+                setHasMoreOlder(data.length === PAGE_SIZE);
             }
         } catch (err) {
             console.error('Fetch error:', err);
-            toast({ title: 'Connection Error', description: 'Failed to synchronize with CEKA cloud.', variant: 'destructive' });
         } finally {
             setLoading(false);
             setLoadingOlder(false);
         }
-    }, [toast]);
+    }, []);
+
+    const handleJoinRoom = async (roomId: string) => {
+        if (!user) return;
+        setActiveRoom(roomId);
+        // Register room join status
+        await supabase.from('user_rooms' as any).upsert({
+            user_id: user.id,
+            room_id: roomId,
+            last_read_at: new Date().toISOString()
+        }, { onConflict: 'user_id,room_id' });
+
+        toast({ title: `Joined ${rooms.find(r => r.id === roomId)?.name}`, description: 'Your session is now synchronized.' });
+    };
 
     // Handle Room Switching & Initial Load
     useEffect(() => {

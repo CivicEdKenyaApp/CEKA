@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight } from 'lucide-react';
+import {
+  Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
+  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -92,7 +95,15 @@ const Navbar = () => {
                     <DropdownMenuItem key={item.path} asChild>
                       <Link to={item.path} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer group">
                         <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                          <Search className="h-4 w-4 text-primary" />
+                          {item.path === '/legislative-tracker' && <FileText className="h-4 w-4 text-primary" />}
+                          {item.path === '/resources' && <Shield className="h-4 w-4 text-primary" />}
+                          {item.path === '/blog' && <PenTool className="h-4 w-4 text-primary" />}
+                          {item.path === '/community' && <MessageSquare className="h-4 w-4 text-primary" />}
+                          {item.path === '/calendar' && <Calendar className="h-4 w-4 text-primary" />}
+                          {item.path === '/join-community' && <Heart className="h-4 w-4 text-primary" />}
+                          {item.path === '/nasaka-iebc' && <LayoutGrid className="h-4 w-4 text-primary" />}
+                          {item.path === '/peoples-audit' && <Radio className="h-4 w-4 text-primary" />}
+                          {item.path === '/shambles' && <Users className="h-4 w-4 text-primary" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold truncate">{item.name}</p>
@@ -131,11 +142,11 @@ const Navbar = () => {
                   <DropdownMenuItem asChild><Link to="/settings" className="rounded-xl p-3 cursor-pointer">Settings</Link></DropdownMenuItem>
                   {isAdmin && <DropdownMenuItem asChild><Link to="/admin/dashboard" className="rounded-xl p-3 cursor-pointer text-primary font-bold">Admin Console</Link></DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 my-2" />
-                  <DropdownMenuItem onClick={signOut} className="rounded-xl p-3 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20">Sign Out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="rounded-xl p-3 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:red-950/20">Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => setShowAuthModal(true)} className="rounded-2xl h-11 px-6 font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">Sign In</Button>
+              <Button onClick={() => setShowAuthModal(true)} className="hidden sm:flex rounded-2xl h-11 px-6 font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">Sign In</Button>
             )}
 
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="lg:hidden h-10 w-10 rounded-2xl bg-slate-100 dark:bg-white/5">
@@ -151,7 +162,7 @@ const Navbar = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-[#1C1C1E] border-t border-slate-100 dark:border-white/5 p-6 space-y-8 shadow-2xl rounded-b-[40px] overflow-y-auto max-h-[80vh]"
+              className="lg:hidden absolute top-full left-0 w-full bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-3xl border-t border-slate-100 dark:border-white/10 p-6 space-y-8 shadow-2xl rounded-b-[40px] overflow-y-auto max-h-[85vh]"
             >
               {categories.map((cat) => (
                 <div key={cat.name} className="space-y-4">

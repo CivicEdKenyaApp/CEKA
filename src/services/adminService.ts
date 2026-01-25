@@ -55,14 +55,44 @@ export interface ModerationQueueItem {
   content_preview: string;
 }
 
+const ROOT_ADMIN_EMAIL = "civiceducationkenya@gmail.com";
+
 class AdminService {
   async isUserAdmin(): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
+
+      // Safety Fallback: Root email is always admin
+      if (user.email === ROOT_ADMIN_EMAIL) return true;
+
       const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+      if (error) return false;
       return data || false;
     } catch { return false; }
+  }
+
+  async getAdminNotifications(): Promise<AdminNotification[]> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_notifications' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data as any[] || []);
+    } catch (error) {
+      console.error('Error fetching admin notifications:', error);
+      return [];
+    }
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    await supabase.from('admin_notifications' as any).update({ is_read: true }).eq('id', id);
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    await supabase.from('admin_notifications' as any).update({ is_read: true }).eq('is_read', false);
   }
 
   async getDashboardStats(): Promise<AdminDashboardStats> {
@@ -98,7 +128,7 @@ class AdminService {
         recent_signups: recentSignups || 0,
         pending_drafts: pendingDrafts || 0,
         total_discussions: totalDiscussions || 0,
-        total_views: (totalInteractions || 0) * 0.8, // Approximation based on interaction data
+        total_views: (totalInteractions || 0) * 0.8,
         total_interactions: totalInteractions || 0,
         avg_daily_users: (totalUsers || 0) * 0.1
       };
@@ -120,7 +150,6 @@ class AdminService {
         .select('created_at')
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-      // Aggregation logic
       const dailyMap: Record<string, UserActivityStats> = {};
       const today = new Date();
       for (let i = 0; i < 30; i++) {
@@ -142,7 +171,6 @@ class AdminService {
 
       return Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
     } catch (error) {
-      console.error('Activity stats error:', error);
       return [];
     }
   }
@@ -179,7 +207,7 @@ class AdminService {
       .select('*, profiles:user_id (full_name, email)')
       .order('created_at', { ascending: false })
       .limit(limit);
-    return data || [];
+    return (data as any[] || []);
   }
 
   async logAdminAction(action: string, resourceType: string, resourceId?: string, details?: any) {

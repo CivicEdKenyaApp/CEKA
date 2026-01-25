@@ -178,7 +178,30 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7. MISCELLANEOUS (Chapters, Alumni, Events)
+-- 7. MISCELLANEOUS (Chapters, Alumni, Events, Volunteers)
+CREATE TABLE IF NOT EXISTS public.volunteer_opportunities (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  organization text NOT NULL,
+  description text NOT NULL,
+  location text NOT NULL,
+  type text NOT NULL, -- 'Local', 'Online', 'Grassroots'
+  commitment text NOT NULL,
+  skills text[] DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.volunteer_applications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  opportunity_id uuid REFERENCES public.volunteer_opportunities(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status text DEFAULT 'pending' CHECK (status IN ('pending', 'under_review', 'approved', 'rejected')),
+  submission_metadata jsonb DEFAULT '{}',
+  is_active boolean DEFAULT false, -- Neutral until user interacts
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS public.chapters (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,

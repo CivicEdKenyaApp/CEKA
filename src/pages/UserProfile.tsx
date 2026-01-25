@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Layout from '@/components/layout/Layout';
 import { translate } from '@/lib/utils';
+import { HandHelping } from 'lucide-react';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -58,7 +59,7 @@ const UserProfile = () => {
       if (error && status !== 406) { // 406 can mean no row found, which is fine for single()
         throw error;
       }
-      
+
       if (data) {
         setProfile(data);
         setUsername(data.username || '');
@@ -83,9 +84,9 @@ const UserProfile = () => {
         // Prevent update if user ID is not available
         setUpdating(false);
         toast({
-            variant: "destructive",
-            title: translate("Error", language),
-            description: translate("User session not found.", language),
+          variant: "destructive",
+          title: translate("Error", language),
+          description: translate("User session not found.", language),
         });
         return;
       }
@@ -99,12 +100,12 @@ const UserProfile = () => {
         .eq('id', session.user.id);
 
       if (error) throw error;
-      
+
       toast({
         title: translate("Success!", language),
         description: translate("Your profile has been updated.", language),
       });
-      
+
       getProfile(); // Refresh profile data
     } catch (error: any) {
       console.error("Error updating profile:", error);
@@ -141,10 +142,10 @@ const UserProfile = () => {
       </Layout>
     );
   }
-  
+
   if (!session) {
-     // This case should ideally be handled by the redirect in useEffect,
-     // but as a fallback or if navigation hasn't completed.
+    // This case should ideally be handled by the redirect in useEffect,
+    // but as a fallback or if navigation hasn't completed.
     return (
       <Layout>
         <div className="container py-16 text-center">
@@ -201,18 +202,34 @@ const UserProfile = () => {
                 placeholder={translate("Enter your full name", language)}
               />
             </div>
+
+            {/* Volunteer Status Section */}
+            <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Civic Activations</h4>
+              <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <HandHelping className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold leading-none">Volunteer Status</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Status: Neutral (Ready to Activate)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              onClick={updateProfile} 
-              className="w-full bg-kenya-green hover:bg-kenya-green/90" 
+            <Button
+              onClick={updateProfile}
+              className="w-full bg-kenya-green hover:bg-kenya-green/90"
               disabled={updating}
             >
               {updating ? translate("Updating...", language) : translate("Update Profile", language)}
             </Button>
-            <Button 
-              onClick={handleSignOut} 
-              variant="outline" 
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
               className="w-full"
             >
               {translate("Sign Out", language)}

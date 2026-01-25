@@ -328,14 +328,14 @@ const LegislativeTracker = () => {
                   </div>
                 ) : (
                   filteredBills.map((bill) => (
-                    <Card key={bill.id} className="overflow-hidden">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
+                    <Card key={bill.id} className="overflow-hidden border-none shadow-ios-low hover:shadow-ios-high transition-all">
+                      <div className="flex flex-col sm:flex-row">
+                        <div className="sm:w-16 lg:w-20 bg-slate-50 dark:bg-white/5 flex items-center justify-center p-4">
+                          <FileText className="h-8 w-8 text-primary" />
                         </div>
-                        <div className="flex-1 p-5 md:p-6">
-                          <div className="flex flex-col md:flex-row justify-between md:items-center">
-                            <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
+                        <div className="flex-1 p-5 md:p-6 min-w-0">
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                            <Badge variant="outline" className="w-fit bg-primary/5 border-primary/20 text-primary">
                               {bill.category}
                             </Badge>
                             <Badge

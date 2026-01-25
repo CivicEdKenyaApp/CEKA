@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Calendar, Clock, Search, ChevronDown, Filter, HandHelping } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { translate } from '@/lib/utils';
+import { translate, cn } from '@/lib/utils';
+import { VolunteerApplyModal } from './VolunteerApplyModal';
 
 // Mock data for volunteer opportunities
 const opportunities = [
@@ -88,63 +89,61 @@ const opportunities = [
 const VolunteerOpportunitiesSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { language } = useLanguage();
-  
+
   const localOpportunities = opportunities.filter(opp => opp.type === "Local");
   const grassrootsOpportunities = opportunities.filter(opp => opp.type === "Grassroots");
   const onlineOpportunities = opportunities.filter(opp => opp.type === "Online");
 
-  const OpportunityCard = ({ opportunity }: { opportunity: typeof opportunities[0] }) => (
-    <Card key={opportunity.id} className="h-full flex flex-col">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <Badge 
-            variant={
-              opportunity.type === "Online" 
-                ? "outline" 
-                : opportunity.type === "Local" 
-                  ? "default" 
-                  : "secondary"
-            }
-            className={opportunity.type === "Local" ? "bg-kenya-green hover:bg-kenya-green/80" : ""}
+  const [selectedOpp, setSelectedOpp] = useState<any>(null);
+
+  const OpportunityCard = ({ opportunity }: { opportunity: any }) => (
+    <Card key={opportunity.id} className="h-full flex flex-col border-none shadow-ios-low hover:shadow-ios-high transition-all rounded-[32px] overflow-hidden bg-white/60 dark:bg-black/40 backdrop-blur-xl">
+      <CardHeader className="pb-4">
+        <div className="flex justify-between items-start mb-4">
+          <Badge
+            variant="outline"
+            className={cn(
+              "uppercase font-black text-[9px] tracking-[0.2em] px-2.5 py-1 rounded-full",
+              opportunity.type === "Online" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                opportunity.type === "Local" ? "bg-primary/10 text-primary border-primary/20" :
+                  "bg-orange-500/10 text-orange-500 border-orange-500/20"
+            )}
           >
             {opportunity.type}
           </Badge>
-          <Badge variant="outline" className="bg-muted font-normal text-muted-foreground">
+          <Badge variant="outline" className="bg-slate-100 dark:bg-white/5 border-none font-bold text-[9px] uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full">
             {opportunity.commitment}
           </Badge>
         </div>
-        <h3 className="text-lg font-semibold mt-3">{opportunity.title}</h3>
-        <p className="text-sm text-kenya-green font-medium">{opportunity.organization}</p>
+        <h3 className="text-xl font-bold tracking-tight leading-tight mb-1">{opportunity.title}</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest text-primary">{opportunity.organization}</p>
       </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground mb-4">{opportunity.description}</p>
-        <div className="space-y-3 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
+      <CardContent className="flex-grow pb-6">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 line-clamp-3 leading-relaxed">{opportunity.description}</p>
+        <div className="space-y-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-white/20" />
             <span>{opportunity.location}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-white/20" />
             <span>{opportunity.date}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{opportunity.time}</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {opportunity.skills.map((skill, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
+          <div className="mt-6 flex flex-wrap gap-2">
+            {opportunity.skills.map((skill: string, index: number) => (
+              <span key={index} className="text-[9px] bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-lg border border-slate-200/50 dark:border-white/5">
                 {skill}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button asChild className="w-full bg-kenya-green hover:bg-kenya-green/90">
-          <Link to={`/join-community?apply=${opportunity.id}`}>
-            {translate("Apply Now", language)}
-          </Link>
+      <CardFooter className="p-6 pt-0">
+        <Button
+          onClick={() => setSelectedOpp(opportunity)}
+          className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 active:scale-95 transition-all"
+        >
+          {translate("Initiate Application", language)}
         </Button>
       </CardFooter>
     </Card>
@@ -161,14 +160,14 @@ const VolunteerOpportunitiesSection = () => {
             <CardContent className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
+                <Input
                   placeholder={translate("Search opportunities...", language)}
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1.5 block">{translate("Location", language)}</label>
                 <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
@@ -179,7 +178,7 @@ const VolunteerOpportunitiesSection = () => {
                   <option value="remote">{translate("Remote", language)}</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1.5 block">{translate("Commitment", language)}</label>
                 <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
@@ -190,7 +189,7 @@ const VolunteerOpportunitiesSection = () => {
                   <option value="ongoing">{translate("Ongoing", language)}</option>
                 </select>
               </div>
-              
+
               <Button className="w-full">
                 <Filter className="mr-2 h-4 w-4" />
                 {translate("Apply Filters", language)}
@@ -198,7 +197,7 @@ const VolunteerOpportunitiesSection = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         <div className="lg:col-span-3">
           <Tabs defaultValue="all">
             <TabsList className="mb-6 z-30 relative">
@@ -207,7 +206,7 @@ const VolunteerOpportunitiesSection = () => {
               <TabsTrigger value="grassroots">{translate("Grassroots", language)}</TabsTrigger>
               <TabsTrigger value="online">{translate("Online", language)}</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {opportunities.map((opportunity) => (
@@ -215,7 +214,7 @@ const VolunteerOpportunitiesSection = () => {
                 ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="local" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {localOpportunities.map((opportunity) => (
@@ -223,7 +222,7 @@ const VolunteerOpportunitiesSection = () => {
                 ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="grassroots" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {grassrootsOpportunities.map((opportunity) => (
@@ -231,7 +230,7 @@ const VolunteerOpportunitiesSection = () => {
                 ))}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="online" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {onlineOpportunities.map((opportunity) => (
@@ -240,7 +239,7 @@ const VolunteerOpportunitiesSection = () => {
               </div>
             </TabsContent>
           </Tabs>
-          
+
           <div className="mt-8 text-center">
             <Button variant="outline" className="mx-auto flex items-center gap-1">
               {translate("Load More", language)}
@@ -249,7 +248,7 @@ const VolunteerOpportunitiesSection = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="mt-12 bg-muted/50 rounded-lg p-8 text-center">
         <HandHelping className="h-12 w-12 text-kenya-green mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">{translate("Have a Volunteering Opportunity to Share?", language)}</h2>
@@ -260,6 +259,14 @@ const VolunteerOpportunitiesSection = () => {
           {translate("Submit an Opportunity", language)}
         </Button>
       </div>
+
+      {selectedOpp && (
+        <VolunteerApplyModal
+          opportunity={selectedOpp}
+          isOpen={!!selectedOpp}
+          onClose={() => setSelectedOpp(null)}
+        />
+      )}
     </div>
   );
 };

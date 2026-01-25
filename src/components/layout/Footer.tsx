@@ -10,7 +10,7 @@ const Footer = () => {
   const nairobiMapUrl = "https://www.google.com/maps/place/Nairobi,+Kenya/@-1.2833099,36.8085756,12z";
 
   return (
-    <footer className="bg-slate-50 dark:bg-[#0A0A0B] py-16 mt-20 border-t border-slate-200 dark:border-white/5 pb-24 md:pb-16">
+    <footer className="bg-white/50 dark:bg-black/40 backdrop-blur-3xl py-16 mt-20 border-t border-slate-200 dark:border-white/5 pb-32 md:pb-16 shadow-ios-high">
       <div className="container grid gap-12 md:grid-cols-4 px-6">
         <div className="space-y-6">
           <Logo variant="full" className="h-10 w-auto" />
