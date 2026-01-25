@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -7,11 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowRight, MessageSquare, Heart, HandHelping, Search, Users, Activity, Plus } from 'lucide-react';
+import { ArrowRight, MessageSquare, Heart, HandHelping, Search, Users, Activity, Plus, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CommunityChat from '@/components/community/CommunityChat';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translate } from '@/lib/utils';
 
 const CommunityPortal = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { language } = useLanguage();
 
   // Discussion keywords
   const discussionKeywords = ["President", "Bill", "Butere Girls", "County", "Education"];
@@ -122,14 +125,12 @@ const CommunityPortal = () => {
   const handleDiscussionSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Searching discussions for:", searchQuery);
-    // Implement search logic here
   };
 
   // Handle search for campaigns
   const handleCampaignSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Searching campaigns for:", searchQuery);
-    // Implement search logic here
   };
 
   // Handle keyword click
@@ -142,16 +143,24 @@ const CommunityPortal = () => {
       <div className="container py-8 md:py-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Community Portal</h1>
-            <p className="text-muted-foreground">Connect with other citizens and join civic campaigns</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">{translate("Community Portal", language)}</h1>
+            <p className="text-muted-foreground">{translate("Connect with other citizens, chat in real-time, and join civic campaigns", language)}</p>
           </div>
         </div>
         
-        <Tabs defaultValue="discussions" className="w-full">
+        <Tabs defaultValue="chat" className="w-full">
           <TabsList className="mb-8">
-            <TabsTrigger value="discussions">Discussions</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="chat" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              {translate("Live Chat", language)}
+            </TabsTrigger>
+            <TabsTrigger value="discussions">{translate("Discussions", language)}</TabsTrigger>
+            <TabsTrigger value="campaigns">{translate("Campaigns", language)}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="chat" className="space-y-4">
+            <CommunityChat />
+          </TabsContent>
           
           <TabsContent value="discussions" className="space-y-8">
             {/* Analytics widgets */}
@@ -162,7 +171,7 @@ const CommunityPortal = () => {
                     <MessageSquare className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Discussions</p>
+                    <p className="text-sm text-muted-foreground">{translate("Total Discussions", language)}</p>
                     <p className="text-2xl font-bold">{analyticsData.totalDiscussions}</p>
                   </div>
                 </CardContent>
@@ -174,7 +183,7 @@ const CommunityPortal = () => {
                     <Users className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Community Members</p>
+                    <p className="text-sm text-muted-foreground">{translate("Community Members", language)}</p>
                     <p className="text-2xl font-bold">{analyticsData.activeUsers}</p>
                   </div>
                 </CardContent>
@@ -186,7 +195,7 @@ const CommunityPortal = () => {
                     <Activity className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Today</p>
+                    <p className="text-sm text-muted-foreground">{translate("Active Today", language)}</p>
                     <p className="text-2xl font-bold">{analyticsData.todayActivity}</p>
                   </div>
                 </CardContent>
@@ -197,19 +206,19 @@ const CommunityPortal = () => {
               <form onSubmit={handleDiscussionSearch} className="relative w-full md:w-1/2">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search discussions..." 
+                  placeholder={translate("Search discussions...", language)}
                   className="pl-9 pr-12" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button type="submit" size="sm" className="absolute right-1.5 top-1.5">
-                  Search
+                  {translate("Search", language)}
                 </Button>
               </form>
               
               <Button className="bg-kenya-green hover:bg-kenya-green/90">
                 <Plus className="mr-2 h-4 w-4" />
-                Start a Discussion
+                {translate("Start a Discussion", language)}
               </Button>
             </div>
             
@@ -244,7 +253,7 @@ const CommunityPortal = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pb-2">
-                    <Link to={`/community/discussions/${discussion.id}`}>
+                    <Link to={`/discussion/${discussion.id}`}>
                       <h3 className="text-lg font-semibold mb-2 hover:text-kenya-green transition-colors">
                         {discussion.title}
                       </h3>
@@ -263,8 +272,8 @@ const CommunityPortal = () => {
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/community/discussions/${discussion.id}`} className="flex items-center">
-                        Join discussion
+                      <Link to={`/discussion/${discussion.id}`} className="flex items-center">
+                        {translate("Join discussion", language)}
                         <ArrowRight className="ml-1 h-3.5 w-3.5" />
                       </Link>
                     </Button>
@@ -275,7 +284,7 @@ const CommunityPortal = () => {
             
             <div className="text-center mt-8">
               <Button variant="outline">
-                Load More Discussions
+                {translate("Load More Discussions", language)}
               </Button>
             </div>
           </TabsContent>
@@ -289,7 +298,7 @@ const CommunityPortal = () => {
                     <HandHelping className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Campaigns</p>
+                    <p className="text-sm text-muted-foreground">{translate("Active Campaigns", language)}</p>
                     <p className="text-2xl font-bold">{campaigns.length}</p>
                   </div>
                 </CardContent>
@@ -301,7 +310,7 @@ const CommunityPortal = () => {
                     <Users className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Participants</p>
+                    <p className="text-sm text-muted-foreground">{translate("Total Participants", language)}</p>
                     <p className="text-2xl font-bold">
                       {campaigns.reduce((total, campaign) => total + campaign.participants, 0)}
                     </p>
@@ -315,7 +324,7 @@ const CommunityPortal = () => {
                     <Activity className="h-5 w-5 text-kenya-green" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">New This Week</p>
+                    <p className="text-sm text-muted-foreground">{translate("New This Week", language)}</p>
                     <p className="text-2xl font-bold">12</p>
                   </div>
                 </CardContent>
@@ -326,19 +335,19 @@ const CommunityPortal = () => {
               <form onSubmit={handleCampaignSearch} className="relative w-full md:w-1/2">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search campaigns..." 
+                  placeholder={translate("Search campaigns...", language)}
                   className="pl-9 pr-12" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button type="submit" size="sm" className="absolute right-1.5 top-1.5">
-                  Search
+                  {translate("Search", language)}
                 </Button>
               </form>
               
               <Button className="bg-kenya-green hover:bg-kenya-green/90">
                 <Plus className="mr-2 h-4 w-4" />
-                Start a Campaign
+                {translate("Start a Campaign", language)}
               </Button>
             </div>
             
@@ -362,24 +371,24 @@ const CommunityPortal = () => {
                   <CardHeader>
                     <Badge className="w-fit mb-2">{campaign.type}</Badge>
                     <h3 className="text-lg font-semibold">
-                      <Link to={`/community/campaigns/${campaign.id}`} className="hover:text-kenya-green transition-colors">
+                      <Link to={`/campaign/${campaign.id}`} className="hover:text-kenya-green transition-colors">
                         {campaign.title}
                       </Link>
                     </h3>
-                    <p className="text-sm text-muted-foreground">Organized by: {campaign.organizer}</p>
+                    <p className="text-sm text-muted-foreground">{translate("Organized by", language)}: {campaign.organizer}</p>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{campaign.content}</p>
-                    <p className="text-sm mb-4">Goal: {campaign.goal}</p>
+                    <p className="text-sm mb-4">{translate("Goal", language)}: {campaign.goal}</p>
                     <div className="flex items-center gap-1.5">
                       <HandHelping className="h-4 w-4 text-kenya-green" />
-                      <span className="text-sm font-medium">{campaign.participants} participants</span>
+                      <span className="text-sm font-medium">{campaign.participants} {translate("participants", language)}</span>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t pt-4 pb-4">
                     <Button asChild className="w-full bg-kenya-green hover:bg-kenya-green/90">
-                      <Link to={`/community/campaigns/${campaign.id}`}>
-                        Join Campaign
+                      <Link to={`/campaign/${campaign.id}`}>
+                        {translate("Join Campaign", language)}
                       </Link>
                     </Button>
                   </CardFooter>
@@ -389,7 +398,7 @@ const CommunityPortal = () => {
             
             <div className="text-center mt-8">
               <Button variant="outline">
-                Load More Campaigns
+                {translate("Load More Campaigns", language)}
               </Button>
             </div>
           </TabsContent>

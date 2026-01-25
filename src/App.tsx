@@ -30,8 +30,7 @@ import RejectFinanceBill from '@/pages/RejectFinanceBill';
 import SHAmbles from '@/pages/SHAmbles';
 import PeoplesAuditPage from '@/pages/PeoplesAuditPage';
 import NasakaPage from '@/pages/NasakaIEBCPage';
-import Volunteer from '@/pages/Volunteer';
-import VolunteerApplication from '@/pages/VolunteerApplication';
+// Volunteer pages removed - functionality merged into JoinCommunity
 import UserProfile from '@/pages/UserProfile';
 import ProfileSettings from '@/pages/ProfileSettings';
 import Notifications from '@/pages/Notifications';
@@ -145,8 +144,9 @@ const AppContent = () => {
         <Route path="/shambles" element={<SHAmbles />} />
         <Route path="/peoples-audit" element={<PeoplesAuditPage />} />
         <Route path="/nasaka" element={<NasakaPage />} />
-        <Route path="/volunteer" element={<Volunteer />} />
-        <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
+        {/* Volunteer routes redirect to join-community */}
+        <Route path="/volunteer" element={<Navigate to="/join-community?tab=volunteer" replace />} />
+        <Route path="/volunteer/apply/:id" element={<Navigate to="/join-community?tab=volunteer" replace />} />
         <Route path="/profile" element={
           <ProtectedRoute>
             <UserProfile />
