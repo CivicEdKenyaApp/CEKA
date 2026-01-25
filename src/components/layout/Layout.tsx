@@ -30,9 +30,9 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
   };
   
   return (
-    <div className="flex min-h-screen flex-col relative">
+    <div className="flex min-h-screen flex-col relative overflow-x-hidden">
       <Navbar />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 pb-16 md:pb-0 w-full overflow-x-hidden">{children}</main>
       <Footer />
       {!hideBottomNav && <BottomNavbar />}
       

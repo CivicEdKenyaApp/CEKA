@@ -30,11 +30,11 @@ const Blog = () => {
   // Filter posts based on search and status
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-    
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+
     const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -72,7 +72,7 @@ const Blog = () => {
           description: "Post submitted for review successfully! You'll be notified once it's approved."
         });
       }
-      
+
       setTimeout(() => {
         navigate('/blog');
       }, 1500);
@@ -124,13 +124,13 @@ const Blog = () => {
               Insights, updates, and discussions on civic education and governance in Kenya
             </p>
           </div>
-          
+
           <div className="flex gap-2 mt-4 md:mt-0">
             <Button onClick={handleCreateNew} className="">
               <PlusCircle className="h-4 w-4 mr-2" />
               New Post
             </Button>
-            
+
             {isAdmin && (
               <Button variant="outline" asChild>
                 <Link to="/admin/dashboard">
@@ -147,11 +147,13 @@ const Blog = () => {
           <div className="lg:col-span-3">
             <Tabs defaultValue="all" className="space-y-6">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <TabsList>
-                  <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
-                  <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
-                  <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
-                </TabsList>
+                <div className="overflow-x-auto w-full md:w-auto pb-2 no-scrollbar">
+                  <TabsList className="min-w-max">
+                    <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
+                    <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
+                    <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <div className="flex gap-2 w-full md:w-auto">
                   <div className="relative flex-1 md:w-64">
@@ -163,7 +165,7 @@ const Blog = () => {
                       className="pl-8"
                     />
                   </div>
-                  
+
                   {isAdmin && (
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                       <SelectTrigger className="w-32">
@@ -189,7 +191,7 @@ const Blog = () => {
                       <BlogList posts={draftPosts} />
                     </div>
                   )}
-                  
+
                   {publishedPosts.length > 0 && (
                     <div className="space-y-4">
                       <h2 className="text-lg font-semibold border-b pb-2">
@@ -198,7 +200,7 @@ const Blog = () => {
                       <BlogList posts={publishedPosts} />
                     </div>
                   )}
-                  
+
                   {allPosts.length === 0 && (
                     <div className="text-center py-12">
                       <h3 className="text-lg font-medium mb-2">No posts found</h3>

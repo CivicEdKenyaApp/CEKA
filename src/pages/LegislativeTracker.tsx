@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
@@ -57,7 +57,7 @@ const LegislativeTracker = () => {
         if (fetchError) {
           throw fetchError;
         }
-        
+
         // If no bills in database, create some sample bills
         if (!data || data.length === 0) {
           const sampleBills: Bill[] = [
@@ -196,7 +196,7 @@ const LegislativeTracker = () => {
             <p className="text-muted-foreground">Stay informed about bills and legislative changes in Kenya</p>
           </div>
         </div>
-        
+
         <div className="grid lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <Card>
@@ -208,9 +208,9 @@ const LegislativeTracker = () => {
                   <label className="text-sm font-medium mb-1.5 block">Search</label>
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search bills..." 
-                      className="pl-8" 
+                    <Input
+                      placeholder="Search bills..."
+                      className="pl-8"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -233,7 +233,7 @@ const LegislativeTracker = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -248,7 +248,7 @@ const LegislativeTracker = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Status</label>
                   <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -263,9 +263,9 @@ const LegislativeTracker = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => {
                     setSearchTerm('');
@@ -280,29 +280,29 @@ const LegislativeTracker = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="lg:col-span-3">
-            <Tabs defaultValue="all">
-              <div className="flex justify-between items-center mb-4">
-                <TabsList>
+            <Tabs defaultValue="all" className="w-full">
+              <div className="flex justify-between items-center mb-4 overflow-x-auto pb-2 no-scrollbar">
+                <TabsList className="min-w-max">
                   <TabsTrigger value="all">All Bills ({filteredBills.length})</TabsTrigger>
                   <TabsTrigger value="new">New</TabsTrigger>
                   <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger>
                   <TabsTrigger value="followed">Following</TabsTrigger>
                 </TabsList>
-                
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <ArrowUpDown className="h-4 w-4" />
                   <span>Sorted by: {
                     sortBy === 'date-desc' ? 'Newest First' :
-                    sortBy === 'date-asc' ? 'Oldest First' :
-                    sortBy === 'alpha-asc' ? 'A-Z' :
-                    sortBy === 'alpha-desc' ? 'Z-A' :
-                    sortBy === 'status' ? 'Status' : 'Category'
+                      sortBy === 'date-asc' ? 'Oldest First' :
+                        sortBy === 'alpha-asc' ? 'A-Z' :
+                          sortBy === 'alpha-desc' ? 'Z-A' :
+                            sortBy === 'status' ? 'Status' : 'Category'
                   }</span>
                 </div>
               </div>
-              
+
               <TabsContent value="all" className="space-y-4 mt-0">
                 {loading ? (
                   <>
@@ -316,11 +316,11 @@ const LegislativeTracker = () => {
                     <p>Please try again later.</p>
                   </div>
                 ) : filteredBills.length === 0 ? (
-                   <div className="bg-muted rounded-md p-8 text-center">
+                  <div className="bg-muted rounded-md p-8 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-medium text-lg">No Bills Found</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {billsData.length === 0 
+                      {billsData.length === 0
                         ? 'There are currently no bills to display. Check back later.'
                         : 'No bills match your current filters. Try adjusting your search criteria.'
                       }
@@ -338,14 +338,14 @@ const LegislativeTracker = () => {
                             <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
                               {bill.category}
                             </Badge>
-                            <Badge 
+                            <Badge
                               variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
                               className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit`}
                             >
                               {bill.status}
                             </Badge>
                           </div>
-                          
+
                           <h3 className="text-lg font-semibold mt-2 mb-1">
                             <Link to={`/bill/${bill.id}`} className="hover:text-kenya-green transition-colors">
                               {bill.title}
@@ -354,7 +354,7 @@ const LegislativeTracker = () => {
                           <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                             {bill.summary}
                           </p>
-                          
+
                           <div className="flex flex-wrap items-center justify-between">
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <Calendar className="h-3.5 w-3.5" />
@@ -366,7 +366,7 @@ const LegislativeTracker = () => {
                                 </>
                               )}
                             </div>
-                            
+
                             <div className="flex items-center gap-2 mt-2 md:mt-0">
                               <BillFollowButton billId={bill.id} />
                               <Button variant="outline" size="sm" asChild>
@@ -383,21 +383,21 @@ const LegislativeTracker = () => {
                   ))
                 )}
               </TabsContent>
-              
+
               <TabsContent value="new">
                 <div className="bg-muted rounded-md p-8 text-center">
                   <h3 className="font-medium">New Bills</h3>
                   <p className="text-sm text-muted-foreground mt-1">Filter applied to show only recently introduced bills.</p>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="public-feedback">
                 <div className="bg-muted rounded-md p-8 text-center">
                   <h3 className="font-medium">Bills Open for Public Feedback</h3>
                   <p className="text-sm text-muted-foreground mt-1">Filter applied to show bills currently accepting public input.</p>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="followed">
                 <div className="bg-muted rounded-md p-8 text-center">
                   <h3 className="font-medium">Bills You're Following</h3>

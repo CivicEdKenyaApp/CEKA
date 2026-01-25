@@ -1,5 +1,5 @@
 // src/components/layout/Navbar.tsx
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,10 +42,10 @@ const Navbar = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  
+
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -63,7 +63,7 @@ const Navbar = () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     }
-    
+
     return () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
@@ -77,7 +77,7 @@ const Navbar = () => {
       const timer = setTimeout(() => setIsScrolling(false), 150);
       return () => clearTimeout(timer);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -92,42 +92,44 @@ const Navbar = () => {
   const navItems: NavItem[] = [
     { name: translate('Home', language), path: '/' },
     { name: translate('Blog', language), path: '/blog' },
+    { name: translate('Calendar', language), path: '/calendar' },
     { name: translate('Resources', language), path: '/resources' },
-    { 
-      name: translate('Tools', language), 
+    {
+      name: translate('Tools', language),
       path: '/legislative-tracker',
       dropdown: [
-        { 
-          name: translate('Nasaka IEBC', language), 
+        {
+          name: translate('Nasaka IEBC', language),
           path: '/nasaka',
           description: translate('Find the closest IEBC registration center', language)
         },
-        { 
-          name: translate('Peoples-Audit', language), 
+        {
+          name: translate('Peoples-Audit', language),
           path: '/peoples-audit',
           description: translate('Breakdown of the economic state of the nation', language)
         },
-        { 
-          name: translate('SHAmbles', language), 
+        {
+          name: translate('SHAmbles', language),
           path: '/shambles',
           description: translate('Investigation and accountability tracking', language)
         },
-        { 
-          name: translate('Legislative Bill Tracker', language), 
+        {
+          name: translate('Legislative Bill Tracker', language),
           path: '/legislative-tracker',
           description: translate('Track bills and legislative progress', language)
         },
-        { 
-          name: translate('Reject Finance Bill', language), 
-          path: '/reject-finance-bill',
-          description: translate('Campaign against problematic legislation', language)
-        }      
+        {
+          name: translate('Resource Hub', language),
+          path: '/resource-hub',
+          description: translate('Central hub for all civic documents', language)
+        }
       ]
     },
+    { name: translate('Volunteer', language), path: '/volunteer' },
     { name: translate('Join Us', language), path: '/join-community' },
   ];
 
-  const allNavItems: NavItem[] = user && isAdmin && !adminLoading 
+  const allNavItems: NavItem[] = user && isAdmin && !adminLoading
     ? [...navItems, { name: 'Admin', path: '/admin/dashboard', icon: Shield }]
     : navItems;
 
@@ -167,9 +169,8 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          showBg ? 'bg-background/95 backdrop-blur-xl shadow-ios-high' : 'bg-background/80 backdrop-blur-lg'
-        } ${isScrolling ? 'transition-shadow duration-150' : ''}`}
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${showBg ? 'bg-background/95 backdrop-blur-xl shadow-ios-high' : 'bg-background/80 backdrop-blur-lg'
+          } ${isScrolling ? 'transition-shadow duration-150' : ''}`}
       >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -178,57 +179,55 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-1"> 
-                  {allNavItems.map((item) =>
-                    item.dropdown ? (
-                      <div key={item.name} className="relative group" style={{ zIndex: 10000 }}>
-                        <button
-                          className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center hover:bg-muted/70 transition-all duration-200 ${
-                            location.pathname === item.path || 
-                            item.dropdown?.some(subItem => location.pathname === subItem.path)
-                              ? 'text-primary bg-muted/40'
-                              : 'text-foreground/90 hover:text-primary'
-                          } group/dropdown`}
-                          style={{ backdropFilter: 'blur(10px)' }}
-                        >
-                          <span className="flex items-center">
-                            {item.name}
-                            <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70 group-hover/dropdown:opacity-100 transition-all duration-200 group-hover/dropdown:translate-y-0.5" />
-                          </span>
-                        </button>
-                        <div className="absolute left-0 mt-2 w-80 origin-top-left rounded-2xl bg-popover/95 backdrop-blur-xl shadow-ios-high border border-border/50 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10000] overflow-hidden">
-                          {/* Gradient fade effect */}
-                          <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-popover/90 to-transparent z-10 pointer-events-none"></div>
-                          <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-popover/90 to-transparent z-10 pointer-events-none"></div>
-                          
-                          <div className="py-2 max-h-[320px] overflow-y-auto green-scrollbar" style={{ zIndex: 10000 }}>
-                            {item.dropdown.map((subItem) => (
-                              <Link
-                                key={subItem.name}
-                                to={subItem.path}
-                                className="block px-4 py-3 hover:bg-muted/50 transition-colors group/subitem relative"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="font-medium text-sm">{subItem.name}</div>
-                                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -translate-x-2 group-hover/subitem:opacity-70 group-hover/subitem:translate-x-0 transition-all duration-200" />
-                                </div>
-                                {subItem.description && (
-                                  <div className="text-xs text-muted-foreground mt-1 pr-4">
-                                    {subItem.description}
-                                  </div>
-                                )}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
+            <div className="hidden md:flex space-x-1">
+              {allNavItems.map((item) =>
+                item.dropdown ? (
+                  <div key={item.name} className="relative group" style={{ zIndex: 10000 }}>
+                    <button
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center hover:bg-muted/70 transition-all duration-200 ${location.pathname === item.path ||
+                        item.dropdown?.some(subItem => location.pathname === subItem.path)
+                        ? 'text-primary bg-muted/40'
+                        : 'text-foreground/90 hover:text-primary'
+                        } group/dropdown`}
+                      style={{ backdropFilter: 'blur(10px)' }}
+                    >
+                      <span className="flex items-center">
+                        {item.name}
+                        <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70 group-hover/dropdown:opacity-100 transition-all duration-200 group-hover/dropdown:translate-y-0.5" />
+                      </span>
+                    </button>
+                    <div className="absolute left-0 mt-2 w-80 origin-top-left rounded-2xl bg-popover/95 backdrop-blur-xl shadow-ios-high border border-border/50 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10000] overflow-hidden">
+                      {/* Gradient fade effect */}
+                      <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-popover/90 to-transparent z-10 pointer-events-none"></div>
+                      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-popover/90 to-transparent z-10 pointer-events-none"></div>
+
+                      <div className="py-2 max-h-[320px] overflow-y-auto green-scrollbar" style={{ zIndex: 10000 }}>
+                        {item.dropdown.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            to={subItem.path}
+                            className="block px-4 py-3 hover:bg-muted/50 transition-colors group/subitem relative"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-sm">{subItem.name}</div>
+                              <ChevronRight className="h-3.5 w-3.5 opacity-0 -translate-x-2 group-hover/subitem:opacity-70 group-hover/subitem:translate-x-0 transition-all duration-200" />
+                            </div>
+                            {subItem.description && (
+                              <div className="text-xs text-muted-foreground mt-1 pr-4">
+                                {subItem.description}
+                              </div>
+                            )}
+                          </Link>
+                        ))}
                       </div>
-                  ) : (
+                    </div>
+                  </div>
+                ) : (
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-muted/70 flex items-center transition-all duration-200 ${
-                      isActive(item.path) ? 'text-primary bg-muted/40' : 'text-foreground/90 hover:text-primary'
-                    }`}
+                    className={`px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-muted/70 flex items-center transition-all duration-200 ${isActive(item.path) ? 'text-primary bg-muted/40' : 'text-foreground/90 hover:text-primary'
+                      }`}
                     style={{ backdropFilter: 'blur(10px)' }}
                   >
                     {item.icon && <item.icon className="h-4 w-4 mr-2" />}
@@ -304,7 +303,7 @@ const Navbar = () => {
                     <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 shadow-ios-high rounded-2xl" style={{ zIndex: 10000 }}>
                       <DropdownMenuLabel className="text-foreground/90">Options</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-border/50" />
-                      
+
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger className="hover:bg-muted/70 focus:bg-muted/70 cursor-pointer">
                           <Globe className="mr-2 h-4 w-4" />
@@ -402,7 +401,7 @@ const Navbar = () => {
                       )}
                     </AnimatePresence>
                   </div>
-                  
+
                   <motion.div
                     className="absolute inset-0 rounded-xl bg-primary/10"
                     initial={false}
@@ -427,7 +426,7 @@ const Navbar = () => {
                 className="fixed inset-0 bg-background/95 backdrop-blur-3xl z-[10001]"
                 onClick={() => setShowSearch(false)}
               />
-              
+
               <motion.div
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -446,7 +445,7 @@ const Navbar = () => {
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    
+
                     <div className="flex-1">
                       <SearchSuggestion
                         isMobile
@@ -475,13 +474,13 @@ const Navbar = () => {
                   className="fixed inset-0 bg-background/80 backdrop-blur-xl z-40"
                   onClick={() => setIsOpen(false)}
                 />
-                
+
                 <motion.div
                   ref={mobileMenuRef}
                   initial={{ opacity: 0, y: -20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     type: "spring",
                     damping: 25,
                     stiffness: 400,
@@ -494,10 +493,21 @@ const Navbar = () => {
                     WebkitOverflowScrolling: 'touch'
                   }}
                 >
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-border/10">
+                    <Logo className="h-7 w-auto" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsOpen(false)}
+                      className="rounded-full bg-muted/20 h-10 w-10"
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
                   <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/95 to-transparent z-10 pointer-events-none"></div>
                   <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/95 to-transparent z-10 pointer-events-none"></div>
-                  
-                  <div 
+
+                  <div
                     className="py-6 overflow-y-auto green-scrollbar"
                     style={{
                       maxHeight: 'calc(100vh - 8rem)',
@@ -509,18 +519,17 @@ const Navbar = () => {
                       {allNavItems.map((item) => {
                         const isDropdownExpanded = expandedDropdown === item.name;
                         const hasDropdown = !!item.dropdown;
-                        const isActiveItem = isActive(item.path) || 
+                        const isActiveItem = isActive(item.path) ||
                           (item.dropdown?.some(subItem => isActive(subItem.path)) ?? false);
-                        
+
                         return hasDropdown ? (
                           <div key={item.name} className="space-y-1">
                             <button
                               onClick={() => setExpandedDropdown(isDropdownExpanded ? null : item.name)}
-                              className={`w-full px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center justify-between transition-all duration-200 ${
-                                isActiveItem
-                                  ? 'bg-primary/10 text-primary'
-                                  : 'text-foreground/90 hover:bg-muted/70'
-                              }`}
+                              className={`w-full px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center justify-between transition-all duration-200 ${isActiveItem
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-foreground/90 hover:bg-muted/70'
+                                }`}
                               style={{ backdropFilter: 'blur(10px)' }}
                             >
                               <div className="flex items-center">
@@ -539,21 +548,21 @@ const Navbar = () => {
                                 </motion.div>
                               </div>
                             </button>
-                            
+
                             <AnimatePresence>
                               {isDropdownExpanded && (
                                 <motion.div
                                   initial={{ height: 0, opacity: 0 }}
-                                  animate={{ 
-                                    height: 'auto', 
+                                  animate={{
+                                    height: 'auto',
                                     opacity: 1,
                                     transition: {
                                       height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
                                       opacity: { duration: 0.25, delay: 0.05 }
                                     }
                                   }}
-                                  exit={{ 
-                                    height: 0, 
+                                  exit={{
+                                    height: 0,
                                     opacity: 0,
                                     transition: {
                                       height: { duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] },
@@ -571,11 +580,10 @@ const Navbar = () => {
                                           setIsOpen(false);
                                           setExpandedDropdown(null);
                                         }}
-                                        className={`block pl-4 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${
-                                          isActive(subItem.path)
-                                            ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                                            : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground hover:translate-x-1'
-                                        }`}
+                                        className={`block pl-4 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${isActive(subItem.path)
+                                          ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                                          : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground hover:translate-x-1'
+                                          }`}
                                       >
                                         <div className="font-medium">{subItem.name}</div>
                                         {subItem.description && (
@@ -595,11 +603,10 @@ const Navbar = () => {
                             key={item.name}
                             to={item.path}
                             onClick={() => setIsOpen(false)}
-                            className={`block px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center transition-all duration-200 ${
-                              isActive(item.path)
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-foreground/90 hover:bg-muted/70'
-                            }`}
+                            className={`block px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center transition-all duration-200 ${isActive(item.path)
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground/90 hover:bg-muted/70'
+                              }`}
                             style={{ backdropFilter: 'blur(10px)' }}
                           >
                             {item.icon && <item.icon className="h-4 w-4 mr-3" />}
@@ -613,8 +620,8 @@ const Navbar = () => {
 
                     <div className="px-4 py-2">
                       {user ? (
-                        <Link 
-                          to="/profile" 
+                        <Link
+                          to="/profile"
                           onClick={() => setIsOpen(false)}
                           className="flex items-center text-foreground/90 hover:text-primary px-4 py-3 rounded-2xl hover:bg-muted/70 transition-all duration-200"
                           style={{ backdropFilter: 'blur(10px)' }}
@@ -646,11 +653,10 @@ const Navbar = () => {
                           <button
                             key={lang.code}
                             onClick={() => setLanguage(lang.code as any)}
-                            className={`block w-full text-left px-4 py-2.5 text-sm rounded-xl transition-all duration-200 ${
-                              language === lang.code 
-                                ? 'bg-primary/10 text-primary' 
-                                : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground'
-                            }`}
+                            className={`block w-full text-left px-4 py-2.5 text-sm rounded-xl transition-all duration-200 ${language === lang.code
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground'
+                              }`}
                           >
                             <div className="flex items-center justify-between">
                               {lang.name}
