@@ -23,7 +23,21 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at timestamptz DEFAULT now()
 );
 
--- 2. ADVANCED CHAT SYSTEM (Recursive Discourse)
+-- 2. ADVANCED CHAT SYSTEM (Formalized Discourse)
+CREATE TABLE IF NOT EXISTS public.chat_rooms (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  room_type text DEFAULT 'public' CHECK (room_type IN ('public', 'private', 'secure_vault')),
+  metadata jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
+-- Ensure default room exists
+INSERT INTO public.chat_rooms (id, name, room_type)
+VALUES ('general', 'General Assembly', 'public')
+ON CONFLICT (id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS public.chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -34,12 +48,14 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
   is_edited boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
-  CONSTRAINT chat_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
+  CONSTRAINT chat_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE,
+  CONSTRAINT chat_messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.chat_rooms(id) ON DELETE CASCADE
 );
 
 -- Ensure naming follows search pattern
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON public.chat_messages (user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON public.chat_messages (room_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON public.chat_messages (created_at DESC);
 
 CREATE TABLE IF NOT EXISTS public.chat_reactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

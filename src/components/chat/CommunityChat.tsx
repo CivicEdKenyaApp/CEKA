@@ -145,20 +145,35 @@ const CommunityChat = () => {
 
     // Handle Room Switching & Initial Load
     useEffect(() => {
-        if (!session) return;
+        if (!session || !user) return;
 
-        // Virtual DM handling: if a peer is selected, the room ID is virtual
+        let targetRoom = 'general';
+
+        // Virtual DM handling: if a peer is selected, generate deterministic ID
         if (isPrivate && selectedPeer) {
-            const ids = [session.user.id, selectedPeer.id].sort();
-            const dmRoomId = `dm:${ids[0]}:${ids[1]}`;
-            setActiveRoom(dmRoomId);
-            fetchMessages(dmRoomId);
+            const ids = [user.id, selectedPeer.id].sort();
+            targetRoom = `vault:${ids[0]}:${ids[1]}`;
+            setActiveRoom(targetRoom);
         } else {
-            fetchMessages(activeRoom);
+            targetRoom = params.get('room') || 'general';
+            setActiveRoom(targetRoom);
         }
 
+        fetchMessages(targetRoom);
         isInitialLoad.current = true;
-    }, [activeRoom, session, fetchMessages, isPrivate, selectedPeer]);
+    }, [activeRoom, session, user, fetchMessages, isPrivate, selectedPeer, params]);
+
+    // Ensure selected room exists in metadata
+    useEffect(() => {
+        if (isPrivate && selectedPeer && !rooms.find(r => r.id === activeRoom)) {
+            const virtualRoom: Room = {
+                id: activeRoom,
+                name: `Secure: ${selectedPeer.full_name || 'Member'}`,
+                type: 'direct'
+            };
+            setRooms(prev => [...prev.filter(r => r.type !== 'direct'), virtualRoom]);
+        }
+    }, [activeRoom, isPrivate, selectedPeer, rooms]);
 
     // Handle incoming source bridge
     useEffect(() => {
