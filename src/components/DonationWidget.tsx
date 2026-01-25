@@ -41,10 +41,10 @@ const DonationWidget: React.FC<DonationWidgetProps> = ({ onTimedOut, isVisible: 
   const [redirecting, setRedirecting] = useState(false);
   
   const widgetMountTimeRef = useRef<number>(Date.now());
-  const visibilityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const hoverInactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const opacityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const visibilityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverInactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const opacityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   const clearTimers = () => {

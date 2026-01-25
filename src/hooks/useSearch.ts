@@ -18,7 +18,7 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Real-time suggestions with debouncing
   useEffect(() => {
