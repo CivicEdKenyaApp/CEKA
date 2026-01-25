@@ -1,4 +1,4 @@
-# 🇰🇪 CEKA – Civic Education Kenya App
+ # 🇰🇪 CEKA – Civic Education Kenya App
 
 **CEKA** (Civic Education Kenya App) is a community-led open-source platform built to bridge the civic knowledge gap and empower Kenyan citizens with accessible, accurate, and engaging civic education.
 
