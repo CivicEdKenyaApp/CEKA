@@ -14,6 +14,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Layout from '@/components/layout/Layout';
+<<<<<<< HEAD
+=======
+import { useAuth } from '@/App';
+import { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
+>>>>>>> origin/ceka-app-v5.0.1
 import { translate } from '@/lib/utils';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -138,6 +144,7 @@ const UserProfile = () => {
       <Layout>
         <div className="container py-16 text-center">
           {translate("Loading...", language)}
+<<<<<<< HEAD
         </div>
       </Layout>
     );
@@ -150,6 +157,8 @@ const UserProfile = () => {
       <Layout>
         <div className="container py-16 text-center">
           {translate("Redirecting to login...", language)}
+=======
+>>>>>>> origin/ceka-app-v5.0.1
         </div>
       </Layout>
     );

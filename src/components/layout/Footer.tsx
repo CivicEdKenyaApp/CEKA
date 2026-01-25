@@ -9,9 +9,12 @@ import { translate } from '@/lib/utils';
 const Footer = () => {
   const { language } = useLanguage();
 
+<<<<<<< HEAD
   // Nairobi Kenya Google Maps URL
   const nairobiMapUrl = "https://www.google.com/maps/place/Nairobi,+Kenya/@-1.2833099,36.8085756,12z";
 
+=======
+>>>>>>> origin/ceka-app-v5.0.1
   return (
     <footer className="bg-muted py-8 mt-12">
       <div className="container grid gap-8 md:grid-cols-4">
@@ -58,7 +61,11 @@ const Footer = () => {
             <li><Link to="/" className="hover:text-kenya-green">{translate('Home', language)}</Link></li>
             <li><Link to="/legislative-tracker" className="hover:text-kenya-green">{translate('Legislative Tracker', language)}</Link></li>
             <li><Link to="/resources" className="hover:text-kenya-green">{translate('Resource Hub', language)}</Link></li>
+<<<<<<< HEAD
             <li><Link to="/blog" className="hover:text-kenya-green">{translate('Blog', language)}</Link></li>
+=======
+            <li><Link to="/community" className="hover:text-kenya-green">{translate('Community', language)}</Link></li>
+>>>>>>> origin/ceka-app-v5.0.1
             <li><Link to="/volunteer" className="hover:text-kenya-green">{translate('Volunteer', language)}</Link></li>
           </ul>
         </div>
@@ -66,7 +73,11 @@ const Footer = () => {
         <div>
           <h4 className="font-medium text-base mb-3">{translate('Resources', language)}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
+<<<<<<< HEAD
             <li><Link to="/constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
+=======
+            <li><Link to="/resources/type/constitution" className="hover:text-kenya-green">{translate('Constitution', language)}</Link></li>
+>>>>>>> origin/ceka-app-v5.0.1
             <li><Link to="/resources/type/infographic" className="hover:text-kenya-green">{translate('Infographic', language)}</Link></li>
             <li><Link to="/resources/type/video" className="hover:text-kenya-green">{translate('Videos', language)}</Link></li>
             <li><Link to="/resources/type/document" className="hover:text-kenya-green">{translate('Documents', language)}</Link></li>

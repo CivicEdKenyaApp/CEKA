@@ -1,4 +1,4 @@
- # 🇰🇪 CEKA – Civic Education Kenya App
+# 🇰🇪 CEKA – Civic Education Kenya App
 
 **CEKA** (Civic Education Kenya App) is a community-led open-source platform built to bridge the civic knowledge gap and empower Kenyan citizens with accessible, accurate, and engaging civic education.
 
@@ -32,11 +32,6 @@ CEKA is a civic tech project built **for the people, by the people**. In a democ
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- Git
-
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/CivicEdKenyaApp/CEKA.git
@@ -54,17 +49,11 @@ Copy the example environment file and add your configuration:
 cp .env.example .env
 ```
 
-Update `.env` with your credentials:
+Update `.env` with your credentials (available from your Supabase dashboard):
 ```env
 # Supabase Configuration
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# OpenAI API (for AI features)
-VITE_OPENAI_API_KEY=your_openai_api_key
-
-# MongoDB Connection
-MONGODB_URI=your_mongodb_connection_string
 ```
 
 > 🔐 **Security Note**: Never commit your `.env` file. It's already included in `.gitignore`.
@@ -73,7 +62,6 @@ MONGODB_URI=your_mongodb_connection_string
 ```bash
 npm run dev
 ```
-
 Your app should be running at [http://localhost:5173](http://localhost:5173)
 
 ### 5. Build for Production
@@ -87,25 +75,15 @@ npm run build
 
 ### Frontend
 - **[React 18](https://react.dev/)** - Modern UI library with hooks and concurrent features
-- **[Next.js](https://nextjs.org/)** - Full-stack React framework with SSR/SSG
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript development
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[Vite](https://vitejs.dev/)** - Fast build tool and development server
+- **[Framer Motion](https://www.framer.com/motion/)** - Smooth animations and interactions
+- **[GSAP](https://greensock.com/gsap/)** - High-performance animations
 
-### Backend
-- **[Node.js](https://nodejs.org/)** - JavaScript runtime environment
-- **[Express.js](https://expressjs.com/)** - Web application framework
-- **[MongoDB](https://www.mongodb.com/)** - NoSQL database for flexible data storage
-- **[Mongoose](https://mongoosejs.com/)** - MongoDB object modeling
-
-### AI & Services
+### Backend & Services
+- **[Supabase](https://supabase.com/)** - Authentication, PostgreSQL database, and real-time features
 - **[OpenAI API](https://openai.com/api/)** - Content summarization and categorization
-- **[Supabase](https://supabase.com/)** - Backend-as-a-Service for authentication and real-time features
-
-### Deployment
-- **[Vercel](https://vercel.com/)** - Frontend hosting with edge functions
-- **[MongoDB Atlas](https://www.mongodb.com/atlas)** - Cloud database hosting
-- **[GitHub Actions](https://github.com/features/actions)** - CI/CD pipeline
 
 ---
 
@@ -133,7 +111,6 @@ We welcome all collaborators — **developers, designers, educators, civic advoc
 4. **Test your changes**
    ```bash
    npm run test
-   npm run lint
    ```
 
 5. **Submit a pull request**
@@ -148,17 +125,6 @@ We welcome all collaborators — **developers, designers, educators, civic advoc
 - **📝 Content** - Civic education materials, translations (Swahili, other Kenyan languages)
 - **🧪 Testing** - Manual testing, automated test writing
 - **📚 Documentation** - API docs, user guides, contribution guidelines
-- **🌍 Localization** - Translation and cultural adaptation
-
-### 📋 Contributor Guidelines
-
-- **Code of Conduct**: Be respectful, inclusive, and constructive
-- **Quality Standards**: Write clean, well-documented, and tested code
-- **Civic Mission**: Ensure contributions align with civic education goals
-- **Accessibility**: Make features usable by people of all abilities
-- **Mobile-First**: Prioritize mobile experience for Kenyan users
-
-For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -166,45 +132,12 @@ For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 CEKA is designed for easy deployment across multiple platforms:
 
-### Frontend Deployment
+### Frontend
 - **[Vercel](https://vercel.com/)** (Recommended)
 - **[Netlify](https://netlify.com/)**
-- **[GitHub Pages](https://pages.github.com/)**
 
-### Backend Deployment
+### Backend
 - **[Supabase](https://supabase.com/)** + Auth 
-- **[Railway](https://railway.app/)**
-- **[Heroku](https://heroku.com/)**
-- **[AWS](https://aws.amazon.com/)**
-
-### Database
-- **[MongoDB Atlas](https://www.mongodb.com/atlas)** 
-- **[Supabase](https://supabase.com/)** (Recommended - Postgres)
-
-See our [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.
-
----
-
-## 📊 Project Structure
-
-```
-CEKA/
-├── src/
-│   ├── components/          # Reusable UI components
-│   ├── pages/              # Main application pages
-│   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Helper functions
-│   ├── services/           # API and external services
-│   └── types/              # TypeScript type definitions
-├── server/
-│   ├── routes/             # API endpoints
-│   ├── models/             # Database models
-│   ├── middleware/         # Express middleware
-│   └── services/           # Server-side services
-├── public/                 # Static assets
-├── docs/                   # Documentation
-└── tests/                  # Test files
-```
 
 ---
 
@@ -212,46 +145,35 @@ CEKA/
 
 CEKA takes user privacy and security seriously:
 
-- **🔐 Secure Authentication** - JWT-based authentication with secure password hashing
+- **🔐 Secure Authentication** - Supabase Auth for identity management
 - **🛡️ Data Protection** - User data is encrypted and stored securely
 - **👤 Anonymous Contributions** - Users can contribute without revealing identity
-- **🔍 Content Moderation** - AI-powered moderation with human oversight
 - **📊 Privacy-First Analytics** - No personal data tracking or sharing
 
-For security issues, please email: [contact@civiceducationkenya.com](mailto:contact@civiceducationkenya.com)
+For security issues, please email: [civiceducationkenya@gmail.com](mailto:civiceducationkenya@gmail.com)
 
 ---
 
 ## 🌐 Community & Support
 
 ### Get Help
-- **📖 Documentation**: [docs.ceka.app](https://docs.ceka.app)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/CivicEdKenyaApp/CEKA/discussions)
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/CivicEdKenyaApp/CEKA/issues)
-- **📧 Email**: [civiceducationkenya@gmail.com](mailto:contact@civiceducationkenya.com)
+- **📧 Email**: [civiceducationkenya@gmail.com](mailto:civiceducationkenya@gmail.com)
 
 ### Stay Connected
 - **📱 Instagram**: [@civiceducationke](https://instagram.com/civiceducationke)
 - **🐦 Twitter**: [@CEKAApp](https://twitter.com/CEKAApp)
-- **💼 LinkedIn**: [CEKA Project](https://linkedin.com/company/ceka-app)
 
 ### Support the Project
-CEKA is entirely community-funded. Your support helps us:
-- Maintain servers and infrastructure
-- Develop new features
-- Create educational content
-- Support community events
+CEKA is community-supported. Your support helps us maintain infrastructure and create content.
 
-**[☕ Buy Me A Coffee](https://ko-fi.com/civiceducationkenya)** | **[💝 GitHub Sponsors](https://github.com/sponsors/CivicEdKenyaApp)**
-
-> Every contribution, no matter how small, makes a difference! 🙏
+**[☕ Buy Me A Coffee](https://ko-fi.com/civiceducationkenya)**
 
 ---
 
-## 📄 License & Legal
-
-### Open Source License
-This project is licensed under the **[MIT License](LICENSE)** - see the LICENSE file for details.
+## 📄 License
+This project is open source and available under the **[MIT License](LICENSE)**.
 
 **What this means:**
 - ✅ **Commercial Use** - Use CEKA in commercial projects

@@ -5,11 +5,15 @@ import { ChevronRight, BookOpen, FileText, Users, HandHelping } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
+<<<<<<< HEAD
 import { motion } from 'framer-motion';
+=======
+>>>>>>> origin/ceka-app-v5.0.1
 
 const Hero = () => {
   const { language } = useLanguage();
 
+<<<<<<< HEAD
   // Track card interaction count for eventual decay of animations
   const [interactionCounts, setInteractionCounts] = React.useState({
     resources: 0,
@@ -33,13 +37,19 @@ const Hero = () => {
     return Math.max(1.03, 1.07 - count * 0.01); // Will decay to 1.03 scale after several interactions
   };
 
+=======
+>>>>>>> origin/ceka-app-v5.0.1
   return (
     <section className="relative py-16 md:py-24 bg-gradient-to-b from-muted/50 to-background overflow-hidden">
       <div className="container relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
             <div className="space-y-2">
+<<<<<<< HEAD
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+=======
+              <h1 className="font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-tight">
+>>>>>>> origin/ceka-app-v5.0.1
                 {translate('Empowering Citizens through', language)} 
                 <span className="block text-kenya-green">{translate('Civic Education', language)}</span>
               </h1>
@@ -66,6 +76,7 @@ const Hero = () => {
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
+<<<<<<< HEAD
                 <Link to="/resources" onClick={() => handleCardInteraction('resources')}>
                   <motion.div 
                     className="kenyan-card p-5 space-y-3 animate-fade-in cursor-pointer" 
@@ -138,6 +149,33 @@ const Hero = () => {
                     <p className="text-sm text-muted-foreground">{translate('Find opportunities to make a difference.', language)}</p>
                   </motion.div>
                 </Link>
+=======
+                <div className="kenyan-card p-5 space-y-3 animate-fade-in" style={{animationDelay: '0s'}}>
+                  <BookOpen className="h-6 w-6 text-kenya-green" />
+                  <h3 className="font-medium text-lg">{translate('Educational Resources', language)}</h3>
+                  <p className="text-sm text-muted-foreground">{translate('Learn about governance, rights, and civic processes.', language)}</p>
+                </div>
+                
+                <div className="kenyan-card-accent p-5 space-y-3 animate-fade-in" style={{animationDelay: '0.2s'}}>
+                  <Users className="h-6 w-6 text-kenya-red" />
+                  <h3 className="font-medium text-lg">{translate('Community Forum', language)}</h3>
+                  <p className="text-sm text-muted-foreground">{translate('Connect and discuss civic matters with other citizens.', language)}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mt-8">
+                <div className="kenyan-card p-5 space-y-3 animate-fade-in" style={{animationDelay: '0.1s'}}>
+                  <FileText className="h-6 w-6 text-kenya-green" />
+                  <h3 className="font-medium text-lg">{translate('Legislative Updates', language)}</h3>
+                  <p className="text-sm text-muted-foreground">{translate('Stay informed about bills and legal changes.', language)}</p>
+                </div>
+                
+                <div className="kenyan-card-accent p-5 space-y-3 animate-fade-in" style={{animationDelay: '0.3s'}}>
+                  <HandHelping className="h-6 w-6 text-kenya-red" />
+                  <h3 className="font-medium text-lg">{translate('Volunteer', language)}</h3>
+                  <p className="text-sm text-muted-foreground">{translate('Find opportunities to make a difference.', language)}</p>
+                </div>
+>>>>>>> origin/ceka-app-v5.0.1
               </div>
             </div>
             

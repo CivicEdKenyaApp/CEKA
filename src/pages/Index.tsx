@@ -1,13 +1,18 @@
 
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+=======
+import React, { useEffect } from 'react';
+>>>>>>> origin/ceka-app-v5.0.1
 import Layout from '@/components/layout/Layout';
 import Hero from '@/components/home/Hero';
 import FeaturedLegislation from '@/components/home/FeaturedLegislation';
 import ResourceHighlights from '@/components/home/ResourceHighlights';
 import CommunitySection from '@/components/home/CommunitySection';
 import VolunteerOpportunities from '@/components/home/VolunteerOpportunities';
+<<<<<<< HEAD
 import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,6 +29,10 @@ interface CarouselSlide {
   image_url: string | null;
   type: 'project' | 'cta';
 }
+=======
+import { useAuth } from '@/App';
+import { useNavigate } from 'react-router-dom';
+>>>>>>> origin/ceka-app-v5.0.1
 
 // Sample resource links for educational content
 export const sampleResources = {
@@ -40,6 +49,7 @@ export const sampleResources = {
     video: "https://www.youtube.com/watch?v=JpY9s1Agbsw"
   }
 };
+<<<<<<< HEAD
 
 // Custom component for the featured cards that link to different sections
 const FeatureCard = ({ title, description, icon, to, color }: any) => {
@@ -127,6 +137,21 @@ const Index = () => {
     );
   }
 
+=======
+
+const Index = () => {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Auto-redirect to auth page if not logged in
+  useEffect(() => {
+    if (!loading && !session) {
+      // We don't need this redirect since we're using the scroll-triggered auth modal
+      // navigate('/auth');
+    }
+  }, [session, loading, navigate]);
+  
+>>>>>>> origin/ceka-app-v5.0.1
   return (
     <Layout>
       <Hero />

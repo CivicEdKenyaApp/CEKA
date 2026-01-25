@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ScrollListener from '@/components/auth/ScrollListener';
 import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
@@ -34,6 +37,7 @@ import AdvocacyToolkit from '@/pages/AdvocacyToolkit';
 import AdvocacyToolkitDetail from '@/pages/AdvocacyToolkitDetail';
 import JoinCommunity from '@/pages/JoinCommunity';
 import ConstitutionPage from '@/pages/ConstitutionPage';
+import CommunityPortal from '@/pages/CommunityPortal';
 import LegalPage from '@/pages/LegalPage';
 import FeedbackPage from '@/pages/FeedbackPage';
 import DiscussionDetail from '@/pages/DiscussionDetail';
@@ -53,12 +57,29 @@ import TermsConditions from '@/pages/TermsConditions';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/providers/AuthProvider';
 
+const queryClient = new QueryClient();
+
 const ScrollToTop = () => {
   const location = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
   return null;
+};
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+  }
+
+  if (!session) {
+    return <Navigate to="/auth" />;
+  }
+
+  return <>{children}</>;
 };
 
 const AppContent = () => {
@@ -103,8 +124,17 @@ const AppContent = () => {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/resources" element={<ResourceLibrary />} />
         <Route path="/resources/:id" element={<ResourceDetail />} />
-        <Route path="/resources/upload" element={<ResourceUpload />} />
-        <Route path="/resources/pending" element={<PendingResources />} />
+        <Route path="/resources/type/:type" element={<ResourceLibrary />} />
+        <Route path="/resources/upload" element={
+          <ProtectedRoute>
+            <ResourceUpload />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources/pending" element={
+          <ProtectedRoute>
+            <PendingResources />
+          </ProtectedRoute>
+        } />
         <Route path="/resource-hub" element={<ResourceHub />} />
         <Route path="/legislative-tracker" element={<LegislativeTracker />} />
         <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
@@ -112,19 +142,30 @@ const AppContent = () => {
         <Route path="/bill/:id" element={<BillDetail />} />
         <Route path="/reject-finance-bill" element={<RejectFinanceBill />} />
         <Route path="/shambles" element={<SHAmbles />} />
-        {/* NEW PAGES ADDED HERE */}
         <Route path="/peoples-audit" element={<PeoplesAuditPage />} />
         <Route path="/nasaka" element={<NasakaPage />} />
-        {/* END NEW PAGES */}
         <Route path="/volunteer" element={<Volunteer />} />
         <Route path="/volunteer/apply/:id" element={<VolunteerApplication />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/profile/settings" element={<ProfileSettings />} />
-        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile/settings" element={
+          <ProtectedRoute>
+            <ProfileSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } />
         <Route path="/advocacy-toolkit" element={<AdvocacyToolkit />} />
         <Route path="/advocacy-toolkit/:id" element={<AdvocacyToolkitDetail />} />
         <Route path="/join-community" element={<JoinCommunity />} />
         <Route path="/constitution" element={<ConstitutionPage />} />
+        <Route path="/community" element={<CommunityPortal />} />
         <Route path="/legal" element={<LegalPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/discussion/:id" element={<DiscussionDetail />} />
@@ -143,22 +184,27 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
+      <Sonner />
     </>
   );
 };
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <ScrollListener>
-            <AuthModal open={false} onOpenChange={() => { }} />
-            <AppContent />
-          </ScrollListener>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <ScrollListener>
+                <AuthModal open={false} onOpenChange={() => { }} />
+                <AppContent />
+              </ScrollListener>
+            </TooltipProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 

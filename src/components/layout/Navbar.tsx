@@ -125,6 +125,7 @@ const Navbar = () => {
         }
       ]
     },
+    { name: translate('Community', language), path: '/community' },
     { name: translate('Volunteer', language), path: '/volunteer' },
     { name: translate('Join Us', language), path: '/join-community' },
   ];
@@ -413,46 +414,299 @@ const Navbar = () => {
             </div>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Search Overlay */}
+      {/* Mobile Search Overlay */}
+      <AnimatePresence>
+        {isMobile && showSearch && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-background/95 backdrop-blur-3xl z-[10001]"
+              onClick={() => setShowSearch(false)}
+            />
+
+            <motion.div
+              initial={{ y: -100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -100, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              className="fixed top-0 left-0 right-0 z-[10002] bg-background/95 backdrop-blur-3xl border-b border-border/50 shadow-ios-high"
+            >
+              <div className="container mx-auto px-4 py-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowSearch(false)}
+                    className="h-12 w-12 hover:bg-muted/70 backdrop-blur-sm rounded-xl"
+                    aria-label="Close search"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+
+                  <div className="flex-1">
+                    <SearchSuggestion
+                      isMobile
+                      onSearch={handleSearch}
+                      autoFocus
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+
+      {/* Mobile Menu */}
+      {isMobile && (
         <AnimatePresence>
-          {isMobile && showSearch && (
+          {isOpen && !showSearch && (
             <>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-background/95 backdrop-blur-3xl z-[10001]"
-                onClick={() => setShowSearch(false)}
+                className="fixed inset-0 bg-background/80 backdrop-blur-xl z-40"
+                onClick={() => setIsOpen(false)}
               />
 
               <motion.div
-                initial={{ y: -100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -100, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-                className="fixed top-0 left-0 right-0 z-[10002] bg-background/95 backdrop-blur-3xl border-b border-border/50 shadow-ios-high"
+                ref={mobileMenuRef}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{
+                  type: "spring",
+                  damping: 25,
+                  stiffness: 400,
+                  mass: 0.8
+                }}
+                className="fixed top-16 left-4 right-4 z-50 bg-background/95 backdrop-blur-3xl border border-border/50 rounded-3xl shadow-ios-high overflow-hidden"
+                style={{
+                  maxHeight: 'calc(100vh - 6rem)',
+                  height: 'auto',
+                  WebkitOverflowScrolling: 'touch'
+                }}
               >
-                <div className="container mx-auto px-4 py-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowSearch(false)}
-                      className="h-12 w-12 hover:bg-muted/70 backdrop-blur-sm rounded-xl"
-                      aria-label="Close search"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border/10">
+                  <Logo className="h-7 w-auto" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsOpen(false)}
+                    className="rounded-full bg-muted/20 h-10 w-10"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/95 to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/95 to-transparent z-10 pointer-events-none"></div>
 
-                    <div className="flex-1">
-                      <SearchSuggestion
-                        isMobile
-                        onSearch={handleSearch}
-                        autoFocus
-                        className="w-full"
-                      />
+                <div
+                  className="py-6 overflow-y-auto green-scrollbar"
+                  style={{
+                    maxHeight: 'calc(100vh - 8rem)',
+                    overscrollBehavior: 'contain',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  <div className="space-y-1 px-4">
+                    {allNavItems.map((item) => {
+                      const isDropdownExpanded = expandedDropdown === item.name;
+                      const hasDropdown = !!item.dropdown;
+                      const isActiveItem = isActive(item.path) ||
+                        (item.dropdown?.some(subItem => isActive(subItem.path)) ?? false);
+
+                      return hasDropdown ? (
+                        <div key={item.name} className="space-y-1">
+                          <button
+                            onClick={() => setExpandedDropdown(isDropdownExpanded ? null : item.name)}
+                            className={`w-full px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center justify-between transition-all duration-200 ${isActiveItem
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground/90 hover:bg-muted/70'
+                              }`}
+                            style={{ backdropFilter: 'blur(10px)' }}
+                          >
+                            <div className="flex items-center">
+                              {item.icon && <item.icon className="h-4 w-4 mr-3" />}
+                              {item.name}
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-xs text-muted-foreground mr-2">
+                                {item.dropdown?.length || 0} items
+                              </span>
+                              <motion.div
+                                animate={{ rotate: isDropdownExpanded ? 90 : 0 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <ChevronRight className="h-4 w-4 opacity-70" />
+                              </motion.div>
+                            </div>
+                          </button>
+
+                          <AnimatePresence>
+                            {isDropdownExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{
+                                  height: 'auto',
+                                  opacity: 1,
+                                  transition: {
+                                    height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                                    opacity: { duration: 0.25, delay: 0.05 }
+                                  }
+                                }}
+                                exit={{
+                                  height: 0,
+                                  opacity: 0,
+                                  transition: {
+                                    height: { duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] },
+                                    opacity: { duration: 0.2 }
+                                  }
+                                }}
+                                className="overflow-hidden pl-6"
+                              >
+                                <div className="space-y-1 py-1 border-l border-border/30 ml-2">
+                                  {item.dropdown?.map((subItem) => (
+                                    <Link
+                                      key={subItem.name}
+                                      to={subItem.path}
+                                      onClick={() => {
+                                        setIsOpen(false);
+                                        setExpandedDropdown(null);
+                                      }}
+                                      className={`block pl-4 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${isActive(subItem.path)
+                                        ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                                        : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground hover:translate-x-1'
+                                        }`}
+                                    >
+                                      <div className="font-medium">{subItem.name}</div>
+                                      {subItem.description && (
+                                        <div className="text-xs text-muted-foreground mt-0.5 opacity-80">
+                                          {subItem.description}
+                                        </div>
+                                      )}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ) : (
+                        <Link
+                          key={item.name}
+                          to={item.path}
+                          onClick={() => setIsOpen(false)}
+                          className={`block px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center transition-all duration-200 ${isActive(item.path)
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-foreground/90 hover:bg-muted/70'
+                            }`}
+                          style={{ backdropFilter: 'blur(10px)' }}
+                        >
+                          {item.icon && <item.icon className="h-4 w-4 mr-3" />}
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                  <div className="border-t border-border/30 my-4 mx-4"></div>
+
+                  <div className="px-4 py-2">
+                    {user ? (
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center text-foreground/90 hover:text-primary px-4 py-3 rounded-2xl hover:bg-muted/70 transition-all duration-200"
+                        style={{ backdropFilter: 'blur(10px)' }}
+                      >
+                        <User className="h-4 w-4 mr-3" />
+                        Profile
+                      </Link>
+                    ) : (
+                      <Button
+                        variant="default"
+                        className="w-full justify-center py-6 rounded-2xl bg-primary hover:bg-primary/90 backdrop-blur-sm"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setShowAuthModal(true);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="px-4 py-2">
+                    <div className="flex items-center text-foreground/90 mb-3 px-4">
+                      <Globe className="h-4 w-4 mr-3" />
+                      <span className="font-medium">Language</span>
+                    </div>
+                    <div className="pl-8 space-y-1">
+                      {languageOptions.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code as any)}
+                          className={`block w-full text-left px-4 py-2.5 text-sm rounded-xl transition-all duration-200 ${language === lang.code
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            {lang.name}
+                            {language === lang.code && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center"
+                              >
+                                <span className="text-primary">✓</span>
+                              </motion.div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="px-4 py-2 pb-6">
+                    <div className="flex items-center text-foreground/90 mb-3 px-4">
+                      <Settings className="h-4 w-4 mr-3" />
+                      <span className="font-medium">Settings</span>
+                    </div>
+                    <div className="pl-8 space-y-1">
+                      <Link
+                        to="/settings/notifications"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
+                      >
+                        Notifications
+                      </Link>
+                      <Link
+                        to="/settings/privacy"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
+                      >
+                        Privacy
+                      </Link>
+                      {user && (
+                        <Link
+                          to="/settings/account"
+                          onClick={() => setIsOpen(false)}
+                          className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
+                        >
+                          Account
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -460,260 +714,8 @@ const Navbar = () => {
             </>
           )}
         </AnimatePresence>
-
-        {/* Mobile Menu */}
-        {isMobile && (
-          <AnimatePresence>
-            {isOpen && !showSearch && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="fixed inset-0 bg-background/80 backdrop-blur-xl z-40"
-                  onClick={() => setIsOpen(false)}
-                />
-
-                <motion.div
-                  ref={mobileMenuRef}
-                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{
-                    type: "spring",
-                    damping: 25,
-                    stiffness: 400,
-                    mass: 0.8
-                  }}
-                  className="fixed top-16 left-4 right-4 z-50 bg-background/95 backdrop-blur-3xl border border-border/50 rounded-3xl shadow-ios-high overflow-hidden"
-                  style={{
-                    maxHeight: 'calc(100vh - 6rem)',
-                    height: 'auto',
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-border/10">
-                    <Logo className="h-7 w-auto" />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsOpen(false)}
-                      className="rounded-full bg-muted/20 h-10 w-10"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/95 to-transparent z-10 pointer-events-none"></div>
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/95 to-transparent z-10 pointer-events-none"></div>
-
-                  <div
-                    className="py-6 overflow-y-auto green-scrollbar"
-                    style={{
-                      maxHeight: 'calc(100vh - 8rem)',
-                      overscrollBehavior: 'contain',
-                      WebkitOverflowScrolling: 'touch'
-                    }}
-                  >
-                    <div className="space-y-1 px-4">
-                      {allNavItems.map((item) => {
-                        const isDropdownExpanded = expandedDropdown === item.name;
-                        const hasDropdown = !!item.dropdown;
-                        const isActiveItem = isActive(item.path) ||
-                          (item.dropdown?.some(subItem => isActive(subItem.path)) ?? false);
-
-                        return hasDropdown ? (
-                          <div key={item.name} className="space-y-1">
-                            <button
-                              onClick={() => setExpandedDropdown(isDropdownExpanded ? null : item.name)}
-                              className={`w-full px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center justify-between transition-all duration-200 ${isActiveItem
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-foreground/90 hover:bg-muted/70'
-                                }`}
-                              style={{ backdropFilter: 'blur(10px)' }}
-                            >
-                              <div className="flex items-center">
-                                {item.icon && <item.icon className="h-4 w-4 mr-3" />}
-                                {item.name}
-                              </div>
-                              <div className="flex items-center">
-                                <span className="text-xs text-muted-foreground mr-2">
-                                  {item.dropdown?.length || 0} items
-                                </span>
-                                <motion.div
-                                  animate={{ rotate: isDropdownExpanded ? 90 : 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <ChevronRight className="h-4 w-4 opacity-70" />
-                                </motion.div>
-                              </div>
-                            </button>
-
-                            <AnimatePresence>
-                              {isDropdownExpanded && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{
-                                    height: 'auto',
-                                    opacity: 1,
-                                    transition: {
-                                      height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
-                                      opacity: { duration: 0.25, delay: 0.05 }
-                                    }
-                                  }}
-                                  exit={{
-                                    height: 0,
-                                    opacity: 0,
-                                    transition: {
-                                      height: { duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] },
-                                      opacity: { duration: 0.2 }
-                                    }
-                                  }}
-                                  className="overflow-hidden pl-6"
-                                >
-                                  <div className="space-y-1 py-1 border-l border-border/30 ml-2">
-                                    {item.dropdown?.map((subItem) => (
-                                      <Link
-                                        key={subItem.name}
-                                        to={subItem.path}
-                                        onClick={() => {
-                                          setIsOpen(false);
-                                          setExpandedDropdown(null);
-                                        }}
-                                        className={`block pl-4 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${isActive(subItem.path)
-                                          ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                                          : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground hover:translate-x-1'
-                                          }`}
-                                      >
-                                        <div className="font-medium">{subItem.name}</div>
-                                        {subItem.description && (
-                                          <div className="text-xs text-muted-foreground mt-0.5 opacity-80">
-                                            {subItem.description}
-                                          </div>
-                                        )}
-                                      </Link>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        ) : (
-                          <Link
-                            key={item.name}
-                            to={item.path}
-                            onClick={() => setIsOpen(false)}
-                            className={`block px-4 py-3.5 rounded-2xl text-sm font-medium flex items-center transition-all duration-200 ${isActive(item.path)
-                              ? 'bg-primary/10 text-primary'
-                              : 'text-foreground/90 hover:bg-muted/70'
-                              }`}
-                            style={{ backdropFilter: 'blur(10px)' }}
-                          >
-                            {item.icon && <item.icon className="h-4 w-4 mr-3" />}
-                            {item.name}
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    <div className="border-t border-border/30 my-4 mx-4"></div>
-
-                    <div className="px-4 py-2">
-                      {user ? (
-                        <Link
-                          to="/profile"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center text-foreground/90 hover:text-primary px-4 py-3 rounded-2xl hover:bg-muted/70 transition-all duration-200"
-                          style={{ backdropFilter: 'blur(10px)' }}
-                        >
-                          <User className="h-4 w-4 mr-3" />
-                          Profile
-                        </Link>
-                      ) : (
-                        <Button
-                          variant="default"
-                          className="w-full justify-center py-6 rounded-2xl bg-primary hover:bg-primary/90 backdrop-blur-sm"
-                          onClick={() => {
-                            setIsOpen(false);
-                            setShowAuthModal(true);
-                          }}
-                        >
-                          Sign In
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="px-4 py-2">
-                      <div className="flex items-center text-foreground/90 mb-3 px-4">
-                        <Globe className="h-4 w-4 mr-3" />
-                        <span className="font-medium">Language</span>
-                      </div>
-                      <div className="pl-8 space-y-1">
-                        {languageOptions.map((lang) => (
-                          <button
-                            key={lang.code}
-                            onClick={() => setLanguage(lang.code as any)}
-                            className={`block w-full text-left px-4 py-2.5 text-sm rounded-xl transition-all duration-200 ${language === lang.code
-                              ? 'bg-primary/10 text-primary'
-                              : 'text-foreground/80 hover:bg-muted/50 hover:text-foreground'
-                              }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              {lang.name}
-                              {language === lang.code && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center"
-                                >
-                                  <span className="text-primary">✓</span>
-                                </motion.div>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="px-4 py-2 pb-6">
-                      <div className="flex items-center text-foreground/90 mb-3 px-4">
-                        <Settings className="h-4 w-4 mr-3" />
-                        <span className="font-medium">Settings</span>
-                      </div>
-                      <div className="pl-8 space-y-1">
-                        <Link
-                          to="/settings/notifications"
-                          onClick={() => setIsOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
-                        >
-                          Notifications
-                        </Link>
-                        <Link
-                          to="/settings/privacy"
-                          onClick={() => setIsOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
-                        >
-                          Privacy
-                        </Link>
-                        {user && (
-                          <Link
-                            to="/settings/account"
-                            onClick={() => setIsOpen(false)}
-                            className="block px-4 py-2.5 text-sm text-foreground/80 hover:bg-muted/50 hover:text-foreground rounded-xl transition-all duration-200"
-                          >
-                            Account
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        )}
-      </nav>
-
+      )}
+    </nav >
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </>
   );
