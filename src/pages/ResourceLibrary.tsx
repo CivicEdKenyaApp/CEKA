@@ -1,9 +1,9 @@
 // src/pages/ResourceLibrary.tsx
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Search, Filter, Download, Book, FileText, Video, Image as ImageIcon, 
-  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen 
+import {
+  Search, Filter, Download, Book, FileText, Video, Image as ImageIcon,
+  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -327,7 +327,7 @@ const ResourceLibrary = () => {
 
   const allResources = useMemo(() => {
     const combined = [...mockResources, ...dbResources];
-    
+
     // Remove duplicates by ID
     const uniqueIds = new Set();
     return combined.filter(resource => {
@@ -343,37 +343,37 @@ const ResourceLibrary = () => {
   // Filter and sort resources based on current state
   const filteredResources = useMemo(() => {
     let filtered = allResources;
-    
+
     // Apply search term filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(resource => 
-        resource.title.toLowerCase().includes(term) || 
+      filtered = filtered.filter(resource =>
+        resource.title.toLowerCase().includes(term) ||
         resource.description.toLowerCase().includes(term) ||
         (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(term)))
       );
     }
-    
+
     // Apply category filter
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(resource => selectedCategories.includes(resource.category));
     }
-    
+
     // Apply type filter
     if (selectedTypes.length > 0) {
       filtered = filtered.filter(resource => selectedTypes.includes(resource.type));
     }
-    
+
     // Apply sorting
     return filtered.sort((a, b) => {
       if (sortBy === 'date') {
-        return sortDirection === 'asc' 
+        return sortDirection === 'asc'
           ? new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime()
           : new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
       } else if (sortBy === 'popularity') {
         const aPopularity = a.views + a.downloads;
         const bPopularity = b.views + b.downloads;
-        return sortDirection === 'asc' 
+        return sortDirection === 'asc'
           ? aPopularity - bPopularity
           : bPopularity - aPopularity;
       } else { // alphabetical
@@ -457,7 +457,7 @@ const ResourceLibrary = () => {
   // Render resource card based on view mode
   const renderResourceCard = (resource: Resource) => {
     const isSelected = selectedResources.includes(resource.id);
-    
+
     if (viewMode === 'grid') {
       return (
         <motion.div
@@ -470,9 +470,9 @@ const ResourceLibrary = () => {
           <Card className={`h-full transition-shadow hover:shadow-md overflow-hidden ${isSelected ? 'border-primary' : ''}`}>
             <div className="relative">
               <div className="absolute top-2 right-2 z-10">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
                   onClick={() => toggleResourceSelection(resource.id)}
                 >
@@ -481,10 +481,12 @@ const ResourceLibrary = () => {
               </div>
               <div className="bg-muted aspect-video relative flex items-center justify-center">
                 {resource.thumbnail ? (
-                  <img 
-                    src={resource.thumbnail} 
-                    alt={resource.title} 
+                  <img
+                    src={resource.thumbnail}
+                    alt={resource.title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full w-full">
@@ -536,10 +538,12 @@ const ResourceLibrary = () => {
             <div className="flex items-start p-4">
               <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
                 {resource.thumbnail ? (
-                  <img 
-                    src={resource.thumbnail} 
-                    alt={resource.title} 
+                  <img
+                    src={resource.thumbnail}
+                    alt={resource.title}
                     className="w-full h-full object-cover rounded-md"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full w-full">
@@ -596,10 +600,10 @@ const ResourceLibrary = () => {
               {translate("Browse and download educational resources on civic education", language)}
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2 mt-4 md:mt-0">
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'} 
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="icon"
               onClick={() => setViewMode('grid')}
               className="h-8 w-8"
@@ -607,7 +611,7 @@ const ResourceLibrary = () => {
               <Grid3X3 className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'} 
+              variant={viewMode === 'list' ? 'default' : 'outline'}
               size="icon"
               onClick={() => setViewMode('list')}
               className="h-8 w-8"
@@ -616,7 +620,7 @@ const ResourceLibrary = () => {
             </Button>
           </div>
         </div>
-        
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar with filters */}
           <div className="lg:w-1/4">
@@ -637,7 +641,7 @@ const ResourceLibrary = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">{translate("Categories", language)}</h4>
                   <div className="space-y-2">
@@ -663,7 +667,7 @@ const ResourceLibrary = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">{translate("Resource Types", language)}</h4>
                   <div className="space-y-2">
@@ -690,12 +694,12 @@ const ResourceLibrary = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">{translate("Sort By", language)}</h4>
                   <div className="flex flex-col gap-2">
-                    <Button 
-                      variant={sortBy === 'date' ? 'default' : 'outline'} 
+                    <Button
+                      variant={sortBy === 'date' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
                         setSortBy('date');
@@ -712,9 +716,9 @@ const ResourceLibrary = () => {
                         sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
                       )}
                     </Button>
-                    
-                    <Button 
-                      variant={sortBy === 'popularity' ? 'default' : 'outline'} 
+
+                    <Button
+                      variant={sortBy === 'popularity' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
                         setSortBy('popularity');
@@ -731,9 +735,9 @@ const ResourceLibrary = () => {
                         sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
                       )}
                     </Button>
-                    
-                    <Button 
-                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'} 
+
+                    <Button
+                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
                         setSortBy('alphabetical');
@@ -752,14 +756,14 @@ const ResourceLibrary = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <Button variant="outline" onClick={resetFilters} className="w-full">
                   <X className="h-4 w-4 mr-2" />
                   {translate("Clear filters", language)}
                 </Button>
               </CardContent>
             </Card>
-            
+
             {/* Download selection panel */}
             {selectedResources.length > 0 && (
               <Card className="mt-4 border-primary">
@@ -783,7 +787,7 @@ const ResourceLibrary = () => {
               </Card>
             )}
           </div>
-          
+
           {/* Main content */}
           <div className="lg:w-3/4">
             <Tabs defaultValue="all" className="w-full">
@@ -826,7 +830,7 @@ const ResourceLibrary = () => {
                   </DropdownMenu>
                 )}
               </TabsList>
-              
+
               <TabsContent value="all" className="mt-0">
                 {isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -849,7 +853,7 @@ const ResourceLibrary = () => {
                   </div>
                 )}
               </TabsContent>
-              
+
               {allCategories.map((category) => (
                 <TabsContent key={category} value={category} className="mt-0">
                   {isLoading ? (

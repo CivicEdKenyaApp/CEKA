@@ -12,6 +12,7 @@ import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
+import EventsCalendar from '@/pages/EventsCalendar';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
@@ -60,7 +61,7 @@ const ScrollToTop = () => {
   return null;
 };
 
-const AppContent: React.FC = () => {
+const AppContent = () => {
   const { session } = useAuth();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -98,6 +99,7 @@ const AppContent: React.FC = () => {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/calendar" element={<EventsCalendar />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/resources" element={<ResourceLibrary />} />
         <Route path="/resources/:id" element={<ResourceDetail />} />
@@ -145,13 +147,13 @@ const AppContent: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
           <ScrollListener>
-            <AuthModal open={false} onOpenChange={() => {}} />
+            <AuthModal open={false} onOpenChange={() => { }} />
             <AppContent />
           </ScrollListener>
         </AuthProvider>

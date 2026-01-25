@@ -45,12 +45,12 @@ export const sampleResources = {
 const FeatureCard = ({ title, description, icon, to, color }: any) => {
   return (
     <Link to={to}>
-      <motion.div 
+      <motion.div
         className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-${color}/20 h-full`}
-        whileHover={{ 
-          scale: 1.03, 
+        whileHover={{
+          scale: 1.03,
           boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
-          borderColor: `var(--${color})` 
+          borderColor: `var(--${color})`
         }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -131,7 +131,7 @@ const Index = () => {
     <Layout>
       <Hero />
       <div className="py-8">
-        <MegaProjectCarousel 
+        <MegaProjectCarousel
           slides={formattedSlides}
           autoPlayMs={4500}
           className="container mx-auto"
