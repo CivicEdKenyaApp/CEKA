@@ -22,7 +22,6 @@ import EventsCalendar from '@/pages/EventsCalendar';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
-import ResourceHub from '@/pages/ResourceHub';
 import LegislativeTracker from '@/pages/LegislativeTracker';
 import LegislativeTrackerDetail from '@/pages/LegislativeTrackerDetail';
 import LegislationDetail from '@/pages/LegislationDetail';
