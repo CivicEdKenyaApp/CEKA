@@ -197,12 +197,10 @@ const App = () => {
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
-              <BrowserRouter>
-                <ScrollListener>
-                  <AuthModal open={false} onOpenChange={() => { }} />
-                  <AppContent />
-                </ScrollListener>
-              </BrowserRouter>
+              <ScrollListener>
+                <AuthModal open={false} onOpenChange={() => { }} />
+                <AppContent />
+              </ScrollListener>
             </TooltipProvider>
           </AuthProvider>
         </LanguageProvider>
