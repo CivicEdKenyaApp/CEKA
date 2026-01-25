@@ -8,13 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2 } from 'lucide-react';
+import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2, HandHelping } from 'lucide-react';
 import TermsModal from '@/components/TermsModal';
 import PrivacyModal from '@/components/PrivacyModal';
+import VolunteerOpportunitiesSection from '@/components/community/VolunteerOpportunitiesSection';
 
 const JoinCommunity = () => {
   const { toast } = useToast();
@@ -187,6 +189,9 @@ const JoinCommunity = () => {
     }
   ];
   
+  // Check if user is coming from a volunteer application link
+  const activeTab = searchParams.get('apply') ? 'volunteer' : 'join';
+
   return (
     <Layout>
       <div className="container py-12 max-w-7xl">
@@ -199,7 +204,20 @@ const JoinCommunity = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-12 items-start">
+        <Tabs defaultValue={activeTab} className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsTrigger value="join" className="gap-2">
+              <Users className="h-4 w-4" />
+              {translate("Join Community", language)}
+            </TabsTrigger>
+            <TabsTrigger value="volunteer" className="gap-2">
+              <HandHelping className="h-4 w-4" />
+              {translate("Volunteer", language)}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="join">
+            <div className="grid md:grid-cols-2 gap-12 items-start">
           <div className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">{translate("Why Join CEKA?", language)}</h2>
@@ -476,7 +494,13 @@ const JoinCommunity = () => {
               </p>
             </div>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="volunteer">
+            <VolunteerOpportunitiesSection />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <TermsModal

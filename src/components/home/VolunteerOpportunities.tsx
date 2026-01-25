@@ -134,7 +134,7 @@ const VolunteerOpportunities = () => {
             <p className="text-muted-foreground">Make a difference in your community through civic engagement</p>
           </div>
           <Button asChild variant="ghost" className="mt-4 md:mt-0">
-            <Link to="/volunteer" className="flex items-center">
+            <Link to="/join-community?tab=volunteer" className="flex items-center">
               View all opportunities
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

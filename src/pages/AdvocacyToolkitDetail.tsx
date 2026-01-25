@@ -233,13 +233,13 @@ const AdvocacyToolkitDetail = () => {
                   Want to contribute to civic engagement efforts? Explore opportunities to get involved.
                 </p>
                 <Button className="w-full bg-kenya-green hover:bg-kenya-green/90" asChild>
-                  <Link to="/volunteer">
+                  <Link to="/join-community?tab=volunteer">
                     Volunteer Opportunities
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/community">
-                    Join Community Discussions
+                    Join Community Chat
                   </Link>
                 </Button>
               </CardContent>
