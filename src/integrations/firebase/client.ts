@@ -39,8 +39,8 @@ if (typeof window !== 'undefined') {
     db = getFirestore(app);
     storage = getStorage(app);
     
-    // Analytics only works in the browser
-    if (process.env.NODE_ENV === 'production') {
+    // Analytics only works in the browser and production
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
       analytics = getAnalytics(app);
     }
   } catch (error) {

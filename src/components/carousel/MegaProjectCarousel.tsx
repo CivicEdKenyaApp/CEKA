@@ -140,7 +140,7 @@ export default function MegaProjectCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef(0);
-  const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoPlayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // CORRECTED: Function to get proper image URL from Supabase storage
