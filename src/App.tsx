@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { Route, Routes, useLocation, Navigate, BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -11,6 +11,9 @@ import ScrollListener from '@/components/auth/ScrollListener';
 import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
 import SplashScreen from '@/components/SplashScreen';
+import { useAuth } from '@/providers/AuthProvider';
+
+// Pages
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
@@ -55,7 +58,6 @@ import PrivacySettings from '@/pages/settings/PrivacySettings';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsConditions from '@/pages/TermsConditions';
 import NotFound from '@/pages/NotFound';
-import { useAuth } from '@/providers/AuthProvider';
 
 const queryClient = new QueryClient();
 
@@ -135,7 +137,7 @@ const AppContent = () => {
             <PendingResources />
           </ProtectedRoute>
         } />
-        <Route path="/resource-hub" element={<ResourceHub />} />
+        <Route path="/resource-hub" element={<Navigate to="/resources" replace />} />
         <Route path="/legislative-tracker" element={<LegislativeTracker />} />
         <Route path="/legislative-tracker/:id" element={<LegislativeTrackerDetail />} />
         <Route path="/legislation/:id" element={<LegislationDetail />} />
@@ -196,10 +198,12 @@ const App = () => {
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
-              <ScrollListener>
-                <AuthModal open={false} onOpenChange={() => { }} />
-                <AppContent />
-              </ScrollListener>
+              <BrowserRouter>
+                <ScrollListener>
+                  <AuthModal open={false} onOpenChange={() => { }} />
+                  <AppContent />
+                </ScrollListener>
+              </BrowserRouter>
             </TooltipProvider>
           </AuthProvider>
         </LanguageProvider>

@@ -18,7 +18,7 @@ interface BlogListProps {
 // Share Modal Component
 const ShareModal: React.FC<{ post: BlogPost; isOpen: boolean; onClose: () => void }> = ({ post, isOpen, onClose }) => {
   const { toast } = useToast();
-  
+
   if (!isOpen) return null;
 
   const shareUrl = `https://ceka.lovable.app/blog/${post.slug}`;
@@ -100,7 +100,7 @@ const ShareModal: React.FC<{ post: BlogPost; isOpen: boolean; onClose: () => voi
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <div className="space-y-3">
           {shareOptions.map((option) => {
             const IconComponent = option.icon;
@@ -117,7 +117,7 @@ const ShareModal: React.FC<{ post: BlogPost; isOpen: boolean; onClose: () => voi
             );
           })}
         </div>
-        
+
         <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-sm">
           <p className="font-medium mb-1 line-clamp-2">{postTitle}</p>
           <p className="text-gray-600 dark:text-gray-300 text-xs break-all">{shareUrl}</p>
@@ -132,7 +132,7 @@ export function BlogList({ posts }: BlogListProps) {
   const { toast } = useToast();
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
-  
+
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -229,7 +229,7 @@ export function BlogList({ posts }: BlogListProps) {
       });
       return;
     }
-    
+
     // Navigate to the blog post with reply form
     const post = posts.find(p => p.id === postId);
     if (post) {
@@ -239,7 +239,7 @@ export function BlogList({ posts }: BlogListProps) {
 
   const PostViewCount = ({ postId }: { postId: string }) => {
     const viewCount = useViewCount(postId, 'blog_post');
-    
+
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <Eye className="h-3 w-3" />
@@ -259,7 +259,7 @@ export function BlogList({ posts }: BlogListProps) {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full max-w-full overflow-hidden">
         {posts.map((post) => {
           // If post is draft, show preview component
           if (post.status === 'draft') {
@@ -269,48 +269,48 @@ export function BlogList({ posts }: BlogListProps) {
           // Otherwise show regular post card
           const isLiked = likedPosts.has(post.id);
           const isSaved = savedPosts.has(post.id);
-          
+
           return (
-            <Card key={post.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <CardTitle className="text-xl">
-                      <Link 
+            <Card key={post.id} className="hover:shadow-md transition-shadow overflow-hidden break-words">
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <CardTitle className="text-xl break-words">
+                      <Link
                         to={`/blog/${post.slug}`}
                         className="hover:text-kenya-green transition-colors line-clamp-2"
                       >
                         {post.title}
                       </Link>
                     </CardTitle>
-                    
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
+
+                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1 min-w-max">
                         <User className="h-4 w-4" />
-                        {post.author}
+                        <span className="truncate max-w-[120px]">{post.author}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 min-w-max">
                         <Calendar className="h-4 w-4" />
                         {new Date(post.published_at || post.created_at).toLocaleDateString()}
                       </div>
                       <PostViewCount postId={post.id} />
                     </div>
                   </div>
-                  
-                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+
+                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="shrink-0">
                     {post.status}
                   </Badge>
                 </div>
               </CardHeader>
-              
-              <CardContent>
-                <p className="text-muted-foreground mb-4 line-clamp-3">
+
+              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                <p className="text-muted-foreground mb-4 line-clamp-3 break-words">
                   {post.excerpt || post.content.slice(0, 200) + '...'}
                 </p>
-                
+
                 {post.tags && post.tags.length > 0 && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <Tag className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-2 mb-4">
+                    <Tag className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
                     <div className="flex flex-wrap gap-2">
                       {post.tags.map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
@@ -321,8 +321,8 @@ export function BlogList({ posts }: BlogListProps) {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant={isLiked ? "default" : "ghost"}
                       size="sm"
@@ -332,7 +332,7 @@ export function BlogList({ posts }: BlogListProps) {
                       <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
                       Like
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -342,7 +342,7 @@ export function BlogList({ posts }: BlogListProps) {
                       <Share2 className="h-4 w-4 mr-1" />
                       Share
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -363,8 +363,8 @@ export function BlogList({ posts }: BlogListProps) {
                       Save
                     </Button>
                   </div>
-                  
-                  <Button variant="ghost" size="sm" asChild>
+
+                  <Button variant="ghost" size="sm" asChild className="ml-auto sm:ml-0">
                     <Link to={`/blog/${post.slug}`}>
                       Read more
                     </Link>
@@ -377,16 +377,18 @@ export function BlogList({ posts }: BlogListProps) {
       </div>
 
       {/* Share Modal */}
-      {showShareModal && selectedPost && (
-        <ShareModal
-          post={selectedPost}
-          isOpen={showShareModal}
-          onClose={() => {
-            setShowShareModal(false);
-            setSelectedPost(null);
-          }}
-        />
-      )}
+      {
+        showShareModal && selectedPost && (
+          <ShareModal
+            post={selectedPost}
+            isOpen={showShareModal}
+            onClose={() => {
+              setShowShareModal(false);
+              setSelectedPost(null);
+            }}
+          />
+        )
+      }
     </>
   );
 }

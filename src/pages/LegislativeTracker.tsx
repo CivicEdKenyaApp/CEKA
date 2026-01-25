@@ -346,28 +346,30 @@ const LegislativeTracker = () => {
                             </Badge>
                           </div>
 
-                          <h3 className="text-lg font-semibold mt-2 mb-1">
+                          <h3 className="text-lg font-semibold mt-2 mb-1 break-words">
                             <Link to={`/bill/${bill.id}`} className="hover:text-kenya-green transition-colors">
                               {bill.title}
                             </Link>
                           </h3>
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3 break-words">
                             {bill.summary}
                           </p>
 
-                          <div className="flex flex-wrap items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span>Created: {new Date(bill.created_at).toLocaleDateString()}</span>
+                          <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground min-w-0">
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>Created: {new Date(bill.created_at).toLocaleDateString()}</span>
+                              </div>
                               {bill.sponsor && (
-                                <>
-                                  <span className="mx-2">•</span>
-                                  <span>Sponsor: {bill.sponsor}</span>
-                                </>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="hidden sm:inline mx-1">•</span>
+                                  <span className="truncate">Sponsor: {bill.sponsor}</span>
+                                </div>
                               )}
                             </div>
 
-                            <div className="flex items-center gap-2 mt-2 md:mt-0">
+                            <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
                               <BillFollowButton billId={bill.id} />
                               <Button variant="outline" size="sm" asChild>
                                 <Link to={`/bill/${bill.id}`}>

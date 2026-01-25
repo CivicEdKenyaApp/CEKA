@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Search, Filter, Download, Book, FileText, Video, Image as ImageIcon,
-  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen
+  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen, Plus
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,7 @@ interface Resource {
   tags: string[];
   featured?: boolean;
   county?: string;
+  canDownload?: boolean;
 }
 
 // Mock data with expanded resource collection
@@ -65,7 +66,8 @@ const mockResources: Resource[] = [
     views: 1245,
     downloads: 521,
     tags: ["constitution", "governance", "rights"],
-    featured: true
+    featured: true,
+    canDownload: true
   },
   {
     id: "2",
@@ -80,7 +82,8 @@ const mockResources: Resource[] = [
     views: 890,
     downloads: 152,
     tags: ["democracy", "protest", "youth", "politics"],
-    featured: true
+    featured: true,
+    canDownload: false // Copyrighted material
   },
   {
     id: "3",
@@ -95,7 +98,8 @@ const mockResources: Resource[] = [
     views: 732,
     downloads: 198,
     tags: ["rights", "citizenship", "infographic"],
-    featured: true
+    featured: true,
+    canDownload: true
   },
   {
     id: "4",
@@ -470,14 +474,20 @@ const ResourceLibrary = () => {
           <Card className={`h-full transition-shadow hover:shadow-md overflow-hidden ${isSelected ? 'border-primary' : ''}`}>
             <div className="relative">
               <div className="absolute top-2 right-2 z-10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
-                  onClick={() => toggleResourceSelection(resource.id)}
-                >
-                  {isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
-                </Button>
+                {resource.canDownload !== false ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
+                    onClick={() => toggleResourceSelection(resource.id)}
+                  >
+                    {isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
+                  </Button>
+                ) : (
+                  <Badge variant="destructive" className="opacity-90">
+                    Proprietary
+                  </Badge>
+                )}
               </div>
               <div className="bg-muted aspect-video relative flex items-center justify-center">
                 {resource.thumbnail ? (
@@ -571,10 +581,16 @@ const ResourceLibrary = () => {
                     <span className="text-xs text-muted-foreground">{resource.views} views</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => toggleResourceSelection(resource.id)}>
-                      {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-                      {isSelected ? "Selected" : "Select"}
-                    </Button>
+                    {resource.canDownload !== false ? (
+                      <Button size="sm" variant="ghost" onClick={() => toggleResourceSelection(resource.id)}>
+                        {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+                        {isSelected ? "Selected" : "Select"}
+                      </Button>
+                    ) : (
+                      <Badge variant="destructive" className="opacity-90">
+                        Proprietary
+                      </Badge>
+                    )}
                     <Button size="sm" variant="secondary" asChild>
                       <Link to={`/resources/${resource.id}`}>
                         {translate("View Details", language)}
@@ -619,6 +635,11 @@ const ResourceLibrary = () => {
               <List className="h-4 w-4" />
             </Button>
           </div>
+
+          <Button onClick={() => navigate('/resources/upload')} className="bg-kenya-green hover:bg-kenya-green/90 mt-4 md:mt-0">
+            <Plus className="mr-2 h-4 w-4" />
+            {translate("Upload Resource", language)}
+          </Button>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">

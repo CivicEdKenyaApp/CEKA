@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -62,14 +63,35 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         },
-        // Kenyan flag colors - Using Nasaka version for consistency
+        // Design Authority Colors from index.css
+        gold: {
+          DEFAULT: 'hsl(var(--gold))',
+          light: 'hsl(var(--gold-light))',
+          dark: 'hsl(var(--gold-dark))'
+        },
+        midnight: {
+          DEFAULT: 'hsl(var(--midnight))',
+          light: 'hsl(var(--midnight-light))',
+          dark: 'hsl(var(--midnight-dark))'
+        },
+        terracotta: {
+          DEFAULT: 'hsl(var(--terracotta))',
+          light: 'hsl(var(--terracotta-light))'
+        },
+        earth: {
+          DEFAULT: 'hsl(var(--earth))',
+          light: 'hsl(var(--earth-light))'
+        },
+        cream: {
+          DEFAULT: 'hsl(var(--cream))',
+          muted: 'hsl(var(--cream-muted))'
+        },
+        // Kenyan flag colors
         kenya: {
           green: '#006600',
           red: '#CC0000',
           white: '#FFFFFF',
-          black: '#000000',
-          // Adding CEKA's red as alternative if needed
-          redAlt: '#bc2026'
+          black: '#000000'
         },
         // iOS Design System Colors for IEBC Office Finder - Enhanced for Dark Mode (from Nasaka)
         ios: {
@@ -433,5 +455,5 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config;

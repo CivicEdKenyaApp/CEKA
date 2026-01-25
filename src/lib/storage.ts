@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Storage provider types supported by the system
+ * Storage adapter to handle file operations across different providers.
+ * Tier: 10GB Integrated Package
  */
 export type StorageProvider = 'supabase' | 'backblaze' | 'cloudflare';
 
@@ -11,26 +12,23 @@ interface StorageOptions {
     isPublic?: boolean;
 }
 
-/**
- * Storage adapter to handle file operations across different providers.
- * Default remains Supabase as per instructions.
- */
 export const storage = {
     /**
      * Get a public URL for a file
      */
     getPublicUrl(path: string, options: StorageOptions = {}): string {
-        const { provider = 'supabase', bucket = 'resources' } = options;
+        const { provider = (import.meta.env.VITE_STORAGE_PROVIDER as StorageProvider) || 'supabase', bucket = 'resources' } = options;
 
         if (provider === 'supabase') {
             const { data } = supabase.storage.from(bucket).getPublicUrl(path);
             return data.publicUrl;
         }
 
-        // Fallback for Backblaze / Cloudflare based on environment config
-        // This uses the STORAGE_PUBLIC_URL_PREFIX from .env
-        const prefix = import.meta.env.STORAGE_PUBLIC_URL_PREFIX || '';
+        // Configuration for Backblaze / Cloudflare
+        const prefix = import.meta.env.VITE_STORAGE_BASE_URL || '';
         if (prefix) {
+            // For Cloudflare R2: https://pub-[hash].r2.dev/[bucket]/[path]
+            // For Backblaze B2: https://f000.backblazeb2.com/file/[bucket]/[path]
             return `${prefix}/${bucket}/${path}`;
         }
 
@@ -39,7 +37,6 @@ export const storage = {
 
     /**
      * Upload a file to storage
-     * Note: This is an authenticated operation in Supabase
      */
     async uploadFile(file: File, path: string, options: StorageOptions = {}) {
         const { provider = 'supabase', bucket = 'resources' } = options;
@@ -52,9 +49,8 @@ export const storage = {
             return data;
         }
 
-        // For Backblaze/Cloudflare, typically you'd hit an API route that uses S3 SDK
-        // Since we can't add runtime services, we assume a compatible S3-like endpoint
-        // could be added to Supabase Edge Functions or handled client-side if keys are safe
-        throw new Error(`Upload for provider ${provider} not fully implemented in client layer.`);
+        // Note: Client-side direct upload to S3 (B2/R2) requires Presigned URLs for security
+        // Recommendation: Handle this via a Supabase Edge Function to keep S3 keys private
+        throw new Error(`Upload for provider ${provider} requires a secure signed URL from Edge Functions.`);
     }
 };

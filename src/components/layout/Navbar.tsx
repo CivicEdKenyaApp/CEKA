@@ -378,24 +378,22 @@ const Navbar = () => {
                       {isOpen ? (
                         <motion.div
                           key="close"
-                          initial="exit"
-                          animate="close"
-                          exit="exit"
-                          variants={hamburgerVariants}
+                          initial={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                          exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                          transition={{ type: "spring", damping: 20, stiffness: 300 }}
                           className="absolute inset-0 flex items-center justify-center"
-                          style={{ willChange: 'transform, opacity' }}
                         >
                           <X className="h-6 w-6" />
                         </motion.div>
                       ) : (
                         <motion.div
                           key="menu"
-                          initial="exit"
-                          animate="menu"
-                          exit="exit"
-                          variants={hamburgerVariants}
+                          initial={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                          exit={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                          transition={{ type: "spring", damping: 20, stiffness: 300 }}
                           className="absolute inset-0 flex items-center justify-center"
-                          style={{ willChange: 'transform, opacity' }}
                         >
                           <Menu className="h-6 w-6" />
                         </motion.div>
@@ -404,10 +402,10 @@ const Navbar = () => {
                   </div>
 
                   <motion.div
-                    className="absolute inset-0 rounded-xl bg-primary/10"
+                    className="absolute inset-0 rounded-xl bg-primary/20"
                     initial={false}
-                    animate={{ opacity: isOpen ? 0.2 : 0 }}
-                    transition={{ duration: 0.3 }}
+                    animate={{ opacity: isOpen ? 0.3 : 0 }}
+                    transition={{ duration: 0.2 }}
                   />
                 </button>
               </div>
@@ -715,7 +713,6 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       )}
-    </nav >
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </>
   );
