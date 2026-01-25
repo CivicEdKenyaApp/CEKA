@@ -16,18 +16,25 @@ export const InteractionLogger = ({ targetId, targetType, metadata = {} }: Inter
     useEffect(() => {
         if (!targetId || hasLoggedInitial.current) return;
 
-        // Log View event on mount
+        // Log Interaction event
         const logInteraction = async (action: string, extra: any = {}) => {
+            let activeUserId = null;
+
+            // Safety: Verify profile row exists before linking user_id to interaction
+            if (user?.id) {
+                const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+                if (profile) activeUserId = profile.id;
+            }
+
             await supabase.from('chat_interactions' as any).insert({
-                user_id: user?.id || null, // Allow anonymous view tracking
+                user_id: activeUserId,
                 target_id: targetId,
                 target_type: targetType,
                 action_type: action,
                 metadata: {
                     ...metadata,
                     ...extra,
-                    ua: navigator.userAgent,
-                    ref: document.referrer
+                    ua: navigator.userAgent
                 }
             });
         };

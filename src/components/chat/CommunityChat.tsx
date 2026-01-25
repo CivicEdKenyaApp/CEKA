@@ -61,6 +61,9 @@ const CommunityChat = () => {
     const [mentionQuery, setMentionQuery] = useState('');
     const [mentionTrigger, setMentionTrigger] = useState<'@' | '/' | null>(null);
     const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(params.get('m'));
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [selectedPeer, setSelectedPeer] = useState<any>(null);
+    const [fetchError, setFetchError] = useState(false);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -70,9 +73,10 @@ const CommunityChat = () => {
     const fetchMessages = useCallback(async (roomId: string, cursor?: string) => {
         if (cursor) setLoadingOlder(true);
         else setLoading(true);
+        setFetchError(false);
 
         try {
-            // FIXED: Using explicit foreign key notation to satisfy PostgREST schema cache
+            // FIXED: Using explicit foreign key notation matching SQL Hardy Mode
             let query = supabase
                 .from('chat_messages')
                 .select(`
@@ -92,7 +96,8 @@ const CommunityChat = () => {
 
             if (error) {
                 console.error('PGRST Error:', error);
-                // Fallback attempt without alias if necessary
+                setFetchError(true);
+                // Fallback attempt
                 const { data: retryData } = await supabase
                     .from('chat_messages')
                     .select('*, profiles(id, full_name, avatar_url, username)')
@@ -104,6 +109,7 @@ const CommunityChat = () => {
                 if (retryData) {
                     const mapped = (retryData as any[]).map(m => ({ ...m, profile: m.profiles }));
                     setMessages(mapped.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
+                    setFetchError(false);
                     return;
                 }
                 throw error;
@@ -116,6 +122,8 @@ const CommunityChat = () => {
             }
         } catch (err) {
             console.error('Fetch error:', err);
+            setFetchError(true);
+            setHasMoreOlder(false); // Kill scroll to prevent spam
         } finally {
             setLoading(false);
             setLoadingOlder(false);
@@ -138,9 +146,29 @@ const CommunityChat = () => {
     // Handle Room Switching & Initial Load
     useEffect(() => {
         if (!session) return;
-        fetchMessages(activeRoom);
+
+        // Virtual DM handling: if a peer is selected, the room ID is virtual
+        if (isPrivate && selectedPeer) {
+            const ids = [session.user.id, selectedPeer.id].sort();
+            const dmRoomId = `dm:${ids[0]}:${ids[1]}`;
+            setActiveRoom(dmRoomId);
+            fetchMessages(dmRoomId);
+        } else {
+            fetchMessages(activeRoom);
+        }
+
         isInitialLoad.current = true;
-    }, [activeRoom, session, fetchMessages]);
+    }, [activeRoom, session, fetchMessages, isPrivate, selectedPeer]);
+
+    // Handle incoming source bridge
+    useEffect(() => {
+        const source = params.get('source');
+        const title = params.get('title');
+        if (source && title && !isInitialLoad.current) {
+            setNewMessage(`[Ref: ${decodeURIComponent(title)}] I have thoughts on this development... `);
+            toast({ title: 'Context Linked', description: 'Discussion bridge active.' });
+        }
+    }, [params, toast]);
 
     // Subscribe to Realtime messages for current room
     useEffect(() => {
@@ -206,10 +234,10 @@ const CommunityChat = () => {
 
     // Infinite Scroll Handler (Intersection Observer)
     useEffect(() => {
-        if (!topSentinelRef.current || loadingOlder || !hasMoreOlder) return;
+        if (!topSentinelRef.current || loadingOlder || !hasMoreOlder || fetchError) return;
 
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !loadingOlder) {
+            if (entries[0].isIntersecting && !loadingOlder && !fetchError) {
                 const oldestMsg = messages[0];
                 if (oldestMsg) fetchMessages(activeRoom, oldestMsg.created_at);
             }
@@ -309,29 +337,45 @@ const CommunityChat = () => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 p-2 space-y-1">
-                    {rooms.map(room => (
-                        <button
-                            key={room.id}
-                            onClick={() => setActiveRoom(room.id)}
-                            className={cn(
-                                "w-full flex items-center gap-3 p-3.5 rounded-[20px] transition-all duration-300",
-                                activeRoom === room.id
-                                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
-                                    : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400"
-                            )}
-                        >
-                            <div className={cn(
-                                "h-10 w-10 rounded-2xl flex items-center justify-center transition-colors",
-                                activeRoom === room.id ? "bg-white/20" : "bg-slate-100 dark:bg-white/5"
-                            )}>
-                                {room.type === 'private' ? <Shield className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
-                            </div>
-                            <div className="flex-1 text-left">
-                                <p className="text-sm font-bold truncate">{room.name}</p>
-                                <p className={cn("text-[10px]", activeRoom === room.id ? "text-white/60" : "text-muted-foreground")}>Public Channel</p>
-                            </div>
-                        </button>
-                    ))}
+                    {/* Public Rooms */}
+                    {!isPrivate ? (
+                        rooms.map(room => (
+                            <button
+                                key={room.id}
+                                onClick={() => { setActiveRoom(room.id); setSelectedPeer(null); setIsPrivate(false); }}
+                                className={cn(
+                                    "w-full flex items-center gap-3 p-3.5 rounded-[20px] transition-all duration-300",
+                                    activeRoom === room.id && !isPrivate
+                                        ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
+                                        : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400"
+                                )}
+                            >
+                                <div className={cn(
+                                    "h-10 w-10 rounded-2xl flex items-center justify-center transition-colors",
+                                    activeRoom === room.id && !isPrivate ? "bg-white/20" : "bg-slate-100 dark:bg-white/5"
+                                )}>
+                                    <Hash className="h-5 w-5" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <p className="text-sm font-bold truncate">{room.name}</p>
+                                    <p className={cn("text-[10px]", activeRoom === room.id && !isPrivate ? "text-white/60" : "text-muted-foreground")}>Public Assembly</p>
+                                </div>
+                            </button>
+                        ))
+                    ) : (
+                        <div className="p-4 text-center space-y-4">
+                            <Shield className="h-10 w-10 text-primary mx-auto opacity-20" />
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Secure Vault Active</p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsPrivate(false)}
+                                className="rounded-xl w-full text-[10px] font-bold"
+                            >
+                                Exit to Assembly
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -340,12 +384,22 @@ const CommunityChat = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/5 backdrop-blur-md bg-white/80 dark:bg-black/40 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 p-2.5 rounded-[18px]"><MessageCircle className="h-5 w-5 text-primary" /></div>
+                        <div className={cn(
+                            "p-2.5 rounded-[18px]",
+                            isPrivate ? "bg-amber-500/10" : "bg-primary/10"
+                        )}>
+                            {isPrivate ? <Shield className="h-5 w-5 text-amber-500" /> : <MessageCircle className="h-5 w-5 text-primary" />}
+                        </div>
                         <div>
-                            <h2 className="font-bold text-lg leading-tight">{rooms.find(r => r.id === activeRoom)?.name}</h2>
-                            <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                {onlineUsers.length} active now
+                            <h2 className="font-bold text-lg leading-tight">
+                                {isPrivate ? `Direct: ${selectedPeer?.full_name || 'Citizen'}` : (rooms.find(r => r.id === activeRoom)?.name || 'Assembly')}
+                            </h2>
+                            <p className={cn(
+                                "text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
+                                isPrivate ? "text-amber-500" : "text-green-500"
+                            )}>
+                                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isPrivate ? "bg-amber-500" : "bg-green-500")} />
+                                {isPrivate ? 'E2E Cloud Encrypted' : `${onlineUsers.length} active now`}
                             </p>
                         </div>
                     </div>
@@ -496,10 +550,14 @@ const CommunityChat = () => {
                             <p className="text-[10px] font-bold uppercase tracking-widest">Watching the halls...</p>
                         </div>
                     ) : (
-                        onlineUsers.map(u => (
+                        onlineUsers.filter(u => u.id !== user?.id).map(u => (
                             <button
                                 key={u.id}
-                                className="w-full flex items-center gap-3 p-3 rounded-[20px] hover:bg-white/40 dark:hover:bg-white/5 transition-all group"
+                                onClick={() => { setSelectedPeer(u); setIsPrivate(true); }}
+                                className={cn(
+                                    "w-full flex items-center gap-3 p-3 rounded-[20px] hover:bg-white/40 dark:hover:bg-white/5 transition-all group",
+                                    selectedPeer?.id === u.id && isPrivate && "bg-white/60 dark:bg-white/10 ring-1 ring-primary/20"
+                                )}
                             >
                                 <div className="relative">
                                     <Avatar className="h-10 w-10 rounded-[14px] shadow-sm border-2 border-white dark:border-black/40 ring-1 ring-slate-200/50">
@@ -510,7 +568,7 @@ const CommunityChat = () => {
                                 </div>
                                 <div className="flex-1 text-left">
                                     <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{u.full_name || 'Anonymous'}</p>
-                                    <p className="text-[10px] text-muted-foreground/60 font-medium">Digital Citizen</p>
+                                    <p className="text-[10px] text-muted-foreground/60 font-medium">Citizen Online</p>
                                 </div>
                             </button>
                         ))

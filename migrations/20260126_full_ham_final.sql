@@ -26,15 +26,20 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2. ADVANCED CHAT SYSTEM (Recursive Discourse)
 CREATE TABLE IF NOT EXISTS public.chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
   room_id text NOT NULL DEFAULT 'general',
   content text NOT NULL,
-  parent_id uuid REFERENCES public.chat_messages(id) ON DELETE CASCADE, -- Unified Threading
+  parent_id uuid REFERENCES public.chat_messages(id) ON DELETE CASCADE,
   attachments jsonb DEFAULT '[]',
   is_edited boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+  updated_at timestamptz DEFAULT now(),
+  CONSTRAINT chat_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
 );
+
+-- Ensure naming follows search pattern
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON public.chat_messages (user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON public.chat_messages (room_id);
 
 CREATE TABLE IF NOT EXISTS public.chat_reactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

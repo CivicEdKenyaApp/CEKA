@@ -43,7 +43,7 @@ const BlogPostPage = () => {
         setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
         const postData = await blogService.getPostBySlug(slug);
@@ -72,7 +72,7 @@ const BlogPostPage = () => {
       });
       return;
     }
-    
+
     setIsLiked(!isLiked);
     toast({
       title: isLiked ? "Unliked" : "Liked",
@@ -89,7 +89,7 @@ const BlogPostPage = () => {
       });
       return;
     }
-    
+
     setIsSaved(!isSaved);
     toast({
       title: isSaved ? "Unsaved" : "Saved",
@@ -99,7 +99,7 @@ const BlogPostPage = () => {
 
   const handleShare = async () => {
     if (!post) return;
-    
+
     const currentUrl = window.location.href;
     const shareData = {
       title: post.title,
@@ -132,10 +132,10 @@ const BlogPostPage = () => {
       // Final fallback - show share options
       const shareText = `Check out this post: ${post.title} - ${currentUrl}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-      
+
       // Open WhatsApp as primary fallback
       window.open(whatsappUrl, '_blank', 'width=600,height=400');
-      
+
       toast({
         title: "Share Options",
         description: "Opening WhatsApp to share. Link also copied to clipboard."
@@ -217,13 +217,13 @@ const BlogPostPage = () => {
                     </Badge>
                   ))}
                 </div>
-                
+
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
-                
+
                 {post.excerpt && (
                   <p className="text-lg text-muted-foreground mb-6">{post.excerpt}</p>
                 )}
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
@@ -258,7 +258,7 @@ const BlogPostPage = () => {
                       <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
                       Like
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -268,15 +268,17 @@ const BlogPostPage = () => {
                       <Share2 className="h-4 w-4 mr-1" />
                       Share
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handleReply}
-                      className="hover:text-kenya-green"
+                      asChild
+                      className="hover:text-primary font-bold gap-2 bg-primary/5 rounded-xl px-4"
                     >
-                      <MessageCircle className="h-4 w-4 mr-1" />
-                      Reply
+                      <Link to={`/community?tab=chat&room=general&source=${post.id}&title=${encodeURIComponent(post.title)}`}>
+                        <MessageCircle className="h-4 w-4" />
+                        Discuss in Assembly
+                      </Link>
                     </Button>
 
                     <Button
