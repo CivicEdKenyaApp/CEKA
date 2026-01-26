@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, Hash, FileText, User, Zap, MessageSquare } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Hash, FileText, User, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface MentionSuggestionsProps {
@@ -14,8 +14,19 @@ interface MentionSuggestionsProps {
     onClose: () => void;
 }
 
+interface MentionItem {
+    id: string;
+    name?: string;
+    full_name?: string;
+    username?: string;
+    avatar_url?: string;
+    type: string;
+    description?: string;
+    icon?: React.ComponentType<{ className?: string }>;
+}
+
 export const MentionSuggestions = ({ query, trigger, onSelect, onClose }: MentionSuggestionsProps) => {
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<MentionItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -31,23 +42,36 @@ export const MentionSuggestions = ({ query, trigger, onSelect, onClose }: Mentio
                         .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
                         .limit(5);
 
-                    setResults(users?.map(u => ({ ...u, type: 'user', icon: User })) || []);
+                    setResults(users?.map(u => ({ 
+                        id: u.id, 
+                        full_name: u.full_name,
+                        username: u.username,
+                        avatar_url: u.avatar_url,
+                        type: 'user', 
+                        icon: User 
+                    })) || []);
                 } else if (trigger === '/') {
-                    // Search Commands, Campaigns, and Resources
-                    const internalCommands = [
+                    // Search Commands and Resources
+                    const internalCommands: MentionItem[] = [
                         { id: 'poll', name: 'Create Poll', description: 'Start a community poll', type: 'command', icon: Zap },
                         { id: 'link', name: 'Link Resource', description: 'Embed a file or doc', type: 'command', icon: FileText }
                     ];
 
-                    const { data: campaigns } = await supabase
-                        .from('campaigns')
+                    // Search resources instead of campaigns
+                    const { data: resources } = await supabase
+                        .from('resources')
                         .select('id, title')
                         .ilike('title', `%${query}%`)
                         .limit(3);
 
-                    const combined = [
-                        ...internalCommands.filter(c => c.name.toLowerCase().includes(query.toLowerCase())),
-                        ...(campaigns?.map(c => ({ id: c.id, name: c.title, type: 'campaign', icon: Hash })) || [])
+                    const combined: MentionItem[] = [
+                        ...internalCommands.filter(c => c.name?.toLowerCase().includes(query.toLowerCase())),
+                        ...(resources?.map(r => ({ 
+                            id: r.id, 
+                            name: r.title, 
+                            type: 'resource', 
+                            icon: Hash 
+                        })) || [])
                     ];
 
                     setResults(combined);
@@ -96,50 +120,53 @@ export const MentionSuggestions = ({ query, trigger, onSelect, onClose }: Mentio
                     {loading && results.length === 0 ? (
                         <div className="p-4 text-center text-xs text-muted-foreground animate-pulse">Searching the CEKA ecosystem...</div>
                     ) : (
-                        results.map((item, idx) => (
-                            <button
-                                key={item.id}
-                                onClick={() => onSelect(item)}
-                                onMouseEnter={() => setSelectedIndex(idx)}
-                                className={cn(
-                                    "w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all duration-200",
-                                    selectedIndex === idx ? "bg-primary text-white shadow-lg" : "hover:bg-slate-100 dark:hover:bg-white/10"
-                                )}
-                            >
-                                <div className={cn(
-                                    "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
-                                    selectedIndex === idx ? "bg-white/20" : "bg-slate-100 dark:bg-white/5 text-muted-foreground"
-                                )}>
-                                    {item.icon ? <item.icon className="h-4 w-4" /> : item.avatar_url ? (
-                                        <Avatar className="h-6 w-6">
-                                            <AvatarImage src={item.avatar_url} />
-                                            <AvatarFallback className="text-[10px]">{item.full_name?.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                    ) : <Hash className="h-4 w-4" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold truncate">{item.name || item.full_name}</span>
-                                        {item.type && (
-                                            <Badge variant="outline" className={cn(
-                                                "text-[9px] uppercase tracking-tighter h-4 px-1 border-none",
-                                                selectedIndex === idx ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                        results.map((item, idx) => {
+                            const IconComponent = item.icon;
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => onSelect(item)}
+                                    onMouseEnter={() => setSelectedIndex(idx)}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all duration-200",
+                                        selectedIndex === idx ? "bg-primary text-white shadow-lg" : "hover:bg-slate-100 dark:hover:bg-white/10"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
+                                        selectedIndex === idx ? "bg-white/20" : "bg-slate-100 dark:bg-white/5 text-muted-foreground"
+                                    )}>
+                                        {IconComponent ? <IconComponent className="h-4 w-4" /> : item.avatar_url ? (
+                                            <Avatar className="h-6 w-6">
+                                                <AvatarImage src={item.avatar_url} />
+                                                <AvatarFallback className="text-[10px]">{item.full_name?.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        ) : <Hash className="h-4 w-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-semibold truncate">{item.name || item.full_name}</span>
+                                            {item.type && (
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[9px] uppercase tracking-tighter h-4 px-1 border-none",
+                                                    selectedIndex === idx ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                                                )}>
+                                                    {item.type}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {item.description && (
+                                            <p className={cn(
+                                                "text-[10px] truncate",
+                                                selectedIndex === idx ? "text-white/70" : "text-muted-foreground"
                                             )}>
-                                                {item.type}
-                                            </Badge>
+                                                {item.description}
+                                            </p>
                                         )}
                                     </div>
-                                    {item.description && (
-                                        <p className={cn(
-                                            "text-[10px] truncate",
-                                            selectedIndex === idx ? "text-white/70" : "text-muted-foreground"
-                                        )}>
-                                            {item.description}
-                                        </p>
-                                    )}
-                                </div>
-                            </button>
-                        ))
+                                </button>
+                            );
+                        })
                     )}
                 </CardContent>
             </Card>

@@ -85,6 +85,26 @@ const EnhancedAdminDashboard = () => {
     }
   };
 
+  const handleGenerateReport = async () => {
+    try {
+      const report = await adminService.generateWeeklyReport();
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ceka-weekly-report-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate report",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading && !stats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -101,7 +121,7 @@ const EnhancedAdminDashboard = () => {
           <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Live Platform Intelligence & Audit</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => adminService.generateWeeklyReport()} variant="outline" className="rounded-2xl h-12 font-bold border-2 gap-2">
+          <Button onClick={handleGenerateReport} variant="outline" className="rounded-2xl h-12 font-bold border-2 gap-2">
             <Download className="h-4 w-4" />
             Weekly Intelligence (.json)
           </Button>
