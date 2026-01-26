@@ -47,9 +47,10 @@ const CommunityChat = () => {
     const [params] = useSearchParams();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [rooms, setRooms] = useState<Room[]>([
-        { id: 'general', name: 'General Assembly', type: 'public' },
-        { id: 'legislation', name: 'Policy Watch', type: 'public' },
-        { id: 'impact', name: 'Field Reports', type: 'public' }
+        { id: 'general', name: 'Bunge Square', type: 'public' },
+        { id: 'legislation', name: 'Policy Watch 2024-2027', type: 'public' },
+        { id: 'mashinani', name: 'Mashinani Dialogue', type: 'public' },
+        { id: 'youth', name: 'Youth Pulse', type: 'public' }
     ]);
     const [activeRoom, setActiveRoom] = useState<string>(params.get('room') || 'general');
     const [newMessage, setNewMessage] = useState('');
@@ -175,13 +176,19 @@ const CommunityChat = () => {
         }
     }, [activeRoom, isPrivate, selectedPeer, rooms]);
 
-    // Handle incoming source bridge
+    // Handle incoming source bridge or blog synchronization
     useEffect(() => {
         const source = params.get('source');
         const title = params.get('title');
+        const content = params.get('content'); // New: Sync content from blog reply
+
         if (source && title && !isInitialLoad.current) {
-            setNewMessage(`[Ref: ${decodeURIComponent(title)}] I have thoughts on this development... `);
-            toast({ title: 'Context Linked', description: 'Discussion bridge active.' });
+            const initialText = content
+                ? `[Discourse Sync] "${decodeURIComponent(content)}" - Ref: ${decodeURIComponent(title)}`
+                : `[Ref: ${decodeURIComponent(title)}] I have thoughts on this development... `;
+
+            setNewMessage(initialText);
+            toast({ title: 'Assembly Synced', description: 'Continuing the discourse from the field.' });
         }
     }, [params, toast]);
 

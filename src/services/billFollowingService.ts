@@ -45,9 +45,9 @@ export class BillFollowingService {
       .select('id')
       .eq('user_id', user.id)
       .eq('bill_id', billId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     return !!data;
   }
 

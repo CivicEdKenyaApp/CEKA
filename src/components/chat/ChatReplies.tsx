@@ -22,20 +22,20 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
     const [replyContent, setReplyContent] = useState('');
     const [sending, setSending] = useState(false);
 
-    const fetchReplies = async () => {
+    const fetchReplies = useCallback(async () => {
         setLoading(true);
         const { data, error } = await (supabase
             .from('chat_messages')
             .select(`
                 *,
-                profile:profiles!user_id (id, full_name, avatar_url, username)
+                profile:profiles!chat_messages_user_id_fkey (id, full_name, avatar_url, username)
             `)
             .eq('parent_id', messageId)
             .order('created_at', { ascending: true }) as any);
 
         if (!error && data) setReplies(data);
         setLoading(false);
-    };
+    }, [messageId]);
 
     useEffect(() => {
         if (!session) return;

@@ -283,8 +283,8 @@ const LegislativeTracker = () => {
 
           <div className="lg:col-span-3">
             <Tabs defaultValue="all" className="w-full">
-              <div className="flex justify-between items-center mb-4 overflow-x-auto pb-2 no-scrollbar">
-                <TabsList className="min-w-max">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 dark:border-white/5 pb-2">
+                <TabsList className="bg-transparent h-auto p-0 flex-wrap sm:flex-nowrap justify-start gap-2 overflow-x-auto no-scrollbar">
                   <TabsTrigger value="all">All Bills ({filteredBills.length})</TabsTrigger>
                   <TabsTrigger value="new">New</TabsTrigger>
                   <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger>

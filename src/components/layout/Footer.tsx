@@ -26,21 +26,21 @@ const Footer = () => {
         </div>
 
         <div>
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Discover</h4>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">{translate('Discover', language)}</h4>
           <ul className="space-y-4 text-sm font-medium">
-            <li><Link to="/legislative-tracker" className="hover:text-primary transition-colors">Legislative Tracker</Link></li>
-            <li><Link to="/resources" className="hover:text-primary transition-colors">Resource library</Link></li>
-            <li><Link to="/blog" className="hover:text-primary transition-colors">Civic Blog</Link></li>
+            <li><Link to="/legislative-tracker" className="hover:text-primary transition-colors">{translate('Legislative Tracker', language)}</Link></li>
+            <li><Link to="/resources" className="hover:text-primary transition-colors">{translate('Resources', language)}</Link></li>
+            <li><Link to="/blog" className="hover:text-primary transition-colors">{translate('Blog', language)}</Link></li>
             <li><Link to="/nasaka-iebc" className="hover:text-primary transition-colors">Nasaka IEBC</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Engage</h4>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">{translate('Engage', language)}</h4>
           <ul className="space-y-4 text-sm font-medium">
-            <li><Link to="/community" className="hover:text-primary transition-colors">Community Hub</Link></li>
-            <li><Link to="/calendar" className="hover:text-primary transition-colors">Events Calendar</Link></li>
-            <li><Link to="/join-community" className="hover:text-primary transition-colors">Join & Support</Link></li>
+            <li><Link to="/community" className="hover:text-primary transition-colors">{translate('Community', language)}</Link></li>
+            <li><Link to="/calendar" className="hover:text-primary transition-colors">{translate('Calendar', language)}</Link></li>
+            <li><Link to="/join-community" className="hover:text-primary transition-colors">{translate('Volunteer', language)}</Link></li>
             <li><Link to="/shambles" className="hover:text-primary transition-colors">SHAmbles Tracker</Link></li>
           </ul>
         </div>

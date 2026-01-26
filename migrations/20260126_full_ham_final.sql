@@ -298,11 +298,26 @@ BEGIN
 END;
 $$;
 
--- 10. REALTIME
-BEGIN;
-  DROP PUBLICATION IF EXISTS supabase_realtime;
-  CREATE PUBLICATION supabase_realtime;
-COMMIT;
+-- 5. CIVIC OBJECTS & DISCOVERY
+CREATE TABLE IF NOT EXISTS public.chat_rooms (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  room_type text DEFAULT 'public' CHECK (room_type IN ('public', 'private', 'secure_vault')),
+  metadata jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
+-- Seed tactical 2027 rooms
+INSERT INTO public.chat_rooms (id, name, room_type, description)
+VALUES 
+  ('general', 'Bunge Square', 'public', 'National dialogue forum'),
+  ('legislation', 'Policy Watch 2024-2027', 'public', 'Constitutional monitoring'),
+  ('mashinani', 'Mashinani Dialogue', 'public', 'County-level engagement'),
+  ('youth', 'Youth Pulse', 'public', 'The voice of Kenya''s future')
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS public.resource_categories (
 ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages, public.chat_reactions, public.profiles, public.admin_notifications;
 
 -- 11. AUTO ADMISSION OF ROOT ADMIN

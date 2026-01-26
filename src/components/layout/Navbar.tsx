@@ -47,27 +47,27 @@ const Navbar = () => {
 
   const categories = [
     {
-      name: 'Discover',
+      name: translate('Discover', language),
       items: [
-        { name: 'Legislative Tracker', path: '/legislative-tracker', description: 'Monitor the pulse of parliament' },
-        { name: 'Resource Library', path: '/resources', description: 'Verified documents and media' },
-        { name: 'Civic Blog', path: '/blog', description: 'Insights and news' }
+        { name: translate('Legislative Tracker', language), path: '/legislative-tracker', description: translate('Stay informed about bills and legislative changes in Kenya', language) },
+        { name: translate('Resource Hub', language), path: '/resources', description: translate('Central hub for all civic documents', language) },
+        { name: translate('Civic Blog', language), path: '/blog', description: translate('Insights and news', language) }
       ]
     },
     {
-      name: 'Engage',
+      name: translate('Engage', language),
       items: [
-        { name: 'Community Hub', path: '/community', description: 'Join the conversation' },
-        { name: 'Events Calendar', path: '/calendar', description: 'What\'s happening in civic space' },
-        { name: 'Join & Support', path: '/join-community', description: 'Volunteer or contribute' }
+        { name: translate('Community Hub', language), path: '/community', description: translate('Connect and discuss civic matters with other citizens.', language) },
+        { name: translate('Events Calendar', language), path: '/calendar', description: translate('What\'s happening in civic space', language) },
+        { name: translate('Volunteer', language), path: '/join-community', description: translate('Find opportunities to make a difference.', language) }
       ]
     },
     {
-      name: 'Tools',
+      name: translate('Tools', language),
       items: [
-        { name: 'Nasaka IEBC', path: '/nasaka-iebc', description: 'Find registration centers' },
-        { name: 'Peoples-Audit', path: '/peoples-audit', description: 'Economic accountability' },
-        { name: 'SHAmbles', path: '/shambles', description: 'Corruption tracker' }
+        { name: translate('Nasaka IEBC', language), path: '/nasaka-iebc', description: translate('Find the closest IEBC registration center', language) },
+        { name: translate('Peoples-Audit', language), path: '/peoples-audit', description: translate('Breakdown of the economic state of the nation', language) },
+        { name: translate('SHAmbles', language), path: '/shambles', description: translate('Investigation and accountability tracking', language) }
       ]
     }
   ];

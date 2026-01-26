@@ -15,6 +15,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useViewTracking } from '@/hooks/useViewTracking';
 import { useViewCount } from '@/hooks/useViewCount';
+import { supabase } from '@/integrations/supabase/client';
 
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,6 +25,7 @@ const BlogPostPage = () => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [sending, setSending] = useState(false);
   const { session } = useAuth();
   const { toast } = useToast();
 
@@ -147,23 +149,44 @@ const BlogPostPage = () => {
     setShowReplyForm(!showReplyForm);
   };
 
-  const submitReply = () => {
-    if (!replyText.trim()) {
+  const submitReply = async () => {
+    if (!replyText.trim() || !session?.user || sending) {
       toast({
-        title: "Empty Reply",
-        description: "Please enter a reply message",
+        title: "Registration Required",
+        description: "Please sign in to contribute to the assembly.",
         variant: "destructive"
       });
       return;
     }
 
-    // For now, just show success - in real implementation, this would save to database
-    toast({
-      title: "Reply Posted",
-      description: "Your reply has been posted successfully!"
-    });
-    setReplyText('');
-    setShowReplyForm(false);
+    try {
+      setSending(true);
+
+      // Social Logic Sync: Post directly to Chat Messages (Bunge Square)
+      const { error } = await supabase.from('chat_messages').insert({
+        user_id: session.user.id,
+        room_id: 'general',
+        content: `[Article Discourse: ${post?.title}] ${replyText.trim()}`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Discourse Synced",
+        description: "Your contribution is now live in Bunge Square!"
+      });
+      setReplyText('');
+      setShowReplyForm(false);
+    } catch (error) {
+      console.error('Sync Error:', error);
+      toast({
+        title: "Sync Failed",
+        description: "We couldn't reach the assembly. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   if (loading) {
