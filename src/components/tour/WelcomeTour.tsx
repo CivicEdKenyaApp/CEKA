@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, Sparkles, Map, MessageSquare, Shield, Zap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Sparkles, MessageSquare, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface WelcomeTourProps {

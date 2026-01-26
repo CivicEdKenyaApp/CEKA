@@ -9,6 +9,21 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+interface ChatReply {
+    id: string;
+    user_id: string;
+    room_id: string;
+    content: string;
+    created_at: string;
+    parent_id: string;
+    profile?: {
+        id: string;
+        full_name: string | null;
+        avatar_url: string | null;
+        username: string | null;
+    };
+}
+
 interface ChatRepliesProps {
     messageId: string;
     room_id: string;
@@ -16,7 +31,7 @@ interface ChatRepliesProps {
 
 export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
     const { user, session } = useAuth();
-    const [replies, setReplies] = useState<any[]>([]);
+    const [replies, setReplies] = useState<ChatReply[]>([]);
     const [loading, setLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [replyContent, setReplyContent] = useState('');
@@ -24,16 +39,33 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
 
     const fetchReplies = useCallback(async () => {
         setLoading(true);
-        const { data, error } = await (supabase
-            .from('chat_messages')
-            .select(`
-                *,
-                profile:profiles!chat_messages_user_id_fkey (id, full_name, avatar_url, username)
-            `)
-            .eq('parent_id', messageId)
-            .order('created_at', { ascending: true }) as any);
+        try {
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('*')
+                .eq('parent_id', messageId)
+                .order('created_at', { ascending: true });
 
-        if (!error && data) setReplies(data);
+            if (!error && data) {
+                // Fetch profiles separately
+                const userIds = [...new Set(data.map(r => r.user_id))];
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, username')
+                    .in('id', userIds);
+
+                const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+                
+                const repliesWithProfiles: ChatReply[] = data.map(r => ({
+                    ...r,
+                    profile: profileMap.get(r.user_id) || null
+                }));
+                
+                setReplies(repliesWithProfiles);
+            }
+        } catch (err) {
+            console.error('Error fetching replies:', err);
+        }
         setLoading(false);
     }, [messageId]);
 
@@ -50,15 +82,22 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                 table: 'chat_messages',
                 filter: `parent_id=eq.${messageId}`
             }, async (payload) => {
+                const newReply = payload.new as any;
+                
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('id, full_name, avatar_url, username')
-                    .eq('id', payload.new.user_id)
-                    .single();
+                    .eq('id', newReply.user_id)
+                    .maybeSingle();
+
+                const replyWithProfile: ChatReply = {
+                    ...newReply,
+                    profile: profile || null
+                };
 
                 setReplies(prev => {
-                    if (prev.find(r => r.id === payload.new.id)) return prev;
-                    return [...prev, { ...payload.new, profile }];
+                    if (prev.find(r => r.id === replyWithProfile.id)) return prev;
+                    return [...prev, replyWithProfile];
                 });
             })
             .subscribe();
@@ -129,8 +168,8 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                             replies.map((reply) => (
                                 <div key={reply.id} className="flex gap-3 group animate-in fade-in slide-in-from-left-2 duration-400">
                                     <Avatar className="h-7 w-7 rounded-lg shrink-0 shadow-sm border border-white dark:border-white/10 mt-1">
-                                        <AvatarImage src={reply.profile?.avatar_url} />
-                                        <AvatarFallback className="text-[10px] uppercase font-bold">{reply.profile?.full_name?.charAt(0)}</AvatarFallback>
+                                        <AvatarImage src={reply.profile?.avatar_url || ''} />
+                                        <AvatarFallback className="text-[10px] uppercase font-bold">{reply.profile?.full_name?.charAt(0) || '?'}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 space-y-1">
                                         <div className="flex items-center gap-2">
@@ -154,7 +193,7 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                         <form onSubmit={sendReply} className="flex gap-3 items-center pt-2 group-focus-within:opacity-100 transition-opacity">
                             <Avatar className="h-7 w-7 rounded-lg shrink-0 opacity-60">
                                 <AvatarImage src={user?.user_metadata?.avatar_url} />
-                                <AvatarFallback className="text-[10px]">{user?.email?.charAt(0)}</AvatarFallback>
+                                <AvatarFallback className="text-[10px]">{user?.email?.charAt(0) || '?'}</AvatarFallback>
                             </Avatar>
                             <div className="relative flex-1">
                                 <Input
