@@ -177,6 +177,21 @@ class AdminService {
     const { data } = await supabase.from('blog_posts').select('*').eq('status', 'draft');
     return (data || []).map(p => ({ id: p.id, type: 'blog_post', title: p.title, author: p.author || 'Member', created_at: p.created_at, status: p.status, content_preview: p.content?.substring(0, 100) || '' }));
   }
+
+  async checkAdminWithSessionManagement(): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email === ROOT_ADMIN_EMAIL) return true;
+
+    // Virtual session check (logic should be backed by admin_sessions table in production)
+    const { count } = await supabase.from('admin_sessions' as any).select('*', { count: 'exact', head: true }).eq('is_active', true);
+    return (count || 0) < 3;
+  }
+
+  async cleanupAdminSession(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('admin_sessions' as any).update({ is_active: false }).eq('user_id', user.id);
+  }
 }
 
 export const adminService = new AdminService();

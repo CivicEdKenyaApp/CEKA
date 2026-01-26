@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -37,10 +37,11 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
         setLoading(false);
     }, [messageId]);
 
+    const hasFetched = useRef(false);
+
     useEffect(() => {
         if (!session) return;
 
-        // Always listen for counter updates or new replies to update the toggle button
         const channel = supabase
             .channel(`thread:${messageId}`)
             .on('postgres_changes', {
@@ -62,7 +63,10 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
             })
             .subscribe();
 
-        if (isExpanded) fetchReplies();
+        if (isExpanded && !hasFetched.current) {
+            fetchReplies();
+            hasFetched.current = true;
+        }
 
         return () => { supabase.removeChannel(channel); };
     }, [messageId, isExpanded, session, fetchReplies]);

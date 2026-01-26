@@ -13,6 +13,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate, cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from '@/components/ui/empty';
 
 const CommunityPortal = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +43,7 @@ const CommunityPortal = () => {
         .from('discussions' as any)
         .select(`
           *,
-          profile:profiles!user_id (full_name, avatar_url)
+          profile:profiles!created_by (full_name, avatar_url)
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -87,10 +95,10 @@ const CommunityPortal = () => {
         <div className="max-w-4xl mx-auto mb-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter text-slate-900 dark:text-white">
-              The <span className="text-primary">Commons</span> Hub
+              {translate('Mwananchi', language)} <span className="text-primary">{translate('Assembly', language)}</span>
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 font-medium">
-              Join the heartbeat of Kenyan civic participation. Real-time updates, policy tracker, and community voices.
+            <p className="text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+              {translate('Join the heartbeat of Kenyan civic participation. Real-time updates, policy tracker, and community voices as we move towards 2027.', language)}
             </p>
           </motion.div>
         </div>
@@ -100,13 +108,13 @@ const CommunityPortal = () => {
             <div className="overflow-x-auto no-scrollbar pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
               <TabsList className="bg-slate-100 dark:bg-white/5 p-1.5 rounded-[24px] inline-flex h-14 shadow-inner min-w-max sm:min-w-0">
                 <TabsTrigger value="chat" className="rounded-2xl px-6 sm:px-8 h-full data-[state=active]:bg-white dark:data-[state=active]:bg-[#1C1C1E] data-[state=active]:shadow-lg gap-2 font-bold whitespace-nowrap">
-                  <MessageCircle className="h-4 w-4" /> Live Assembly
+                  <MessageCircle className="h-4 w-4" /> {translate('Bunge Live', language)}
                 </TabsTrigger>
                 <TabsTrigger value="discussions" className="rounded-2xl px-6 sm:px-8 h-full data-[state=active]:bg-white dark:data-[state=active]:bg-[#1C1C1E] data-[state=active]:shadow-lg font-bold whitespace-nowrap">
-                  Threads
+                  {translate('Discourse Threads', language)}
                 </TabsTrigger>
                 <TabsTrigger value="campaigns" className="rounded-2xl px-6 sm:px-8 h-full data-[state=active]:bg-white dark:data-[state=active]:bg-[#1C1C1E] data-[state=active]:shadow-lg font-bold whitespace-nowrap">
-                  Campaigns
+                  {translate('Campaigns', language)}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -158,10 +166,20 @@ const CommunityPortal = () => {
               {/* Feed */}
               <div className="max-w-3xl mx-auto space-y-6">
                 {discussions.length === 0 ? (
-                  <div className="text-center py-20 opacity-30">
-                    <MessageSquare className="h-16 w-16 mx-auto mb-4" />
-                    <p className="font-bold uppercase tracking-widest text-sm">Quiet in the commons today.</p>
-                  </div>
+                  <Empty className="border-none bg-slate-50/50 dark:bg-white/5 py-20 rounded-[40px]">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon" className="bg-primary/10">
+                        <MessageSquare className="h-8 w-8 text-primary" />
+                      </EmptyMedia>
+                      <EmptyTitle>{translate('Quiet in the assembly.', language)}</EmptyTitle>
+                      <EmptyDescription>{translate('Be the first to ignite the discourse for the 2027 engine.', language)}</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <Button asChild variant="outline" className="rounded-2xl border-primary/20">
+                        <Link to="/community?tab=chat">{translate('Start Conversation', language)}</Link>
+                      </Button>
+                    </EmptyContent>
+                  </Empty>
                 ) : (
                   discussions.map((discussion) => (
                     <Card key={discussion.id} className="border-none shadow-ios-low rounded-[32px] hover:shadow-ios-high transition-all group active:scale-[0.99]">

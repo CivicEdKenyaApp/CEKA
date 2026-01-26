@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock, Settings } from 'lucide-react';
 import EnhancedAdminDashboard from './EnhancedAdminDashboard';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
+import FuzzyText from '../ui/FuzzyText';
 
 const AdminDashboard = () => {
   const { isAdmin, isLoading, sessionLimited } = useAdminAccess();
@@ -52,25 +53,30 @@ const AdminDashboard = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <Card className="max-w-md">
-              <CardHeader>
-                <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-4">
-                <p className="text-muted-foreground">
-                  Admin privileges required to access this dashboard.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Only users with admin email (civiceducationkenya@gmail.com) can access this area.
-                </p>
-                <Button asChild>
-                  <a href="/">Return to Homepage</a>
-                </Button>
-              </CardContent>
-            </Card>
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="max-w-2xl w-full text-center space-y-12">
+          <div className="space-y-4">
+            <FuzzyText
+              baseIntensity={0.2}
+              hoverIntensity={0.5}
+              enableHover
+              color="#ef4444"
+              fontSize="clamp(3rem, 15vw, 12rem)"
+            >
+              403
+            </FuzzyText>
+            <h2 className="text-2xl font-black uppercase tracking-[0.3em] text-red-500/80">Sovereign Access Required</h2>
+          </div>
+
+          <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-md mx-auto">
+            Administrative entry is restricted to authorized personnel.
+            Discursive credentials must be verified via the National Civic Registry.
+          </p>
+
+          <div className="pt-8">
+            <Button asChild variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-2xl h-14 px-8 font-bold uppercase tracking-widest text-xs">
+              <a href="/">Return to Perimeter</a>
+            </Button>
           </div>
         </div>
       </div>
@@ -88,7 +94,7 @@ const AdminDashboard = () => {
               Comprehensive system management and analytics for civic education platform
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowEnhanced(!showEnhanced)}
             variant={showEnhanced ? "default" : "outline"}
             className="bg-kenya-green hover:bg-kenya-green/90"
@@ -106,11 +112,11 @@ const AdminDashboard = () => {
 
 // Keep the existing basic dashboard as a fallback
 const BasicAdminDashboard = () => {
-  const { 
-    notifications, 
-    draftPosts, 
-    isAdmin, 
-    loading, 
+  const {
+    notifications,
+    draftPosts,
+    isAdmin,
+    loading,
     markNotificationAsRead,
     markAllNotificationsAsRead,
     updatePostStatus,
@@ -118,7 +124,7 @@ const BasicAdminDashboard = () => {
     rejectPost,
     refreshAdminData
   } = useEnhancedAdmin();
-  
+
   const { toast } = useToast();
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -220,7 +226,7 @@ const BasicAdminDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Basic Admin Dashboard</h2>
-        <Button 
+        <Button
           onClick={refreshAdminData}
           variant="outline"
         >
@@ -278,7 +284,7 @@ const BasicAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Recent Notifications</CardTitle>
             {unreadNotifications > 0 && (
-              <Button 
+              <Button
                 onClick={markAllNotificationsAsRead}
                 variant="outline"
                 size="sm"
@@ -297,11 +303,10 @@ const BasicAdminDashboard = () => {
           ) : (
             <div className="space-y-3">
               {notifications.slice(0, 5).map((notification) => (
-                <div 
+                <div
                   key={notification.id}
-                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                    !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
-                  }`}
+                  className={`flex items-start space-x-3 p-3 rounded-lg border ${!notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+                    }`}
                 >
                   <div className="flex-1">
                     <h4 className="font-medium">{notification.title}</h4>
@@ -348,7 +353,7 @@ const BasicAdminDashboard = () => {
                         By {post.author} • {new Date(post.created_at).toLocaleDateString()}
                       </p>
                       <p className="text-sm mb-3">{post.excerpt}</p>
-                      
+
                       <div className="flex items-center space-x-2 mb-3">
                         <Badge variant="outline">
                           <Clock className="w-3 h-3 mr-1" />

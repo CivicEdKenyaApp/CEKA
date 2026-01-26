@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,91 +10,54 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translate, cn } from '@/lib/utils';
 import { VolunteerApplyModal } from './VolunteerApplyModal';
 
-// Mock data for volunteer opportunities
-const opportunities = [
-  {
-    id: 1,
-    title: "Civic Education Workshop Facilitator",
-    organization: "Democracy Kenya Foundation",
-    location: "Nairobi",
-    type: "Local",
-    date: "May 15, 2025",
-    time: "9:00 AM - 4:00 PM",
-    commitment: "One-time",
-    description: "Lead workshops to educate citizens about their constitutional rights and civic responsibilities. Training will be provided.",
-    skills: ["Public Speaking", "Knowledge of Kenyan Constitution", "Teaching"]
-  },
-  {
-    id: 2,
-    title: "Youth Voter Registration Drive",
-    organization: "Kenya Electoral Commission",
-    location: "Multiple Locations",
-    type: "Grassroots",
-    date: "May 20-21, 2025",
-    time: "Various shifts available",
-    commitment: "Short-term",
-    description: "Help increase youth voter registration by conducting outreach in communities, schools, and universities.",
-    skills: ["Communication", "Organization", "Community Outreach"]
-  },
-  {
-    id: 3,
-    title: "Online Content Developer",
-    organization: "Civic Rights Kenya",
-    location: "Remote",
-    type: "Online",
-    date: "Flexible",
-    time: "5-10 hours per week",
-    commitment: "Ongoing",
-    description: "Create engaging digital content on civic education topics for social media and website distribution.",
-    skills: ["Content Creation", "Social Media", "Graphic Design"]
-  },
-  {
-    id: 4,
-    title: "Community Meeting Coordinator",
-    organization: "Local Governance Network",
-    location: "Mombasa",
-    type: "Local",
-    date: "June 5, 2025",
-    time: "2:00 PM - 6:00 PM",
-    commitment: "One-time",
-    description: "Organize and facilitate a community meeting to discuss local development priorities with county officials.",
-    skills: ["Event Planning", "Facilitation", "Communication"]
-  },
-  {
-    id: 5,
-    title: "Policy Research Assistant",
-    organization: "Governance Institute",
-    location: "Remote",
-    type: "Online",
-    date: "Ongoing",
-    time: "10-15 hours per week",
-    commitment: "Ongoing",
-    description: "Support research on public policy issues affecting Kenyan citizens, compile findings, and help draft reports.",
-    skills: ["Research", "Data Analysis", "Writing"]
-  },
-  {
-    id: 6,
-    title: "Rural Rights Awareness Campaign",
-    organization: "Rural Development Trust",
-    location: "Western Kenya",
-    type: "Grassroots",
-    date: "June 10-15, 2025",
-    time: "Full day events",
-    commitment: "Short-term",
-    description: "Travel to rural areas to conduct awareness campaigns on land rights, community resources, and government services.",
-    skills: ["Knowledge of Land Rights", "Communication", "Capacity to Travel"]
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export interface VolunteerOpportunity {
+  id: string;
+  title: string;
+  organization: string;
+  location: string;
+  category: string;
+  date_time: string;
+  commitment_type: string;
+  description: string;
+  skills_required: string[];
+  is_active: boolean;
+}
 
 const VolunteerOpportunitiesSection = () => {
+  const [opportunities, setOpportunities] = useState<VolunteerOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { language } = useLanguage();
+  const [selectedOpp, setSelectedOpp] = useState<VolunteerOpportunity | null>(null);
 
-  const localOpportunities = opportunities.filter(opp => opp.type === "Local");
-  const grassrootsOpportunities = opportunities.filter(opp => opp.type === "Grassroots");
-  const onlineOpportunities = opportunities.filter(opp => opp.type === "Online");
+  useEffect(() => {
+    fetchOpportunities();
+  }, []);
 
-  const [selectedOpp, setSelectedOpp] = useState<any>(null);
+  const fetchOpportunities = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('volunteer_opportunities' as any)
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOpportunities((data as any[]) || []);
+    } catch (err) {
+      console.error('Fetch Opportunities Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const localOpportunities = opportunities.filter(opp => opp.category === "Local");
+  const grassrootsOpportunities = opportunities.filter(opp => opp.category === "Grassroots");
+  const onlineOpportunities = opportunities.filter(opp => opp.category === "Online");
 
   const OpportunityCard = ({ opportunity }: { opportunity: any }) => (
     <Card key={opportunity.id} className="h-full flex flex-col border-none shadow-ios-low hover:shadow-ios-high transition-all rounded-[32px] overflow-hidden bg-white/60 dark:bg-black/40 backdrop-blur-xl">
@@ -104,15 +67,15 @@ const VolunteerOpportunitiesSection = () => {
             variant="outline"
             className={cn(
               "uppercase font-black text-[9px] tracking-[0.2em] px-2.5 py-1 rounded-full",
-              opportunity.type === "Online" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
-                opportunity.type === "Local" ? "bg-primary/10 text-primary border-primary/20" :
+              opportunity.category === "Online" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                opportunity.category === "Local" ? "bg-primary/10 text-primary border-primary/20" :
                   "bg-orange-500/10 text-orange-500 border-orange-500/20"
             )}
           >
-            {opportunity.type}
+            {opportunity.category}
           </Badge>
           <Badge variant="outline" className="bg-slate-100 dark:bg-white/5 border-none font-bold text-[9px] uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full">
-            {opportunity.commitment}
+            {opportunity.commitment_type}
           </Badge>
         </div>
         <h3 className="text-xl font-bold tracking-tight leading-tight mb-1">{opportunity.title}</h3>
@@ -122,15 +85,15 @@ const VolunteerOpportunitiesSection = () => {
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 line-clamp-3 leading-relaxed">{opportunity.description}</p>
         <div className="space-y-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
           <div className="flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-white/20" />
+            <MapPin className="h-3 w-3" />
             <span>{opportunity.location}</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-white/20" />
-            <span>{opportunity.date}</span>
+            <Calendar className="h-3 w-3" />
+            <span>{opportunity.date_time}</span>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
-            {opportunity.skills.map((skill: string, index: number) => (
+            {opportunity.skills_required?.map((skill: string, index: number) => (
               <span key={index} className="text-[9px] bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-lg border border-slate-200/50 dark:border-white/5">
                 {skill}
               </span>
@@ -208,11 +171,17 @@ const VolunteerOpportunitiesSection = () => {
             </TabsList>
 
             <TabsContent value="all" className="mt-0">
-              <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {opportunities.map((opportunity) => (
-                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-                ))}
-              </div>
+              {loading ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-64 rounded-[32px]" />)}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  {opportunities.map((opportunity) => (
+                    <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="local" className="mt-0">

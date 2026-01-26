@@ -318,7 +318,22 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.resource_categories (
-ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages, public.chat_reactions, public.profiles, public.admin_notifications;
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL,
+  description text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Ensure Publication includes all tactical tables
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END
+$$;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages, public.chat_reactions, public.profiles, public.admin_notifications, public.chat_rooms;
 
 -- 11. AUTO ADMISSION OF ROOT ADMIN
 CREATE OR REPLACE FUNCTION public.handle_admin_promotion()

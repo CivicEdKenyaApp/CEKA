@@ -17,6 +17,14 @@ import { ChatReplies } from './ChatReplies';
 import { InteractionLogger } from './InteractionLogger';
 import { MentionSuggestions } from './MentionSuggestions';
 import { cn } from '@/lib/utils';
+import {
+    Empty,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+    EmptyDescription,
+    EmptyContent
+} from '@/components/ui/empty';
 
 // Types
 interface ChatMessage {
@@ -440,6 +448,26 @@ const CommunityChat = () => {
                             <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
                         )}
 
+                        {messages.length === 0 && !loading && (
+                            <Empty className="border-none mt-20">
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon" className="bg-primary/10">
+                                        <Hash className="h-8 w-8 text-primary" />
+                                    </EmptyMedia>
+                                    <EmptyTitle>The Floor is Yours</EmptyTitle>
+                                    <EmptyDescription>
+                                        Initiate the discourse in {rooms.find(r => r.id === activeRoom)?.name}.
+                                        Your voice is the heartbeat of the assembly.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                                <EmptyContent>
+                                    <Button onClick={() => (document.querySelector('input') as any)?.focus()} variant="outline" className="rounded-2xl">
+                                        Open Floor
+                                    </Button>
+                                </EmptyContent>
+                            </Empty>
+                        )}
+
                         <div className="space-y-8 py-8">
                             {messages.map((message, idx) => {
                                 const isOwn = message.user_id === user?.id;
@@ -463,8 +491,8 @@ const CommunityChat = () => {
                                             {showAvatar && (
                                                 <Avatar className="h-10 w-10 rounded-[14px] shadow-sm border-2 border-white dark:border-white/10 ring-1 ring-slate-200/50">
                                                     <AvatarImage src={message.profile?.avatar_url || ''} />
-                                                    <AvatarFallback className="bg-slate-100 font-bold text-xs uppercase">
-                                                        {message.profile?.full_name?.charAt(0) || '?'}
+                                                    <AvatarFallback className="bg-primary/5 font-bold text-xs p-1">
+                                                        <img src="/lovable-uploads/bea0d682-b245-4391-b21b-80fdf695fdae.png" alt="CEKA" className="opacity-20 grayscale brightness-0 invert shadow-none" />
                                                     </AvatarFallback>
                                                 </Avatar>
                                             )}

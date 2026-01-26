@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
+import { translate } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VolunteerApplyModalProps {
     opportunity: any;
@@ -21,6 +24,8 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
     const [motivation, setMotivation] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const { language } = useLanguage();
 
     const handleSubmit = async () => {
         if (!user) {
@@ -29,12 +34,25 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
         }
 
         setSubmitting(true);
+        setProgress(10);
+
         try {
+            // Artificial 'Calming' Delay for Node Propagation
+            const progressTimer = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 90) {
+                        clearInterval(progressTimer);
+                        return 90;
+                    }
+                    return prev + 5;
+                });
+            }, 100);
+
             const { error } = await supabase.from('volunteer_applications').insert({
                 user_id: user.id,
                 opportunity_id: opportunity.id,
-                submission_metadata: { motivation },
-                is_active: true // Trigger interaction boolean
+                message: motivation,
+                status: 'pending'
             });
 
             if (error) throw error;
@@ -47,6 +65,7 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                 action_type: 'apply'
             });
 
+            setProgress(100);
             setSuccess(true);
             toast({ title: "Application Transmitted", description: "The CEKA admin team has received your request." });
 
@@ -55,6 +74,7 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                 onClose();
                 setSuccess(false);
                 setMotivation('');
+                setProgress(0);
             }, 3000);
 
         } catch (err: any) {
@@ -92,7 +112,7 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                                         <div className="h-2 w-2 rounded-full bg-kenya-green animate-pulse" />
                                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requirements Check</span>
                                     </div>
-                                    <p className="text-xs font-medium">By applying, you confirm availability for: <span className="font-bold">{opportunity.commitment}</span></p>
+                                    <p className="text-xs font-medium">By applying, you confirm availability for: <span className="font-bold">{opportunity.commitment_type}</span></p>
                                 </div>
 
                                 <div className="grid gap-4 pt-2">
@@ -109,7 +129,17 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                                 </div>
                             </div>
 
-                            <DialogFooter className="pt-4">
+                            <DialogFooter className="flex-col gap-4 pt-4">
+                                {submitting && (
+                                    <div className="w-full space-y-2 mb-2 animate-in fade-in duration-500">
+                                        <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-primary">
+                                            <span>Sovereign Transmission in Progress...</span>
+                                            <span>{progress}%</span>
+                                        </div>
+                                        <Progress value={progress} className="h-1.5" />
+                                        <p className="text-[10px] text-muted-foreground italic text-center">Calming system nodes for secure propagation...</p>
+                                    </div>
+                                )}
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={submitting || !motivation.trim()}
