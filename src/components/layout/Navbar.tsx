@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
-  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users
+  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
@@ -170,7 +170,17 @@ const Navbar = () => {
                   <div className="grid gap-2">
                     {cat.items.map((item) => (
                       <Link key={item.path} to={item.path} onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-white/5 active:scale-[0.98] transition-all">
-                        <div className="h-10 w-10 rounded-2xl bg-white dark:bg-black/40 flex items-center justify-center shadow-sm"><ChevronRight className="h-4 w-4" /></div>
+                        <div className="h-10 w-10 rounded-2xl bg-white dark:bg-black/40 flex items-center justify-center shadow-sm">
+                          {item.path === '/legislative-tracker' && <FileText className="h-4 w-4 text-primary" />}
+                          {item.path === '/resources' && <Shield className="h-4 w-4 text-primary" />}
+                          {item.path === '/blog' && <PenTool className="h-4 w-4 text-primary" />}
+                          {item.path === '/community' && <MessageSquare className="h-4 w-4 text-primary" />}
+                          {item.path === '/calendar' && <Calendar className="h-4 w-4 text-primary" />}
+                          {item.path === '/join-community' && <Heart className="h-4 w-4 text-primary" />}
+                          {item.path === '/nasaka-iebc' && <LayoutGrid className="h-4 w-4 text-primary" />}
+                          {item.path === '/peoples-audit' && <Radio className="h-4 w-4 text-primary" />}
+                          {item.path === '/shambles' && <Users className="h-4 w-4 text-primary" />}
+                        </div>
                         <div>
                           <p className="text-sm font-bold">{item.name}</p>
                           <p className="text-[10px] text-muted-foreground">{item.description}</p>
