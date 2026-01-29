@@ -303,4 +303,5 @@ Disallow: /
 # Sitemap Locations
 Sitemap: https://ceka.lovable.app/sitemap.xml
 Sitemap: https://civicedkenya.vercel.app/sitemap.xml
+Sitemap: https://www.civiceducationkenya.com/sitemap.xml
 Sitemap: https://preview--ceka.lovable.app/sitemap.xml
