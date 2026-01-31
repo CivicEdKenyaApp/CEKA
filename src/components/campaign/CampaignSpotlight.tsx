@@ -25,15 +25,15 @@ const CampaignSpotlight: React.FC<CampaignSpotlightProps> = ({ section }) => {
     useEffect(() => {
         const fetchCampaigns = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('platform_campaigns')
+                const { data, error } = await (supabase
+                    .from('platform_campaigns' as any) as any)
                     .select('*')
                     .eq('section_target', section)
                     .eq('is_active', true)
                     .limit(1);
 
                 if (error) throw error;
-                setCampaigns(data || []);
+                setCampaigns((data as any) || []);
             } catch (err) {
                 console.error('Error fetching campaigns:', err);
             } finally {

@@ -25,13 +25,13 @@ export class GamificationService {
         try {
             const amount = SCORING_MAP[action];
 
-            const { data, error } = await supabase.rpc('add_user_points', {
+            const { data, error } = await (supabase.rpc('add_user_points' as any, {
                 p_user_id: userId,
                 p_amount: amount,
                 p_action: action,
                 p_description: `Earned points for ${action.replace('_', ' ')}`,
                 p_metadata: metadata
-            });
+            }) as any);
 
             if (error) throw error;
             return data;
@@ -45,8 +45,8 @@ export class GamificationService {
      * Get current user's points and rank
      */
     static async getUserStats(userId: string) {
-        const { data, error } = await supabase
-            .from('user_points')
+        const { data, error } = await (supabase
+            .from('user_points' as any) as any)
             .select('*, rank')
             .eq('user_id', userId)
             .maybeSingle();
@@ -62,8 +62,8 @@ export class GamificationService {
      * Get top ranked users
      */
     static async getLeaderboard(limit = 10) {
-        const { data, error } = await supabase
-            .from('leaderboard')
+        const { data, error } = await (supabase
+            .from('leaderboard' as any) as any)
             .select('*')
             .limit(limit);
 
@@ -78,8 +78,8 @@ export class GamificationService {
      * Get points history for a user
      */
     static async getPointsHistory(userId: string, limit = 20) {
-        const { data, error } = await supabase
-            .from('points_history')
+        const { data, error } = await (supabase
+            .from('points_history' as any) as any)
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })

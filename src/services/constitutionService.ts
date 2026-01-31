@@ -26,8 +26,8 @@ export class ConstitutionService {
      * Fetch all chapters
      */
     static async getChapters(): Promise<ConstitutionChapter[]> {
-        const { data, error } = await supabase
-            .from('constitution_chapters')
+        const { data, error } = await (supabase
+            .from('constitution_chapters' as any) as any)
             .select('*')
             .order('chapter_number', { ascending: true });
 
@@ -42,8 +42,8 @@ export class ConstitutionService {
      * Fetch sections for a specific chapter
      */
     static async getSectionsByChapter(chapterId: number): Promise<ConstitutionSection[]> {
-        const { data, error } = await supabase
-            .from('constitution_sections')
+        const { data, error } = await (supabase
+            .from('constitution_sections' as any) as any)
             .select('*')
             .eq('chapter_id', chapterId)
             .eq('media_status', 'approved')
@@ -60,8 +60,8 @@ export class ConstitutionService {
      * Search constitution across all fields
      */
     static async searchConstitution(query: string) {
-        const { data, error } = await supabase
-            .from('constitution_sections')
+        const { data, error } = await (supabase
+            .from('constitution_sections' as any) as any)
             .select(`
         *,
         constitution_chapters (

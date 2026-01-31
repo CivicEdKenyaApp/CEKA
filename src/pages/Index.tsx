@@ -11,6 +11,7 @@ import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
+import CampaignSpotlight from '@/components/campaign/CampaignSpotlight';
 
 // Types for our carousel slides
 interface CarouselSlide {
