@@ -10,6 +10,15 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -26,6 +35,37 @@ import { translate, cn } from '@/lib/utils';
 import SearchSuggestion from '@/components/SearchSuggestion';
 import AuthModal from '@/components/auth/AuthModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+// Icon mapping for menu items
+const getItemIcon = (path: string) => {
+  switch (path) {
+    case '/legislative-tracker': return FileText;
+    case '/resources': return Shield;
+    case '/blog': return PenTool;
+    case '/community': return MessageSquare;
+    case '/calendar': return Calendar;
+    case '/join-community': return Heart;
+    case '/nasaka-iebc': return LayoutGrid;
+    case '/peoples-audit': return Radio;
+    case '/shambles': return Users;
+    default: return ChevronRight;
+  }
+};
+
+// Category color mapping
+const getCategoryColor = (categoryName: string) => {
+  if (categoryName.includes('Discover')) return 'text-primary';
+  if (categoryName.includes('Engage')) return 'text-kenya-green';
+  if (categoryName.includes('Tools')) return 'text-amber-500';
+  return 'text-primary';
+};
+
+const getCategoryBgColor = (categoryName: string) => {
+  if (categoryName.includes('Discover')) return 'bg-primary/10';
+  if (categoryName.includes('Engage')) return 'bg-kenya-green/10';
+  if (categoryName.includes('Tools')) return 'bg-amber-500/10';
+  return 'bg-primary/10';
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -81,41 +121,46 @@ const Navbar = () => {
         <div className="container mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="z-50"><Logo className="h-8 w-auto" /></Link>
 
-          {/* Desktop Consolidated Menu */}
-          <div className="hidden lg:flex items-center gap-1">
-            {categories.map((cat) => (
-              <DropdownMenu key={cat.name}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="rounded-2xl h-10 px-4 text-sm font-bold gap-1 hover:bg-slate-100 dark:hover:bg-white/5">
-                    {cat.name} <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-[320px] p-2 rounded-[28px] bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-3xl border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] mt-2">
-                  {cat.items.map((item) => (
-                    <DropdownMenuItem key={item.path} asChild>
-                      <Link to={item.path} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer group">
-                        <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                          {item.path === '/legislative-tracker' && <FileText className="h-4 w-4 text-primary" />}
-                          {item.path === '/resources' && <Shield className="h-4 w-4 text-primary" />}
-                          {item.path === '/blog' && <PenTool className="h-4 w-4 text-primary" />}
-                          {item.path === '/community' && <MessageSquare className="h-4 w-4 text-primary" />}
-                          {item.path === '/calendar' && <Calendar className="h-4 w-4 text-primary" />}
-                          {item.path === '/join-community' && <Heart className="h-4 w-4 text-primary" />}
-                          {item.path === '/nasaka-iebc' && <LayoutGrid className="h-4 w-4 text-primary" />}
-                          {item.path === '/peoples-audit' && <Radio className="h-4 w-4 text-primary" />}
-                          {item.path === '/shambles' && <Users className="h-4 w-4 text-primary" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold truncate">{item.name}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{item.description}</p>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ))}
-          </div>
+          {/* Desktop Navigation Menu - Hover-enabled */}
+          <NavigationMenu className="hidden lg:flex">
+            <NavigationMenuList className="gap-1">
+              {categories.map((cat) => (
+                <NavigationMenuItem key={cat.name}>
+                  <NavigationMenuTrigger className="rounded-2xl h-10 px-4 text-sm font-bold gap-1 bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 data-[state=open]:bg-slate-100 dark:data-[state=open]:bg-white/5">
+                    {cat.name}
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="w-[320px] p-2 rounded-[28px] bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-3xl">
+                      {cat.items.map((item) => {
+                        const Icon = getItemIcon(item.path);
+                        return (
+                          <li key={item.path}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                to={item.path}
+                                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer group transition-colors"
+                              >
+                                <div className={cn(
+                                  "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform",
+                                  getCategoryBgColor(cat.name)
+                                )}>
+                                  <Icon className={cn("h-4 w-4", getCategoryColor(cat.name))} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-bold truncate">{item.name}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{item.description}</p>
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:block"><SearchSuggestion className="w-64" /></div>
@@ -142,7 +187,7 @@ const Navbar = () => {
                   <DropdownMenuItem asChild><Link to="/settings" className="rounded-xl p-3 cursor-pointer">Settings</Link></DropdownMenuItem>
                   {isAdmin && <DropdownMenuItem asChild><Link to="/admin/dashboard" className="rounded-xl p-3 cursor-pointer text-primary font-bold">Admin Console</Link></DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 my-2" />
-                  <DropdownMenuItem onClick={signOut} className="rounded-xl p-3 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:red-950/20">Sign Out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="rounded-xl p-3 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20">Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -155,7 +200,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Menu Overlay - Enhanced with Icons & Colors */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -166,20 +211,54 @@ const Navbar = () => {
             >
               {categories.map((cat) => (
                 <div key={cat.name} className="space-y-4">
-                  <h3 className="text-[10px] uppercase tracking-widest font-black text-slate-400 px-2">{cat.name}</h3>
+                  <h3 className={cn(
+                    "text-[10px] uppercase tracking-widest font-black px-2",
+                    getCategoryColor(cat.name)
+                  )}>
+                    {cat.name}
+                  </h3>
                   <div className="grid gap-2">
-                    {cat.items.map((item) => (
-                      <Link key={item.path} to={item.path} onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-white/5 active:scale-[0.98] transition-all">
-                        <div className="h-10 w-10 rounded-2xl bg-white dark:bg-black/40 flex items-center justify-center shadow-sm"><ChevronRight className="h-4 w-4" /></div>
-                        <div>
-                          <p className="text-sm font-bold">{item.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{item.description}</p>
-                        </div>
-                      </Link>
-                    ))}
+                    {cat.items.map((item) => {
+                      const Icon = getItemIcon(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-white/5 active:scale-[0.98] transition-all group"
+                        >
+                          <div className={cn(
+                            "h-10 w-10 rounded-2xl flex items-center justify-center shadow-sm",
+                            getCategoryBgColor(cat.name)
+                          )}>
+                            <Icon className={cn("h-4 w-4", getCategoryColor(cat.name))} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold">{item.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{item.description}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-active:translate-x-1 transition-transform" />
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
+
+              {/* Mobile Sign In Button */}
+              {!user && (
+                <div className="pt-4 border-t border-slate-100 dark:border-white/10">
+                  <Button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full rounded-2xl h-14 font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+                  >
+                    Sign In to CEKA
+                  </Button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -190,3 +269,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

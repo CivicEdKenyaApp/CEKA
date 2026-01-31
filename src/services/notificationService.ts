@@ -1,109 +1,346 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+
+// Notification source types matching the database schema
+export type NotificationSourceType =
+  | 'chat_message'
+  | 'chat_mention'
+  | 'chat_reply'
+  | 'blog_comment'
+  | 'blog_mention'
+  | 'volunteer_opportunity'
+  | 'volunteer_application'
+  | 'bill_update'
+  | 'campaign_update'
+  | 'discussion_reply'
+  | 'system'
+  | 'moderation';
+
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
 export interface Notification {
   id: string;
   user_id: string;
+  source_type: NotificationSourceType;
+  source_id: string | null;
+  actor_id: string | null;
+  title: string;
   message: string;
-  type: string | null;
   link: string | null;
+  image_url: string | null;
+  metadata: Record<string, unknown>;
+  priority: NotificationPriority;
+  category: string;
   is_read: boolean;
+  read_at: string | null;
+  is_archived: boolean;
+  archived_at: string | null;
+  is_dismissed: boolean;
   created_at: string;
-  related_entity_id: string | null;
+  expires_at: string | null;
+  // Joined data
+  actor?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
-export class NotificationService {
-  async getNotifications(): Promise<Notification[]> {
+export interface NotificationFilters {
+  isRead?: boolean;
+  sourceType?: NotificationSourceType;
+  priority?: NotificationPriority;
+  category?: string;
+  limit?: number;
+}
+
+class NotificationService {
+  private channel: RealtimeChannel | null = null;
+  private userId: string | null = null;
+
+  /**
+   * Get notifications with optional filtering
+   */
+  async getNotifications(filters: NotificationFilters = {}): Promise<Notification[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
+    let query = supabase
+      .from('user_notifications')
+      .select(`
+        *,
+        actor:profiles!actor_id (full_name, avatar_url)
+      `)
       .eq('user_id', user.id)
+      .eq('is_archived', false)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+    if (filters.isRead !== undefined) {
+      query = query.eq('is_read', filters.isRead);
+    }
+    if (filters.sourceType) {
+      query = query.eq('source_type', filters.sourceType);
+    }
+    if (filters.priority) {
+      query = query.eq('priority', filters.priority);
+    }
+    if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
+    }
+
+    return (data || []) as Notification[];
   }
 
-  async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-
-    if (error) throw error;
-  }
-
-  async markAllAsRead(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', user.id)
-      .eq('is_read', false);
-
-    if (error) throw error;
-  }
-
+  /**
+   * Get unread notification count
+   */
   async getUnreadCount(): Promise<number> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return 0;
 
     const { count, error } = await supabase
-      .from('notifications')
+      .from('user_notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('is_read', false);
+      .eq('is_read', false)
+      .eq('is_archived', false);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error getting unread count:', error);
+      return 0;
+    }
+
     return count || 0;
   }
 
-  async createNotification(
-    userId: string,
-    message: string,
-    type?: string,
-    link?: string,
-    relatedEntityId?: string
-  ): Promise<void> {
+  /**
+   * Mark a single notification as read
+   */
+  async markAsRead(notificationId: string): Promise<void> {
     const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        message,
-        type,
-        link,
-        related_entity_id: relatedEntityId
-      });
+      .from('user_notifications')
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq('id', notificationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
   }
 
-  // Set up real-time subscription for notifications
-  subscribeToNotifications(callback: (notification: Notification) => void) {
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          callback(payload.new as Notification);
-        }
-      )
-      .subscribe();
+  /**
+   * Mark multiple notifications as read
+   */
+  async markMultipleAsRead(notificationIds: string[]): Promise<void> {
+    const { error } = await supabase.rpc('mark_notifications_read', {
+      p_notification_ids: notificationIds
+    });
 
-    return () => {
-      supabase.removeChannel(channel);
+    if (error) {
+      console.error('Error marking notifications as read:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllAsRead(): Promise<void> {
+    const { error } = await supabase.rpc('mark_all_notifications_read');
+
+    if (error) {
+      console.error('Error marking all notifications as read:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Archive a notification (soft delete)
+   */
+  async archive(notificationId: string): Promise<void> {
+    const { error } = await supabase
+      .from('user_notifications')
+      .update({ is_archived: true, archived_at: new Date().toISOString() })
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('Error archiving notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Dismiss a notification (hide without archiving)
+   */
+  async dismiss(notificationId: string): Promise<void> {
+    const { error } = await supabase
+      .from('user_notifications')
+      .update({ is_dismissed: true })
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('Error dismissing notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a notification (for testing or manual triggers)
+   */
+  async create(
+    userId: string,
+    sourceType: NotificationSourceType,
+    title: string,
+    message: string,
+    options: {
+      sourceId?: string;
+      actorId?: string;
+      link?: string;
+      imageUrl?: string;
+      priority?: NotificationPriority;
+      metadata?: Record<string, unknown>;
+    } = {}
+  ): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: userId,
+        source_type: sourceType,
+        source_id: options.sourceId,
+        actor_id: options.actorId,
+        title,
+        message,
+        link: options.link,
+        image_url: options.imageUrl,
+        priority: options.priority || 'normal',
+        metadata: options.metadata || {},
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      return null;
+    }
+
+    return data?.id || null;
+  }
+
+  /**
+   * Subscribe to real-time notifications
+   */
+  subscribeToNotifications(
+    callback: (notification: Notification) => void
+  ): () => void {
+    const setupSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      this.userId = user.id;
+
+      // Remove existing channel if any
+      if (this.channel) {
+        supabase.removeChannel(this.channel);
+      }
+
+      // Create new channel with user-specific filter
+      this.channel = supabase
+        .channel(`user_notifications:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          async (payload) => {
+            // Fetch full notification with actor data
+            const { data } = await supabase
+              .from('user_notifications')
+              .select(`
+                *,
+                actor:profiles!actor_id (full_name, avatar_url)
+              `)
+              .eq('id', payload.new.id)
+              .single();
+
+            if (data) {
+              callback(data as Notification);
+            }
+          }
+        )
+        .subscribe();
     };
+
+    setupSubscription();
+
+    // Return cleanup function
+    return () => {
+      if (this.channel) {
+        supabase.removeChannel(this.channel);
+        this.channel = null;
+      }
+    };
+  }
+
+  /**
+   * Get icon based on notification type
+   */
+  getNotificationIcon(sourceType: NotificationSourceType): string {
+    switch (sourceType) {
+      case 'chat_message':
+      case 'chat_mention':
+      case 'chat_reply':
+        return 'MessageSquare';
+      case 'blog_comment':
+      case 'blog_mention':
+        return 'PenTool';
+      case 'volunteer_opportunity':
+      case 'volunteer_application':
+        return 'Heart';
+      case 'bill_update':
+        return 'FileText';
+      case 'campaign_update':
+        return 'TrendingUp';
+      case 'discussion_reply':
+        return 'MessageCircle';
+      case 'moderation':
+        return 'Shield';
+      case 'system':
+      default:
+        return 'Bell';
+    }
+  }
+
+  /**
+   * Get color based on priority
+   */
+  getPriorityColor(priority: NotificationPriority): string {
+    switch (priority) {
+      case 'urgent':
+        return 'text-red-500';
+      case 'high':
+        return 'text-amber-500';
+      case 'normal':
+        return 'text-primary';
+      case 'low':
+      default:
+        return 'text-muted-foreground';
+    }
   }
 }
 
 export const notificationService = new NotificationService();
+export default notificationService;
+
