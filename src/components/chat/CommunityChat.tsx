@@ -85,13 +85,10 @@ const CommunityChat = () => {
         setFetchError(false);
 
         try {
-            // FIXED: Using explicit foreign key notation matching SQL Hardy Mode
+            // Simple query without FK join to avoid PGRST200 errors
             let query = supabase
                 .from('chat_messages')
-                .select(`
-                    *,
-                    profile:profiles!chat_messages_user_id_fkey (id, full_name, avatar_url, username)
-                `)
+                .select('*')
                 .eq('room_id', roomId)
                 .is('parent_id', null)
                 .order('created_at', { ascending: false })
@@ -104,28 +101,27 @@ const CommunityChat = () => {
             const { data, error } = await query;
 
             if (error) {
-                console.error('PGRST Error:', error);
+                console.error('Chat fetch error:', error);
                 setFetchError(true);
-                // Fallback attempt
-                const { data: retryData } = await supabase
-                    .from('chat_messages')
-                    .select('*, profiles(id, full_name, avatar_url, username)')
-                    .eq('room_id', roomId)
-                    .is('parent_id', null)
-                    .order('created_at', { ascending: false })
-                    .limit(PAGE_SIZE);
-
-                if (retryData) {
-                    const mapped = (retryData as any[]).map(m => ({ ...m, profile: m.profiles }));
-                    setMessages(mapped.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
-                    setFetchError(false);
-                    return;
-                }
                 throw error;
             }
 
             if (data) {
-                const sorted = (data as any[]).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                // Fetch profile data separately for each unique user_id
+                const userIds = [...new Set(data.map(m => m.user_id))];
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, username')
+                    .in('id', userIds);
+
+                const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+                const messagesWithProfiles = data.map(m => ({
+                    ...m,
+                    profile: profileMap.get(m.user_id) || null
+                }));
+
+                const sorted = messagesWithProfiles.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
                 setMessages(prev => cursor ? [...sorted, ...prev] : sorted);
                 setHasMoreOlder(data.length === PAGE_SIZE);
             }
@@ -138,6 +134,7 @@ const CommunityChat = () => {
             setLoadingOlder(false);
         }
     }, []);
+
 
     const handleJoinRoom = async (roomId: string) => {
         if (!user) return;

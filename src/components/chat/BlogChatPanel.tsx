@@ -78,23 +78,33 @@ export const BlogChatPanel: React.FC<BlogChatPanelProps> = ({ blogPost, classNam
                     .single();
 
                 if (roomData) {
-                    setChatRoom(roomData);
+                    setChatRoom({
+                        ...roomData,
+                        type: roomData.room_type || 'public'
+                    });
 
-                    // Fetch recent messages
+                    // Fetch recent messages without FK join
                     const { data: messagesData } = await supabase
                         .from('chat_messages')
-                        .select(`
-              id,
-              content,
-              created_at,
-              profile:profiles!chat_messages_user_id_fkey (full_name, avatar_url)
-            `)
+                        .select('id, content, created_at, user_id')
                         .eq('room_id', roomId)
                         .order('created_at', { ascending: false })
                         .limit(3);
 
-                    if (messagesData) {
-                        setRecentMessages(messagesData as RecentMessage[]);
+                    if (messagesData && messagesData.length > 0) {
+                        // Fetch profiles separately
+                        const userIds = [...new Set(messagesData.map(m => m.user_id))];
+                        const { data: profiles } = await supabase
+                            .from('profiles')
+                            .select('id, full_name, avatar_url')
+                            .in('id', userIds);
+
+                        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+                        const messagesWithProfiles = messagesData.map(m => ({
+                            ...m,
+                            profile: profileMap.get(m.user_id) || null
+                        }));
+                        setRecentMessages(messagesWithProfiles as RecentMessage[]);
                     }
 
                     // Count unique participants
@@ -114,6 +124,7 @@ export const BlogChatPanel: React.FC<BlogChatPanelProps> = ({ blogPost, classNam
 
         fetchRoomData();
     }, [roomId]);
+
 
     // Create room if it doesn't exist and join
     const handleJoinDiscussion = async () => {

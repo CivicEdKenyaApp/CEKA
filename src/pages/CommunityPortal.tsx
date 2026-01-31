@@ -38,17 +38,30 @@ const CommunityPortal = () => {
   const fetchCommunityData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch live discussions (Corrected relationship)
+      // 1. Fetch live discussions (without FK join to avoid PGRST200)
       const { data: discData } = await supabase
         .from('discussions' as any)
-        .select(`
-          *,
-          profile:profiles!created_by (full_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
 
-      setDiscussions(discData || []);
+      // Fetch profiles separately if discussions exist
+      if (discData && discData.length > 0) {
+        const userIds = [...new Set(discData.map((d: any) => d.created_by).filter(Boolean))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const discussionsWithProfiles = discData.map((d: any) => ({
+          ...d,
+          profile: profileMap.get(d.created_by) || null
+        }));
+        setDiscussions(discussionsWithProfiles);
+      } else {
+        setDiscussions([]);
+      }
 
       // 2. Fetch live campaigns
       const { data: campData } = await supabase
@@ -74,6 +87,7 @@ const CommunityPortal = () => {
       setLoading(false);
     }
   };
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

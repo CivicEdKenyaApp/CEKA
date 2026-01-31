@@ -94,18 +94,21 @@ export const ChatModerationPanel: React.FC<ChatModerationPanelProps> = ({
     // Fetch moderation history for user
     useEffect(() => {
         const fetchHistory = async () => {
-            const { data } = await supabase
-                .from('chat_moderation_actions' as any)
-                .select(`
-          *,
-          target_user:profiles!target_user_id (full_name, avatar_url)
-        `)
-                .eq('target_user_id', targetUserId)
-                .order('created_at', { ascending: false })
-                .limit(10);
+            try {
+                // Fetch without FK join to avoid PGRST200 errors
+                const { data } = await supabase
+                    .from('chat_moderation_actions' as any)
+                    .select('*')
+                    .eq('target_user_id', targetUserId)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
 
-            if (data) {
-                setHistory(data as ModerationAction[]);
+                if (data) {
+                    setHistory(data as unknown as ModerationAction[]);
+                }
+            } catch (err) {
+                console.warn('Error fetching moderation history:', err);
+                setHistory([]);
             }
         };
 
@@ -113,6 +116,7 @@ export const ChatModerationPanel: React.FC<ChatModerationPanelProps> = ({
             fetchHistory();
         }
     }, [isOpen, targetUserId]);
+
 
     const handleDeleteMessage = async () => {
         if (!messageId) return;
