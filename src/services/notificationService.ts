@@ -54,6 +54,10 @@ export interface NotificationFilters {
   limit?: number;
 }
 
+// Type helper for table that doesn't exist in generated types yet
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const notificationsTable = () => supabase.from('user_notifications' as any);
+
 class NotificationService {
   private channel: RealtimeChannel | null = null;
   private userId: string | null = null;
@@ -67,9 +71,8 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      // First, try simple query to check if table exists
-      let query = supabase
-        .from('user_notifications')
+      // Use type assertion for table that doesn't exist in types.ts yet
+      let query = notificationsTable()
         .select('*')
         .eq('user_id', user.id)
         .eq('is_archived', false)
@@ -77,6 +80,7 @@ class NotificationService {
 
       if (filters.isRead !== undefined) {
         query = query.eq('is_read', filters.isRead);
+
       }
       if (filters.sourceType) {
         query = query.eq('source_type', filters.sourceType);
@@ -105,7 +109,7 @@ class NotificationService {
         return [];
       }
 
-      return (data || []) as Notification[];
+      return (data || []) as unknown as Notification[];
     } catch (err) {
       console.warn('Notification service error:', err);
       return [];
@@ -120,8 +124,7 @@ class NotificationService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 0;
 
-      const { count, error } = await supabase
-        .from('user_notifications')
+      const { count, error } = await notificationsTable()
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false)
@@ -148,8 +151,7 @@ class NotificationService {
    */
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      await supabase
-        .from('user_notifications')
+      await notificationsTable()
         .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
     } catch (err) {
@@ -162,7 +164,7 @@ class NotificationService {
    */
   async markMultipleAsRead(notificationIds: string[]): Promise<void> {
     try {
-      await supabase.rpc('mark_notifications_read', {
+      await supabase.rpc('mark_notifications_read' as any, {
         p_notification_ids: notificationIds
       });
     } catch (err) {
@@ -175,7 +177,7 @@ class NotificationService {
    */
   async markAllAsRead(): Promise<void> {
     try {
-      await supabase.rpc('mark_all_notifications_read');
+      await supabase.rpc('mark_all_notifications_read' as any);
     } catch (err) {
       console.warn('Error marking all notifications as read:', err);
     }
@@ -185,9 +187,8 @@ class NotificationService {
    * Archive a notification (soft delete)
    */
   async archive(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('user_notifications')
-      .update({ is_archived: true, archived_at: new Date().toISOString() })
+    const { error } = await notificationsTable()
+      .update({ is_archived: true, archived_at: new Date().toISOString() } as any)
       .eq('id', notificationId);
 
     if (error) {
@@ -200,9 +201,8 @@ class NotificationService {
    * Dismiss a notification (hide without archiving)
    */
   async dismiss(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('user_notifications')
-      .update({ is_dismissed: true })
+    const { error } = await notificationsTable()
+      .update({ is_dismissed: true } as any)
       .eq('id', notificationId);
 
     if (error) {
@@ -228,8 +228,7 @@ class NotificationService {
       metadata?: Record<string, unknown>;
     } = {}
   ): Promise<string | null> {
-    const { data, error } = await supabase
-      .from('user_notifications')
+    const { data, error } = await notificationsTable()
       .insert({
         user_id: userId,
         source_type: sourceType,
@@ -241,8 +240,8 @@ class NotificationService {
         image_url: options.imageUrl,
         priority: options.priority || 'normal',
         metadata: options.metadata || {},
-      })
-      .select('id')
+      } as any)
+      .select('id' as any)
       .single();
 
     if (error) {
@@ -250,7 +249,7 @@ class NotificationService {
       return null;
     }
 
-    return data?.id || null;
+    return (data as any)?.id || null;
   }
 
   /**
@@ -286,14 +285,13 @@ class NotificationService {
             async (payload) => {
               try {
                 // Fetch full notification without FK join
-                const { data } = await supabase
-                  .from('user_notifications')
+                const { data } = await notificationsTable()
                   .select('*')
                   .eq('id', payload.new.id)
                   .single();
 
                 if (data) {
-                  callback(data as Notification);
+                  callback(data as unknown as Notification);
                 }
               } catch {
                 // Silently fail
