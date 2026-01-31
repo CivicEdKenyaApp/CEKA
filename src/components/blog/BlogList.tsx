@@ -259,7 +259,7 @@ export function BlogList({ posts }: BlogListProps) {
 
   return (
     <>
-      <div className="space-y-6 w-full max-w-full overflow-hidden">
+      <div className="space-y-6 w-full max-w-full overflow-x-hidden">
         {posts.map((post) => {
           // If post is draft, show preview component
           if (post.status === 'draft') {
@@ -273,9 +273,9 @@ export function BlogList({ posts }: BlogListProps) {
           return (
             <Card key={post.id} className="hover:shadow-md transition-shadow overflow-hidden break-words">
               <CardHeader className="p-4 md:p-6">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                  <div className="space-y-2 flex-1 min-w-0">
-                    <CardTitle className="text-xl break-words">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4 w-full">
+                  <div className="space-y-2 flex-1 min-w-0 w-full overflow-hidden">
+                    <CardTitle className="text-lg md:text-xl break-words leading-tight">
                       <Link
                         to={`/blog/${post.slug}`}
                         className="hover:text-kenya-green transition-colors line-clamp-2"
@@ -284,20 +284,20 @@ export function BlogList({ posts }: BlogListProps) {
                       </Link>
                     </CardTitle>
 
-                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1 min-w-max">
-                        <User className="h-4 w-4" />
-                        <span className="truncate max-w-[120px]">{post.author}</span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-muted-foreground overflow-hidden">
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="truncate max-w-[100px] md:max-w-[150px]">{post.author}</span>
                       </div>
-                      <div className="flex items-center gap-1 min-w-max">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="whitespace-nowrap">{new Date(post.published_at || post.created_at).toLocaleDateString()}</span>
                       </div>
                       <PostViewCount postId={post.id} />
                     </div>
                   </div>
 
-                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="shrink-0">
+                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="shrink-0 text-[10px] md:text-xs">
                     {post.status}
                   </Badge>
                 </div>

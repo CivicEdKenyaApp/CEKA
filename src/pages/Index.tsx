@@ -129,6 +129,12 @@ const Index = () => {
   return (
     <Layout>
       <Hero />
+
+      {/* Campaign Spotlight / Ad Space (Dynamic) */}
+      <section className="container mx-auto py-8">
+        <CampaignSpotlight section="home_hero" />
+      </section>
+
       <div className="py-8">
         <MegaProjectCarousel
           slides={formattedSlides}
@@ -137,6 +143,12 @@ const Index = () => {
         />
       </div>
       <FeaturedLegislation />
+
+      {/* Secondary Ad Space: Between Legislation and Resources */}
+      <section className="container mx-auto py-8">
+        <CampaignSpotlight section="home_mid" />
+      </section>
+
       <ResourceHighlights resources={sampleResources} />
       <CommunitySection />
       <VolunteerOpportunities />

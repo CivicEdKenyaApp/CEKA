@@ -9,6 +9,7 @@ import MegaProjectCarousel from '@/components/carousel/MegaProjectCarousel';
 import MegaResources from '@/components/resources/MegaResources';
 import CommunityProfileForm from '@/components/community/CommunityProfileForm';
 import VolunteerOpportunityDialog from '@/components/volunteer/VolunteerOpportunityDialog';
+import InteractiveConstitution from '@/components/constitution/InteractiveConstitution';
 
 const ConstitutionPage = () => {
   return (
@@ -18,10 +19,10 @@ const ConstitutionPage = () => {
         <div className="mb-10">
           <MegaProjectCarousel
             slides={[
-              { id: 'c1', title: 'Constitution Highlights', description: 'Explore the key chapters and the Bill of Rights.', color: 'kenya-green', ctaText: 'Learn more', onClick: () => {} },
-              { id: 'c2', title: 'How Laws Are Made', description: 'Understand the legislative process in Kenya.', color: 'kenya-red', ctaText: 'See process', onClick: () => {} },
-              { id: 'c3', title: 'Public Participation', description: 'Your voice matters in governance.', color: 'kenya-black', ctaText: 'Get involved', onClick: () => {} },
-              { id: 'c4', title: 'Civic Education Toolkit', description: 'Discover learning materials and toolkits.', color: 'kenya-white', ctaText: 'Browse resources', onClick: () => {} },
+              { id: 'c1', title: 'Constitution Highlights', description: 'Explore the key chapters and the Bill of Rights.', color: 'kenya-green', ctaText: 'Learn more', onClick: () => { } },
+              { id: 'c2', title: 'How Laws Are Made', description: 'Understand the legislative process in Kenya.', color: 'kenya-red', ctaText: 'See process', onClick: () => { } },
+              { id: 'c3', title: 'Public Participation', description: 'Your voice matters in governance.', color: 'kenya-black', ctaText: 'Get involved', onClick: () => { } },
+              { id: 'c4', title: 'Civic Education Toolkit', description: 'Discover learning materials and toolkits.', color: 'kenya-white', ctaText: 'Browse resources', onClick: () => { } },
             ]}
           />
         </div>
@@ -66,66 +67,26 @@ const ConstitutionPage = () => {
               <TabsTrigger value="civic-education">Civic Education</TabsTrigger>
               <TabsTrigger value="framework">NCEF</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="overview" className="space-y-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-medium mb-4">What is the Constitution?</h3>
-                  <p className="mb-4">
-                    Kenya's Constitution is the supreme law of the Republic of Kenya. It was promulgated on August 27, 2010, 
-                    replacing the previous constitution dating back to independence. The Constitution establishes the structure of 
-                    the Kenyan government and defines the relationship between the government and the citizens of Kenya.
-                  </p>
-                  <p>
-                    As the foundation of Kenya's legal system, the Constitution outlines the fundamental rights and freedoms of all 
-                    Kenyans, establishes the three branches of government (Executive, Legislative, and Judicial), and introduces 
-                    a devolved system of governance with 47 counties.
-                  </p>
-                </CardContent>
-              </Card>
 
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-medium mb-4">Key Features of Kenya's Constitution</h3>
-                  <ul className="space-y-3 list-disc pl-5">
-                    <li>
-                      <strong>Bill of Rights:</strong> A comprehensive set of civil, political, economic, social, and cultural rights 
-                      guaranteed to all Kenyans.
-                    </li>
-                    <li>
-                      <strong>Devolution:</strong> A system of governance that transfers power, resources, and representation from 
-                      the national government to 47 county governments.
-                    </li>
-                    <li>
-                      <strong>Separation of Powers:</strong> Clear division of powers between the Executive, Legislature, and Judiciary.
-                    </li>
-                    <li>
-                      <strong>Public Participation:</strong> Requirements for citizen involvement in governance and decision-making processes.
-                    </li>
-                    <li>
-                      <strong>Independent Commissions:</strong> Establishment of independent bodies to protect democracy and enforce 
-                      constitutional provisions.
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+            <TabsContent value="overview" className="space-y-6">
+              <InteractiveConstitution />
             </TabsContent>
-            
+
             <TabsContent value="civic-education" className="space-y-6">
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-medium mb-4">Civic Education in the Constitution</h3>
                   <p className="mb-4">
-                    Article 33 of the Constitution of Kenya recognizes the right to freedom of expression, which includes the right 
+                    Article 33 of the Constitution of Kenya recognizes the right to freedom of expression, which includes the right
                     to seek, receive, or impart information. This forms the foundation for civic education in Kenya.
                   </p>
                   <p className="mb-4">
-                    Article 35 further guarantees every citizen the right of access to information held by the State and information 
+                    Article 35 further guarantees every citizen the right of access to information held by the State and information
                     held by another person required for the exercise or protection of any right or fundamental freedom.
                   </p>
                   <p>
-                    The Fourth Schedule of the Constitution, which distributes functions between the National and County governments, 
-                    places the responsibility for education policy, standards, curricula, and examinations with the National government. 
+                    The Fourth Schedule of the Constitution, which distributes functions between the National and County governments,
+                    places the responsibility for education policy, standards, curricula, and examinations with the National government.
                     County governments are responsible for pre-primary education, village polytechnics, and childcare facilities.
                   </p>
                 </CardContent>
@@ -135,27 +96,27 @@ const ConstitutionPage = () => {
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-medium mb-4">Public Participation as a Constitutional Principle</h3>
                   <p className="mb-4">
-                    Article 10(2) of the Constitution establishes public participation as one of the national values and principles 
-                    of governance. This principle binds all State organs, State officers, public officers, and all persons whenever 
+                    Article 10(2) of the Constitution establishes public participation as one of the national values and principles
+                    of governance. This principle binds all State organs, State officers, public officers, and all persons whenever
                     they apply or interpret the Constitution, enact, apply or interpret any law, or make or implement public policy decisions.
                   </p>
                   <p>
-                    Various other articles, including Articles 118, 174, and 196, emphasize the importance of public participation in 
-                    legislative processes, devolved governance, and county assembly procedures. This constitutional emphasis on public 
-                    participation necessitates effective civic education to ensure citizens are equipped to meaningfully participate 
+                    Various other articles, including Articles 118, 174, and 196, emphasize the importance of public participation in
+                    legislative processes, devolved governance, and county assembly procedures. This constitutional emphasis on public
+                    participation necessitates effective civic education to ensure citizens are equipped to meaningfully participate
                     in governance.
                   </p>
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="framework" className="space-y-6">
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-medium mb-4">National Civic Education Framework (NCEF)</h3>
                   <p className="mb-4">
-                    The National Civic Education Framework is a comprehensive document that outlines how civic education should be 
-                    implemented at both the County and National levels in Kenya. It was developed to ensure a structured and 
+                    The National Civic Education Framework is a comprehensive document that outlines how civic education should be
+                    implemented at both the County and National levels in Kenya. It was developed to ensure a structured and
                     standardized approach to civic education across the country.
                   </p>
                   <div className="flex mb-4">
@@ -221,7 +182,7 @@ const ConstitutionPage = () => {
           <div className="bg-kenya-green/10 p-6 rounded-lg mb-8 mt-10">
             <h3 className="text-xl font-semibold mb-4">Join the Discussion</h3>
             <p className="mb-6">
-              Have questions about Kenya's Constitution or want to share your insights on civic education? 
+              Have questions about Kenya's Constitution or want to share your insights on civic education?
               Join the conversation in our community discussion forum.
             </p>
             <div className="flex flex-col md:flex-row gap-3">

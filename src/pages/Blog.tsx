@@ -117,22 +117,22 @@ const Blog = () => {
   return (
     <Layout>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">CEKA Blog</h1>
-            <p className="text-muted-foreground">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 overflow-hidden">
+          <div className="max-w-full">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2 break-words">CEKA Blog</h1>
+            <p className="text-sm md:text-base text-muted-foreground break-words">
               Insights, updates, and discussions on civic education and governance in Kenya
             </p>
           </div>
 
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button onClick={handleCreateNew} className="">
+          <div className="flex flex-wrap gap-2 mt-2 md:mt-0 w-full md:w-auto">
+            <Button onClick={handleCreateNew} className="flex-1 md:flex-none">
               <PlusCircle className="h-4 w-4 mr-2" />
               New Post
             </Button>
 
             {isAdmin && (
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="flex-1 md:flex-none">
                 <Link to="/admin/dashboard">
                   <Settings className="h-4 w-4 mr-2" />
                   Admin
@@ -147,22 +147,22 @@ const Blog = () => {
           <div className="lg:col-span-3">
             <Tabs defaultValue="all" className="space-y-6">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div className="overflow-x-auto w-full md:w-auto pb-2 no-scrollbar">
-                  <TabsList className="min-w-max">
-                    <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
+                <div className="overflow-x-auto w-full pb-2 no-scrollbar">
+                  <TabsList className="min-w-max md:min-w-0 md:w-full flex justify-start md:justify-center">
+                    <TabsTrigger value="all">All ({allPosts.length})</TabsTrigger>
                     <TabsTrigger value="published">Published ({publishedPosts.length})</TabsTrigger>
                     <TabsTrigger value="drafts">Drafts ({draftPosts.length})</TabsTrigger>
                   </TabsList>
                 </div>
 
-                <div className="flex gap-2 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-64">
+                <div className="flex flex-wrap gap-2 w-full md:w-auto mt-2 md:mt-0">
+                  <div className="relative flex-1 min-w-[200px] md:w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search posts..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8"
+                      className="pl-8 w-full"
                     />
                   </div>
 
@@ -235,7 +235,7 @@ const Blog = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 w-full overflow-hidden">
             <BlogSidebar />
           </div>
         </div>
