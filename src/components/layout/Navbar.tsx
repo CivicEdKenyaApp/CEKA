@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
-  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users
+  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
@@ -166,10 +166,7 @@ const Navbar = () => {
             <div className="hidden sm:block"><SearchSuggestion className="w-64" /></div>
             <ThemeToggle />
 
-            <Link to="/notifications" className="relative p-2.5 rounded-[18px] bg-slate-100 dark:bg-white/5 hover:scale-105 transition-transform">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 bg-red-500 border-2 border-white dark:border-black rounded-full" />}
-            </Link>
+            <NotificationDropdown className="mr-1" />
 
             {user ? (
               <DropdownMenu>

@@ -19,7 +19,7 @@ const NasakaPage: React.FC = () => {
   const { theme, syncThemeToIframe } = useTheme();
 
   const NASAKA_URL = 'https://recall254.vercel.app';
-  const COMMUNITY_URL = 'https://civicedkenya.vercel.app/join-community';
+  const COMMUNITY_URL = 'https://www.civiceducationkenya.com/join-community';
   const ANDROID_APP_URL = 'https://linktr.ee/civiceducationke';
 
   // Delay mounting the iframe to ensure container is ready

@@ -298,23 +298,25 @@ const CommunityChat = () => {
         </CardContent>
 
         <CardFooter className="border-t p-3">
-          <form onSubmit={sendMessage} className="flex gap-2 w-full">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              disabled={sending}
-              maxLength={1000}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={sending || !newMessage.trim()}>
-              {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </form>
+          <div className="w-full">
+            <form onSubmit={sendMessage} className="flex gap-2 w-full">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type a message..."
+                disabled={sending}
+                maxLength={1000}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={sending || !newMessage.trim()}>
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+          </div>
         </CardFooter>
       </Card>
 
