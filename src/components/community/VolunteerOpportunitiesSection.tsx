@@ -41,9 +41,9 @@ const VolunteerOpportunitiesSection = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('volunteer_opportunities' as any)
+        .from('volunteer_opportunities')
         .select('*')
-        .eq('is_active', true)
+        .eq('status', 'open')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
