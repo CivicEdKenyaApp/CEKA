@@ -189,7 +189,7 @@ export const storageService = {
             case 'supabase':
             default:
                 // Convert to File for Supabase
-                const blob = new Blob([data], { type: contentType });
+                const blob = new Blob([data as any], { type: contentType });
                 const file = new File([blob], path.split('/').pop() || 'file', { type: contentType });
                 return supabaseStorage.uploadFile(file, path);
         }
