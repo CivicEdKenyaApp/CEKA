@@ -35,6 +35,7 @@ import { translate, cn } from '@/lib/utils';
 import SearchSuggestion from '@/components/SearchSuggestion';
 import AuthModal from '@/components/auth/AuthModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
 // Icon mapping for menu items
 const getItemIcon = (path: string) => {
