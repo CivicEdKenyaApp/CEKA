@@ -20,64 +20,107 @@ logging.basicConfig(
 
 class LegislativeScraper:
     def __init__(self, headless=True):
-        self.base_url = "http://www.parliament.go.ke/the-national-assembly/house-business/bills"
+        self.targets_file = "scripts/scraping_targets.json"
         self.headless = headless
         self.data = []
+        self.targets = self.load_targets()
 
-    def scrape_bills(self, max_pages=5):
-        logging.info(f"Starting scrape of {max_pages} pages from Parliament portal...")
+    def load_targets(self):
+        try:
+            with open(self.targets_file, 'r') as f:
+                return json.load(f).get("targets", [])
+        except Exception as e:
+            logging.error(f"Failed to load targets: {e}")
+            return []
+
+    def scrape_all(self, max_pages=3):
+        logging.info(f"🚀 Initializing GO-HAM Legislative Sync Engine (Scheduled @ 09:00 EAT)")
         
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
-            page = browser.new_page()
+            context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+            page = context.new_page()
             
-            try:
-                page.goto(self.base_url, wait_until="networkidle", timeout=60000)
-                
-                for current_page in range(1, max_pages + 1):
-                    logging.info(f"Scraping page {current_page}...")
+            for target in self.targets:
+                logging.info(f"🔍 Digging into: {target['name']}...")
+                try:
+                    page.goto(target['url'], wait_until="networkidle", timeout=60000)
                     
-                    # Wait for table to be visible
-                    page.wait_for_selector("table", timeout=30000)
-                    
-                    # Extract bill rows
-                    rows = page.query_selector_all("table tbody tr")
-                    for row in rows:
-                        cells = row.query_selector_all("td")
-                        if len(cells) >= 5:
-                            bill = {
-                                "title": cells[1].inner_text().strip(),
-                                "sponsor": cells[2].inner_text().strip(),
-                                "status": cells[3].inner_text().strip(),
-                                "date": cells[4].inner_text().strip(),
-                                "url": self.extract_link(cells[1]),
-                                "category": "Legislative",
-                                "created_at": datetime.now().isoformat()
-                            }
-                            # Simple summary generation or detail fetch
-                            bill["summary"] = f"A bill regarding {bill['title'][:100]}... currently at {bill['status']} stage."
-                            self.data.append(bill)
-                    
-                    # Try to click next page if available
-                    next_button = page.query_selector("li.next a")
-                    if next_button and current_page < max_pages:
-                        next_button.click()
-                        page.wait_for_load_state("networkidle")
-                        time.sleep(2) # Politeness
-                    else:
-                        break
+                    if target['type'] == "bills":
+                        self.extract_bills(page, target, max_pages)
+                    elif target['type'] == "order_papers":
+                        self.extract_order_papers(page, target)
+                    elif target['type'] == "gazette":
+                        self.extract_gazette(page, target)
                         
-            except Exception as e:
-                logging.error(f"Scrape failed: {str(e)}")
-            finally:
-                browser.close()
-                
+                except Exception as e:
+                    logging.error(f"Failed to scrape {target['name']}: {str(e)}")
+            
+            browser.close()
         return self.data
 
-    def extract_link(self, cell):
-        link_elem = cell.query_selector("a")
+    def extract_bills(self, page, target, max_pages):
+        for cp in range(1, max_pages + 1):
+            page.wait_for_selector(target['selector'], timeout=30000)
+            rows = page.query_selector_all(target['selector'])
+            for row in rows:
+                cells = row.query_selector_all("td")
+                if len(cells) >= 5:
+                    title = cells[1].inner_text().strip()
+                    bill = {
+                        "title": title,
+                        "sponsor": cells[2].inner_text().strip(),
+                        "status": cells[3].inner_text().strip(),
+                        "date": cells[4].inner_text().strip(),
+                        "url": self.extract_link(cells[1], target['url']),
+                        "source": target['name'],
+                        "category": "Legislative",
+                        "summary": f"Automatic trace for {title}. Status: {cells[3].inner_text().strip()}.",
+                        "created_at": datetime.now().isoformat()
+                    }
+                    self.data.append(bill)
+            
+            # Check for next page
+            next_btn = page.query_selector("li.next a")
+            if next_btn and cp < max_pages:
+                next_btn.click()
+                page.wait_for_load_state("networkidle")
+                time.sleep(2)
+            else:
+                break
+
+    def extract_order_papers(self, page, target):
+        items = page.query_selector_all(target['selector'])
+        for item in items:
+            title_elem = item.query_selector("a")
+            if title_elem:
+                self.data.append({
+                    "title": f"Order Paper: {title_elem.inner_text().strip()}",
+                    "url": self.extract_link(item, target['url']),
+                    "source": target['name'],
+                    "category": "Order Paper",
+                    "status": "Published",
+                    "created_at": datetime.now().isoformat()
+                })
+
+    def extract_gazette(self, page, target):
+        # Gazetti specific extraction
+        items = page.query_selector_all(target['selector'])
+        for item in items:
+            self.data.append({
+                "title": item.inner_text().strip().split('\n')[0],
+                "url": self.extract_link(item, target['url']),
+                "source": target['name'],
+                "category": "Gazette",
+                "status": "Notice",
+                "created_at": datetime.now().isoformat()
+            })
+
+    def extract_link(self, element, base_url):
+        link_elem = element.query_selector("a")
         if link_elem:
-            return urljoin(self.base_url, link_elem.get_attribute("href"))
+            from urllib.parse import urljoin
+            return urljoin(base_url, link_elem.get_attribute("href"))
         return None
 
     def save_data(self, output_dir="processed_data/legislative"):
@@ -97,7 +140,6 @@ class LegislativeScraper:
         logging.info(f"Saved {len(self.data)} bills to {json_path} and {csv_path}")
 
 if __name__ == "__main__":
-    from urllib.parse import urljoin
     scraper = LegislativeScraper()
-    bills = scraper.scrape_bills(max_pages=3)
+    results = scraper.scrape_all(max_pages=3)
     scraper.save_data()

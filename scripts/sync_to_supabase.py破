@@ -1,0 +1,64 @@
+import os
+import json
+import logging
+from typing import List, Dict, Any
+from supabase import create_client, Client
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def get_supabase_client() -> Client:
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    
+    if not url or not key:
+        logging.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not found in environment")
+        raise EnvironmentError("Missing Supabase credentials")
+        
+    return create_client(url, key)
+
+def sync_data(output_dir="processed_data/legislative"):
+    supabase = get_supabase_client()
+    
+    # Logic to find the latest JSON file
+    files = [f for f in os.listdir(output_dir) if f.endswith('.json')]
+    if not files:
+        logging.warning("No scraped data files found to sync.")
+        return
+        
+    files.sort()
+    latest_file = os.path.join(output_dir, files[-1])
+    logging.info(f"Syncing data from: {latest_file}")
+    
+    with open(latest_file, 'r', encoding='utf-8') as f:
+        bills = json.load(f)
+        
+    total_synced = 0
+    for bill in bills:
+        try:
+            # We use 'title' as the unique identifier for upserting 
+            # as it's the most stable field from the website.
+            data = {
+                "title": bill["title"],
+                "summary": bill.get("summary", ""),
+                "description": bill.get("summary", ""), # Fallback
+                "status": bill.get("status", "Unknown"),
+                "category": bill.get("category", "Legislative"),
+                "sponsor": bill.get("sponsor", ""),
+                "url": bill.get("url", ""),
+                "updated_at": "now()"
+            }
+            
+            # Use upsert to prevent duplicates
+            # Note: This requires a unique constraint on 'title' or 'url' in Supabase
+            # If no constraint exists, this will just keep inserting.
+            res = supabase.table("bills").upsert(data, on_conflict="title").execute()
+            total_synced += 1
+            
+        except Exception as e:
+            logging.error(f"Failed to sync bill '{bill['title']}': {e}")
+            
+    logging.info(f"Successfully synced {total_synced}/{len(bills)} bills to Supabase.")
+
+if __name__ == "__main__":
+    sync_data()

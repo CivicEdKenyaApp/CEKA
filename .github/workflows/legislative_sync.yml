@@ -2,8 +2,8 @@ name: Legislative Data Sync
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Daily at midnight
-  workflow_dispatch: # Allow manual trigger
+    - cron: '0 6 * * *' # 06:00 UTC = 09:00 EAT (Kenya Time)
+  workflow_dispatch:
 
 jobs:
   scrape:
@@ -27,6 +27,14 @@ jobs:
 
       - name: Run Scraper
         run: python scripts/legislative_scraper.py
+
+      - name: Sync to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          pip install supabase
+          python scripts/sync_to_supabase.py
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
