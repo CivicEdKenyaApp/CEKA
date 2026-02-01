@@ -48,31 +48,45 @@ interface Bill {
   url?: string | null;
   sponsor?: string;
   description?: string;
-  stage_index?: number; // Map status to LEGISLATIVE_STAGES
+  stage_index?: number;
+  neural_summary?: string | null;
+  text_content?: string | null;
+  pdf_url?: string | null;
+  follow_count?: number;
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'alpha-asc' | 'alpha-desc' | 'status' | 'category';
 
 const LegislativeTracker = () => {
   const [billsData, setBillsData] = useState<Bill[]>([]);
+  const [trendingBills, setTrendingBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all_stages');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deepSearch, setDeepSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
 
   useEffect(() => {
-    const fetchBills = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('bills')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // 1. Fetch Trending Bills via RPC
+        const { data: trendingData } = await supabase.rpc('get_trending_bills', { limit_count: 5 });
+        if (trendingData) setTrendingBills(trendingData as any);
 
+        // 2. Fetch All Bills (Standard Query)
+        let query = supabase.from('bills').select('*');
+
+        if (deepSearch && searchTerm) {
+          query = query.textSearch('fts', searchTerm);
+        } else {
+          query = query.order('created_at', { ascending: false });
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
 
-        // Dynamic stage mapping based on status text
         const processedData = (data || []).map(bill => {
           const statusLower = bill.status?.toLowerCase() || '';
           let stageIndex = 0;
@@ -87,7 +101,7 @@ const LegislativeTracker = () => {
           return { ...bill, stage_index: stageIndex };
         });
 
-        setBillsData(processedData);
+        setBillsData(processedData as Bill[]);
       } catch (e: any) {
         console.error('Fetch error:', e);
       } finally {
@@ -95,11 +109,14 @@ const LegislativeTracker = () => {
       }
     };
 
-    fetchBills();
-  }, []);
+    fetchData();
+  }, [deepSearch, searchTerm]);
 
   const filteredBills = useMemo(() => {
     return billsData.filter(bill => {
+      // If deepSearch is active, data is already filtered/searched by Supabase
+      if (deepSearch && searchTerm) return true;
+
       const matchesSearch = bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.summary.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || bill.category === selectedCategory;
@@ -112,9 +129,9 @@ const LegislativeTracker = () => {
       if (sortBy === 'alpha-asc') return a.title.localeCompare(b.title);
       return 0;
     });
-  }, [billsData, searchTerm, selectedCategory, activeTab, sortBy]);
+  }, [billsData, searchTerm, selectedCategory, activeTab, sortBy, deepSearch]);
 
-  const trendingBill = billsData[0] || { title: "Finance Bill", created_at: new Date().toISOString() };
+  const trendingBill = trendingBills[0] || billsData[0] || { id: "trending-placeholder", title: "Finance Bill", created_at: new Date().toISOString() };
 
   return (
     <Layout>
@@ -185,15 +202,25 @@ const LegislativeTracker = () => {
                     <Search className="h-5 w-5 text-primary" />
                     Vault Query
                   </h3>
-                  <div className="relative group">
+                  <div className="relative group space-y-3">
                     <Input
                       placeholder="Title | Year | Keyword"
                       className="h-14 rounded-2xl bg-white dark:bg-[#111] border-slate-200 dark:border-white/5 shadow-sm focus:ring-primary/20 pr-12"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-30 select-none">
-                      ⌘ F
+                    <div className="flex items-center gap-2 px-2">
+                      <button
+                        onClick={() => setDeepSearch(!deepSearch)}
+                        className={cn(
+                          "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full transition-all",
+                          deepSearch
+                            ? "bg-primary text-white"
+                            : "bg-slate-100 dark:bg-white/5 opacity-50"
+                        )}
+                      >
+                        {deepSearch ? 'Deep Neural Search Active' : 'Enable Deep PDF Search'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -345,9 +372,22 @@ const LegislativeTracker = () => {
                                 <h3 className="text-3xl font-[1000] tracking-tight leading-none dark:text-white group-hover:text-primary transition-colors">
                                   <Link to={`/bill/${bill.id}`}>{bill.title}</Link>
                                 </h3>
-                                <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl line-clamp-3">
-                                  {bill.summary}
-                                </p>
+
+                                {bill.neural_summary ? (
+                                  <div className="bg-kenya-green/[0.03] border border-kenya-green/10 rounded-3xl p-6 mb-4">
+                                    <div className="flex items-center gap-2 text-kenya-green mb-3">
+                                      <Globe className="h-4 w-4" />
+                                      <span className="text-[10px] font-black uppercase tracking-widest">Neural Insight (Gemini AI)</span>
+                                    </div>
+                                    <p className="text-sm font-medium leading-relaxed italic opacity-80">
+                                      {bill.neural_summary}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl line-clamp-3">
+                                    {bill.summary}
+                                  </p>
+                                )}
                               </div>
 
                               <div className="flex flex-wrap items-center justify-between gap-6 pt-6 border-t border-border/50">
@@ -366,6 +406,14 @@ const LegislativeTracker = () => {
                                 </div>
 
                                 <div className="flex items-center gap-3">
+                                  {bill.pdf_url && (
+                                    <Button variant="outline" asChild className="h-12 px-6 rounded-2xl border-slate-200 dark:border-white/10 font-black text-xs uppercase tracking-widest">
+                                      <a href={bill.pdf_url} target="_blank" rel="noopener noreferrer">
+                                        Vault Copy
+                                        <BookOpen className="ml-2 h-4 w-4" />
+                                      </a>
+                                    </Button>
+                                  )}
                                   <BillFollowButton billId={bill.id} variant="ghost" className="h-12 px-6 rounded-2xl" />
                                   <Button asChild className="h-12 px-10 rounded-2xl bg-[#111] dark:bg-white text-white dark:text-black font-black hover:opacity-90 shadow-xl">
                                     <Link to={`/bill/${bill.id}`}>
