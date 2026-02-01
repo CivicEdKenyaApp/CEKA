@@ -10,10 +10,12 @@ import MegaResources from '@/components/resources/MegaResources';
 import CommunityProfileForm from '@/components/community/CommunityProfileForm';
 import VolunteerOpportunityDialog from '@/components/volunteer/VolunteerOpportunityDialog';
 import InteractiveConstitution from '@/components/constitution/InteractiveConstitution';
+import ConstitutionChat from '@/components/constitution/ConstitutionChat';
 
 const ConstitutionPage = () => {
   return (
     <Layout>
+      <ConstitutionChat />
       <div className="container py-8 md:py-12">
         {/* Kenya-themed projects carousel */}
         <div className="mb-10">

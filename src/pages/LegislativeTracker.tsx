@@ -1,5 +1,5 @@
-
 // src/pages/LegislativeTracker.tsx
+import { vaultService } from '@/services/vaultService';
 import React, { useEffect, useState, useMemo } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -71,8 +71,7 @@ const LegislativeTracker = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Trending Bills via RPC
-        const { data: trendingData } = await supabase.rpc('get_trending_bills', { limit_count: 5 });
+        const { data: trendingData } = await (supabase.rpc as any)('get_trending_bills', { limit_count: 5 });
         if (trendingData) setTrendingBills(trendingData as any);
 
         // 2. Fetch All Bills (Standard Query)
@@ -407,11 +406,13 @@ const LegislativeTracker = () => {
 
                                 <div className="flex items-center gap-3">
                                   {bill.pdf_url && (
-                                    <Button variant="outline" asChild className="h-12 px-6 rounded-2xl border-slate-200 dark:border-white/10 font-black text-xs uppercase tracking-widest">
-                                      <a href={bill.pdf_url} target="_blank" rel="noopener noreferrer">
-                                        Vault Copy
-                                        <BookOpen className="ml-2 h-4 w-4" />
-                                      </a>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => vaultService.openDocument(bill.pdf_url!)}
+                                      className="h-12 px-6 rounded-2xl border-slate-200 dark:border-white/10 font-black text-xs uppercase tracking-widest"
+                                    >
+                                      Vault Copy
+                                      <BookOpen className="ml-2 h-4 w-4" />
                                     </Button>
                                   )}
                                   <BillFollowButton billId={bill.id} variant="ghost" className="h-12 px-6 rounded-2xl" />

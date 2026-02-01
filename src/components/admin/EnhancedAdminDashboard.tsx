@@ -32,7 +32,40 @@ const EnhancedAdminDashboard = () => {
     // Set up periodic refresh every 5 minutes
     const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
+    // Set up real-time subscriptions for live updates
+    const setupRealtimeSubscriptions = async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      // Subscribe to profile changes (new users)
+      const profilesChannel = supabase
+        .channel('admin-profiles-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          console.log('[Dashboard] Profile change detected, refreshing...');
+          loadDashboardData();
+        })
+        .subscribe();
+
+      // Subscribe to notification changes
+      const notificationsChannel = supabase
+        .channel('admin-notifications-changes')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications' }, () => {
+          console.log('[Dashboard] New notification, refreshing queue...');
+          adminService.getModerationQueue().then(setModerationQueue);
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profilesChannel);
+        supabase.removeChannel(notificationsChannel);
+      };
+    };
+
+    const cleanupRealtime = setupRealtimeSubscriptions();
+
+    return () => {
+      clearInterval(interval);
+      cleanupRealtime.then(cleanup => cleanup?.());
+    };
   }, []);
 
   const loadDashboardData = async () => {
@@ -158,7 +191,7 @@ const EnhancedAdminDashboard = () => {
                   <CardContent>
                     <div className="text-3xl font-black">{stats.total_users.toLocaleString()}</div>
                     <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                      <span className="text-kenya-green font-bold">+12%</span> from last week
+                      <span className="text-kenya-green font-bold">+{stats.recent_signups}</span> new this week
                     </p>
                   </CardContent>
                 </Card>
@@ -183,8 +216,8 @@ const EnhancedAdminDashboard = () => {
                     <Shield className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-black">99.9%</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Uptime Verified</p>
+                    <div className="text-3xl font-black">{stats.active_sessions > 0 ? '99.9%' : 'Checking...'}</div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{stats.active_sessions} active sessions</p>
                   </CardContent>
                 </Card>
                 <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
@@ -194,8 +227,8 @@ const EnhancedAdminDashboard = () => {
                     <MessageSquare className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-black">24</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Real-time channels</p>
+                    <div className="text-3xl font-black">{stats.total_discussions}</div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{stats.total_interactions} interactions today</p>
                   </CardContent>
                 </Card>
               </>

@@ -26,3 +26,8 @@ app/venv311/
 .env
 .env.local
 .env.*.local
+
+# Firebase service account keys - NEVER commit these!
+*-firebase-adminsdk-*.json
+firebase-service-account.json
+service-account*.json

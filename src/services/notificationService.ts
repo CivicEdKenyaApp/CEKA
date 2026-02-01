@@ -301,16 +301,18 @@ class NotificationService {
             async (payload) => {
               if (!active) return;
               try {
-                const { data } = await notificationsTable()
+                // Fetch the full record with potentially joined profiles (managed in DB trigger)
+                const { data, error } = await notificationsTable()
                   .select('*')
                   .eq('id', payload.new.id)
                   .single();
 
+                if (error) throw error;
                 if (data && active) {
                   callback(data as unknown as Notification);
                 }
-              } catch {
-                // Silently fail
+              } catch (err) {
+                console.warn('Notification fetch error:', err);
               }
             }
           )
@@ -334,6 +336,8 @@ class NotificationService {
       if (this.channel) {
         const chan = this.channel;
         this.channel = null;
+        // Immediate disconnect locally to stop callbacks
+        chan.unsubscribe().catch(() => { });
         supabase.removeChannel(chan).catch(() => { });
       }
     };

@@ -1,0 +1,186 @@
+{
+    "chapters": [
+        {
+            "chapter_number": 1,
+            "title_en": "Sovereignty of the People and Supremacy of this Constitution",
+            "title_sw": "Ukuu wa Wananchi na Utukufu wa Katiba hii"
+        },
+        {
+            "chapter_number": 2,
+            "title_en": "The Republic",
+            "title_sw": "Jamhuri"
+        },
+        {
+            "chapter_number": 3,
+            "title_en": "Citizenship",
+            "title_sw": "Uraia"
+        },
+        {
+            "chapter_number": 4,
+            "title_en": "The Bill of Rights",
+            "title_sw": "Haki za Msingi"
+        },
+        {
+            "chapter_number": 5,
+            "title_en": "Land and Environment",
+            "title_sw": "Ardhi na Mazingira"
+        },
+        {
+            "chapter_number": 6,
+            "title_en": "Leadership and Integrity",
+            "title_sw": "Uongozi na Maadili"
+        },
+        {
+            "chapter_number": 7,
+            "title_en": "Representation of the People",
+            "title_sw": "Uwakilishi wa Wananchi"
+        },
+        {
+            "chapter_number": 8,
+            "title_en": "The Legislature",
+            "title_sw": "Bunge"
+        },
+        {
+            "chapter_number": 9,
+            "title_en": "The Executive",
+            "title_sw": "Serikali Kuu"
+        },
+        {
+            "chapter_number": 10,
+            "title_en": "Judiciary",
+            "title_sw": "Idara ya Mahakama"
+        },
+        {
+            "chapter_number": 11,
+            "title_en": "Devolved Government",
+            "title_sw": "Serikali za Gatuzi"
+        },
+        {
+            "chapter_number": 12,
+            "title_en": "Public Finance",
+            "title_sw": "Usimamizi wa Fedha za Umma"
+        },
+        {
+            "chapter_number": 13,
+            "title_en": "The Public Service",
+            "title_sw": "Utumishi wa Umma"
+        },
+        {
+            "chapter_number": 14,
+            "title_en": "National Security",
+            "title_sw": "Usalama wa Kitaifa"
+        },
+        {
+            "chapter_number": 15,
+            "title_en": "Commissions and Independent Offices",
+            "title_sw": "Tume na Ofisi Huru"
+        },
+        {
+            "chapter_number": 16,
+            "title_en": "Amendment of this Constitution",
+            "title_sw": "Marekebisho ya Katiba hii"
+        },
+        {
+            "chapter_number": 17,
+            "title_en": "General Provisions",
+            "title_sw": "Masharti ya Jumla"
+        },
+        {
+            "chapter_number": 18,
+            "title_en": "Transitional and Consequential Provisions",
+            "title_sw": "Masharti ya Mpito na Matokeo"
+        }
+    ],
+    "sections": [
+        {
+            "chapter_number": 1,
+            "article_number": 1,
+            "article_label": "Article 1",
+            "title_en": "Sovereignty of the people",
+            "title_sw": "Ukuu wa wananchi",
+            "content_en": "(1) All sovereign power belongs to the people of Kenya and shall be exercised only in accordance with this Constitution. (2) The people may exercise their sovereign power either directly or through their democratically elected representatives. (3) Sovereign power under this Constitution is delegated to the following State organs, which shall perform their functions in accordance with this Constitution— (a) Parliament and the legislative assemblies in the county governments; (b) the national executive and the executive structures in the county governments; and (c) the Judiciary and independent tribunals. (4) The sovereign power of the people is exercised at— (a) the national level; and (b) the county level.",
+            "content_sw": "(1) Mamlaka yote makuu ni ya wananchi wa Kenya na yatatumiwa tu kwa mujibu wa Katiba hii."
+        },
+        {
+            "chapter_number": 1,
+            "article_number": 2,
+            "article_label": "Article 2",
+            "title_en": "Supremacy of this Constitution",
+            "title_sw": "Utukufu wa Katiba hii",
+            "content_en": "(1) This Constitution is the supreme law of the Republic and binds all persons and all State organs at both levels of government. (2) No person may claim or exercise State authority except as authorised under this Constitution. (3) The validity or legality of this Constitution is not subject to challenge by or before any court or other State organ. (4) Any law, including customary law, that is inconsistent with this Constitution is void to the extent of the inconsistency, and any act or omission in contravention of this Constitution is invalid.",
+            "content_sw": "(1) Katiba hii ndiyo sheria kuu ya Jamhuri na inawabana watu wote na vyombo vyote vya Serikali katika ngazi zote mbili za serikali."
+        },
+        {
+            "chapter_number": 1,
+            "article_number": 3,
+            "article_label": "Article 3",
+            "title_en": "Defence of this Constitution",
+            "title_sw": "Ulinzi wa Katiba hii",
+            "content_en": "(1) Every person has an obligation to respect, uphold and defend this Constitution. (2) Any attempt to establish a government otherwise than in compliance with this Constitution is unlawful.",
+            "content_sw": "(1) Kila mtu ana wajibu wa kuheshimu, kuunga mkono na kutetea Katiba hii."
+        },
+        {
+            "chapter_number": 2,
+            "article_number": 4,
+            "article_label": "Article 4",
+            "title_en": "Declaration of the Republic",
+            "title_sw": "Tangazo la Jamhuri",
+            "content_en": "(1) Kenya is a sovereign Republic. (2) The Republic of Kenya shall be a multi-party democratic State founded on the national values and principles of governance referred to in Article 10.",
+            "content_sw": "(1) Kenya ni Jamhuri huru. (2) Jamhuri ya Kenya itakuwa Dola ya kidemokrasia ya vyama vingi iliyojengwa juu ya thamani na misingi ya kitaifa ya utawala inayorejelewa katika Ibara ya 10."
+        },
+        {
+            "chapter_number": 2,
+            "article_number": 5,
+            "article_label": "Article 5",
+            "title_en": "Territory of Kenya",
+            "title_sw": "Eneo la Kenya",
+            "content_en": "(1) Kenya consists of the territory and territorial waters comprising Kenya on the effective date, and any additional territory and territorial waters as defined by an Act of Parliament.",
+            "content_sw": "(1) Kenya inajumuisha eneo na maji ya eneo yanayounda Kenya siku ya kuanza kutumika."
+        },
+        {
+            "chapter_number": 2,
+            "article_number": 6,
+            "article_label": "Article 6",
+            "title_en": "Devolution and access to services",
+            "title_sw": "Ugatuzi na upatikanaji wa huduma",
+            "content_en": "(1) The territory of Kenya is divided into the counties specified in the First Schedule. (2) The governments at the national and county levels are distinct and inter-dependent and shall conduct their mutual relations on the basis of consultation and cooperation.",
+            "content_sw": "(1) Eneo la Kenya limegawanywa katika kaunti zilizobainishwa katika Ratiba ya Kwanza."
+        },
+        {
+            "chapter_number": 4,
+            "article_number": 19,
+            "article_label": "Article 19",
+            "title_en": "Rights and fundamental freedoms",
+            "title_sw": "Haki na uhuru wa kimsingi",
+            "content_en": "(1) The Bill of Rights is an integral part of Kenya's democratic state and is the framework for social, economic and cultural policies. (2) The purpose of recognising and protecting human rights and fundamental freedoms is to preserve the dignity of individuals and communities and to promote social justice and the realisation of the potential of all human beings.",
+            "content_sw": "(1) Haki za Msingi ni sehemu muhimu ya mfumo wa kidemokrasia wa Kenya."
+        },
+        {
+            "chapter_number": 4,
+            "article_number": 20,
+            "article_label": "Article 20",
+            "title_en": "Application of Bill of Rights",
+            "title_sw": "Utekelezaji wa Haki za Msingi",
+            "content_en": "(1) The Bill of Rights applies to all law and binds all State organs and all persons. (2) Every person shall enjoy the rights and fundamental freedoms in the Bill of Rights to the greatest extent consistent with the nature of the right or fundamental freedom.",
+            "content_sw": "(1) Haki za Msingi zinatumika kwa sheria zote na zinafunga vyombo vyote vya Serikali na watu wote."
+        },
+        {
+            "chapter_number": 4,
+            "article_number": 21,
+            "article_label": "Article 21",
+            "title_en": "Implementation of rights and fundamental freedoms",
+            "title_sw": "Utekelezaji wa haki na uhuru wa kimsingi",
+            "content_en": "(1) It is a fundamental duty of the State and every State organ to observe, respect, protect, promote and fulfil the rights and fundamental freedoms in the Bill of Rights.",
+            "content_sw": "(1) Ni wajibu wa msingi wa Serikali na kila chombo cha Serikali kuangalia, kuheshimu, kulinda, kukuza na kutimiza haki na uhuru wa kimsingi katika Haki za Msingi."
+        },
+        {
+            "chapter_number": 4,
+            "article_number": 22,
+            "article_label": "Article 22",
+            "title_en": "Enforcement of Bill of Rights",
+            "title_sw": "Utekelezaji wa Haki za Msingi",
+            "content_en": "(1) Every person has the right to institute court proceedings claiming that a right or fundamental freedom in the Bill of Rights has been denied, violated or infringed, or is threatened.",
+            "content_sw": "(1) Kila mtu ana haki ya kuanzisha mashauri ya mahakama akidai kwamba haki au uhuru wa kimsingi katika Haki za Msingi umekataliwa, umekiukwa au umebinafsiwa, au unatishiwa."
+        }
+    ]
+}
