@@ -9,35 +9,41 @@ export function useBillFollowing(billId: string) {
   const { user } = useAuth();
 
   useEffect(() => {
+    let active = true;
+
     if (billId) {
-      checkFollowStatus();
-      getFollowCount();
+      checkFollowStatus(active);
+      getFollowCount(active);
     }
+
+    return () => { active = false; };
   }, [billId, user]);
 
-  const checkFollowStatus = async () => {
+  const checkFollowStatus = async (active: boolean) => {
     if (!user) {
-      setIsFollowing(false);
-      setLoading(false);
+      if (active) {
+        setIsFollowing(false);
+        setLoading(false);
+      }
       return;
     }
 
     try {
       const following = await billFollowingService.isFollowingBill(billId);
-      setIsFollowing(following);
+      if (active) setIsFollowing(following);
     } catch (error) {
-      console.error('Error checking follow status:', error);
+      if (active) console.error('Error checking follow status:', error);
     } finally {
-      setLoading(false);
+      if (active) setLoading(false);
     }
   };
 
-  const getFollowCount = async () => {
+  const getFollowCount = async (active: boolean) => {
     try {
       const count = await billFollowingService.getFollowCount(billId);
-      setFollowCount(count);
+      if (active) setFollowCount(count);
     } catch (error) {
-      console.error('Error getting follow count:', error);
+      if (active) console.error('Error getting follow count:', error);
     }
   };
 

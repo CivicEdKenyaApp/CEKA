@@ -33,8 +33,10 @@ export function useNotifications() {
     try {
       const data = await notificationService.getNotifications();
       setNotifications(data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+    } catch (error: any) {
+      if (error.name !== 'AbortError' && !error.message?.includes('signal is aborted')) {
+        console.error('Error fetching notifications:', error);
+      }
     } finally {
       setLoading(false);
     }

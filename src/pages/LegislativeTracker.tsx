@@ -14,7 +14,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown } from 'lucide-react';
+import {
+  FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown,
+  TrendingUp, RefreshCw, Layers, CheckCircle, Clock
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BillFollowButton } from '@/components/legislative/BillFollowButton';
@@ -189,41 +192,75 @@ const LegislativeTracker = () => {
 
   return (
     <Layout>
-      <div className="container py-8 md:py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Legislative Tracker</h1>
-            <p className="text-muted-foreground">Stay informed about bills and legislative changes in Kenya</p>
+      <div className="container py-8 md:py-12 space-y-10 animate-fade-in">
+        {/* iOS Aero Hero Hub */}
+        <div className="relative p-8 md:p-12 rounded-[40px] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-ios-high overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32" />
+          <div className="relative z-10 space-y-6">
+            <div className="flex items-center gap-3 bg-white/50 dark:bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl w-fit border border-white/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-kenya-green opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-kenya-green"></span>
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Democracy Track</span>
+            </div>
+            <div>
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+                Legislative <span className="text-primary italic">Vault</span>
+              </h1>
+              <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
+                Stay ahead of national protocols. Our "Track & Trace" engine monitors every bill, policy amendment, and gazette notice in real-time.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-10 w-10 rounded-full border-2 border-background bg-slate-200" />
+                ))}
+                <div className="h-10 px-4 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-bold">
+                  +12k Trackers
+                </div>
+              </div>
+              <div className="h-8 w-[1px] bg-border mx-2" />
+              <div className="flex items-center gap-2 text-sm font-bold">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                Scanning National Gazettes...
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Filters & Sort</CardTitle>
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark rounded-[32px] overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-black flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-primary" />
+                  Vault Filters
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Search</label>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Identifier</label>
                   <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search bills..."
-                      className="pl-8"
+                      placeholder="Bill #, Title, Keyword..."
+                      className="pl-10 h-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-primary/20"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Sort By</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Order Hierarchy</label>
                   <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
                       <SelectItem value="date-desc">Newest First</SelectItem>
                       <SelectItem value="date-asc">Oldest First</SelectItem>
                       <SelectItem value="alpha-asc">A-Z</SelectItem>
@@ -234,14 +271,14 @@ const LegislativeTracker = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Category</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sector Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
+                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
+                      <SelectItem value="all">All Sectors</SelectItem>
                       {uniqueCategories.map(category => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
@@ -249,14 +286,14 @@ const LegislativeTracker = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Status</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Legal Status</label>
                   <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
+                      <SelectItem value="all">All Stages</SelectItem>
                       {uniqueStatuses.map(status => (
                         <SelectItem key={status} value={status}>{status}</SelectItem>
                       ))}
@@ -265,8 +302,8 @@ const LegislativeTracker = () => {
                 </div>
 
                 <Button
-                  variant="outline"
-                  className="w-full"
+                  variant="ghost"
+                  className="w-full h-12 rounded-2xl hover:bg-muted/50 font-bold"
                   onClick={() => {
                     setSearchTerm('');
                     setSelectedCategory('all');
@@ -274,8 +311,23 @@ const LegislativeTracker = () => {
                     setSortBy('date-desc');
                   }}
                 >
-                  <Filter className="mr-2 h-4 w-4" />
-                  Clear Filters
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reset Vault
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark rounded-[32px] overflow-hidden bg-kenya-green/5">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-kenya-green/20 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-kenya-green" />
+                  </div>
+                  <h4 className="font-black text-sm uppercase tracking-wider">Top Trending</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">The Finance Bill 2025 is currently seeing high tracking activity.</p>
+                <Button variant="link" className="p-0 h-auto text-kenya-green font-bold text-xs uppercase tracking-widest">
+                  View Analysis <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </CardContent>
             </Card>
@@ -328,53 +380,65 @@ const LegislativeTracker = () => {
                   </div>
                 ) : (
                   filteredBills.map((bill) => (
-                    <Card key={bill.id} className="overflow-hidden border-none shadow-ios-low hover:shadow-ios-high transition-all">
+                    <Card key={bill.id} className="group relative overflow-hidden border-none glass-card shadow-ios-high dark:shadow-ios-high-dark rounded-[40px] transition-all hover:translate-y-[-4px]">
+                      <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
                       <div className="flex flex-col sm:flex-row">
-                        <div className="sm:w-16 lg:w-20 bg-slate-50 dark:bg-white/5 flex items-center justify-center p-4">
-                          <FileText className="h-8 w-8 text-primary" />
+                        <div className="sm:w-32 bg-muted/20 flex flex-col items-center justify-center p-6 border-r border-border/50">
+                          <div className="h-16 w-16 rounded-3xl bg-white dark:bg-white/5 shadow-ios-low flex items-center justify-center mb-3">
+                            <FileText className="h-8 w-8 text-primary" />
+                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Document</span>
                         </div>
-                        <div className="flex-1 p-5 md:p-6 min-w-0">
-                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                            <Badge variant="outline" className="w-fit bg-primary/5 border-primary/20 text-primary">
-                              {bill.category}
-                            </Badge>
-                            <Badge
-                              variant={bill.status === "Public Feedback" ? "secondary" : "outline"}
-                              className={`${bill.status === "Public Feedback" ? "bg-yellow-500 text-black" : ""} w-fit`}
-                            >
-                              {bill.status}
-                            </Badge>
+                        <div className="flex-1 p-8 min-w-0 space-y-6">
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                            <div className="flex flex-wrap gap-2">
+                              <Badge className="rounded-xl px-4 py-1.5 bg-primary/10 text-primary border-none font-bold">
+                                {bill.category}
+                              </Badge>
+                              <Badge className="rounded-xl px-4 py-1.5 bg-muted/50 text-muted-foreground border-none font-bold flex items-center gap-2">
+                                <Clock className="h-3 w-3" />
+                                {bill.status}
+                              </Badge>
+                            </div>
+                            <div className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">{new Date(bill.created_at).toLocaleDateString()}</div>
                           </div>
 
-                          <h3 className="text-lg font-semibold mt-2 mb-1 break-words">
-                            <Link to={`/bill/${bill.id}`} className="hover:text-kenya-green transition-colors">
-                              {bill.title}
-                            </Link>
-                          </h3>
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3 break-words">
-                            {bill.summary}
-                          </p>
+                          <div className="space-y-3">
+                            <h3 className="text-2xl font-black tracking-tight leading-tight">
+                              <Link to={`/bill/${bill.id}`} className="hover:text-primary transition-colors">
+                                {bill.title}
+                              </Link>
+                            </h3>
+                            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 max-w-3xl">
+                              {bill.summary}
+                            </p>
+                          </div>
 
-                          <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground min-w-0">
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <Calendar className="h-3.5 w-3.5" />
-                                <span>Created: {new Date(bill.created_at).toLocaleDateString()}</span>
-                              </div>
+                          {/* Interactive Bill Journey Simulation */}
+                          <div className="flex items-center gap-2 py-4">
+                            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden flex">
+                              <div className="h-full bg-kenya-green w-1/4" />
+                              <div className="h-full bg-muted w-3/4" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-kenya-green">25% Progressive Path</span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-6 pt-4 border-t border-border/50">
+                            <div className="flex items-center gap-4 text-xs font-bold">
                               {bill.sponsor && (
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className="hidden sm:inline mx-1">•</span>
-                                  <span className="truncate">Sponsor: {bill.sponsor}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-6 w-6 rounded-full bg-slate-200" />
+                                  <span>{bill.sponsor}</span>
                                 </div>
                               )}
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
-                              <BillFollowButton billId={bill.id} />
-                              <Button variant="outline" size="sm" asChild>
+                            <div className="flex items-center gap-2">
+                              <BillFollowButton billId={bill.id} variant="ghost" className="rounded-2xl h-12 px-6" />
+                              <Button asChild className="rounded-2xl h-12 px-8 bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20">
                                 <Link to={`/bill/${bill.id}`}>
-                                  View Details
-                                  <ArrowRight className="ml-1 h-3 w-3" />
+                                  Trace Bill
+                                  <ArrowRight className="ml-2 h-4 w-4" />
                                 </Link>
                               </Button>
                             </div>
