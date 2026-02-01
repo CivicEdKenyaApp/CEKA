@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Search, Filter, Download, Book, FileText, Video, Image as ImageIcon,
-  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen, Plus
+  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen, Plus, RefreshCw
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,

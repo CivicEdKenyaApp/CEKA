@@ -8,7 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
   FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home, BookOpen,
-  PlusCircle, Edit3, Activity, TrendingUp, Eye, UserCheck, Clock, AlertTriangle, Download
+  PlusCircle, Edit3, Activity, TrendingUp, Eye, UserCheck, Clock, AlertTriangle, Download,
+  RefreshCw, Plus
 } from 'lucide-react';
 import { adminService, AdminDashboardStats, UserActivityStats, ModerationQueueItem } from '@/services/adminService';
 import { AdminSessionManager } from './AdminSessionManager';
@@ -17,7 +18,6 @@ import MediaAppraisal from './MediaAppraisal';
 import VolunteerManager from './VolunteerManager';
 import CampaignManager from './CampaignManager';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { BookOpen as BookOpenIcon, Plus as PlusIcon, RefreshCw, Download as DownloadIcon } from 'lucide-react';
 
 const EnhancedAdminDashboard = () => {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
