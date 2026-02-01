@@ -9,8 +9,9 @@ export interface BillFollow {
 }
 
 export class BillFollowingService {
-  async followBill(billId: string): Promise<void> {
+  async followBill(billId: string, signal?: AbortSignal): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
+    if (signal?.aborted) throw new Error('Aborted');
     if (!user) throw new Error('User not authenticated');
 
     const { error } = await supabase
@@ -23,8 +24,9 @@ export class BillFollowingService {
     if (error) throw error;
   }
 
-  async unfollowBill(billId: string): Promise<void> {
+  async unfollowBill(billId: string, signal?: AbortSignal): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
+    if (signal?.aborted) throw new Error('Aborted');
     if (!user) throw new Error('User not authenticated');
 
     const { error } = await supabase
@@ -36,8 +38,9 @@ export class BillFollowingService {
     if (error) throw error;
   }
 
-  async isFollowingBill(billId: string): Promise<boolean> {
+  async isFollowingBill(billId: string, signal?: AbortSignal): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
+    if (signal?.aborted) return false;
     if (!user) return false;
 
     const { data, error } = await supabase
@@ -51,8 +54,9 @@ export class BillFollowingService {
     return !!data;
   }
 
-  async getFollowedBills(): Promise<any[]> {
+  async getFollowedBills(signal?: AbortSignal): Promise<any[]> {
     const { data: { user } } = await supabase.auth.getUser();
+    if (signal?.aborted) return [];
     if (!user) return [];
 
     const { data, error } = await supabase
@@ -76,7 +80,7 @@ export class BillFollowingService {
     return data?.map(follow => follow.bills) || [];
   }
 
-  async getFollowCount(billId: string): Promise<number> {
+  async getFollowCount(billId: string, signal?: AbortSignal): Promise<number> {
     const { count, error } = await supabase
       .from('bill_follows')
       .select('*', { count: 'exact', head: true })

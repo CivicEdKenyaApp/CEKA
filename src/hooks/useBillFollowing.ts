@@ -9,17 +9,22 @@ export function useBillFollowing(billId: string) {
   const { user } = useAuth();
 
   useEffect(() => {
+    const controller = new AbortController();
     let active = true;
 
     if (billId) {
-      checkFollowStatus(active);
-      getFollowCount(active);
+      setLoading(true);
+      checkFollowStatus(active, controller.signal);
+      getFollowCount(active, controller.signal);
     }
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [billId, user]);
 
-  const checkFollowStatus = async (active: boolean) => {
+  const checkFollowStatus = async (active: boolean, signal: AbortSignal) => {
     if (!user) {
       if (active) {
         setIsFollowing(false);
@@ -29,21 +34,25 @@ export function useBillFollowing(billId: string) {
     }
 
     try {
-      const following = await billFollowingService.isFollowingBill(billId);
+      const following = await billFollowingService.isFollowingBill(billId, signal);
       if (active) setIsFollowing(following);
-    } catch (error) {
-      if (active) console.error('Error checking follow status:', error);
+    } catch (error: any) {
+      if (active && error.name !== 'AbortError' && error.message !== 'Aborted') {
+        console.error('Error checking follow status:', error);
+      }
     } finally {
       if (active) setLoading(false);
     }
   };
 
-  const getFollowCount = async (active: boolean) => {
+  const getFollowCount = async (active: boolean, signal: AbortSignal) => {
     try {
-      const count = await billFollowingService.getFollowCount(billId);
+      const count = await billFollowingService.getFollowCount(billId, signal);
       if (active) setFollowCount(count);
-    } catch (error) {
-      if (active) console.error('Error getting follow count:', error);
+    } catch (error: any) {
+      if (active && error.name !== 'AbortError' && error.message !== 'Aborted') {
+        console.error('Error getting follow count:', error);
+      }
     }
   };
 

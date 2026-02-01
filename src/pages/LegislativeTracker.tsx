@@ -1,5 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
+// src/pages/LegislativeTracker.tsx
+import React, { useEffect, useState, useMemo } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,11 +17,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import {
   FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown,
-  TrendingUp, RefreshCw, Layers, CheckCircle, Clock
+  TrendingUp, RefreshCw, Layers, CheckCircle, Clock, Users, BookOpen, Globe, Shield, Scale
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BillFollowButton } from '@/components/legislative/BillFollowButton';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+
+// Actual Kenyan Legislative Stages
+const LEGISLATIVE_STAGES = [
+  { id: 'publication', label: 'Publication', desc: 'Bill published in Kenya Gazette' },
+  { id: 'first_reading', label: '1st Reading', desc: 'Formal introduction in Parliament' },
+  { id: 'committee_referral', label: 'Committee', desc: 'Scrutiny & Public Participation' },
+  { id: 'second_reading', label: '2nd Reading', desc: 'Debate on principles & merits' },
+  { id: 'whole_house', label: 'House Committee', desc: 'Detailed clause-by-clause review' },
+  { id: 'third_reading', label: '3rd Reading', desc: 'Final vote on the floor' },
+  { id: 'bicameral', label: 'Bicameral', desc: 'Processing by the other House' },
+  { id: 'assent', label: 'Assent', desc: 'Presidential signature into law' }
+];
 
 interface Bill {
   id: string;
@@ -33,78 +48,48 @@ interface Bill {
   url?: string | null;
   sponsor?: string;
   description?: string;
+  stage_index?: number; // Map status to LEGISLATIVE_STAGES
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'alpha-asc' | 'alpha-desc' | 'status' | 'category';
 
 const LegislativeTracker = () => {
   const [billsData, setBillsData] = useState<Bill[]>([]);
-  const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('all_stages');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
 
   useEffect(() => {
     const fetchBills = async () => {
       setLoading(true);
-      setError(null);
       try {
-        const { data, error: fetchError } = await supabase
+        const { data, error } = await supabase
           .from('bills')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (fetchError) {
-          throw fetchError;
-        }
+        if (error) throw error;
 
-        // If no bills in database, create some sample bills
-        if (!data || data.length === 0) {
-          const sampleBills: Bill[] = [
-            {
-              id: '74961912-8ba7-47f2-bf61-9ae3abafe2e1',
-              title: 'Education Amendment Bill',
-              summary: 'Enhances access to quality education for all Kenyan citizens through policy reforms and funding provisions.',
-              status: 'First Reading',
-              category: 'Education',
-              date: '2025-03-15',
-              created_at: '2025-03-15T10:00:00Z',
-              sponsor: 'Hon. James Mwangi',
-              description: 'The Education Amendment Bill seeks to reform Kenya\'s education system by improving infrastructure, curriculum, and teacher training.'
-            },
-            {
-              id: '85072023-9cb8-53e3-c672-0bf4b8ceee3f',
-              title: 'Healthcare Access Bill',
-              summary: 'Improves healthcare accessibility and affordability for all Kenyan citizens.',
-              status: 'Committee Stage',
-              category: 'Healthcare',
-              date: '2025-02-20',
-              created_at: '2025-02-20T14:30:00Z',
-              sponsor: 'Hon. Mary Wanjiku',
-              description: 'This bill aims to establish universal healthcare coverage and improve medical services across Kenya.'
-            },
-            {
-              id: '96183134-adc9-64f4-d783-1cg5c9dfff4g',
-              title: 'Environmental Protection Act',
-              summary: 'Strengthens environmental protection measures and promotes sustainable development.',
-              status: 'Public Feedback',
-              category: 'Environment',
-              date: '2025-01-10',
-              created_at: '2025-01-10T09:15:00Z',
-              sponsor: 'Hon. Peter Kimani',
-              description: 'Comprehensive environmental protection legislation to combat climate change and preserve natural resources.'
-            }
-          ];
-          setBillsData(sampleBills);
-        } else {
-          setBillsData(data || []);
-        }
+        // Dynamic stage mapping based on status text
+        const processedData = (data || []).map(bill => {
+          const statusLower = bill.status?.toLowerCase() || '';
+          let stageIndex = 0;
+          if (statusLower.includes('assent')) stageIndex = 7;
+          else if (statusLower.includes('bicameral')) stageIndex = 6;
+          else if (statusLower.includes('third')) stageIndex = 5;
+          else if (statusLower.includes('whole house')) stageIndex = 4;
+          else if (statusLower.includes('second')) stageIndex = 3;
+          else if (statusLower.includes('committee')) stageIndex = 2;
+          else if (statusLower.includes('first')) stageIndex = 1;
+
+          return { ...bill, stage_index: stageIndex };
+        });
+
+        setBillsData(processedData);
       } catch (e: any) {
-        console.error('Error fetching bills:', e);
-        setError(e.message || 'Failed to fetch bills.');
+        console.error('Fetch error:', e);
       } finally {
         setLoading(false);
       }
@@ -113,364 +98,292 @@ const LegislativeTracker = () => {
     fetchBills();
   }, []);
 
-  // Filter and sort bills
-  useEffect(() => {
-    let filtered = billsData;
+  const filteredBills = useMemo(() => {
+    return billsData.filter(bill => {
+      const matchesSearch = bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.summary.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || bill.category === selectedCategory;
+      const matchesTab = activeTab === 'all_stages' ||
+        bill.status.toLowerCase().replace(/ /g, '_').includes(activeTab);
 
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(bill =>
-        bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (bill.sponsor && bill.sponsor.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(bill => bill.category === selectedCategory);
-    }
-
-    // Apply status filter
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(bill => bill.status === selectedStatus);
-    }
-
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'date-desc':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case 'date-asc':
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case 'alpha-asc':
-          return a.title.localeCompare(b.title);
-        case 'alpha-desc':
-          return b.title.localeCompare(a.title);
-        case 'status':
-          return a.status.localeCompare(b.status);
-        case 'category':
-          return a.category.localeCompare(b.category);
-        default:
-          return 0;
-      }
+      return matchesSearch && matchesCategory && matchesTab;
+    }).sort((a, b) => {
+      if (sortBy === 'date-desc') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === 'alpha-asc') return a.title.localeCompare(b.title);
+      return 0;
     });
+  }, [billsData, searchTerm, selectedCategory, activeTab, sortBy]);
 
-    setFilteredBills(filtered);
-  }, [billsData, searchTerm, selectedCategory, selectedStatus, sortBy]);
-
-  // Get unique categories and statuses for filters
-  const uniqueCategories = [...new Set(billsData.map(bill => bill.category))].filter(category => category && category.trim() !== '');
-  const uniqueStatuses = [...new Set(billsData.map(bill => bill.status))].filter(status => status && status.trim() !== '');
-
-  const BillCardSkeleton = () => (
-    <Card className="overflow-hidden">
-      <div className="flex flex-col md:flex-row">
-        <div className="md:w-16 lg:w-20 bg-muted flex items-center justify-center p-4">
-          <Skeleton className="h-8 w-8 rounded-md" />
-        </div>
-        <div className="flex-1 p-5 md:p-6 space-y-3">
-          <div className="flex flex-col md:flex-row justify-between md:items-center">
-            <Skeleton className="h-5 w-24 rounded" />
-            <Skeleton className="h-5 w-20 rounded mt-1 md:mt-0" />
-          </div>
-          <Skeleton className="h-6 w-3/4 rounded" />
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-5/6 rounded" />
-          <div className="flex flex-wrap items-center justify-between mt-2">
-            <Skeleton className="h-4 w-32 rounded" />
-            <div className="flex gap-2 mt-2 md:mt-0">
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-8 w-24 rounded" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
+  const trendingBill = billsData[0] || { title: "Finance Bill", created_at: new Date().toISOString() };
 
   return (
     <Layout>
-      <div className="container py-8 md:py-12 space-y-10 animate-fade-in">
-        {/* iOS Aero Hero Hub */}
-        <div className="relative p-8 md:p-12 rounded-[40px] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-ios-high overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32" />
-          <div className="relative z-10 space-y-6">
-            <div className="flex items-center gap-3 bg-white/50 dark:bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl w-fit border border-white/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-kenya-green opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-kenya-green"></span>
-              </span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Democracy Track</span>
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
-                Legislative <span className="text-primary italic">Vault</span>
-              </h1>
-              <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                Stay ahead of national protocols. Our "Track & Trace" engine monitors every bill, policy amendment, and gazette notice in real-time.
-              </p>
-            </div>
+      <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0A0A0A]">
+        {/* EXECUTIVE HERO: Mobile Optimized */}
+        <section className="relative px-4 pt-12 pb-20 md:pt-24 md:pb-32 overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full opacity-20 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-kenya-green/20 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-primary/10 blur-[100px] rounded-full" />
+          </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-10 w-10 rounded-full border-2 border-background bg-slate-200" />
-                ))}
-                <div className="h-10 px-4 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-bold">
-                  +12k Trackers
+          <div className="container relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-4xl"
+            >
+              <Badge className="mb-6 rounded-full px-4 py-1.5 bg-kenya-green/10 text-kenya-green border-kenya-green/20 font-black tracking-widest text-[10px] uppercase">
+                <Globe className="h-3 w-3 mr-2 animate-pulse" />
+                Live National Intelligence
+              </Badge>
+              <h1 className="text-5xl md:text-8xl font-[1000] tracking-tight leading-[0.9] mb-8 dark:text-white">
+                Track <span className="text-transparent bg-clip-text bg-gradient-to-r from-kenya-green to-primary">Democracy</span>.
+              </h1>
+              <p className="text-xl md:text-2xl text-muted-foreground font-medium leading-relaxed max-w-2xl">
+                The most advanced legislative bridge in Kenya. Real-time updates from
+                <span className="text-foreground font-bold"> National Assembly</span>,
+                <span className="text-foreground font-bold"> The Senate</span>, and
+                <span className="text-foreground font-bold"> The Gazette</span>.
+              </p>
+            </motion.div>
+
+            {/* DYNAMIC TRENDING: Variable Based */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-12 p-1 rounded-[32px] bg-gradient-to-r from-kenya-green/20 to-primary/20 max-w-md shadow-2xl overflow-hidden"
+            >
+              <div className="bg-white dark:bg-[#111] p-6 rounded-[28px] flex items-start gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-kenya-green/10 flex items-center justify-center shrink-0">
+                  <TrendingUp className="h-6 w-6 text-kenya-green" />
+                </div>
+                <div>
+                  <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-1 opacity-60">High Activity Trace</h4>
+                  <p className="font-bold text-sm mb-3">
+                    The <span className="text-kenya-green">{trendingBill.title}</span> is currently seeing 32% more tracking activity this week.
+                  </p>
+                  <Button variant="link" asChild className="p-0 h-auto text-primary font-black text-xs uppercase tracking-widest gap-2">
+                    <Link to={`/bill/${trendingBill.id || ''}`}>
+                      View Full Analysis <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </Button>
                 </div>
               </div>
-              <div className="h-8 w-[1px] bg-border mx-2" />
-              <div className="flex items-center gap-2 text-sm font-bold">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                Scanning National Gazettes...
-              </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </section>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark rounded-[32px] overflow-hidden">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-black flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-primary" />
-                  Vault Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Identifier</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* VAULT INTERFACE */}
+        <div className="container pb-24">
+          <div className="grid lg:grid-cols-12 gap-10">
+            {/* SEARCH & FILTERS: Sidebar for Desktop, Floating Tray for Mobile */}
+            <aside className="lg:col-span-3 space-y-8">
+              <div className="sticky top-24 space-y-8">
+                <div className="space-y-4">
+                  <h3 className="font-black text-lg flex items-center gap-2">
+                    <Search className="h-5 w-5 text-primary" />
+                    Vault Query
+                  </h3>
+                  <div className="relative group">
                     <Input
-                      placeholder="Bill #, Title, Keyword..."
-                      className="pl-10 h-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-primary/20"
+                      placeholder="Title | Year | Keyword"
+                      className="h-14 rounded-2xl bg-white dark:bg-[#111] border-slate-200 dark:border-white/5 shadow-sm focus:ring-primary/20 pr-12"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-30 select-none">
+                      ⌘ F
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Order Hierarchy</label>
-                  <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
-                      <SelectItem value="date-desc">Newest First</SelectItem>
-                      <SelectItem value="date-asc">Oldest First</SelectItem>
-                      <SelectItem value="alpha-asc">A-Z</SelectItem>
-                      <SelectItem value="alpha-desc">Z-A</SelectItem>
-                      <SelectItem value="status">By Status</SelectItem>
-                      <SelectItem value="category">By Category</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sector Category</label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
-                      <SelectItem value="all">All Sectors</SelectItem>
-                      {uniqueCategories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Legal Status</label>
-                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-none">
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl glass-card border-none shadow-2xl">
-                      <SelectItem value="all">All Stages</SelectItem>
-                      {uniqueStatuses.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  className="w-full h-12 rounded-2xl hover:bg-muted/50 font-bold"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('all');
-                    setSelectedStatus('all');
-                    setSortBy('date-desc');
-                  }}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Reset Vault
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark rounded-[32px] overflow-hidden bg-kenya-green/5">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-kenya-green/20 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-kenya-green" />
+                <div className="space-y-4">
+                  <h3 className="font-black text-lg flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-primary" />
+                    Governance Sector
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {['all', 'Finance', 'Education', 'Healthcare', 'Environment'].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={cn(
+                          "w-full text-left px-5 py-3 rounded-2xl text-sm font-bold transition-all",
+                          selectedCategory === cat
+                            ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
+                            : "bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
+                        )}
+                      >
+                        {cat === 'all' ? 'All Portfolios' : cat}
+                      </button>
+                    ))}
                   </div>
-                  <h4 className="font-black text-sm uppercase tracking-wider">Top Trending</h4>
                 </div>
-                <p className="text-xs text-muted-foreground">The Finance Bill 2025 is currently seeing high tracking activity.</p>
-                <Button variant="link" className="p-0 h-auto text-kenya-green font-bold text-xs uppercase tracking-widest">
-                  View Analysis <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="all" className="w-full">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 dark:border-white/5 pb-2">
-                <TabsList className="bg-transparent h-auto p-0 flex-wrap sm:flex-nowrap justify-start gap-2 overflow-x-auto no-scrollbar">
-                  <TabsTrigger value="all">All Bills ({filteredBills.length})</TabsTrigger>
-                  <TabsTrigger value="new">New</TabsTrigger>
-                  <TabsTrigger value="public-feedback">Public Feedback</TabsTrigger>
-                  <TabsTrigger value="followed">Following</TabsTrigger>
-                </TabsList>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <ArrowUpDown className="h-4 w-4" />
-                  <span>Sorted by: {
-                    sortBy === 'date-desc' ? 'Newest First' :
-                      sortBy === 'date-asc' ? 'Oldest First' :
-                        sortBy === 'alpha-asc' ? 'A-Z' :
-                          sortBy === 'alpha-desc' ? 'Z-A' :
-                            sortBy === 'status' ? 'Status' : 'Category'
-                  }</span>
-                </div>
-              </div>
-
-              <TabsContent value="all" className="space-y-4 mt-0">
-                {loading ? (
-                  <>
-                    <BillCardSkeleton />
-                    <BillCardSkeleton />
-                    <BillCardSkeleton />
-                  </>
-                ) : error ? (
-                  <div className="text-red-500 p-4 border border-red-500 rounded-md">
-                    <p>Error loading bills: {error}</p>
-                    <p>Please try again later.</p>
-                  </div>
-                ) : filteredBills.length === 0 ? (
-                  <div className="bg-muted rounded-md p-8 text-center">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-medium text-lg">No Bills Found</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {billsData.length === 0
-                        ? 'There are currently no bills to display. Check back later.'
-                        : 'No bills match your current filters. Try adjusting your search criteria.'
-                      }
+                <Card className="rounded-[32px] border-none bg-kenya-green/5 overflow-hidden">
+                  <CardContent className="p-6 space-y-4">
+                    <Scale className="h-8 w-8 text-kenya-green opacity-40" />
+                    <h5 className="font-bold">Public Mandate</h5>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Mandatory public participation is currently active for 4 bills in the Committee Stage.
                     </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </aside>
+
+            {/* BILLS JOURNEY: Main Content */}
+            <main className="lg:col-span-9 space-y-12">
+              <Tabs defaultValue="all_stages" onValueChange={setActiveTab} className="w-full">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-border/50 pb-2">
+                  <TabsList className="bg-transparent h-auto p-0 flex-wrap justify-start gap-6 overflow-x-auto no-scrollbar">
+                    {['all_stages', 'publication', 'first_reading', 'committee', 'second_reading', 'assent'].map(tab => (
+                      <TabsTrigger
+                        key={tab}
+                        value={tab}
+                        className="p-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none relative h-10 px-1"
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-data-[state=active]:opacity-100">
+                          {tab.replace('_', ' ')}
+                        </span>
+                        <AnimatePresence>
+                          {activeTab === tab && (
+                            <motion.div
+                              layoutId="tab_underline"
+                              className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full"
+                            />
+                          )}
+                        </AnimatePresence>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  <div className="flex items-center gap-4">
+                    <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                      <SelectTrigger className="w-[160px] h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-none font-bold text-xs uppercase tracking-widest">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-none shadow-2xl">
+                        <SelectItem value="date-desc">Newest First</SelectItem>
+                        <SelectItem value="alpha-asc">A-Z</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                ) : (
-                  filteredBills.map((bill) => (
-                    <Card key={bill.id} className="group relative overflow-hidden border-none glass-card shadow-ios-high dark:shadow-ios-high-dark rounded-[40px] transition-all hover:translate-y-[-4px]">
-                      <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="sm:w-32 bg-muted/20 flex flex-col items-center justify-center p-6 border-r border-border/50">
-                          <div className="h-16 w-16 rounded-3xl bg-white dark:bg-white/5 shadow-ios-low flex items-center justify-center mb-3">
-                            <FileText className="h-8 w-8 text-primary" />
-                          </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Document</span>
-                        </div>
-                        <div className="flex-1 p-8 min-w-0 space-y-6">
-                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                            <div className="flex flex-wrap gap-2">
-                              <Badge className="rounded-xl px-4 py-1.5 bg-primary/10 text-primary border-none font-bold">
-                                {bill.category}
-                              </Badge>
-                              <Badge className="rounded-xl px-4 py-1.5 bg-muted/50 text-muted-foreground border-none font-bold flex items-center gap-2">
-                                <Clock className="h-3 w-3" />
-                                {bill.status}
-                              </Badge>
-                            </div>
-                            <div className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">{new Date(bill.created_at).toLocaleDateString()}</div>
-                          </div>
+                </div>
 
-                          <div className="space-y-3">
-                            <h3 className="text-2xl font-black tracking-tight leading-tight">
-                              <Link to={`/bill/${bill.id}`} className="hover:text-primary transition-colors">
-                                {bill.title}
-                              </Link>
-                            </h3>
-                            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 max-w-3xl">
-                              {bill.summary}
-                            </p>
-                          </div>
-
-                          {/* Interactive Bill Journey Simulation */}
-                          <div className="flex items-center gap-2 py-4">
-                            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden flex">
-                              <div className="h-full bg-kenya-green w-1/4" />
-                              <div className="h-full bg-muted w-3/4" />
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-kenya-green">25% Progressive Path</span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-between gap-6 pt-4 border-t border-border/50">
-                            <div className="flex items-center gap-4 text-xs font-bold">
-                              {bill.sponsor && (
-                                <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded-full bg-slate-200" />
-                                  <span>{bill.sponsor}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <BillFollowButton billId={bill.id} variant="ghost" className="rounded-2xl h-12 px-6" />
-                              <Button asChild className="rounded-2xl h-12 px-8 bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20">
-                                <Link to={`/bill/${bill.id}`}>
-                                  Trace Bill
-                                  <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                <TabsContent value={activeTab} className="space-y-6 mt-0">
+                  {loading ? (
+                    Array(3).fill(0).map((_, i) => (
+                      <div key={i} className="h-64 rounded-[40px] bg-slate-50 dark:bg-white/5 animate-pulse" />
+                    ))
+                  ) : filteredBills.length === 0 ? (
+                    <div className="py-32 text-center space-y-4">
+                      <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center mx-auto">
+                        <Shield className="h-10 w-10 opacity-20" />
                       </div>
-                    </Card>
-                  ))
-                )}
-              </TabsContent>
+                      <h3 className="font-black text-2xl tracking-tight">No bills tracked in this vault.</h3>
+                      <p className="text-muted-foreground">The "Track & Trace" engine is currently scanning for updates.</p>
+                    </div>
+                  ) : (
+                    filteredBills.map((bill) => (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={bill.id}
+                      >
+                        <Card className="group relative overflow-hidden border-none bg-white dark:bg-[#111] shadow-ios-high dark:shadow-ios-high-dark rounded-[40px] transition-all hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                          <div className="flex flex-col md:flex-row">
+                            {/* Visual Progress Pillar */}
+                            <div className="md:w-48 p-8 flex flex-col justify-between border-r border-border/50 bg-slate-50/30 dark:bg-white/[0.01]">
+                              <div className="space-y-4">
+                                <div className="h-14 w-14 rounded-2xl bg-white dark:bg-white/5 shadow-sm flex items-center justify-center">
+                                  <Scale className="h-7 w-7 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[10px] font-black uppercase tracking-widest opacity-40">Current Stage</div>
+                                  <div className="text-sm font-black text-kenya-green">{bill.status}</div>
+                                </div>
+                              </div>
 
-              <TabsContent value="new">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">New Bills</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Filter applied to show only recently introduced bills.</p>
-                </div>
-              </TabsContent>
+                              {/* Actual Kenyan Stage Journey Mini-Visualizer */}
+                              <div className="grid grid-cols-8 gap-1 h-1.5 mt-8">
+                                {LEGISLATIVE_STAGES.map((_, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={cn(
+                                      "rounded-full transition-all",
+                                      idx <= (bill.stage_index || 0)
+                                        ? "bg-kenya-green"
+                                        : "bg-slate-200 dark:bg-white/10"
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                            </div>
 
-              <TabsContent value="public-feedback">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">Bills Open for Public Feedback</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Filter applied to show bills currently accepting public input.</p>
-                </div>
-              </TabsContent>
+                            {/* Bill Intelligence */}
+                            <div className="flex-1 p-8 md:p-10 space-y-8">
+                              <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex gap-2">
+                                  <Badge className="bg-primary/10 text-primary border-none font-bold rounded-lg px-3">
+                                    {bill.category}
+                                  </Badge>
+                                  {bill.stage_index === 2 && (
+                                    <Badge className="bg-orange-500/10 text-orange-500 border-none font-bold rounded-lg px-3 animate-pulse">
+                                      Public Feedback Needed
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                                  {new Date(bill.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </div>
+                              </div>
 
-              <TabsContent value="followed">
-                <div className="bg-muted rounded-md p-8 text-center">
-                  <h3 className="font-medium">Bills You're Following</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Sign in to view and track the bills you're following.</p>
-                </div>
-              </TabsContent>
-            </Tabs>
+                              <div className="space-y-4">
+                                <h3 className="text-3xl font-[1000] tracking-tight leading-none dark:text-white group-hover:text-primary transition-colors">
+                                  <Link to={`/bill/${bill.id}`}>{bill.title}</Link>
+                                </h3>
+                                <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl line-clamp-3">
+                                  {bill.summary}
+                                </p>
+                              </div>
+
+                              <div className="flex flex-wrap items-center justify-between gap-6 pt-6 border-t border-border/50">
+                                <div className="flex items-center gap-4">
+                                  {bill.sponsor && (
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center font-bold text-xs">
+                                        {bill.sponsor.charAt(0)}
+                                      </div>
+                                      <div className="text-xs font-bold leading-none">
+                                        <div className="opacity-40 uppercase tracking-widest text-[8px] mb-1">Mover / Sponsor</div>
+                                        {bill.sponsor}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <BillFollowButton billId={bill.id} variant="ghost" className="h-12 px-6 rounded-2xl" />
+                                  <Button asChild className="h-12 px-10 rounded-2xl bg-[#111] dark:bg-white text-white dark:text-black font-black hover:opacity-90 shadow-xl">
+                                    <Link to={`/bill/${bill.id}`}>
+                                      Trace Progress
+                                      <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    ))
+                  )}
+                </TabsContent>
+              </Tabs>
+            </main>
           </div>
         </div>
       </div>
