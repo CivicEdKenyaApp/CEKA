@@ -67,6 +67,7 @@ const ResourceLibrary = () => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
 
   // Load resources from Supabase with debounced search and filters
   useEffect(() => {
@@ -276,12 +277,13 @@ const ResourceLibrary = () => {
       return (
         <motion.div
           key={resource.id}
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ y: -4, scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full"
+          className="w-full cursor-pointer group"
           layout
+          onClick={() => navigate(`/resources/${resource.id}`)}
         >
-          <Card className={`h-full transition-shadow hover:shadow-md overflow-hidden ${isSelected ? 'border-primary' : ''}`}>
+          <Card className={`h-full border-none glass-card shadow-ios-high dark:shadow-ios-high-dark overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}>
             <div className="relative">
               <div className="absolute top-2 right-2 z-10">
                 {resource.canDownload !== false ? (
@@ -419,297 +421,106 @@ const ResourceLibrary = () => {
   return (
     <Layout>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">{translate("Resource Library", language)}</h1>
-            <p className="text-muted-foreground mt-1">
-              {translate("Browse and download educational resources on civic education", language)}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+              <BookOpen className="h-8 w-8 text-primary" />
+              {translate("Resource Vault", language)}
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium">
+              {translate("Access the repository of civic knowledge and national protocols", language)}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 mt-4 md:mt-0">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-              className="h-8 w-8"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('list')}
-              className="h-8 w-8"
-            >
-              <List className="h-4 w-4" />
+          <div className="flex items-center gap-3 bg-muted/20 p-1 rounded-2xl backdrop-blur-md">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="rounded-xl px-4 gap-2 font-bold group">
+                  <Filter className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform" />
+                  {activeCategory}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 p-2 rounded-[24px] glass-card border-none shadow-2xl">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 pt-2">Categories</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => { setActiveCategory('All'); setSelectedCategories([]) }} className="rounded-xl p-3 cursor-pointer">All Resources</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {categories.map(cat => (
+                  <DropdownMenuItem
+                    key={cat}
+                    onClick={() => { setActiveCategory(cat); setSelectedCategories([cat]) }}
+                    className="rounded-xl p-3 cursor-pointer"
+                  >
+                    {cat}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="h-8 w-[1px] bg-border mx-1" />
+
+            <div className="flex bg-muted/50 p-1 rounded-xl">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className="h-8 w-8 rounded-lg"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className="h-8 w-8 rounded-lg"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button onClick={() => navigate('/resources/upload')} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl h-10 px-6 shadow-lg shadow-primary/20">
+              <Plus className="mr-2 h-4 w-4" />
+              {translate("Upload", language)}
             </Button>
           </div>
-
-          <Button onClick={() => navigate('/resources/upload')} className="bg-kenya-green hover:bg-kenya-green/90 mt-4 md:mt-0">
-            <Plus className="mr-2 h-4 w-4" />
-            {translate("Upload Resource", language)}
-          </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar with filters */}
-          <div className="lg:w-1/4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{translate("Filter Resources", language)}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder={translate("Search resources...", language)}
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">{translate("Categories", language)}</h4>
-                  <div className="space-y-2">
-                    {allCategories.map((category) => (
-                      <div key={category} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`category-${category}`}
-                          checked={selectedCategories.includes(category)}
-                          onChange={() => {
-                            if (selectedCategories.includes(category)) {
-                              setSelectedCategories(selectedCategories.filter(c => c !== category));
-                            } else {
-                              setSelectedCategories([...selectedCategories, category]);
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <label htmlFor={`category-${category}`} className="text-sm">
-                          {category}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">{translate("Resource Types", language)}</h4>
-                  <div className="space-y-2">
-                    {allTypes.map((type) => (
-                      <div key={type} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`type-${type}`}
-                          checked={selectedTypes.includes(type)}
-                          onChange={() => {
-                            if (selectedTypes.includes(type)) {
-                              setSelectedTypes(selectedTypes.filter(t => t !== type));
-                            } else {
-                              setSelectedTypes([...selectedTypes, type]);
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <label htmlFor={`type-${type}`} className="flex items-center text-sm">
-                          <span className="mr-1">{getTypeIcon(type)}</span>
-                          {type.toUpperCase()}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">{translate("Sort By", language)}</h4>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      variant={sortBy === 'date' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('date');
-                        if (sortBy === 'date') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('desc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Date Added", language)}
-                      {sortBy === 'date' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
-
-                    <Button
-                      variant={sortBy === 'popularity' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('popularity');
-                        if (sortBy === 'popularity') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('desc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Popularity", language)}
-                      {sortBy === 'popularity' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
-
-                    <Button
-                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        setSortBy('alphabetical');
-                        if (sortBy === 'alphabetical') {
-                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                        } else {
-                          setSortDirection('asc');
-                        }
-                      }}
-                      className="justify-between"
-                    >
-                      {translate("Alphabetical", language)}
-                      {sortBy === 'alphabetical' && (
-                        sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <Button variant="outline" onClick={resetFilters} className="w-full">
-                  <X className="h-4 w-4 mr-2" />
-                  {translate("Clear filters", language)}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Download selection panel */}
-            {selectedResources.length > 0 && (
-              <Card className="mt-4 border-primary">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-lg">{translate("Selected Resources", language)}</CardTitle>
-                </CardHeader>
-                <CardContent className="py-2">
-                  <p className="text-sm font-medium">{selectedResources.length} {selectedResources.length === 1 ? 'resource' : 'resources'} selected</p>
-                </CardContent>
-                <CardFooter className="pt-2 pb-3">
-                  <div className="flex gap-2 w-full">
-                    <Button variant="outline" className="flex-1" onClick={() => setSelectedResources([])}>
-                      {translate("Clear", language)}
-                    </Button>
-                    <Button className="flex-1" onClick={downloadSelectedResources}>
-                      <Download className="h-4 w-4 mr-2" />
-                      {translate("Download", language)}
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            )}
+        <div className="space-y-10">
+          <div className="relative max-w-2xl mx-auto mb-12">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={translate("Search resources...", language)}
+              className="pl-12 h-14 rounded-[28px] glass-card border-none shadow-ios-high dark:shadow-ios-high-dark text-lg focus-visible:ring-primary/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          {/* Main content */}
-          <div className="lg:w-3/4">
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="mb-4 flex w-full h-auto flex-wrap">
-                <TabsTrigger value="all" className="flex-1">
-                  {translate("All Resources", language)} ({filteredResources.length})
-                </TabsTrigger>
-                {allCategories.slice(0, 3).map((category) => (
-                  <TabsTrigger key={category} value={category} className="flex-1">
-                    {category} ({resourcesByCategory[category]?.length || 0})
-                  </TabsTrigger>
+          <div className="w-full">
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <div key={i} className="h-72 bg-muted/30 rounded-3xl animate-pulse"></div>
                 ))}
-                {allCategories.length > 3 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        {translate("More", language)}
-                        <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuLabel>{translate("Categories", language)}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {allCategories.slice(3).map((category) => (
-                        <DropdownMenuCheckboxItem
-                          key={category}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => {
-                            if (selectedCategories.includes(category)) {
-                              setSelectedCategories(selectedCategories.filter(c => c !== category));
-                            } else {
-                              setSelectedCategories([...selectedCategories, category]);
-                            }
-                          }}
-                        >
-                          {category} ({resourcesByCategory[category]?.length || 0})
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </TabsList>
-
-              <TabsContent value="all" className="mt-0">
-                {isLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                      <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : filteredResources.length === 0 ? (
-                  <div className="text-center py-12">
-                    <h3 className="text-lg font-medium">No resources match your filters</h3>
-                    <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
-                    <Button variant="outline" onClick={resetFilters} className="mt-4">
-                      <X className="h-4 w-4 mr-2" />
-                      Clear filters
-                    </Button>
-                  </div>
-                ) : (
-                  <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
-                    {filteredResources.map(resource => renderResourceCard(resource))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {allCategories.map((category) => (
-                <TabsContent key={category} value={category} className="mt-0">
-                  {isLoading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="h-64 bg-muted/50 rounded-lg animate-pulse"></div>
-                      ))}
-                    </div>
-                  ) : resourcesByCategory[category]?.length === 0 ? (
-                    <div className="text-center py-12">
-                      <h3 className="text-lg font-medium">No {category} resources match your filters</h3>
-                      <p className="text-muted-foreground mt-2">Try adjusting your filters or search term</p>
-                      <Button variant="outline" onClick={resetFilters} className="mt-4">
-                        <X className="h-4 w-4 mr-2" />
-                        Clear filters
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : ''}`}>
-                      {resourcesByCategory[category]?.map(resource => renderResourceCard(resource))}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+              </div>
+            ) : filteredResources.length === 0 ? (
+              <div className="text-center py-20 glass-card rounded-[40px]">
+                <div className="bg-muted w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <X className="h-10 w-10 text-muted-foreground opacity-20" />
+                </div>
+                <h3 className="text-2xl font-black mb-2">No Results Found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-8">Try adjusting your filters or search term to discover curated civic educational materials.</p>
+                <Button variant="outline" onClick={resetFilters} className="rounded-2xl px-8 h-12">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reset Vault
+                </Button>
+              </div>
+            ) : (
+              <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'max-w-4xl mx-auto'}`}>
+                {filteredResources.map(resource => renderResourceCard(resource))}
+              </div>
+            )}
           </div>
         </div>
       </div>

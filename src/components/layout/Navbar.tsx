@@ -116,8 +116,8 @@ const Navbar = () => {
   return (
     <>
       <nav className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-500 font-sans",
-        showBg ? "bg-white/80 dark:bg-black/80 backdrop-blur-3xl shadow-ios-high py-2" : "bg-transparent py-4"
+        "fixed lg:sticky top-0 z-[100] w-full transition-all duration-500 font-sans",
+        showBg ? "bg-white/95 dark:bg-black/95 backdrop-blur-3xl shadow-ios-high py-2" : "bg-white/40 dark:bg-black/20 backdrop-blur-sm lg:bg-transparent py-4"
       )}>
         <div className="container mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="z-50"><Logo className="h-8 w-auto" /></Link>
