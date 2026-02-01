@@ -25,6 +25,9 @@ import {
 import { adminService, AdminDashboardStats, UserActivityStats, ModerationQueueItem } from '@/services/adminService';
 import { AdminSessionManager } from './AdminSessionManager';
 import AppChangeLogger from './AppChangeLogger';
+import MediaAppraisal from './MediaAppraisal';
+import VolunteerManager from './VolunteerManager';
+import CampaignManager from './CampaignManager';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const EnhancedAdminDashboard = () => {
@@ -133,13 +136,22 @@ const EnhancedAdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="moderation">Content</TabsTrigger>
+          <TabsTrigger value="appraisal" className="gap-2">
+            Appraisal
+            {moderationQueue.length > 0 && (
+              <Badge className="h-4 w-4 p-0 flex items-center justify-center bg-kenya-red text-[8px]">
+                {moderationQueue.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
+          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="changes">App Changes</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="changes">Audit</TabsTrigger>
+          <TabsTrigger value="settings">System</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -342,51 +354,16 @@ const EnhancedAdminDashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="moderation">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Content Moderation Queue
-              </CardTitle>
-              <CardDescription>
-                Review and manage user-generated content
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {moderationQueue.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No content pending moderation
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {moderationQueue.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-medium">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {item.type} by {item.author} • {new Date(item.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <Badge variant={item.status === 'pending' ? 'secondary' : 'outline'}>
-                          {item.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {item.content_preview}...
-                      </p>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="default">Approve</Button>
-                        <Button size="sm" variant="destructive">Reject</Button>
-                        <Button size="sm" variant="outline">Review</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="appraisal">
+          <MediaAppraisal />
+        </TabsContent>
+
+        <TabsContent value="volunteers">
+          <VolunteerManager />
+        </TabsContent>
+
+        <TabsContent value="campaigns">
+          <CampaignManager />
         </TabsContent>
 
         <TabsContent value="sessions">

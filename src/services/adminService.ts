@@ -133,11 +133,11 @@ class AdminService {
       status,
       updated_at: new Date().toISOString()
     };
-    
+
     if (adminNotes) {
       updates.admin_notes = adminNotes;
     }
-    
+
     if (status === 'published') {
       updates.published_at = new Date().toISOString();
     }
@@ -146,7 +146,7 @@ class AdminService {
       .from('blog_posts')
       .update(updates)
       .eq('id', postId);
-    
+
     await this.logAdminAction('update_post_status', 'blog_post', postId, { new_status: status, admin_notes: adminNotes });
   }
 
@@ -159,7 +159,7 @@ class AdminService {
         updated_at: new Date().toISOString()
       })
       .eq('id', postId);
-    
+
     await this.logAdminAction('schedule_post', 'blog_post', postId, { scheduled_at: scheduledAt });
   }
 
@@ -172,7 +172,7 @@ class AdminService {
         updated_at: new Date().toISOString()
       })
       .eq('id', postId);
-    
+
     await this.logAdminAction('reject_post', 'blog_post', postId, { rejection_reason: rejectionReason });
   }
 
@@ -240,9 +240,9 @@ class AdminService {
         .from('chat_interactions')
         .select('created_at')
         .limit(1000);
-      
+
       const dailyMap: Record<string, UserActivityStats> = {};
-      
+
       (interactions as any[])?.forEach(item => {
         const d = item.created_at.split('T')[0];
         if (!dailyMap[d]) {
@@ -250,7 +250,7 @@ class AdminService {
         }
         dailyMap[d].interactions++;
       });
-      
+
       return Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
     } catch {
       return [];
@@ -283,7 +283,7 @@ class AdminService {
   async generateWeeklyReport(): Promise<any> {
     const stats = await this.getDashboardStats();
     const activity = await this.getUserActivityStats();
-    
+
     const report = {
       generated_at: new Date().toISOString(),
       period: 'weekly',
@@ -301,7 +301,7 @@ class AdminService {
   async logAdminAction(action: string, resourceType: string, resourceId?: string, details?: any) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    
+
     await supabase.from('admin_audit_log').insert({
       user_id: user.id,
       action,
@@ -325,7 +325,7 @@ class AdminService {
       .from('blog_posts')
       .select('*')
       .eq('status', 'draft');
-    
+
     return (data || []).map(p => ({
       id: p.id,
       type: 'blog_post',
@@ -340,25 +340,116 @@ class AdminService {
   async checkAdminWithSessionManagement(): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    
+
     if (user.email === ROOT_ADMIN_EMAIL) return true;
 
     const { count } = await supabase
       .from('admin_sessions')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);
-    
+
     return (count || 0) < 3;
   }
 
   async cleanupAdminSession(): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    
+
     await supabase
       .from('admin_sessions')
       .update({ is_active: false })
       .eq('user_id', user.id);
+  }
+
+  // --- PHASE 2 MANAGEMENT FUNCTIONS ---
+
+  /**
+   * Fetch items pending media appraisal
+   */
+  async getQuarantineQueue(): Promise<ModerationQueueItem[]> {
+    const [blogRes, resourceRes, constitutionRes] = await Promise.all([
+      (supabase.from('blog_posts' as any) as any).select('*').eq('media_status', 'quarantined'),
+      (supabase.from('resources' as any) as any).select('*').eq('media_status', 'quarantined'),
+      (supabase.from('constitution_sections' as any) as any).select('*').eq('media_status', 'quarantined')
+    ]);
+
+    const items: ModerationQueueItem[] = [];
+
+    (blogRes.data || []).forEach((p: any) => items.push({
+      id: p.id, type: 'blog_post', title: p.title, author: p.author || 'Member',
+      created_at: p.created_at, status: p.media_status, content_preview: p.content?.substring(0, 100) || ''
+    }));
+
+    (resourceRes.data || []).forEach((r: any) => items.push({
+      id: r.id, type: 'resource', title: r.title, author: r.provider || 'Contributor',
+      created_at: r.created_at, status: r.media_status, content_preview: r.description?.substring(0, 100) || ''
+    }));
+
+    (constitutionRes.data || []).forEach((s: any) => items.push({
+      id: s.id, type: 'constitution_section', title: s.title_en, author: 'AI/Editor',
+      created_at: s.created_at, status: s.media_status, content_preview: s.content_en?.substring(0, 100) || ''
+    }));
+
+    return items.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
+
+  /**
+   * Approve or reject media
+   */
+  async updateMediaStatus(id: string | number, type: string, status: 'approved' | 'rejected'): Promise<void> {
+    let table = '';
+    if (type === 'blog_post') table = 'blog_posts';
+    if (type === 'resource') table = 'resources';
+    if (type === 'constitution_section') table = 'constitution_sections';
+
+    if (!table) return;
+
+    await (supabase.from(table as any) as any)
+      .update({ media_status: status })
+      .eq('id', id);
+
+    await this.logAdminAction('update_media_status', type, id.toString(), { status });
+  }
+
+  /**
+   * Volunteer Opportunity Management
+   */
+  async getVolunteerOpportunities(): Promise<any[]> {
+    const { data } = await (supabase.from('volunteer_opportunities' as any) as any)
+      .select('*')
+      .order('created_at', { ascending: false });
+    return data || [];
+  }
+
+  async updateVolunteerStatus(id: string, status: 'approved' | 'rejected' | 'pending' | 'closed'): Promise<void> {
+    await (supabase.from('volunteer_opportunities' as any) as any)
+      .update({ status })
+      .eq('id', id);
+
+    await this.logAdminAction('update_volunteer_status', 'volunteer_opportunity', id, { status });
+  }
+
+  /**
+   * Campaign Management
+   */
+  async getCampaigns(): Promise<any[]> {
+    const { data } = await (supabase.from('platform_campaigns' as any) as any)
+      .select('*')
+      .order('created_at', { ascending: false });
+    return data || [];
+  }
+
+  async saveCampaign(campaign: any): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    const payload = { ...campaign, created_by: user?.id };
+
+    if (campaign.id) {
+      await (supabase.from('platform_campaigns' as any) as any).update(payload).eq('id', campaign.id);
+    } else {
+      await (supabase.from('platform_campaigns' as any) as any).insert(payload);
+    }
+
+    await this.logAdminAction('save_campaign', 'platform_campaign', campaign.id || 'new', campaign);
   }
 }
 
