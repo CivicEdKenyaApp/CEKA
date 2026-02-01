@@ -69,6 +69,7 @@ const ResourceLibrary = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [dynamicThumbnails, setDynamicThumbnails] = useState<Record<string, string>>({});
 
   // Load resources from Supabase with debounced search and filters
   useEffect(() => {
@@ -141,6 +142,21 @@ const ResourceLibrary = () => {
     const debounceTimer = setTimeout(fetchResources, 400);
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection, toast]);
+
+  // Handle auto-thumbnail generation for videos/media
+  useEffect(() => {
+    const generateNeededThumbnails = async () => {
+      const needed = resources.filter(r => !r.thumbnail && r.type === 'video');
+      for (const res of needed) {
+        if (dynamicThumbnails[res.id]) continue;
+        const thumb = await notificationService.getAutoThumbnail(res.url, res.type);
+        if (thumb) {
+          setDynamicThumbnails(prev => ({ ...prev, [res.id]: thumb }));
+        }
+      }
+    };
+    if (resources.length > 0) generateNeededThumbnails();
+  }, [resources]);
 
   // Optionally fetch categories from a dedicated table
   useEffect(() => {
@@ -273,6 +289,7 @@ const ResourceLibrary = () => {
   // Render resource card based on view mode
   const renderResourceCard = (resource: Resource) => {
     const isSelected = selectedResources.includes(resource.id);
+    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id];
 
     if (viewMode === 'grid') {
       return (
@@ -303,9 +320,9 @@ const ResourceLibrary = () => {
                 )}
               </div>
               <div className="bg-muted aspect-video relative flex items-center justify-center">
-                {resource.thumbnail ? (
+                {thumbnail ? (
                   <img
-                    src={resource.thumbnail}
+                    src={thumbnail}
                     alt={resource.title}
                     className="w-full h-full object-cover"
                     loading="lazy"

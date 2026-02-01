@@ -61,6 +61,7 @@ const notificationsTable = () => supabase.from('user_notifications' as any);
 class NotificationService {
   private channel: RealtimeChannel | null = null;
   private userId: string | null = null;
+  private isSubscribing = false;
 
   /**
    * Get notifications with optional filtering
@@ -252,28 +253,43 @@ class NotificationService {
     return (data as any)?.id || null;
   }
 
-  /**
-   * Subscribe to real-time notifications
-   * Note: Subscription will silently fail if table doesn't exist
-   */
   subscribeToNotifications(
     callback: (notification: Notification) => void
   ): () => void {
+    let active = true;
+
     const setupSubscription = async () => {
+      if (this.isSubscribing) return;
+      this.isSubscribing = true;
+
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user || !active) {
+          this.isSubscribing = false;
+          return;
+        }
 
         this.userId = user.id;
 
-        // Remove existing channel if any
+        // Clean removal of previous channel
         if (this.channel) {
-          await supabase.removeChannel(this.channel);
+          const oldChannel = this.channel;
+          this.channel = null;
+          try {
+            await supabase.removeChannel(oldChannel);
+          } catch (e) {
+            // Ignore abort/removal errors
+          }
+        }
+
+        if (!active) {
+          this.isSubscribing = false;
+          return;
         }
 
         // Create new channel with user-specific filter
         this.channel = supabase
-          .channel(`user_notifications:${user.id}`)
+          .channel(`user_notifications:${user.id}-${Math.random().toString(36).substr(2, 9)}`)
           .on(
             'postgres_changes',
             {
@@ -283,14 +299,14 @@ class NotificationService {
               filter: `user_id=eq.${user.id}`,
             },
             async (payload) => {
+              if (!active) return;
               try {
-                // Fetch full notification without FK join
                 const { data } = await notificationsTable()
                   .select('*')
                   .eq('id', payload.new.id)
                   .single();
 
-                if (data) {
+                if (data && active) {
                   callback(data as unknown as Notification);
                 }
               } catch {
@@ -299,12 +315,14 @@ class NotificationService {
             }
           )
           .subscribe((status) => {
-            if (status === 'CHANNEL_ERROR') {
-              console.warn('Notification subscription failed - table may not exist');
+            if (status === 'CHANNEL_ERROR' && active) {
+              console.warn('Notification subscription failed');
             }
           });
       } catch (err) {
-        console.warn('Failed to setup notification subscription:', err);
+        if (active) console.warn('Failed to setup notification subscription:', err);
+      } finally {
+        this.isSubscribing = false;
       }
     };
 
@@ -312,12 +330,42 @@ class NotificationService {
 
     // Return cleanup function
     return () => {
+      active = false;
       if (this.channel) {
-        supabase.removeChannel(this.channel);
+        const chan = this.channel;
         this.channel = null;
+        supabase.removeChannel(chan).catch(() => { });
       }
-
     };
+  }
+
+  /**
+   * Generates a thumbnail for media without one
+   */
+  async getAutoThumbnail(url: string, type: string): Promise<string | null> {
+    if (type === 'video') {
+      return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.src = url;
+        video.crossOrigin = 'anonymous';
+        video.currentTime = 1;
+        video.muted = true;
+
+        video.onloadeddata = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+
+        video.onerror = () => resolve(null);
+        // Timeout safeguard
+        setTimeout(() => resolve(null), 5000);
+      });
+    }
+    return null;
   }
 
   /**
