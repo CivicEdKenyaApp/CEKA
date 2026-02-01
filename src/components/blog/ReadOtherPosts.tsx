@@ -77,22 +77,22 @@ export function ReadOtherPosts({ currentPostId, limit = 3 }: ReadOtherPostsProps
           </Link>
         </Button>
       </div>
-      
-      <div className="grid gap-4">
+
+      <div className="grid gap-4 min-w-0">
         {posts.map((post) => (
-          <Card key={post.id} className="hover:shadow-md transition-shadow">
+          <Card key={post.id} className="hover:shadow-md transition-shadow overflow-hidden break-words">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <CardTitle className="text-lg leading-tight mb-2">
-                    <Link 
+                    <Link
                       to={`/blog/${post.slug}`}
                       className="hover:text-kenya-green transition-colors line-clamp-2"
                     >
                       {post.title}
                     </Link>
                   </CardTitle>
-                  
+
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <User className="h-3 w-3" />
@@ -108,18 +108,18 @@ export function ReadOtherPosts({ currentPostId, limit = 3 }: ReadOtherPostsProps
                     </div>
                   </div>
                 </div>
-                
+
                 <Badge variant="secondary" className="text-xs">
                   {post.status}
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-0">
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                 {post.excerpt || post.content.slice(0, 120) + '...'}
               </p>
-              
+
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {post.tags.slice(0, 3).map((tag) => (
@@ -129,7 +129,7 @@ export function ReadOtherPosts({ currentPostId, limit = 3 }: ReadOtherPostsProps
                   ))}
                 </div>
               )}
-              
+
               <Button variant="ghost" size="sm" className="text-kenya-green hover:text-kenya-green/90 p-0 h-auto">
                 <Link to={`/blog/${post.slug}`} className="flex items-center">
                   Read More <ArrowRight className="h-3 w-3 ml-1" />

@@ -217,7 +217,7 @@ const BlogPostPage = () => {
 
   return (
     <Layout>
-      <div className="container py-8 pb-16">
+      <div className="container px-4 md:px-6 py-8 pb-16 overflow-x-hidden max-w-full">
         <Button variant="ghost" className="mb-6" asChild>
           <Link to="/blog" className="flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -227,8 +227,8 @@ const BlogPostPage = () => {
 
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            <article className="max-w-4xl">
+          <div className="lg:col-span-3 min-w-0">
+            <article className="max-w-4xl break-words overflow-hidden">
               <header className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                   <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
@@ -241,7 +241,9 @@ const BlogPostPage = () => {
                   ))}
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 leading-tight break-words">
+                  {post.title}
+                </h1>
 
                 {post.excerpt && (
                   <p className="text-lg text-muted-foreground mb-6">{post.excerpt}</p>
@@ -265,8 +267,8 @@ const BlogPostPage = () => {
                 </div>
               </header>
 
-              <div className="prose prose-lg max-w-none mb-8">
-                <div className="whitespace-pre-wrap">{post.content}</div>
+              <div className="prose prose-lg dark:prose-invert max-w-none mb-8 break-words overflow-x-hidden">
+                <div className="whitespace-pre-wrap break-words">{post.content}</div>
               </div>
 
               <footer className="border-t pt-6 space-y-6">
