@@ -1,0 +1,43 @@
+name: Legislative Data Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas beautifulsoup4 requests
+          playwright install chromium
+
+      - name: Run Scraper
+        run: python scripts/legislative_scraper.py
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: scraped-bills
+          path: processed_data/legislative/
+
+      - name: Update Supabase (Optional Proxy)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Here we would call a script to upsert the JSON to Supabase
+          echo "Data ready for integration."

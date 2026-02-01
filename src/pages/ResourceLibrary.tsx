@@ -1,33 +1,6 @@
-// src/pages/ResourceLibrary.tsx
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  Search, Filter, Download, Book, FileText, Video, Image as ImageIcon,
-  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen, Plus, RefreshCw
-} from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { notificationService } from '@/services/notificationService';
 import { translate } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { motion } from 'framer-motion';

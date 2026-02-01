@@ -1,23 +1,22 @@
-
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Heart, Users } from 'lucide-react';
 import { useBillFollowing } from '@/hooks/useBillFollowing';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 interface BillFollowButtonProps {
   billId: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'sm' | 'default' | 'lg';
   showCount?: boolean;
+  className?: string;
 }
 
-export function BillFollowButton({ 
-  billId, 
-  variant = 'outline', 
+export function BillFollowButton({
+  billId,
+  variant = 'outline',
   size = 'sm',
-  showCount = true 
+  showCount = true,
+  className
 }: BillFollowButtonProps) {
   const { isFollowing, followCount, loading, toggleFollow } = useBillFollowing(billId);
   const { user } = useAuth();
@@ -37,7 +36,7 @@ export function BillFollowButton({
       await toggleFollow();
       toast({
         title: isFollowing ? "Unfollowed bill" : "Following bill",
-        description: isFollowing 
+        description: isFollowing
           ? "You will no longer receive updates about this bill."
           : "You will receive notifications when this bill is updated.",
       });
@@ -56,10 +55,14 @@ export function BillFollowButton({
       size={size}
       onClick={handleFollow}
       disabled={loading}
-      className={`flex items-center gap-2 ${isFollowing ? 'bg-kenya-green hover:bg-kenya-green/90' : ''}`}
+      className={cn(
+        "flex items-center gap-2",
+        isFollowing ? 'bg-kenya-green hover:bg-kenya-green/90' : '',
+        className
+      )}
     >
-      <Heart 
-        className={`h-4 w-4 ${isFollowing ? 'fill-current' : ''}`} 
+      <Heart
+        className={`h-4 w-4 ${isFollowing ? 'fill-current' : ''}`}
       />
       {isFollowing ? 'Following' : 'Follow'}
       {showCount && followCount > 0 && (
