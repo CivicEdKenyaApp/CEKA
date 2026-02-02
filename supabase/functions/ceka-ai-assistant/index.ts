@@ -1,6 +1,4 @@
 // @ts-ignore
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-// @ts-ignore
 import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.21.0'
 
 const corsHeaders = {
@@ -30,7 +28,6 @@ const getProviderConfig = (): AIProviderConfig => {
     };
 };
 
-// System prompt for CEKA context
 const SYSTEM_PROMPT = `You are CEKA AI — the Civic Education Kenya Assistant. Operate as a single, dependable system persona whose sole purpose is to help Kenyan citizens (and CEKA staff) understand, navigate, and use civic law, processes, civic rights, and the CEKA platform itself. Obey these instructions strictly.
 
 SCOPE — what you cover
@@ -110,18 +107,33 @@ FINAL REMINDERS (strict)
 Current context token: %CONTEXT% — when responding, always incorporate relevant items from that context (platform state, feature flags, membership tiers, moderation needs, scraping automation, UI behaviours, and repository links) into your answer or request for user-supplied missing data.`;
 
 // @ts-ignore
-serve(async (req: Request) => {
+Deno.serve(async (req) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { status: 200, headers: corsHeaders });
     }
 
+    const config = getProviderConfig();
+
     try {
+        // Health check endpoint
+        const url = new URL(req.url);
+        if (url.pathname.endsWith('/health')) {
+            return new Response(
+                JSON.stringify({
+                    status: 'ok',
+                    provider: config.provider,
+                    model: config.model,
+                    // @ts-ignore
+                    gemini_key_exists: !!Deno.env.get('GEMINI_API_KEY')
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
         const body = await req.json().catch(() => ({}));
         const query = body.query || "";
         const context = body.context || 'general';
-
-        console.log(`[AI Assistant] Processing request for context "${context}" with query length ${query.length}`);
 
         if (!query || query.trim().length < 1) {
             return new Response(
@@ -130,8 +142,7 @@ serve(async (req: Request) => {
             );
         }
 
-        const config = getProviderConfig();
-        console.log(`[AI Assistant] Using provider: ${config.provider}, model: ${config.model}`);
+        console.log(`[AI Assistant] Processing: ${query.substring(0, 50)}...`);
 
         let answer: string;
 
@@ -139,83 +150,50 @@ serve(async (req: Request) => {
             // @ts-ignore
             const apiKey = Deno.env.get('GEMINI_API_KEY');
             if (!apiKey) {
-                console.error('[AI Assistant] GEMINI_API_KEY IS MISSING');
                 throw new Error('GEMINI_API_KEY not configured in Supabase Secrets.');
             }
 
             try {
                 const genAI = new GoogleGenerativeAI(apiKey);
                 const model = genAI.getGenerativeModel({ model: config.model });
-
-                const systemPrompt = SYSTEM_PROMPT.replace('%CONTEXT%', context);
-                const fullPrompt = `${systemPrompt}\n\nUser Question: ${query}\n\nProvide a helpful, educational response:`;
+                const fullPrompt = `${SYSTEM_PROMPT.replace('%CONTEXT%', context)}\n\nUser Question: ${query}`;
 
                 const result = await model.generateContent(fullPrompt);
                 const response = await result.response;
                 answer = response.text();
 
-                if (!answer) {
-                    throw new Error('AI returned an empty response');
-                }
+                if (!answer) throw new Error('AI returned an empty response');
             } catch (e: any) {
-                console.error('[AI Assistant] GoogleGenerativeAI Error:', e.message);
-
-                // Handle 404 Not Found (Model selection error)
-                if (e.message?.includes('404') || e.message?.includes('not found')) {
-                    throw new Error(`The selected model "${config.model}" was not found or is not supported. Please check GEMINI_MODEL secret. Details: ${e.message}`);
+                console.error('[AI Assistant] Gemini Error:', e.message);
+                if (e.message?.includes('404')) {
+                    throw new Error(`Model "${config.model}" not found. Please check GEMINI_MODEL secret.`);
                 }
-
-                // Handle 429 Too Many Requests (Rate limit)
-                if (e.message?.includes('429')) {
-                    throw new Error('Gemini API rate limit exceeded. Please try again in a minute.');
-                }
-
                 throw e;
             }
-        }
-        else if (config.provider === 'deepseek') {
+        } else {
             answer = 'DeepSeek integration is coming soon. Using Gemini for now.';
-        }
-        else {
-            throw new Error(`Unknown AI provider: ${config.provider}`);
         }
 
         return new Response(
-            JSON.stringify({
-                answer,
-                provider: config.provider,
-                model: config.model
-            }),
+            JSON.stringify({ answer, provider: config.provider, model: config.model }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
     } catch (err: any) {
-        const errorMessage = err.message || 'Unknown error occurred';
-        const errorStack = err.stack || '';
-
-        console.error('[AI Assistant] Final Error Handler:', errorMessage, errorStack);
-
-        // Return 200 even on error to bypass supabase-js throwing client-side
-        // but include the error details in the payload.
+        console.error('[AI Assistant] Handler Crash:', err.message);
         return new Response(
             JSON.stringify({
                 error: true,
-                message: errorMessage,
+                message: err.message || 'Unknown error occurred',
                 diagnostic: {
+                    provider: config.provider,
+                    model: config.model,
                     // @ts-ignore
-                    provider: Deno.env.get('AI_PROVIDER') || 'not_set',
-                    // @ts-ignore
-                    model: config?.model || 'unknown',
-                    // @ts-ignore
-                    gemini_key_exists: !!Deno.env.get('GEMINI_API_KEY'),
-                    // @ts-ignore
-                    environment: Deno.env.get('ENVIRONMENT') || 'production'
+                    gemini_key: !!Deno.env.get('GEMINI_API_KEY'),
+                    deno_version: Deno.version.deno
                 }
             }),
-            {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
 });
