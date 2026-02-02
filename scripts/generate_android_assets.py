@@ -100,9 +100,10 @@ def resize_image(img: Image.Image, size: int | tuple, mode: str = 'contain') -> 
         return img.resize(size, Image.Resampling.LANCZOS)
 
 
-def generate_icons(source_path: str, res_dir: str):
+def generate_icons(source_path: str, res_dir: str, padding: float = 0.25):
     """Generate all app icon variants."""
     print(f"\n📱 Generating app icons from: {source_path}")
+    print(f"  (Using padding: {padding*100}%)")
     
     img = Image.open(source_path).convert('RGBA')
     
@@ -110,15 +111,23 @@ def generate_icons(source_path: str, res_dir: str):
         output_dir = os.path.join(res_dir, folder)
         ensure_dir(output_dir)
         
+        # Calculate size with padding
+        target_size = int(size * (1.0 - padding))
+        
         # Standard launcher icon
-        resized = resize_image(img.copy(), size, 'contain')
+        resized = resize_image(img.copy(), target_size, 'contain')
+        # Center the padded icon in the full size canvas
+        canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        offset = ((size - resized.width) // 2, (size - resized.height) // 2)
+        canvas.paste(resized, offset, resized)
+        
         output_path = os.path.join(output_dir, 'ic_launcher.png')
-        resized.save(output_path, 'PNG')
+        canvas.save(output_path, 'PNG')
         print(f"  ✅ {folder}/ic_launcher.png ({size}x{size})")
         
         # Round launcher icon
         output_path = os.path.join(output_dir, 'ic_launcher_round.png')
-        resized.save(output_path, 'PNG')
+        canvas.save(output_path, 'PNG')
         print(f"  ✅ {folder}/ic_launcher_round.png ({size}x{size})")
     
     # Generate foreground for adaptive icons
@@ -126,9 +135,17 @@ def generate_icons(source_path: str, res_dir: str):
         output_dir = os.path.join(res_dir, folder)
         ensure_dir(output_dir)
         
-        resized = resize_image(img.copy(), size, 'contain')
+        # Adaptive icons need more specific padding (usually 66% safe zone)
+        # We apply the user-requested padding to the 108dp base
+        target_size = int(size * (1.0 - padding))
+        
+        resized = resize_image(img.copy(), target_size, 'contain')
+        canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        offset = ((size - resized.width) // 2, (size - resized.height) // 2)
+        canvas.paste(resized, offset, resized)
+        
         output_path = os.path.join(output_dir, 'ic_launcher_foreground.png')
-        resized.save(output_path, 'PNG')
+        canvas.save(output_path, 'PNG')
         print(f"  ✅ {folder}/ic_launcher_foreground.png ({size}x{size})")
     
     print(f"\n✨ Generated {len(ICON_SIZES) * 3} icon files")
@@ -194,6 +211,8 @@ def main():
         help='Splash background color (default: Kenya Green #006633)')
     parser.add_argument('--res-dir', '-r', default=RES_DIR,
         help='Output res directory (default: android/app/src/main/res)')
+    parser.add_argument('--padding', '-p', type=float, default=0.25,
+        help='Padding around the icon (0.0 to 1.0, default: 0.25)')
     
     args = parser.parse_args()
     
@@ -214,7 +233,7 @@ def main():
         if not os.path.exists(args.icon):
             print(f"❌ Icon file not found: {args.icon}")
             sys.exit(1)
-        generate_icons(args.icon, args.res_dir)
+        generate_icons(args.icon, args.res_dir, args.padding)
     
     if args.splash:
         if not os.path.exists(args.splash):
