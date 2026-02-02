@@ -121,18 +121,22 @@ FINAL REMINDERS (strict)
 Current context token: %CONTEXT% — when responding, always incorporate relevant items from that context (platform state, feature flags, membership tiers, moderation needs, scraping automation, UI behaviours, and repository links) into your answer or request for user-supplied missing data.`;
 
 // @ts-ignore
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { status: 200, headers: corsHeaders });
     }
 
     try {
-        const { query, context = 'general' } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const query = body.query || "";
+        const context = body.context || 'general';
 
-        if (!query || query.trim().length < 3) {
+        console.log(`[AI Assistant] Request from ${context}: "${query}"`);
+
+        if (!query || query.trim().length < 1) {
             return new Response(
-                JSON.stringify({ error: 'Query too short' }),
+                JSON.stringify({ error: 'Query is empty' }),
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }

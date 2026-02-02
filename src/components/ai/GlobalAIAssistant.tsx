@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Send, X, Bot, Loader2 } from 'lucide-react';
+import { Sparkles, Send, X, Bot, Loader2, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -40,7 +40,15 @@ const GlobalAIAssistant = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [usage, setUsage] = useState(0);
+    const queryRef = React.useRef(query);
+    const usageRef = React.useRef(usage);
+    const loadingRef = React.useRef(loading);
     const location = useLocation();
+
+    // Sync refs
+    useEffect(() => { queryRef.current = query; }, [query]);
+    useEffect(() => { usageRef.current = usage; }, [usage]);
+    useEffect(() => { loadingRef.current = loading; }, [loading]);
 
     // Hide on pages that already have their own AI implementation
     const hiddenPaths = ['/constitution'];
@@ -53,10 +61,10 @@ const GlobalAIAssistant = () => {
             const { query: triggerQuery } = e.detail;
             setIsOpen(true);
             setQuery(triggerQuery);
-            // We use a small timeout to let the state update before sending
+            // Pass directly to avoid state lag
             setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('ceka-ai-send-now'));
-            }, 100);
+                handleSend(triggerQuery);
+            }, 50);
         };
 
         window.addEventListener('ceka-ai-trigger', handleTrigger);
@@ -69,12 +77,14 @@ const GlobalAIAssistant = () => {
         };
         document.addEventListener('ceka-ai-send-now', handleSendNow);
         return () => document.removeEventListener('ceka-ai-send-now', handleSendNow);
-    }, [query, usage, loading]); // Dependencies for handleSend capture
+    }, []); // No deps needed with refs
 
-    const handleSend = async () => {
-        if (!query.trim() || loading) return;
+    const handleSend = async (overrideQuery?: string) => {
+        const activeQuery = overrideQuery !== undefined ? overrideQuery : queryRef.current;
 
-        if (usage >= MAX_MESSAGES_PER_DAY) {
+        if (!activeQuery.trim() || loadingRef.current) return;
+
+        if (usageRef.current >= MAX_MESSAGES_PER_DAY) {
             setMessages(prev => [...prev, {
                 role: 'ai',
                 content: `You've reached your daily limit of ${MAX_MESSAGES_PER_DAY} AI queries. Come back tomorrow! 🇰🇪`
@@ -82,7 +92,7 @@ const GlobalAIAssistant = () => {
             return;
         }
 
-        const userMsg = query;
+        const userMsg = activeQuery;
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setQuery('');
         setLoading(true);
@@ -118,21 +128,21 @@ const GlobalAIAssistant = () => {
     if (shouldHide) return null;
 
     return (
-        // Repositioned to bottom-32 on mobile to clear the donation widget (bottom-6)
-        // Smaller size on mobile (h-12 w-12) for better aesthetics
-        <div className="fixed bottom-32 right-4 z-50 md:bottom-8 md:right-24">
+        // Aligned to 2rem (right-8) to match Donation FAB vertically
+        // Positioned at bottom-[204px] (140 offset + 48 height + 16 gap)
+        <div className="fixed bottom-[204px] right-8 z-50">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="mb-4 w-[350px] max-w-[85vw] md:w-[380px]"
+                        className="mb-4 w-[350px] max-w-[85vw] md:w-[380px] origin-bottom-right"
                     >
                         <Card className="border-none shadow-2xl overflow-hidden h-[450px] md:h-[480px] flex flex-col bg-white/95 dark:bg-[#111]/95 backdrop-blur-xl">
                             <CardHeader className="bg-gradient-to-r from-kenya-green to-primary p-3 md:p-4 flex flex-row items-center justify-between">
                                 <CardTitle className="text-xs md:text-sm font-black tracking-widest uppercase flex items-center gap-2 text-white">
-                                    <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
+                                    <HelpCircle className="h-3 w-3 md:h-4 md:w-4" />
                                     CEKA AI
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
@@ -143,7 +153,7 @@ const GlobalAIAssistant = () => {
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-black/20">
+                            <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-black/20 text-slate-800 dark:text-slate-200">
                                 {messages.length === 0 && (
                                     <div className="text-center py-6 md:py-8 space-y-4">
                                         <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-kenya-green/10 flex items-center justify-center mx-auto">
@@ -157,7 +167,10 @@ const GlobalAIAssistant = () => {
                                             {['What is Article 43?', 'Explain Finance Bill'].map(q => (
                                                 <button
                                                     key={q}
-                                                    onClick={() => setQuery(q)}
+                                                    onClick={() => {
+                                                        setQuery(q);
+                                                        handleSend(q);
+                                                    }}
                                                     className="text-[10px] md:text-xs px-3 py-1.5 rounded-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:bg-kenya-green/10 hover:border-kenya-green/20 transition-colors"
                                                 >
                                                     {q}
@@ -176,7 +189,7 @@ const GlobalAIAssistant = () => {
                                     >
                                         <div className={`max-w-[88%] p-3 rounded-2xl text-xs md:text-sm ${m.role === 'user'
                                             ? 'bg-kenya-green text-white rounded-tr-none'
-                                            : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-tl-none'
+                                            : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-tl-none pr-4'
                                             }`}>
                                             {m.content}
                                         </div>
@@ -203,7 +216,7 @@ const GlobalAIAssistant = () => {
                                         disabled={usage >= MAX_MESSAGES_PER_DAY}
                                     />
                                     <Button
-                                        onClick={handleSend}
+                                        onClick={() => handleSend()}
                                         size="icon"
                                         className="h-10 w-10 md:h-10 md:w-10 rounded-xl bg-kenya-green hover:bg-kenya-green/90 text-white shrink-0"
                                         disabled={loading || usage >= MAX_MESSAGES_PER_DAY}
@@ -224,7 +237,7 @@ const GlobalAIAssistant = () => {
                     : 'bg-gradient-to-br from-kenya-green to-primary hover:scale-110 hover:shadow-kenya-green/30'
                     }`}
             >
-                {isOpen ? <X className="h-5 w-5 md:h-6 md:w-6 text-white" /> : <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />}
+                {isOpen ? <X className="h-5 w-5 md:h-6 md:w-6 text-white" /> : <HelpCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />}
             </Button>
         </div>
     );
