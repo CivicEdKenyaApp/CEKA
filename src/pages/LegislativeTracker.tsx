@@ -87,7 +87,7 @@ const LegislativeTracker = () => {
       try {
         // Fetch trending bills with graceful fallback
         try {
-          const { data: trendingData, error: trendingError } = await supabase.rpc('get_trending_bills', {
+          const { data: trendingData, error: trendingError } = await (supabase.rpc as any)('get_trending_bills', {
             limit_count: 5
           });
           if (!trendingError && trendingData) {

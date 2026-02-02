@@ -193,7 +193,9 @@ serve(async (req: Request) => {
                 error: true,
                 message: errorMessage,
                 diagnostic: {
+                    // @ts-ignore
                     provider: Deno.env.get('AI_PROVIDER') || 'not_set',
+                    // @ts-ignore
                     gemini_key_exists: !!Deno.env.get('GEMINI_API_KEY'),
                     // @ts-ignore
                     environment: Deno.env.get('ENVIRONMENT') || 'production'
