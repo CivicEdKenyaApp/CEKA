@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_db.py", line 48, in <module>
+    check_db_state()
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_db.py", line 19, in check_db_state
+    print("\U0001f50d Auditing Live Database State...")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined>

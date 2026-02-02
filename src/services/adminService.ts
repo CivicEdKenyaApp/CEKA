@@ -195,16 +195,36 @@ class AdminService {
 
       const statsData = data as any;
 
+      const [
+        totalPosts,
+        totalResources,
+        totalBills,
+        totalSessions,
+        pendingDrafts,
+        totalDiscussions,
+        totalViewsRes
+      ] = await Promise.all([
+        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('resources').select('*', { count: 'exact', head: true }),
+        supabase.from('bills').select('*', { count: 'exact', head: true }),
+        supabase.from('admin_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
+        supabase.from('discussions').select('*', { count: 'exact', head: true }),
+        supabase.from('bills').select('views_count')
+      ]);
+
+      const totalViews = (totalViewsRes.data || []).reduce((acc, b) => acc + (b.views_count || 0), 0);
+
       return {
         total_users: statsData?.total_users || 0,
-        total_posts: (await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published')).count || 0,
-        total_resources: (await supabase.from('resources').select('*', { count: 'exact', head: true })).count || 0,
-        total_bills: statsData?.total_bills || 0,
-        active_sessions: (await supabase.from('admin_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true)).count || 0,
-        recent_signups: statsData?.total_users ? Math.ceil(statsData.total_users * 0.05) : 0,
-        pending_drafts: (await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft')).count || 0,
-        total_discussions: (await supabase.from('discussions').select('*', { count: 'exact', head: true })).count || 0,
-        total_views: (statsData?.chat_activity_24h || 0) * 10, // Simulated scale
+        total_posts: totalPosts.count || 0,
+        total_resources: totalResources.count || 0,
+        total_bills: totalBills.count || 0,
+        active_sessions: totalSessions.count || 0,
+        recent_signups: statsData?.total_users ? Math.ceil(statsData.total_users * 0.05) : 0, // Still heuristic as we don't have a daily signups view yet
+        pending_drafts: pendingDrafts.count || 0,
+        total_discussions: totalDiscussions.count || 0,
+        total_views: totalViews || 0,
         total_interactions: statsData?.chat_activity_24h || 0,
         avg_daily_users: (statsData?.total_users || 0) * 0.1
       };

@@ -43,6 +43,10 @@ const EnhancedAdminDashboard = () => {
           console.log('[Dashboard] Profile change detected, refreshing...');
           loadDashboardData();
         })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => {
+          console.log('[Dashboard] New chat message, refreshing content flow...');
+          loadDashboardData();
+        })
         .subscribe();
 
       // Subscribe to notification changes
