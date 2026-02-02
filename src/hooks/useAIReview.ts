@@ -24,14 +24,13 @@ export function useAIReview() {
     const fetchDrafts = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('generated_articles')
+            const { data, error } = await (supabase.from('generated_articles' as any) as any)
                 .select('*')
                 .in('status', ['draft', 'submitted'])
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setDrafts(data || []);
+            setDrafts((data as any) || []);
         } catch (err: any) {
             console.error('Error fetching AI drafts:', err);
             toast({
@@ -47,8 +46,7 @@ export function useAIReview() {
     const approveArticle = async (id: string) => {
         try {
             // First, update the generated article status
-            const { error } = await supabase
-                .from('generated_articles')
+            const { error } = await (supabase.from('generated_articles' as any) as any)
                 .update({ status: 'approved' })
                 .eq('id', id);
 
@@ -75,8 +73,7 @@ export function useAIReview() {
 
     const rejectArticle = async (id: string, notes: string) => {
         try {
-            const { error } = await supabase
-                .from('generated_articles')
+            const { error } = await (supabase.from('generated_articles' as any) as any)
                 .update({ status: 'rejected', review_notes: notes })
                 .eq('id', id);
 
@@ -122,8 +119,7 @@ export function useAIReview() {
 
             if (blogError) throw blogError;
 
-            const { error: updateError } = await supabase
-                .from('generated_articles')
+            const { error: updateError } = await (supabase.from('generated_articles' as any) as any)
                 .update({ status: 'published' })
                 .eq('id', article.id);
 

@@ -210,7 +210,7 @@ class AdminService {
         supabase.from('admin_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
         supabase.from('discussions').select('*', { count: 'exact', head: true }),
-        supabase.from('bills').select('views_count')
+        (supabase.from('bills' as any) as any).select('views_count')
       ]);
 
       const totalViews = (totalViewsRes.data || []).reduce((acc, b) => acc + (b.views_count || 0), 0);

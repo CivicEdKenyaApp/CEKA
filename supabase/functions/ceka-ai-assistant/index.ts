@@ -334,6 +334,7 @@ Deno.serve(async (req) => {
                     model: config.model,
                     // @ts-ignore
                     gemini_key: !!Deno.env.get('GEMINI_API_KEY'),
+                    // @ts-ignore
                     deno_version: Deno.version.deno
                 }
             }),
