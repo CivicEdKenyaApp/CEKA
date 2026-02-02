@@ -5,7 +5,7 @@
 // @ts-ignore
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 // @ts-ignore
-import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.1.3'
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.12.0'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
