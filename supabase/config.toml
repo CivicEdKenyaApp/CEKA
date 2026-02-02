@@ -9,6 +9,7 @@ max_rows = 1000
 
 [db]
 port = 54322
+major_version = 15
 
 [studio]
 enabled = true
@@ -23,16 +24,13 @@ pop3_port = 54326
 
 [storage]
 enabled = true
-port = 54327
 file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-port = 54328
 site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
-refresh_token_rotation_enabled = true
 refresh_token_reuse_interval = 10
 enable_signup = true
 
