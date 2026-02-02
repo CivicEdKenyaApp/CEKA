@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Download, BookOpen, MapPin } from 'lucide-react';
+import { ExternalLink, Download, BookOpen, MapPin, Video, FileText, ImageIcon, Gavel } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,14 +18,15 @@ export interface ResourceCardProps {
     uploadedBy?: string;
     downloadUrl?: string;
     videoUrl?: string;
+    thumbnail_url?: string;
     status?: 'pending' | 'approved' | 'rejected';
     category?: string;
     billObjective?: string;
     county?: string;
     isSelected?: boolean;
-    is_downloadable?: boolean; // Added this line
+    is_downloadable?: boolean;
   };
-  downloadable?: boolean; // This can remain for backward compatibility or specific use cases
+  downloadable?: boolean;
   id?: string;
   onToggleSelect?: () => void;
 }
@@ -48,61 +49,62 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
   };
 
   const getResourceThumbnail = (resource: any) => {
+    // 1. Use real thumbnail if available
+    if (resource.thumbnail_url) {
+      return (
+        <img
+          src={resource.thumbnail_url}
+          alt={resource.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      );
+    }
+
+    // 2. YouTube Embed if video
     if (resource.type.toLowerCase() === 'video' && resource.videoUrl) {
-      // Extract video ID from YouTube URL
-      const videoId = resource.videoUrl.split('v=')[1];
+      const videoId = resource.videoUrl.split('v=')[1]?.split('&')[0];
       if (videoId) {
-        const ampersandPosition = videoId.indexOf('&');
-        const videoIdClean = ampersandPosition !== -1 ? videoId.substring(0, ampersandPosition) : videoId;
-        
         return (
           <iframe
-            src={`https://www.youtube.com/embed/${videoIdClean}`}
-            title="YouTube video player"
+            src={`https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0`}
+            title={resource.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="absolute top-0 left-0 w-full h-full"
+            className="absolute top-0 left-0 w-full h-full border-0"
           ></iframe>
         );
       }
     }
-    
-    // Show different placeholders based on resource type
+
+    // 3. Premium Fallback Gradients
+    const type = resource.type.toLowerCase();
+    let gradient = "from-slate-400 to-slate-600";
+    let Icon = FileText;
+
+    if (type === 'video') {
+      gradient = "from-kenya-blue to-primary";
+      Icon = Video;
+    } else if (type === 'infographic' || type === 'image') {
+      gradient = "from-kenya-green to-kenya-green-dark";
+      Icon = ImageIcon;
+    } else if (type === 'document' || type === 'pdf') {
+      gradient = "from-amber-400 to-amber-600";
+      Icon = BookOpen;
+    } else if (type === 'constitution') {
+      gradient = "from-kenya-red to-kenya-red-dark";
+      Icon = Gavel;
+    }
+
     return (
-      <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-muted">
-        {resource.type.toLowerCase() === 'video' && (
-          <div className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="mt-2 text-sm text-muted-foreground">Video Preview</p>
-          </div>
-        )}
-        {resource.type.toLowerCase() === 'infographic' && (
-          <div className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <p className="mt-2 text-sm text-muted-foreground">Infographic Preview</p>
-          </div>
-        )}
-        {(resource.type.toLowerCase() === 'document' || resource.type.toLowerCase() === 'pdf') && (
-          <div className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2 text-sm text-muted-foreground">Document Preview</p>
-          </div>
-        )}
-        {resource.type.toLowerCase() === 'constitution' && (
-          <div className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <p className="mt-2 text-sm text-muted-foreground">Constitution Preview</p>
-          </div>
-        )}
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-6 text-white overflow-hidden`}>
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <Icon className="w-48 h-48 -mr-12 -mb-12 absolute bottom-0 right-0 rotate-12" />
+        </div>
+        <Icon className="h-12 w-12 mb-3 relative z-10" />
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] relative z-10 opacity-80">{type}</p>
       </div>
     );
   };
@@ -151,7 +153,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
             </div>
           </Link>
         </div>
-        
+
         <div className="flex flex-wrap gap-1.5 mb-3">
           {resource.billObjective && (
             <Badge variant="secondary" className="text-xs">
@@ -167,7 +169,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
             </Badge>
           )}
         </div>
-        
+
         {resource.uploadDate && (
           <div className="text-xs text-muted-foreground">
             <div className="space-y-0.5">
@@ -185,7 +187,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
             View Details
           </Link>
         </Button>
-        
+
         {isConstitutionResource && (
           <Button variant="outline" size="sm" asChild>
             <Link to="/constitution"> {/* This route might need to be created or verified */}
@@ -194,7 +196,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
             </Link>
           </Button>
         )}
-        
+
         {!isConstitutionResource && resource.downloadUrl && (actualDownloadable !== false) && (
           <Button variant="outline" size="sm" asChild>
             <a href={resource.downloadUrl} target="_blank" rel="noopener noreferrer">

@@ -22,6 +22,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BillFollowButton } from '@/components/legislative/BillFollowButton';
+import FeaturedLegislationCarousel from '@/components/legislative/FeaturedLegislationCarousel';
+import AIContextButton from '@/components/ai/AIContextButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -63,22 +65,48 @@ const LegislativeTracker = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all_stages');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [deepSearch, setDeepSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+
+  // Debounce search input - only trigger after 300ms of no typing and 3+ chars
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchTerm.trim().length >= 3 || searchTerm.trim().length === 0) {
+        setDebouncedSearchTerm(searchTerm.trim());
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data: trendingData } = await (supabase.rpc as any)('get_trending_bills', { limit_count: 5 });
-        if (trendingData) setTrendingBills(trendingData as any);
+        // Fetch trending bills with graceful fallback
+        try {
+          const { data: trendingData, error: trendingError } = await (supabase.rpc as any)('get_trending_bills', { limit_count: 5 });
+          if (!trendingError && trendingData) {
+            setTrendingBills(trendingData as any);
+          }
+        } catch (rpcError) {
+          console.warn('get_trending_bills RPC not available, using fallback');
+          // Fallback: Get bills ordered by created_at
+          const { data: fallbackTrending } = await supabase
+            .from('bills')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
+          if (fallbackTrending) setTrendingBills(fallbackTrending as any);
+        }
 
         // 2. Fetch All Bills (Standard Query)
         let query = supabase.from('bills').select('*');
 
-        if (deepSearch && searchTerm) {
-          query = query.textSearch('fts', searchTerm);
+        if (deepSearch && debouncedSearchTerm) {
+          query = query.textSearch('fts', debouncedSearchTerm);
         } else {
           query = query.order('created_at', { ascending: false });
         }
@@ -109,7 +137,7 @@ const LegislativeTracker = () => {
     };
 
     fetchData();
-  }, [deepSearch, searchTerm]);
+  }, [deepSearch, debouncedSearchTerm]);
 
   const filteredBills = useMemo(() => {
     return billsData.filter(bill => {
@@ -188,6 +216,11 @@ const LegislativeTracker = () => {
               </div>
             </motion.div>
           </div>
+        </section>
+
+        {/* FEATURED LEGISLATION CAROUSEL */}
+        <section className="container py-8">
+          <FeaturedLegislationCarousel bills={trendingBills} isLoading={loading} />
         </section>
 
         {/* VAULT INTERFACE */}
@@ -415,6 +448,7 @@ const LegislativeTracker = () => {
                                       <BookOpen className="ml-2 h-4 w-4" />
                                     </Button>
                                   )}
+                                  <AIContextButton label="Summarize" context={bill.title + ": " + bill.summary} className="h-12 px-6" />
                                   <BillFollowButton billId={bill.id} variant="ghost" className="h-12 px-6 rounded-2xl" />
                                   <Button asChild className="h-12 px-10 rounded-2xl bg-[#111] dark:bg-white text-white dark:text-black font-black hover:opacity-90 shadow-xl">
                                     <Link to={`/bill/${bill.id}`}>

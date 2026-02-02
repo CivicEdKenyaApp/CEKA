@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import AIContextButton from '@/components/ai/AIContextButton';
 
 const InteractiveConstitution = () => {
     const { user } = useAuth();
@@ -262,13 +263,21 @@ const ConstitutionItem = ({ section, isSwahili, isExpanded, onToggle }: any) => 
                             <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                                 {content}
                             </div>
-                            <div className="mt-6 pt-4 border-t flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="text-[10px] uppercase tracking-widest font-bold">
-                                    Cite Article
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-[10px] uppercase tracking-widest font-bold text-primary">
-                                    Share
-                                </Button>
+                            <div className="mt-6 pt-4 border-t flex items-center justify-between gap-2">
+                                <AIContextButton
+                                    label="CEKA, explain this article!"
+                                    context={`Article ${section.article_number}: ${title}. ${content}`}
+                                    variant="outline"
+                                    className="h-8 text-[10px] rounded-lg"
+                                />
+                                <div className="flex gap-2">
+                                    <Button variant="ghost" size="sm" className="text-[10px] uppercase tracking-widest font-bold">
+                                        Cite Article
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="text-[10px] uppercase tracking-widest font-bold text-primary">
+                                        Share
+                                    </Button>
+                                </div>
                             </div>
                         </CardContent>
                     </motion.div>

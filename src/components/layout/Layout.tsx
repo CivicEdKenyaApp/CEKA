@@ -3,6 +3,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import BottomNavbar from './BottomNavbar';
 import DonationWidget from '@/components/DonationWidget';
+import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,9 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
       <Footer />
       {!hideBottomNav && <BottomNavbar />}
 
+      {/* AI Assistant FAB - positioned above donation widget */}
+      <GlobalAIAssistant />
+
       {/* Conditionally render the donation widget */}
       {(showDonationWidget || !donationTimedOut) && (
         <DonationWidget
@@ -39,3 +43,4 @@ const Layout = ({ children, hideBottomNav, hideBackButton }: LayoutProps) => {
 };
 
 export default Layout;
+

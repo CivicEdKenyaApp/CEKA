@@ -17,6 +17,7 @@ import AppChangeLogger from './AppChangeLogger';
 import MediaAppraisal from './MediaAppraisal';
 import VolunteerManager from './VolunteerManager';
 import CampaignManager from './CampaignManager';
+import BulkUploadManager from './BulkUploadManager';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const EnhancedAdminDashboard = () => {
@@ -176,6 +177,7 @@ const EnhancedAdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="volunteers" className="rounded-xl px-6 py-3">Volunteers</TabsTrigger>
             <TabsTrigger value="campaigns" className="rounded-xl px-6 py-3">Campaigns</TabsTrigger>
+            <TabsTrigger value="uploads" className="rounded-xl px-6 py-3">Uploads</TabsTrigger>
             <TabsTrigger value="sessions" className="rounded-xl px-6 py-3">Sessions</TabsTrigger>
             <TabsTrigger value="changes" className="rounded-xl px-6 py-3">Audit</TabsTrigger>
             <TabsTrigger value="settings" className="rounded-xl px-6 py-3">System</TabsTrigger>
@@ -397,6 +399,10 @@ const EnhancedAdminDashboard = () => {
 
         <TabsContent value="sessions">
           <AdminSessionManager />
+        </TabsContent>
+
+        <TabsContent value="uploads">
+          <BulkUploadManager />
         </TabsContent>
 
         <TabsContent value="changes">

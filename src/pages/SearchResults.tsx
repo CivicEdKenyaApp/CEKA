@@ -6,13 +6,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search, Filter, SlidersHorizontal, FileText, Book, Gavel, MessageSquare, TrendingUp } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, FileText, Book, Gavel, MessageSquare, TrendingUp, Calendar, ArrowUpDown, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { searchService, SearchResult } from '@/lib/searchService';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -23,6 +27,13 @@ const SearchResults = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [filteredResults, setFilteredResults] = useState<SearchResult[]>([]);
+
+  // Filter state
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'relevance' | 'date-desc' | 'date-asc' | 'alpha'>('relevance');
+  const [dateRange, setDateRange] = useState<'all' | 'week' | 'month' | 'year'>('all');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(['resource', 'bill', 'blog', 'discussion']);
+  const [hasActiveFilters, setHasActiveFilters] = useState(false);;
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -68,6 +79,63 @@ const SearchResults = () => {
       window.history.pushState({}, '', `/search?q=${encodeURIComponent(searchTerm.trim())}`);
       window.location.reload();
     }
+  };
+
+  // Apply filters to results
+  const applyFilters = (baseResults: SearchResult[]) => {
+    let filtered = [...baseResults];
+
+    // Filter by selected types
+    if (selectedTypes.length < 4) {
+      filtered = filtered.filter(r => selectedTypes.includes(r.type));
+    }
+
+    // Filter by date range
+    if (dateRange !== 'all' && filtered.length > 0) {
+      const now = new Date();
+      const cutoff = new Date();
+      if (dateRange === 'week') cutoff.setDate(now.getDate() - 7);
+      else if (dateRange === 'month') cutoff.setMonth(now.getMonth() - 1);
+      else if (dateRange === 'year') cutoff.setFullYear(now.getFullYear() - 1);
+
+      filtered = filtered.filter(r => r.date && new Date(r.date) >= cutoff);
+    }
+
+    // Sort
+    if (sortOrder === 'date-desc') {
+      filtered.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+    } else if (sortOrder === 'date-asc') {
+      filtered.sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime());
+    } else if (sortOrder === 'alpha') {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    return filtered;
+  };
+
+  useEffect(() => {
+    const hasFilters = sortOrder !== 'relevance' || dateRange !== 'all' || selectedTypes.length < 4;
+    setHasActiveFilters(hasFilters);
+
+    let baseResults = results;
+    if (activeTab !== 'all') {
+      baseResults = results.filter(result => result.type === activeTab);
+    }
+    setFilteredResults(applyFilters(baseResults));
+  }, [activeTab, results, sortOrder, dateRange, selectedTypes]);
+
+  const clearFilters = () => {
+    setSortOrder('relevance');
+    setDateRange('all');
+    setSelectedTypes(['resource', 'bill', 'blog', 'discussion']);
+  };
+
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
   };
 
   const getTypeIcon = (type: string) => {
@@ -194,7 +262,7 @@ const SearchResults = () => {
             translate("Search for resources, discussions, and campaigns", language)
           )}
         </p>
-        
+
         {/* Search Form */}
         <form onSubmit={handleSearch} className="relative max-w-lg mb-8">
           <div className="flex gap-2">
@@ -209,13 +277,90 @@ const SearchResults = () => {
               />
             </div>
             <Button type="submit">{translate("Search", language)}</Button>
-            <Button type="button" variant="outline" className="px-3">
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="sr-only">Filters</span>
-            </Button>
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button type="button" variant="outline" className="px-3 relative">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-kenya-green rounded-full" />
+                  )}
+                  <span className="sr-only">Filters</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Filters</h4>
+                    {hasActiveFilters && (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-auto p-1 text-xs">
+                        <X className="h-3 w-3 mr-1" /> Clear
+                      </Button>
+                    )}
+                  </div>
+                  <Separator />
+
+                  {/* Content Types */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Content Type</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['resource', 'bill', 'blog', 'discussion'].map(type => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`type-${type}`}
+                            checked={selectedTypes.includes(type)}
+                            onCheckedChange={() => toggleType(type)}
+                          />
+                          <label htmlFor={`type-${type}`} className="text-sm capitalize cursor-pointer">
+                            {type === 'bill' ? 'Bills' : type + 's'}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Date Range */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Date Range</Label>
+                    <Select value={dateRange} onValueChange={(v: any) => setDateRange(v)}>
+                      <SelectTrigger className="w-full">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Select range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="week">Past Week</SelectItem>
+                        <SelectItem value="month">Past Month</SelectItem>
+                        <SelectItem value="year">Past Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Sort Order */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Sort By</Label>
+                    <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
+                      <SelectTrigger className="w-full">
+                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Sort order" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="relevance">Most Relevant</SelectItem>
+                        <SelectItem value="date-desc">Newest First</SelectItem>
+                        <SelectItem value="date-asc">Oldest First</SelectItem>
+                        <SelectItem value="alpha">Alphabetical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button onClick={() => setFilterOpen(false)} className="w-full bg-kenya-green hover:bg-kenya-green/90">
+                    Apply Filters
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </form>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="all">{translate("All Results", language)} ({results.length})</TabsTrigger>
@@ -224,7 +369,7 @@ const SearchResults = () => {
             <TabsTrigger value="blog">{translate("Blog", language)} ({results.filter(r => r.type === 'blog').length})</TabsTrigger>
             <TabsTrigger value="discussion">{translate("Discussions", language)} ({results.filter(r => r.type === 'discussion').length})</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="all" className="space-y-6">
             {isLoading ? (
               renderSkeleton()
@@ -239,7 +384,7 @@ const SearchResults = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="resource" className="space-y-6">
             {isLoading ? (
               renderSkeleton()
@@ -254,7 +399,7 @@ const SearchResults = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="bill" className="space-y-6">
             {isLoading ? (
               renderSkeleton()
@@ -269,7 +414,7 @@ const SearchResults = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="blog" className="space-y-6">
             {isLoading ? (
               renderSkeleton()
@@ -284,7 +429,7 @@ const SearchResults = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="discussion" className="space-y-6">
             {isLoading ? (
               renderSkeleton()

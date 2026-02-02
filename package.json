@@ -59,7 +59,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
     "@sentry/capacitor": "^2.4.1",
-    "@sentry/react": "^9.46.0",
+    "@sentry/react": "9.46.0",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.75.5",
     "axios": "^1.11.0",
