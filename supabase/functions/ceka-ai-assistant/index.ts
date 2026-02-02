@@ -137,15 +137,18 @@ serve(async (req: Request) => {
         }
 
         const config = getProviderConfig();
+        console.log(`[AI Assistant] Using provider: ${config.provider}, model: ${config.model}`);
+
         let answer: string;
 
         if (config.provider === 'gemini') {
             // @ts-ignore
             const apiKey = Deno.env.get('GEMINI_API_KEY');
             if (!apiKey) {
-                console.error('[AI Assistant] GEMINI_API_KEY is missing');
-                throw new Error('GEMINI_API_KEY not configured in Supabase Secrets');
+                console.error('[AI Assistant] GEMINI_API_KEY IS MISSING from environment variables');
+                throw new Error('GEMINI_API_KEY not configured in Supabase Secrets. Please run: supabase secrets set GEMINI_API_KEY=YOUR_KEY');
             }
+            console.log('[AI Assistant] API Key detected (length: ' + apiKey.length + ')');
 
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: config.model });

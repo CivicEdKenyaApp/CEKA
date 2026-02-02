@@ -40,10 +40,44 @@ const GlobalAIAssistant = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [usage, setUsage] = useState(0);
+
+    const [isIdle, setIsIdle] = useState(false);
+    const [showPulse, setShowPulse] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
     const queryRef = React.useRef(query);
     const usageRef = React.useRef(usage);
     const loadingRef = React.useRef(loading);
     const location = useLocation();
+
+    // engagement effects
+    useEffect(() => {
+        const pulseTimer = setTimeout(() => {
+            if (!isOpen) setShowPulse(true);
+        }, 15000); // 15s delay
+
+        const idleTimer = setTimeout(() => {
+            if (!isOpen && !isHovering) setIsIdle(true);
+        }, 45000); // 45s delay
+
+        return () => {
+            clearTimeout(pulseTimer);
+            clearTimeout(idleTimer);
+        };
+    }, [isOpen, isHovering]);
+
+    const pulseAnimation = showPulse && !isOpen ? {
+        scale: [1, 1.05, 1],
+        boxShadow: [
+            "0 0 0 0px rgba(16, 185, 129, 0)",
+            "0 0 0 15px rgba(16, 185, 129, 0.2)",
+            "0 0 0 0px rgba(16, 185, 129, 0)"
+        ],
+        transition: {
+            duration: 2.5,
+            repeat: Infinity,
+            repeatType: "mirror" as const
+        }
+    } : {};
 
     // Sync refs
     useEffect(() => { queryRef.current = query; }, [query]);
@@ -230,15 +264,28 @@ const GlobalAIAssistant = () => {
                 )}
             </AnimatePresence>
 
-            <Button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`h-12 w-12 md:h-14 md:w-14 rounded-full shadow-2xl transition-all duration-300 ${isOpen
-                    ? 'bg-kenya-red rotate-45'
-                    : 'bg-gradient-to-br from-kenya-green to-primary hover:scale-110 hover:shadow-kenya-green/30'
-                    }`}
+
+            <motion.div
+                onMouseEnter={() => {
+                    setIsHovering(true);
+                    setIsIdle(false);
+                }}
+                onMouseLeave={() => setIsHovering(false)}
+                animate={pulseAnimation}
             >
-                {isOpen ? <X className="h-5 w-5 md:h-6 md:w-6 text-white" /> : <HelpCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />}
-            </Button>
+                <Button
+                    onClick={() => {
+                        setIsOpen(!isOpen);
+                        setShowPulse(false);
+                    }}
+                    className={`h-12 w-12 md:h-14 md:w-14 rounded-full shadow-2xl transition-all duration-300 ${isOpen
+                        ? 'bg-kenya-red rotate-45'
+                        : isIdle ? 'opacity-70 grayscale-[0.5] scale-90' : 'bg-gradient-to-br from-kenya-green to-primary hover:scale-110'
+                        }`}
+                >
+                    {isOpen ? <X className="h-5 w-5 md:h-6 md:w-6 text-white" /> : <HelpCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />}
+                </Button>
+            </motion.div>
         </div>
     );
 };
