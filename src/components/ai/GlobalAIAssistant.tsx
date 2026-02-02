@@ -220,7 +220,7 @@ const GlobalAIAssistant = () => {
                                             ? 'bg-kenya-green text-white rounded-tr-none'
                                             : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-tl-none pr-4'
                                             }`}>
-                                            <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-white/5 prose-pre:p-2 prose-pre:rounded-lg whitespace-pre-wrap break-words max-w-full overflow-hidden">
+                                            <div className="prose prose-sm dark:prose-invert prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1 prose-li:my-0.5 prose-pre:bg-slate-100 dark:prose-pre:bg-white/5 prose-pre:p-2 prose-pre:rounded-lg whitespace-pre-wrap break-words max-w-full overflow-hidden leading-snug">
                                                 <ReactMarkdown>
                                                     {m.content}
                                                 </ReactMarkdown>
