@@ -1,43 +1,60 @@
 -- ================================================
--- ADMIN INFRASTRUCTURE & RLS FIX
+-- CRITICAL INFRASTRUCTURE FIX V2
 -- ================================================
 
--- 1. IDENTIFY & FIX ADMIN ACCESS HELPER
+-- 0. PRE-REQUISITE: ENSURE BILLS TABLE HAS FOLLOW_COUNT
 -- ------------------------------------------
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean AS $$
-BEGIN
-  -- Root Bypass for legacy support and high-privilege access
-  IF (auth.jwt()->>'email' = 'civiceducationkenya@gmail.com') THEN
-    RETURN true;
-  END IF;
-
-  -- Role check
-  RETURN EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() 
-    AND role = 'admin'
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 2. ENSURE ROOT ADMIN HAS ROLE
--- ------------------------------------------
--- Find user id for the root email if they exist
 DO $$
-DECLARE
-    v_user_id uuid;
 BEGIN
-    SELECT id INTO v_user_id FROM auth.users WHERE email = 'civiceducationkenya@gmail.com' LIMIT 1;
-    
-    IF v_user_id IS NOT NULL THEN
-        INSERT INTO public.user_roles (user_id, role)
-        VALUES (v_user_id, 'admin')
-        ON CONFLICT (user_id, role) DO NOTHING;
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bills' AND column_name = 'follow_count'
+    ) THEN
+        ALTER TABLE public.bills ADD COLUMN follow_count INTEGER DEFAULT 0;
     END IF;
 END $$;
 
--- 3. APPLY RLS POLICIES TO ADMIN TABLES
+-- 1. ROBUST IS_ADMIN FUNCTION
+-- ------------------------------------------
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean AS $$
+DECLARE
+  v_user_email text;
+BEGIN
+  -- 1. SERVICE ROLE BYPASS
+  IF (auth.role() = 'service_role') THEN
+    RETURN true;
+  END IF;
+
+  -- 2. ROOT EMAIL BYPASS (Explicit check)
+  v_user_email := auth.jwt()->>'email';
+  IF (v_user_email = 'civiceducationkenya@gmail.com') THEN
+    RETURN true;
+  END IF;
+
+  -- 3. ROLE TABLE CHECK (Primary)
+  IF EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() 
+    AND role = 'admin'
+  ) THEN
+    RETURN true;
+  END IF;
+
+  -- 4. PROFILE TABLE FALLBACK (Legacy)
+  IF EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() 
+    AND is_admin = true
+  ) THEN
+    RETURN true;
+  END IF;
+
+  RETURN false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 2. RE-APPLY POLICIES TO ALL CRITICAL TABLES
 -- ------------------------------------------
 
 -- admin_sessions
@@ -58,7 +75,7 @@ DROP POLICY IF EXISTS "Admins have full access to audit logs" ON public.admin_au
 CREATE POLICY "Admins have full access to audit logs" ON public.admin_audit_log
 FOR ALL USING (public.is_admin());
 
--- generated_articles (Phase 10 fix)
+-- generated_articles
 ALTER TABLE public.generated_articles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admin full access" ON public.generated_articles;
 CREATE POLICY "Admin full access" ON public.generated_articles
@@ -70,14 +87,41 @@ DROP POLICY IF EXISTS "Admins have full access to metrics" ON public.system_metr
 CREATE POLICY "Admins have full access to metrics" ON public.system_metrics
 FOR ALL USING (public.is_admin());
 
--- 4. ENSURE REALTIME IS ACTIVE FOR ADMIN TABLES
+-- 3. FIX GET_TRENDING_BILLS PERMISSIONS
 -- ------------------------------------------
-DO $$
-BEGIN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_notifications;
-EXCEPTION WHEN OTHERS THEN END $$;
+GRANT EXECUTE ON FUNCTION public.get_trending_bills(INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_trending_bills(INTEGER) TO anon;
 
-DO $$
+-- Add a version that takes no arguments to avoid 400s if called incorrectly
+CREATE OR REPLACE FUNCTION public.get_trending_bills()
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  summary TEXT,
+  status TEXT,
+  category TEXT,
+  date TEXT,
+  created_at TIMESTAMPTZ,
+  url TEXT,
+  sponsor TEXT,
+  description TEXT,
+  neural_summary TEXT,
+  text_content TEXT,
+  pdf_url TEXT,
+  follow_count BIGINT
+) 
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 BEGIN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_sessions;
-EXCEPTION WHEN OTHERS THEN END $$;
+  RETURN QUERY
+  SELECT 
+    b.id, b.title, b.summary, b.status, b.category, b.date, b.created_at, b.url, b.sponsor, b.description, b.neural_summary, b.text_content, b.pdf_url, b.follow_count::BIGINT 
+  FROM public.bills b 
+  ORDER BY b.follow_count DESC 
+  LIMIT 5;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_trending_bills() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_trending_bills() TO anon;

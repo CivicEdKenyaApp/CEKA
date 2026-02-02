@@ -186,15 +186,21 @@ serve(async (req: Request) => {
 
         console.error('[AI Assistant] Final Error Handler:', errorMessage, errorStack);
 
+        // Return 200 even on error to bypass supabase-js throwing client-side
+        // but include the error details in the payload.
         return new Response(
             JSON.stringify({
-                error: 'Internal Server Error',
+                error: true,
                 message: errorMessage,
-                // @ts-ignore
-                stack: Deno.env.get('ENVIRONMENT') === 'development' ? errorStack : undefined
+                diagnostic: {
+                    provider: Deno.env.get('AI_PROVIDER') || 'not_set',
+                    gemini_key_exists: !!Deno.env.get('GEMINI_API_KEY'),
+                    // @ts-ignore
+                    environment: Deno.env.get('ENVIRONMENT') || 'production'
+                }
             }),
             {
-                status: 500,
+                status: 200,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
         );

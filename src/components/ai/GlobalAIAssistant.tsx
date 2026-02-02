@@ -47,6 +47,7 @@ const GlobalAIAssistant = () => {
     const queryRef = React.useRef(query);
     const usageRef = React.useRef(usage);
     const loadingRef = React.useRef(loading);
+
     const location = useLocation();
 
     // engagement effects
@@ -64,20 +65,6 @@ const GlobalAIAssistant = () => {
             clearTimeout(idleTimer);
         };
     }, [isOpen, isHovering]);
-
-    const pulseAnimation = showPulse && !isOpen ? {
-        scale: [1, 1.05, 1],
-        boxShadow: [
-            "0 0 0 0px rgba(16, 185, 129, 0)",
-            "0 0 0 15px rgba(16, 185, 129, 0.2)",
-            "0 0 0 0px rgba(16, 185, 129, 0)"
-        ],
-        transition: {
-            duration: 2.5,
-            repeat: Infinity,
-            repeatType: "mirror" as const
-        }
-    } : {};
 
     // Sync refs
     useEffect(() => { queryRef.current = query; }, [query]);
@@ -141,6 +128,15 @@ const GlobalAIAssistant = () => {
 
             if (error) throw error;
 
+            if (data.error) {
+                console.error('AI Strategy Error:', data.message, data.diagnostic);
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: `I'm currently recalibrating. Diagnosis: ${data.message}. Please try again shortly.`
+                }]);
+                return;
+            }
+
             const newUsage = incrementUsage();
             setUsage(newUsage);
 
@@ -162,8 +158,6 @@ const GlobalAIAssistant = () => {
     if (shouldHide) return null;
 
     return (
-        // Aligned to 2rem (right-8) to match Donation FAB vertically
-        // Positioned at bottom-[204px] (140 offset + 48 height + 16 gap)
         <div className="fixed bottom-[204px] right-8 z-50">
             <AnimatePresence>
                 {isOpen && (
@@ -264,15 +258,31 @@ const GlobalAIAssistant = () => {
                 )}
             </AnimatePresence>
 
-
             <motion.div
                 onMouseEnter={() => {
                     setIsHovering(true);
                     setIsIdle(false);
                 }}
                 onMouseLeave={() => setIsHovering(false)}
-                animate={pulseAnimation}
+                className="relative"
             >
+                {/* Breathing Glow Ring */}
+                <AnimatePresence>
+                    {showPulse && !isOpen && (
+                        <motion.div
+                            initial={{ scale: 1, opacity: 0.6 }}
+                            animate={{ scale: 2.2, opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{
+                                duration: 2.5,
+                                repeat: Infinity,
+                                ease: "easeOut"
+                            }}
+                            className="absolute inset-0 rounded-full bg-kenya-green/40 -z-10 blur-sm pointer-events-none"
+                        />
+                    )}
+                </AnimatePresence>
+
                 <Button
                     onClick={() => {
                         setIsOpen(!isOpen);
