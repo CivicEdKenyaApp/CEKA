@@ -31,3 +31,20 @@ app/venv311/
 *-firebase-adminsdk-*.json
 firebase-service-account.json
 service-account*.json
+
+# Capacitor Native Build Artifacts
+android/app/build/
+android/.gradle/
+android/app/release/
+ios/App/Pods/
+ios/App/build/
+*.apk
+*.aab
+*.ipa
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# Capacitor Live Updates
+.live-update/
+

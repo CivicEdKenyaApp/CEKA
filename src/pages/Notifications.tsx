@@ -26,7 +26,7 @@ const Notifications = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) {
       return 'just now';
     } else if (diffInSeconds < 3600) {
@@ -78,7 +78,7 @@ const Notifications = () => {
                 </p>
               )}
             </div>
-            
+
             {notifications.length > 0 && (
               <div className="flex gap-2 self-end md:self-auto">
                 <Button variant="outline" size="sm" onClick={refetch}>
@@ -91,7 +91,7 @@ const Notifications = () => {
               </div>
             )}
           </div>
-          
+
           {loading ? (
             <div className="space-y-4">
               <NotificationSkeleton />
@@ -119,7 +119,7 @@ const Notifications = () => {
           ) : (
             <div className="space-y-4">
               {notifications.map((notification) => (
-                <Card 
+                <Card
                   key={notification.id}
                   className={`transition-all duration-200 ${!notification.is_read ? 'border-kenya-green bg-muted/30' : ''}`}
                 >
@@ -142,8 +142,8 @@ const Notifications = () => {
                               {formatDate(notification.created_at)}
                             </span>
                             {!notification.is_read && (
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => handleMarkAsRead(notification.id)}
                                 className="h-8 px-2"

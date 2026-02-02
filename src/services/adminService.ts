@@ -193,18 +193,20 @@ class AdminService {
 
       if (error) throw error;
 
+      const statsData = data as any;
+
       return {
-        total_users: data.total_users || 0,
+        total_users: statsData?.total_users || 0,
         total_posts: (await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published')).count || 0,
         total_resources: (await supabase.from('resources').select('*', { count: 'exact', head: true })).count || 0,
-        total_bills: data.total_bills || 0,
+        total_bills: statsData?.total_bills || 0,
         active_sessions: (await supabase.from('admin_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true)).count || 0,
-        recent_signups: data.total_users ? Math.ceil(data.total_users * 0.05) : 0,
+        recent_signups: statsData?.total_users ? Math.ceil(statsData.total_users * 0.05) : 0,
         pending_drafts: (await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft')).count || 0,
         total_discussions: (await supabase.from('discussions').select('*', { count: 'exact', head: true })).count || 0,
-        total_views: (data.chat_activity_24h || 0) * 10, // Simulated scale
-        total_interactions: data.chat_activity_24h || 0,
-        avg_daily_users: (data.total_users || 0) * 0.1
+        total_views: (statsData?.chat_activity_24h || 0) * 10, // Simulated scale
+        total_interactions: statsData?.chat_activity_24h || 0,
+        avg_daily_users: (statsData?.total_users || 0) * 0.1
       };
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);

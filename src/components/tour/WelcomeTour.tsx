@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Check, Sparkles, MessageSquare, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Logo from '@/components/ui/Logo';
 import { cn } from '@/lib/utils';
 
 interface WelcomeTourProps {
@@ -16,7 +17,7 @@ const slides = [
     description: "Empowering citizens with knowledge, legislative tracking, and a unified community voices platform.",
     icon: Sparkles,
     color: "bg-primary",
-    image: "/lovable-uploads/ceka-logo.png"
+    isLogo: true
   },
   {
     title: "Legislative Tracker",
@@ -107,9 +108,13 @@ const WelcomeTour = ({ onComplete }: WelcomeTourProps) => {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="flex flex-col items-center text-center text-white"
             >
-              <div className="bg-white/20 p-6 rounded-[32px] mb-6 backdrop-blur-md shadow-lg border border-white/10">
-                {React.createElement(slides[currentSlide].icon, { className: "h-16 w-16" })}
-              </div>
+              {slides[currentSlide].isLogo ? (
+                <div className="bg-white rounded-2xl p-4 flex items-center justify-center">
+                  <Logo variant="icon-only" className="h-20 w-20" />
+                </div>
+              ) : (
+                React.createElement(slides[currentSlide].icon, { className: "h-16 w-16" })
+              )}
               <Badge variant="outline" className="text-white border-white/30 px-3 h-6 mb-4 bg-white/10 font-bold tracking-[0.2em] text-[10px] uppercase">
                 Step {currentSlide + 1} of {slides.length}
               </Badge>
