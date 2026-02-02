@@ -7,6 +7,7 @@ import { Sparkles, Send, X, Bot, Loader2, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 // Rate limiting per user session
 const MAX_MESSAGES_PER_DAY = 20;
@@ -219,7 +220,11 @@ const GlobalAIAssistant = () => {
                                             ? 'bg-kenya-green text-white rounded-tr-none'
                                             : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-tl-none pr-4'
                                             }`}>
-                                            {m.content}
+                                            <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-white/5 prose-pre:p-2 prose-pre:rounded-lg whitespace-pre-wrap break-words max-w-full overflow-hidden">
+                                                <ReactMarkdown>
+                                                    {m.content}
+                                                </ReactMarkdown>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}
