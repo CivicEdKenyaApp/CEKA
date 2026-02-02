@@ -134,7 +134,7 @@ const LegislativeTracker = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#FDFDFD] dark:bg-background">
+      <div className="min-h-screen bg-[#FDFDFD] dark:bg-background overflow-x-hidden">
         {/* EXECUTIVE HERO: Mobile Optimized */}
         <section className="relative px-4 pt-12 pb-20 md:pt-24 md:pb-32 overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full opacity-20 pointer-events-none">

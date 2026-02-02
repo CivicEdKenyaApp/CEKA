@@ -115,10 +115,13 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={cn(
-        "fixed lg:sticky top-0 z-[100] w-full transition-all duration-500 font-sans",
-        showBg ? "bg-white/95 dark:bg-black/95 backdrop-blur-3xl shadow-ios-high py-2" : "bg-white/40 dark:bg-black/20 backdrop-blur-sm lg:bg-transparent py-4"
-      )}>
+      <nav
+        className={cn(
+          "fixed lg:sticky top-0 z-[100] w-full transition-all duration-500 font-sans",
+          showBg ? "bg-white/95 dark:bg-black/95 backdrop-blur-3xl shadow-ios-high py-2" : "bg-white/40 dark:bg-black/20 backdrop-blur-sm lg:bg-transparent py-4"
+        )}
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
+      >
         <div className="container mx-auto px-6 flex items-center justify-between">
           <Link to="/" className="z-50"><Logo className="h-8 w-auto" /></Link>
 
