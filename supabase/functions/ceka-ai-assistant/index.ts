@@ -20,19 +20,13 @@ interface AIProviderConfig {
 const getProviderConfig = (): AIProviderConfig => {
     // @ts-ignore
     const provider = Deno.env.get('AI_PROVIDER') || 'gemini';
-
-    if (provider === 'deepseek') {
-        return {
-            provider: 'deepseek',
-            model: 'deepseek-chat',
-            maxTokens: 2000
-        };
-    }
+    // @ts-ignore
+    const model = Deno.env.get('AI_MODEL') || Deno.env.get('GEMINI_MODEL') || (provider === 'gemini' ? 'gemini-2.0-flash' : 'deepseek-chat');
 
     return {
-        provider: 'gemini',
-        model: 'gemini-1.5-flash',
-        maxTokens: 1000
+        provider: provider as any,
+        model: model,
+        maxTokens: provider === 'deepseek' ? 2000 : 1000
     };
 };
 
@@ -145,23 +139,38 @@ serve(async (req: Request) => {
             // @ts-ignore
             const apiKey = Deno.env.get('GEMINI_API_KEY');
             if (!apiKey) {
-                console.error('[AI Assistant] GEMINI_API_KEY IS MISSING from environment variables');
-                throw new Error('GEMINI_API_KEY not configured in Supabase Secrets. Please run: supabase secrets set GEMINI_API_KEY=YOUR_KEY');
+                console.error('[AI Assistant] GEMINI_API_KEY IS MISSING');
+                throw new Error('GEMINI_API_KEY not configured in Supabase Secrets.');
             }
-            console.log('[AI Assistant] API Key detected (length: ' + apiKey.length + ')');
 
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: config.model });
+            try {
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: config.model });
 
-            const systemPrompt = SYSTEM_PROMPT.replace('%CONTEXT%', context);
-            const fullPrompt = `${systemPrompt}\n\nUser Question: ${query}\n\nProvide a helpful, educational response:`;
+                const systemPrompt = SYSTEM_PROMPT.replace('%CONTEXT%', context);
+                const fullPrompt = `${systemPrompt}\n\nUser Question: ${query}\n\nProvide a helpful, educational response:`;
 
-            const result = await model.generateContent(fullPrompt);
-            const response = await result.response;
-            answer = response.text();
+                const result = await model.generateContent(fullPrompt);
+                const response = await result.response;
+                answer = response.text();
 
-            if (!answer) {
-                throw new Error('AI returned an empty response');
+                if (!answer) {
+                    throw new Error('AI returned an empty response');
+                }
+            } catch (e: any) {
+                console.error('[AI Assistant] GoogleGenerativeAI Error:', e.message);
+
+                // Handle 404 Not Found (Model selection error)
+                if (e.message?.includes('404') || e.message?.includes('not found')) {
+                    throw new Error(`The selected model "${config.model}" was not found or is not supported. Please check GEMINI_MODEL secret. Details: ${e.message}`);
+                }
+
+                // Handle 429 Too Many Requests (Rate limit)
+                if (e.message?.includes('429')) {
+                    throw new Error('Gemini API rate limit exceeded. Please try again in a minute.');
+                }
+
+                throw e;
             }
         }
         else if (config.provider === 'deepseek') {
@@ -195,6 +204,8 @@ serve(async (req: Request) => {
                 diagnostic: {
                     // @ts-ignore
                     provider: Deno.env.get('AI_PROVIDER') || 'not_set',
+                    // @ts-ignore
+                    model: config?.model || 'unknown',
                     // @ts-ignore
                     gemini_key_exists: !!Deno.env.get('GEMINI_API_KEY'),
                     // @ts-ignore

@@ -89,4 +89,3 @@ CREATE INDEX IF NOT EXISTS idx_bills_fts ON public.bills USING gin(fts);
 
 -- 7. ENABLE REALTIME
 ALTER PUBLICATION supabase_realtime ADD TABLE public.bills;
-破
