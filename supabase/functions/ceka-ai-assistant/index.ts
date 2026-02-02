@@ -1,11 +1,7 @@
-// CEKA AI Assistant Edge Function
-// Supports Gemini (current) with future DeepSeek integration
-// Rate limited and context-aware
-
 // @ts-ignore
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 // @ts-ignore
-import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.12.0'
+import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.21.0'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -15,7 +11,6 @@ const corsHeaders = {
 }
 
 // AI Provider Configuration
-// Future: Add DeepSeek support when ready
 interface AIProviderConfig {
     provider: 'gemini' | 'deepseek';
     model: string;
@@ -121,7 +116,7 @@ FINAL REMINDERS (strict)
 Current context token: %CONTEXT% — when responding, always incorporate relevant items from that context (platform state, feature flags, membership tiers, moderation needs, scraping automation, UI behaviours, and repository links) into your answer or request for user-supplied missing data.`;
 
 // @ts-ignore
-Deno.serve(async (req: Request) => {
+serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { status: 200, headers: corsHeaders });
@@ -132,7 +127,7 @@ Deno.serve(async (req: Request) => {
         const query = body.query || "";
         const context = body.context || 'general';
 
-        console.log(`[AI Assistant] Request from ${context}: "${query}"`);
+        console.log(`[AI Assistant] Processing request for context "${context}" with query length ${query.length}`);
 
         if (!query || query.trim().length < 1) {
             return new Response(
@@ -147,7 +142,10 @@ Deno.serve(async (req: Request) => {
         if (config.provider === 'gemini') {
             // @ts-ignore
             const apiKey = Deno.env.get('GEMINI_API_KEY');
-            if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+            if (!apiKey) {
+                console.error('[AI Assistant] GEMINI_API_KEY is missing');
+                throw new Error('GEMINI_API_KEY not configured in Supabase Secrets');
+            }
 
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: config.model });
@@ -156,31 +154,14 @@ Deno.serve(async (req: Request) => {
             const fullPrompt = `${systemPrompt}\n\nUser Question: ${query}\n\nProvide a helpful, educational response:`;
 
             const result = await model.generateContent(fullPrompt);
-            answer = result.response.text();
-        }
-        // FUTURE: DeepSeek Integration Skeleton
-        else if (config.provider === 'deepseek') {
-            // DeepSeek API Integration (to be implemented)
-            // const apiKey = Deno.env.get('DEEPSEEK_API_KEY');
-            // const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-            //   method: 'POST',
-            //   headers: {
-            //     'Authorization': `Bearer ${apiKey}`,
-            //     'Content-Type': 'application/json'
-            //   },
-            //   body: JSON.stringify({
-            //     model: config.model,
-            //     messages: [
-            //       { role: 'system', content: SYSTEM_PROMPT.replace('%CONTEXT%', context) },
-            //       { role: 'user', content: query }
-            //     ],
-            //     temperature: 1.5, // Recommended for creative responses
-            //     max_tokens: config.maxTokens
-            //   })
-            // });
-            // const data = await response.json();
-            // answer = data.choices[0].message.content;
+            const response = await result.response;
+            answer = response.text();
 
+            if (!answer) {
+                throw new Error('AI returned an empty response');
+            }
+        }
+        else if (config.provider === 'deepseek') {
             answer = 'DeepSeek integration is coming soon. Using Gemini for now.';
         }
         else {
@@ -196,14 +177,23 @@ Deno.serve(async (req: Request) => {
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
-    } catch (error: any) {
-        console.error('AI Assistant Error:', error);
+    } catch (err: any) {
+        const errorMessage = err.message || 'Unknown error occurred';
+        const errorStack = err.stack || '';
+
+        console.error('[AI Assistant] Final Error Handler:', errorMessage, errorStack);
+
         return new Response(
             JSON.stringify({
-                error: 'Failed to generate response',
-                details: error.message
+                error: 'Internal Server Error',
+                message: errorMessage,
+                // @ts-ignore
+                stack: Deno.env.get('ENVIRONMENT') === 'development' ? errorStack : undefined
             }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
         );
     }
 });

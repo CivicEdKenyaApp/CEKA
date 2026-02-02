@@ -1,0 +1,26 @@
+name: AI Content Automation
+
+on:
+  schedule:
+    # Trigger at 8AM EAT (05:00 UTC) every day
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    # Allows manual trigger for testing
+
+jobs:
+  generate-content:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger CEKA Content Generator
+        run: |
+          curl -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/ceka-content-generator" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{}'
+
+      - name: Summary
+        run: |
+          echo "### AI Content Generation Triggered 🤖" >> $GITHUB_STEP_SUMMARY
+          echo "- Time: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- Endpoint: ceka-content-generator" >> $GITHUB_STEP_SUMMARY
