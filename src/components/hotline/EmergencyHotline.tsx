@@ -34,14 +34,15 @@ const EmergencyHotline = () => {
     React.useEffect(() => {
         const fetchHotlines = async () => {
             try {
-                const { data, error } = await supabase
+                // Using any cast to bypass out-of-sync Supabase types
+                const { data, error } = await (supabase as any)
                     .from('civic_hotline')
                     .select('*')
                     .eq('is_active', true)
                     .order('priority', { ascending: false });
 
                 if (error) throw error;
-                if (data) setHotlines(data);
+                if (data) setHotlines(data as Hotline[]);
             } catch (err) {
                 console.error('Error fetching hotlines:', err);
             } finally {
