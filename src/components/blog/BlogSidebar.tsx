@@ -3,13 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Download, 
-  Smartphone, 
+import {
+  Download,
+  Smartphone,
   MapPin,
   Scale,
-  Users, 
-  BookOpen, 
+  Users,
+  BookOpen,
   MessageSquare,
   ExternalLink,
   Heart,
@@ -43,18 +43,18 @@ interface CarouselSectionProps {
   autoPlayInterval?: number;
 }
 
-const CarouselSection: React.FC<CarouselSectionProps> = ({ 
-  title, 
-  titleIcon, 
-  items, 
-  autoPlayInterval = 5000 
+const CarouselSection: React.FC<CarouselSectionProps> = ({
+  title,
+  titleIcon,
+  items,
+  autoPlayInterval = 5000
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (items.length <= 1 || isPaused) return;
-    
+
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % items.length);
     }, autoPlayInterval);
@@ -75,7 +75,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
   const currentItem = items[currentIndex];
 
   return (
-    <Card 
+    <Card
       className="overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -258,19 +258,19 @@ export function BlogSidebar() {
   ];
 
   const popularTags = [
-    translate("Civic Education", language), 
-    translate("Governance", language), 
-    translate("Democracy", language), 
+    translate("Civic Education", language),
+    translate("Governance", language),
+    translate("Democracy", language),
     translate("Constitutional Rights", language),
-    translate("Public Participation", language), 
-    translate("Accountability", language), 
-    translate("Transparency", language), 
+    translate("Public Participation", language),
+    translate("Accountability", language),
+    translate("Transparency", language),
     translate("Legislation", language)
   ];
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.trim()) {
       toast({
         title: translate("Email Required", language),
@@ -320,9 +320,9 @@ export function BlogSidebar() {
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-2">
             {popularTags.map((tag, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
+              <Badge
+                key={index}
+                variant="secondary"
                 className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
               >
                 {tag}
@@ -352,8 +352,8 @@ export function BlogSidebar() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full"
               size="sm"
             >
@@ -373,11 +373,22 @@ export function BlogSidebar() {
               {translate("Download our mobile app for offline access to civic education resources.", language)}
             </p>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="flex-1 text-xs">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => toast({
+                  title: "Coming Soon!",
+                  description: "The iOS application is currently in development.",
+                  duration: 3000,
+                })}
+              >
                 iOS App
               </Button>
-              <Button size="sm" variant="outline" className="flex-1 text-xs">
-                Android
+              <Button size="sm" variant="outline" className="flex-1 text-xs" asChild>
+                <a href="https://tr.ee/ltXtQXXEmu" target="_blank" rel="noopener noreferrer">
+                  Android
+                </a>
               </Button>
             </div>
           </div>

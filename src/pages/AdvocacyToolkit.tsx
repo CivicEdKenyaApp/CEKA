@@ -1,101 +1,64 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Search, Download, ArrowRight, Share2, ExternalLink, FileIcon } from 'lucide-react';
+import {
+  FileText,
+  Search,
+  Download,
+  ArrowRight,
+  Scale,
+  ShieldAlert,
+  Gavel,
+  BookOpen,
+  Zap,
+  ChevronRight,
+  ExternalLink,
+  LifeBuoy,
+  Megaphone,
+  Sparkles
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-// Types for our toolkit items
-interface ToolkitItem {
+interface Resource {
   id: string;
   title: string;
-  description: string | null;
-  content: string | null;
+  description: string;
   category: string;
-  document_ids: string[] | null;
-  created_at: string;
-  updated_at: string;
+  url: string;
+  thumbnail_url: string | null;
+  type: string;
+  is_downloadable: boolean;
 }
-
-interface Document {
-  id: string;
-  title: string;
-  description: string | null;
-  file_url: string;
-  file_type: string;
-  mime_type: string;
-}
-
-const categories = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'policy', label: 'Policy Documents' },
-  { value: 'legal', label: 'Legal Resources' },
-  { value: 'advocacy', label: 'Advocacy Guides' },
-  { value: 'educational', label: 'Educational Materials' },
-  { value: 'templates', label: 'Templates & Forms' }
-];
 
 const AdvocacyToolkit = () => {
-  const [toolkitItems, setToolkitItems] = useState<ToolkitItem[]>([]);
-  const [documents, setDocuments] = useState<Record<string, Document>>({});
+  const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const { toast } = useToast();
 
-  // Fetch toolkit items and associated documents
   useEffect(() => {
-    const fetchToolkitItems = async () => {
+    const fetchResources = async () => {
       setIsLoading(true);
       try {
-        // Get toolkit items
-        const { data: toolkitData, error: toolkitError } = await supabase
-          .from('advocacy_toolkit')
-          .select('*');
+        const { data, error } = await supabase
+          .from('resources')
+          .select('*')
+          .or('category.eq.advocacy,category.eq.legal,category.eq.constitution');
 
-        if (toolkitError) throw toolkitError;
-
-        const items = toolkitData as ToolkitItem[];
-        setToolkitItems(items);
-
-        // Get all document IDs from the toolkit items
-        const allDocumentIds: string[] = [];
-        items.forEach(item => {
-          if (item.document_ids && item.document_ids.length > 0) {
-            allDocumentIds.push(...item.document_ids);
-          }
-        });
-
-        // If we have document IDs, fetch the documents
-        if (allDocumentIds.length > 0) {
-          const { data: documentsData, error: docsError } = await supabase
-            .from('documents')
-            .select('*')
-            .in('id', allDocumentIds)
-            .eq('is_approved', true);
-
-          if (docsError) throw docsError;
-
-          // Create a map of document ID to document
-          const docsMap: Record<string, Document> = {};
-          (documentsData as Document[]).forEach(doc => {
-            docsMap[doc.id] = doc;
-          });
-
-          setDocuments(docsMap);
-        }
+        if (error) throw error;
+        setResources(data || []);
       } catch (error) {
-        console.error('Error fetching toolkit items:', error);
+        console.error('Error fetching resources:', error);
         toast({
-          title: "Error",
-          description: "Failed to load advocacy toolkit resources. Please try again later.",
+          title: "Connection Issue",
+          description: "We couldn't load the latest advocacy tools. Falling back to offline guide.",
           variant: "destructive"
         });
       } finally {
@@ -103,358 +66,226 @@ const AdvocacyToolkit = () => {
       }
     };
 
-    fetchToolkitItems();
+    fetchResources();
   }, [toast]);
 
-  // Filter toolkit items based on search query and category
-  const filteredItems = toolkitItems.filter(item => {
-    const matchesSearch = searchQuery === '' ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredResources = resources.filter(res =>
+    res.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    res.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
-  });
-
-  // Get documents for a toolkit item
-  const getDocumentsForItem = (item: ToolkitItem) => {
-    if (!item.document_ids || item.document_ids.length === 0) return [];
-
-    return item.document_ids.map(id => documents[id]).filter(Boolean);
+  const constitutionResource = resources.find(r => r.title.toLowerCase().includes('constitution')) || {
+    title: "The Constitution of Kenya (2010)",
+    description: "The supreme law of the Republic of Kenya. Every person has an obligation to respect, uphold and defend this Constitution.",
+    url: "https://www.klrc.go.ke/index.php/constitution-of-kenya",
+    category: "Constitution"
   };
+
+  const featureCards = [
+    {
+      title: "Know Your Rights",
+      description: "Learn about Fundamental Rights and Freedoms (Chapter Four).",
+      icon: <ShieldAlert className="h-6 w-6 text-kenya-red" />,
+      link: "/resources?cat=rights",
+      color: "from-red-500/10 to-transparent"
+    },
+    {
+      title: "Self-Advocacy",
+      description: "How to handle police encounters and illegal crackdowns.",
+      icon: <Megaphone className="h-6 w-6 text-kenya-green" />,
+      link: "/resources?cat=guides",
+      color: "from-green-500/10 to-transparent"
+    },
+    {
+      title: "Legal Aid",
+      description: "Access pro-bono legal services and support networks.",
+      icon: <LifeBuoy className="h-6 w-6 text-blue-500" />,
+      link: "/resources?cat=legal",
+      color: "from-blue-500/10 to-transparent"
+    }
+  ];
 
   return (
     <Layout>
-      <div className="container py-8 md:py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Advocacy Toolkit</h1>
-            <p className="text-muted-foreground">Resources and guides to support civic engagement and advocacy efforts</p>
-          </div>
-        </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950/20">
+        {/* iOS style hero header */}
+        <section className="relative pt-24 pb-12 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-kenya-green/5 via-transparent to-transparent -z-10" />
+          <div className="container px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-3xl"
+            >
+              <Badge className="mb-4 bg-kenya-green/10 text-kenya-green border-kenya-green/20 rounded-full px-4 py-1">
+                <Zap className="h-3 w-3 mr-2" />
+                Empowerment Hub
+              </Badge>
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+                Advocacy & Rights Toolkit
+              </h1>
+              <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                A sanctuary for legal knowledge. Access the tools you need to defend justice,
+                demand accountability, and exercise your constitutional powers as a Kenyan.
+              </p>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Filters sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Filters</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Search</label>
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input
+                  placeholder="Search laws, rights, or guides..."
+                  className="pl-10 h-12 rounded-2xl bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-ios-high shadow-slate-200/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="container px-4 py-12 space-y-16">
+          {/* Featured Constitution - iOS Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="group relative overflow-hidden rounded-[2.5rem] border-none shadow-ios-high bg-white dark:bg-slate-900">
+              <div className="absolute inset-0 bg-gradient-to-br from-kenya-green/5 via-transparent to-kenya-red/5 opacity-50" />
+              <div className="relative p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center">
+                <div className="w-full md:w-1/3 flex justify-center">
                   <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="toolkit-search"
-                      name="q"
-                      placeholder="Search resources..."
-                      className="pl-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="absolute inset-0 bg-kenya-green/20 blur-3xl rounded-full animate-pulse" />
+                    <Card className="aspect-[3/4] w-48 bg-gradient-to-br from-kenya-green to-primary rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-white border-none transform group-hover:rotate-2 transition-transform duration-500">
+                      <Scale className="h-16 w-16 mb-4 drop-shadow-lg" />
+                      <div className="text-center font-bold text-lg leading-tight">
+                        KATRE <br />YA KENYA
+                      </div>
+                      <div className="mt-8 text-[8px] uppercase tracking-[0.2em] opacity-80">
+                        Revised Edition 2010
+                      </div>
+                    </Card>
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Category</label>
-                  <Select
-                    name="category"
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger id="toolkit-category">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main content */}
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">All Resources</TabsTrigger>
-                <TabsTrigger value="guides">Guides</TabsTrigger>
-                <TabsTrigger value="templates">Templates</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="mt-6">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <Card key={i} className="h-40 animate-pulse bg-muted/50" />
-                    ))}
-                  </div>
-                ) : filteredItems.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No resources found</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {searchQuery || selectedCategory !== 'all'
-                        ? "Try adjusting your search or filters"
-                        : "Resources will be added soon"}
+                <div className="flex-1 space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                      The Constitution of Kenya
+                      <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800">Alpha Resource</Badge>
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-lg">
+                      {constitutionResource.description}
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredItems.map((item) => {
-                      const itemDocuments = getDocumentsForItem(item);
 
-                      return (
-                        <Card key={item.id} className="overflow-hidden">
-                          <div className="flex flex-col md:flex-row">
-                            <div className="flex-1 p-5 md:p-6">
-                              <div className="flex flex-col md:flex-row justify-between md:items-center mb-2">
-                                <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                                  {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-                                </Badge>
-                              </div>
-
-                              <h3 className="text-lg font-semibold mb-1">
-                                <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
-                                  {item.title}
-                                </Link>
-                              </h3>
-
-                              {item.description && (
-                                <p className="text-muted-foreground text-sm mb-4">
-                                  {item.description}
-                                </p>
-                              )}
-
-                              {itemDocuments.length > 0 && (
-                                <div className="space-y-2 mb-4">
-                                  <h4 className="text-sm font-medium">Resources</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {itemDocuments.map((doc) => (
-                                      <a
-                                        key={doc.id}
-                                        href={doc.file_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center text-xs bg-muted px-2.5 py-1.5 rounded hover:bg-muted/80 transition-colors"
-                                      >
-                                        <FileIcon className="h-3.5 w-3.5 mr-1.5" />
-                                        {doc.title}
-                                        <ExternalLink className="h-3 w-3 ml-1" />
-                                      </a>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs text-muted-foreground">
-                                  Updated: {new Date(item.updated_at).toLocaleDateString()}
-                                </span>
-
-                                <Button size="sm" variant="ghost" asChild>
-                                  <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
-                                    Details
-                                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                  </Link>
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
+                  <div className="flex flex-wrap gap-4">
+                    <Button onClick={() => window.open(constitutionResource.url, '_blank')} className="rounded-2xl h-12 px-8 bg-kenya-green hover:bg-primary text-white shadow-lg shadow-kenya-green/20 transition-all hover:scale-105">
+                      Read Online
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" className="rounded-2xl h-12 px-8 border-slate-200 dark:border-slate-800 backdrop-blur-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                      Summarize with AI
+                      <Sparkles className="ml-2 h-4 w-4 text-amber-500" />
+                    </Button>
                   </div>
-                )}
-              </TabsContent>
-
-              {/* These are placeholders for other tabs - we'll filter by category */}
-              <TabsContent value="guides">
-                <div className="mt-6">
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(2)].map((_, i) => (
-                        <Card key={i} className="h-40 animate-pulse bg-muted/50" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {filteredItems
-                        .filter(item => item.category === 'advocacy')
-                        .map((item) => {
-                          const itemDocuments = getDocumentsForItem(item);
-
-                          return (
-                            <Card key={item.id} className="overflow-hidden">
-                              {/* Similar card content as "all" tab */}
-                              <div className="flex flex-col md:flex-row">
-                                <div className="flex-1 p-5 md:p-6">
-                                  <div className="flex flex-col md:flex-row justify-between md:items-center mb-2">
-                                    <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-                                    </Badge>
-                                  </div>
-
-                                  <h3 className="text-lg font-semibold mb-1">
-                                    <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
-                                      {item.title}
-                                    </Link>
-                                  </h3>
-
-                                  {item.description && (
-                                    <p className="text-muted-foreground text-sm mb-4">
-                                      {item.description}
-                                    </p>
-                                  )}
-
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-muted-foreground">
-                                      Updated: {new Date(item.updated_at).toLocaleDateString()}
-                                    </span>
-
-                                    <Button size="sm" variant="ghost" asChild>
-                                      <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
-                                        Details
-                                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                      </Link>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                    </div>
-                  )}
                 </div>
-              </TabsContent>
+              </div>
+            </Card>
+          </motion.div>
 
-              <TabsContent value="templates">
-                <div className="mt-6">
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(2)].map((_, i) => (
-                        <Card key={i} className="h-40 animate-pulse bg-muted/50" />
-                      ))}
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featureCards.map((card, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.1 }}
+                whileHover={{ y: -5 }}
+              >
+                <Card className={cn(
+                  "h-full rounded-3xl border-none shadow-ios-high bg-white dark:bg-slate-900 overflow-hidden",
+                  "bg-gradient-to-br", card.color
+                )}>
+                  <CardContent className="p-8">
+                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center mb-6">
+                      {card.icon}
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {filteredItems
-                        .filter(item => item.category === 'templates')
-                        .map((item) => {
-                          return (
-                            <Card key={item.id} className="overflow-hidden">
-                              {/* Similar card content for templates */}
-                              <div className="flex flex-col md:flex-row">
-                                <div className="flex-1 p-5 md:p-6">
-                                  <div className="flex flex-col md:flex-row justify-between md:items-center mb-2">
-                                    <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                                      Templates
-                                    </Badge>
-                                  </div>
-
-                                  <h3 className="text-lg font-semibold mb-1">
-                                    <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
-                                      {item.title}
-                                    </Link>
-                                  </h3>
-
-                                  {item.description && (
-                                    <p className="text-muted-foreground text-sm mb-4">
-                                      {item.description}
-                                    </p>
-                                  )}
-
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-muted-foreground">
-                                      Updated: {new Date(item.updated_at).toLocaleDateString()}
-                                    </span>
-
-                                    <Button size="sm" variant="ghost" asChild>
-                                      <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
-                                        Details
-                                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                      </Link>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="documents">
-                <div className="mt-6">
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(2)].map((_, i) => (
-                        <Card key={i} className="h-40 animate-pulse bg-muted/50" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {filteredItems
-                        .filter(item => ['policy', 'legal', 'educational'].includes(item.category))
-                        .map((item) => {
-                          return (
-                            <Card key={item.id} className="overflow-hidden">
-                              {/* Similar card content for documents */}
-                              <div className="flex flex-col md:flex-row">
-                                <div className="flex-1 p-5 md:p-6">
-                                  <div className="flex flex-col md:flex-row justify-between md:items-center mb-2">
-                                    <Badge variant="outline" className="mb-2 md:mb-0 w-fit">
-                                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-                                    </Badge>
-                                  </div>
-
-                                  <h3 className="text-lg font-semibold mb-1">
-                                    <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
-                                      {item.title}
-                                    </Link>
-                                  </h3>
-
-                                  {item.description && (
-                                    <p className="text-muted-foreground text-sm mb-4">
-                                      {item.description}
-                                    </p>
-                                  )}
-
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-muted-foreground">
-                                      Updated: {new Date(item.updated_at).toLocaleDateString()}
-                                    </span>
-
-                                    <Button size="sm" variant="ghost" asChild>
-                                      <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
-                                        Details
-                                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                      </Link>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+                    <h3 className="text-xl font-bold mb-3">{card.title}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                      {card.description}
+                    </p>
+                    <Link to={card.link} className="inline-flex items-center text-kenya-green font-semibold group">
+                      Explore Resources
+                      <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
-        </div>
+
+          {/* Dynamic Resources List */}
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Latest Advocacy Guides</h2>
+              <Button variant="link" asChild>
+                <Link to="/resources">View all resources <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {isLoading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <div key={i} className="h-32 rounded-3xl bg-slate-200/50 dark:bg-slate-800/50 animate-pulse" />
+                ))
+              ) : filteredResources.length > 0 ? (
+                filteredResources.slice(0, 6).map((res) => (
+                  <motion.div key={res.id} whileHover={{ x: 5 }}>
+                    <Card className="rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group cursor-pointer bg-white/50 backdrop-blur-sm dark:bg-slate-950/20"
+                      onClick={() => window.open(res.url, '_blank')}
+                    >
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                          <FileText className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{res.title}</h4>
+                          <p className="text-xs text-slate-500 line-clamp-1">{res.description}</p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-kenya-green transition-colors" />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-12 bg-slate-100/50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                  <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500">No specific guides found for "{searchQuery}". Try a broader term.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Call to Action - Legal Services */}
+          <section className="pt-8 pb-12">
+            <Card className="rounded-[2.5rem] bg-gradient-to-r from-slate-900 to-slate-800 text-white border-none overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-kenya-green/20 blur-[100px] -mr-32 -mt-32" />
+              <CardContent className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div className="space-y-4 max-w-xl">
+                  <h3 className="text-3xl font-bold">Involved in a legal dispute?</h3>
+                  <p className="text-slate-300 text-lg">
+                    CEKA works with a network of pro-bono lawyers in Kenya to support victims of
+                    rights violations and police brutality. Don't fight alone.
+                  </p>
+                </div>
+                <Button className="rounded-2xl h-14 px-10 bg-white text-slate-900 hover:bg-slate-100 font-bold transition-all hover:scale-105">
+                  Request Legal Support
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
+        </section>
       </div>
     </Layout>
   );

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
 
 // Rate limiting per user session
 const MAX_MESSAGES_PER_DAY = 20;
@@ -41,6 +42,7 @@ const GlobalAIAssistant = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [usage, setUsage] = useState(0);
+    const [isVisible, setIsVisible] = useState(false);
 
     const [isIdle, setIsIdle] = useState(false);
     const [showPulse, setShowPulse] = useState(false);
@@ -89,8 +91,15 @@ const GlobalAIAssistant = () => {
             }, 50);
         };
 
+        const visibilityTimer = setTimeout(() => {
+            setIsVisible(true);
+        }, 5000);
+
         window.addEventListener('ceka-ai-trigger', handleTrigger);
-        return () => window.removeEventListener('ceka-ai-trigger', handleTrigger);
+        return () => {
+            window.removeEventListener('ceka-ai-trigger', handleTrigger);
+            clearTimeout(visibilityTimer);
+        };
     }, []);
 
     useEffect(() => {
@@ -160,7 +169,10 @@ const GlobalAIAssistant = () => {
 
     return (
         <div
-            className="fixed z-50 transition-all duration-500 ease-out"
+            className={cn(
+                "fixed z-50 transition-all duration-1000 ease-out",
+                !isVisible && !isOpen && "opacity-0 translate-y-20 pointer-events-none"
+            )}
             style={{
                 zIndex: 50,
                 bottom: isOpen ? 'auto' : '204px',
@@ -300,20 +312,20 @@ const GlobalAIAssistant = () => {
                     <div className="relative w-48 h-12 flex items-center">
                         <div
                             className={`absolute right-12 top-0 h-12 flex items-center transition-all duration-500 ease-out ${isHovering
-                                    ? 'opacity-100 translate-x-0'
-                                    : 'opacity-0 translate-x-4 pointer-events-none'
+                                ? 'opacity-100 translate-x-0'
+                                : 'opacity-0 translate-x-4 pointer-events-none'
                                 }`}
                         >
                             <div
                                 className={`absolute inset-0 rounded-full transition-all duration-500 ease-out ${isHovering
-                                        ? 'bg-black/20 backdrop-blur-sm scale-100'
-                                        : 'bg-black/0 backdrop-blur-none scale-75'
+                                    ? 'bg-black/20 backdrop-blur-sm scale-100'
+                                    : 'bg-black/0 backdrop-blur-none scale-75'
                                     }`}
                             />
                             <span
                                 className={`relative px-4 py-2 text-white font-semibold text-sm whitespace-nowrap transition-all duration-500 ease-out drop-shadow-lg ${isHovering
-                                        ? 'opacity-100 scale-100'
-                                        : 'opacity-0 scale-90'
+                                    ? 'opacity-100 scale-100'
+                                    : 'opacity-0 scale-90'
                                     }`}
                             >
                                 Ask CEKA AI
@@ -321,15 +333,15 @@ const GlobalAIAssistant = () => {
                         </div>
                         <div
                             className={`absolute right-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 ease-out shadow-2xl ${isHovering || showPulse
-                                    ? 'bg-gradient-to-br from-kenya-green via-primary to-kenya-green shadow-kenya-green/50 scale-110'
-                                    : 'bg-gradient-to-br from-kenya-green to-primary shadow-kenya-green/40 scale-100'
+                                ? 'bg-gradient-to-br from-kenya-green via-primary to-kenya-green shadow-kenya-green/50 scale-110'
+                                : 'bg-gradient-to-br from-kenya-green to-primary shadow-kenya-green/40 scale-100'
                                 }`}
                         >
                             <div className="absolute inset-1 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
                             <HelpCircle
                                 className={`relative z-10 transition-all duration-300 ease-out ${isHovering
-                                        ? 'h-6 w-6 text-white drop-shadow-lg'
-                                        : 'h-5 w-5 text-white/90'
+                                    ? 'h-6 w-6 text-white drop-shadow-lg'
+                                    : 'h-5 w-5 text-white/90'
                                     }`}
                             />
                             {showPulse && !isHovering && (
