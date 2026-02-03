@@ -159,6 +159,8 @@ const Blog = () => {
                   <div className="relative flex-1 min-w-[200px] md:w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
+                      id="blog-search"
+                      name="q"
                       placeholder="Search posts..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -167,8 +169,8 @@ const Blog = () => {
                   </div>
 
                   {isAdmin && (
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-32">
+                    <Select name="status" value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger id="post-status" className="w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

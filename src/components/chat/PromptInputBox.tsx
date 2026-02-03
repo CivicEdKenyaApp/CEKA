@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowUp, 
-  Paperclip, 
-  X, 
-  Mic, 
-  Globe, 
+import {
+  ArrowUp,
+  Paperclip,
+  X,
+  Mic,
+  Globe,
   MessageSquare,
   StopCircle,
   Loader2,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -285,6 +285,8 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
                 exit={{ opacity: 0, height: 0 }}
               >
                 <Textarea
+                  id="prompt-input"
+                  name="prompt"
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}

@@ -178,8 +178,9 @@ const UserProfile = () => {
               <label htmlFor="email" className="text-sm font-medium">{translate("Email", language)}</label>
               <Input
                 id="email"
+                name="email"
+                defaultValue={session?.user?.email || ''}
                 type="email"
-                value={session.user.email || ''}
                 disabled
                 className="bg-muted/50"
               />
@@ -188,6 +189,7 @@ const UserProfile = () => {
               <label htmlFor="username" className="text-sm font-medium">{translate("Username", language)}</label>
               <Input
                 id="username"
+                name="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder={translate("Enter your username", language)}
@@ -197,6 +199,7 @@ const UserProfile = () => {
               <label htmlFor="fullName" className="text-sm font-medium">{translate("Full Name", language)}</label>
               <Input
                 id="fullName"
+                name="full_name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder={translate("Enter your full name", language)}

@@ -49,10 +49,10 @@ export default function CommunityProfileForm() {
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={onSubmit} className="grid gap-4">
-          <Input placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <Input placeholder="Email (optional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Input placeholder="County (optional)" value={county} onChange={(e) => setCounty(e.target.value)} />
-          <Textarea placeholder="Short bio (optional)" value={bio} onChange={(e) => setBio(e.target.value)} />
+          <Input id="full-name" name="full_name" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <Input id="email" name="email" placeholder="Email (optional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input id="county" name="county" placeholder="County (optional)" value={county} onChange={(e) => setCounty(e.target.value)} />
+          <Textarea id="bio" name="bio" placeholder="Short bio (optional)" value={bio} onChange={(e) => setBio(e.target.value)} />
           <Button type="submit" className="bg-kenya-green hover:bg-kenya-green/90" disabled={isLoading}>
             {isLoading ? 'Creating...' : 'Create Community Profile'}
           </Button>

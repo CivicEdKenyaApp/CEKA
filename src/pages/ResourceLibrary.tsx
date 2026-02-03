@@ -508,6 +508,8 @@ const ResourceLibrary = () => {
           <div className="relative max-w-2xl mx-auto mb-12">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
+              id="resource-search"
+              name="q"
               type="text"
               placeholder={translate("Search resources...", language)}
               className="pl-12 h-14 rounded-[28px] glass-card border-none shadow-ios-high dark:shadow-ios-high-dark text-lg focus-visible:ring-primary/20"

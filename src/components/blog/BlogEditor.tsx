@@ -36,7 +36,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
   const [newKeyword, setNewKeyword] = useState('');
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
-  
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -171,6 +171,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
+                  name="title"
                   placeholder="Enter post title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -182,6 +183,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 <Label htmlFor="excerpt">Excerpt</Label>
                 <Textarea
                   id="excerpt"
+                  name="excerpt"
                   placeholder="Brief description of your post (optional - will be auto-generated if left empty)"
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
@@ -207,8 +209,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={status} onValueChange={(value: 'draft' | 'published') => setStatus(value)}>
-                  <SelectTrigger>
+                <Select name="status" value={status} onValueChange={(value: 'draft' | 'published') => setStatus(value)}>
+                  <SelectTrigger id="status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -220,8 +222,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
 
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger>
+                <Select name="category" value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger id="category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -237,8 +239,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
 
               <div>
                 <Label htmlFor="content-type">Content Type</Label>
-                <Select value={contentType} onValueChange={(value: 'html' | 'markdown') => setContentType(value)}>
-                  <SelectTrigger>
+                <Select name="content_type" value={contentType} onValueChange={(value: 'html' | 'markdown') => setContentType(value)}>
+                  <SelectTrigger id="content-type">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,15 +257,17 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 <div className="mt-2">
                   {featuredImageUrl && (
                     <div className="mb-2">
-                      <img 
-                        src={featuredImageUrl} 
-                        alt="Featured" 
+                      <img
+                        src={featuredImageUrl}
+                        alt="Featured"
                         className="max-w-xs h-32 object-cover rounded border"
                       />
                     </div>
                   )}
                   <div className="flex gap-2">
                     <Input
+                      id="featured-image-url"
+                      name="featured_image_url"
                       placeholder="Featured image URL"
                       value={featuredImageUrl}
                       onChange={(e) => setFeaturedImageUrl(e.target.value)}
@@ -291,6 +295,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input
+                      id="tags-input"
+                      name="tags_input"
                       placeholder="Add tag"
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
@@ -304,8 +310,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                     {tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                         {tag}
-                        <X 
-                          className="h-3 w-3 cursor-pointer" 
+                        <X
+                          className="h-3 w-3 cursor-pointer"
                           onClick={() => handleRemoveTag(tag)}
                         />
                       </Badge>
@@ -321,6 +327,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
               <Label htmlFor="meta-description">Meta Description</Label>
               <Textarea
                 id="meta-description"
+                name="meta_description"
                 placeholder="Brief description for search engines (150-160 characters recommended)"
                 value={metaDescription}
                 onChange={(e) => setMetaDescription(e.target.value)}
@@ -336,6 +343,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
+                    id="seo-keywords-input"
+                    name="seo_keywords_input"
                     placeholder="Add SEO keyword"
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
@@ -349,8 +358,8 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                   {seoKeywords.map((keyword) => (
                     <Badge key={keyword} variant="outline" className="flex items-center gap-1">
                       {keyword}
-                      <X 
-                        className="h-3 w-3 cursor-pointer" 
+                      <X
+                        className="h-3 w-3 cursor-pointer"
                         onClick={() => handleRemoveKeyword(keyword)}
                       />
                     </Badge>

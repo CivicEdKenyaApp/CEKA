@@ -78,10 +78,10 @@ const DiscussionDetail = () => {
   const [likeCount, setLikeCount] = useState(discussionDetails.likes);
   const { toast } = useToast();
   const { id } = useParams<{ id: string }>();
-  
+
   // In a real app, fetch the discussion detail using the ID
   const discussion = discussionDetails;
-  
+
   const handleLike = () => {
     if (liked) {
       setLikeCount(likeCount - 1);
@@ -90,7 +90,7 @@ const DiscussionDetail = () => {
     }
     setLiked(!liked);
   };
-  
+
   const handleSave = () => {
     setSaved(!saved);
     toast({
@@ -98,14 +98,14 @@ const DiscussionDetail = () => {
       description: saved ? "This discussion has been removed from your saved items." : "This discussion has been saved to your bookmarks.",
     });
   };
-  
+
   const handleReport = () => {
     toast({
       title: "Report submitted",
       description: "Thank you for helping keep our community safe. We'll review this content shortly.",
     });
   };
-  
+
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (comment.trim()) {
@@ -116,7 +116,7 @@ const DiscussionDetail = () => {
       setComment("");
     }
   };
-  
+
   // Group replies with their parent comments
   const commentsWithReplies = discussion.replies.reduce((acc: any[], reply) => {
     if (!reply.isReply) {
@@ -127,7 +127,7 @@ const DiscussionDetail = () => {
     }
     return acc;
   }, []);
-  
+
   return (
     <Layout>
       <div className="container py-8 md:py-12 max-w-4xl">
@@ -154,7 +154,7 @@ const DiscussionDetail = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleSave}>
                   <Bookmark className={`h-4 w-4 ${saved ? 'fill-current text-kenya-green' : ''}`} />
@@ -167,7 +167,7 @@ const DiscussionDetail = () => {
               </div>
             </div>
           </CardHeader>
-          
+
           <CardContent className="pb-4">
             <h1 className="text-2xl font-bold mb-4">{discussion.title}</h1>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -176,23 +176,23 @@ const DiscussionDetail = () => {
                 <Badge key={index} variant="outline">{tag}</Badge>
               ))}
             </div>
-            
+
             <div className="prose dark:prose-invert max-w-none mb-4">
               {discussion.content.split('\n\n').map((paragraph, index) => (
                 <p key={index} className="mb-4">{paragraph}</p>
               ))}
             </div>
-            
+
             {discussion.image && (
               <div className="mt-4 mb-4 rounded-lg overflow-hidden">
-                <img 
-                  src={discussion.image} 
-                  alt={discussion.title} 
-                  className="w-full h-auto object-cover" 
+                <img
+                  src={discussion.image}
+                  alt={discussion.title}
+                  className="w-full h-auto object-cover"
                 />
               </div>
             )}
-            
+
             <div className="flex items-center text-sm text-muted-foreground gap-4">
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
@@ -211,12 +211,12 @@ const DiscussionDetail = () => {
               </div>
             </div>
           </CardContent>
-          
+
           <CardFooter className="border-t pt-4 pb-4 flex justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="flex items-center gap-1 px-2"
                 onClick={handleLike}
               >
@@ -225,19 +225,19 @@ const DiscussionDetail = () => {
                   {liked ? 'Liked' : 'Like'}
                 </span>
               </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
+
+              <Button
+                variant="ghost"
+                size="sm"
                 className="flex items-center gap-1 px-2"
               >
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Comment</span>
               </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
+
+              <Button
+                variant="ghost"
+                size="sm"
                 className="flex items-center gap-1 px-2"
               >
                 <ShareIcon className="h-5 w-5 text-muted-foreground" />
@@ -246,10 +246,10 @@ const DiscussionDetail = () => {
             </div>
           </CardFooter>
         </Card>
-        
+
         <div className="space-y-6">
           <h2 className="text-xl font-bold mb-4">Comments ({discussion.comments})</h2>
-          
+
           <form onSubmit={handleSubmitComment} className="mb-6">
             <div className="flex items-start gap-3">
               <Avatar>
@@ -257,6 +257,8 @@ const DiscussionDetail = () => {
               </Avatar>
               <div className="flex-1">
                 <Input
+                  id="comment-input"
+                  name="comment"
                   placeholder="Write a comment..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -266,7 +268,7 @@ const DiscussionDetail = () => {
               </div>
             </div>
           </form>
-          
+
           <div className="space-y-6">
             {commentsWithReplies.map((comment) => (
               <div key={comment.id} className="space-y-4">
@@ -304,7 +306,7 @@ const DiscussionDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* Replies to this comment */}
                 {comment.replies && comment.replies.length > 0 && (
                   <div className="ml-10 space-y-4">

@@ -77,7 +77,7 @@ const CommunityChat = () => {
           .in('id', userIds);
 
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-        
+
         const messagesWithProfiles = data?.map(m => ({
           ...m,
           profile: profileMap.get(m.user_id) || { full_name: 'Unknown', avatar_url: null }
@@ -107,7 +107,7 @@ const CommunityChat = () => {
         },
         async (payload) => {
           const newMsg = payload.new as ChatMessage;
-          
+
           // Fetch profile for the new message
           const { data: profile } = await supabase
             .from('profiles')
@@ -138,7 +138,7 @@ const CommunityChat = () => {
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
         const users: OnlineUser[] = [];
-        
+
         Object.values(state).forEach((presences: any) => {
           presences.forEach((presence: any) => {
             if (!users.find(u => u.id === presence.id)) {
@@ -151,7 +151,7 @@ const CommunityChat = () => {
             }
           });
         });
-        
+
         setOnlineUsers(users);
       })
       .subscribe(async (status) => {
@@ -241,7 +241,7 @@ const CommunityChat = () => {
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent className="flex-1 p-0 overflow-hidden">
           <ScrollArea className="h-full p-4" ref={scrollRef}>
             {loading ? (
@@ -278,11 +278,10 @@ const CommunityChat = () => {
                           </span>
                         </div>
                         <div
-                          className={`rounded-lg px-3 py-2 max-w-md ${
-                            isOwn
+                          className={`rounded-lg px-3 py-2 max-w-md ${isOwn
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
-                          }`}
+                            }`}
                         >
                           <p className="text-sm whitespace-pre-wrap break-words">
                             {message.content}
@@ -301,6 +300,8 @@ const CommunityChat = () => {
           <div className="w-full">
             <form onSubmit={sendMessage} className="flex gap-2 w-full">
               <Input
+                id="chat-input"
+                name="message"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."

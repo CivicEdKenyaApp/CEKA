@@ -61,10 +61,10 @@ const AdvocacyToolkit = () => {
           .select('*');
 
         if (toolkitError) throw toolkitError;
-        
+
         const items = toolkitData as ToolkitItem[];
         setToolkitItems(items);
-        
+
         // Get all document IDs from the toolkit items
         const allDocumentIds: string[] = [];
         items.forEach(item => {
@@ -72,7 +72,7 @@ const AdvocacyToolkit = () => {
             allDocumentIds.push(...item.document_ids);
           }
         });
-        
+
         // If we have document IDs, fetch the documents
         if (allDocumentIds.length > 0) {
           const { data: documentsData, error: docsError } = await supabase
@@ -80,15 +80,15 @@ const AdvocacyToolkit = () => {
             .select('*')
             .in('id', allDocumentIds)
             .eq('is_approved', true);
-          
+
           if (docsError) throw docsError;
-          
+
           // Create a map of document ID to document
           const docsMap: Record<string, Document> = {};
           (documentsData as Document[]).forEach(doc => {
             docsMap[doc.id] = doc;
           });
-          
+
           setDocuments(docsMap);
         }
       } catch (error) {
@@ -102,25 +102,25 @@ const AdvocacyToolkit = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchToolkitItems();
   }, [toast]);
 
   // Filter toolkit items based on search query and category
   const filteredItems = toolkitItems.filter(item => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
   // Get documents for a toolkit item
   const getDocumentsForItem = (item: ToolkitItem) => {
     if (!item.document_ids || item.document_ids.length === 0) return [];
-    
+
     return item.document_ids.map(id => documents[id]).filter(Boolean);
   };
 
@@ -133,7 +133,7 @@ const AdvocacyToolkit = () => {
             <p className="text-muted-foreground">Resources and guides to support civic engagement and advocacy efforts</p>
           </div>
         </div>
-        
+
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Filters sidebar */}
           <div className="lg:col-span-1 space-y-4">
@@ -146,22 +146,25 @@ const AdvocacyToolkit = () => {
                   <label className="text-sm font-medium mb-1.5 block">Search</label>
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search resources..." 
+                    <Input
+                      id="toolkit-search"
+                      name="q"
+                      placeholder="Search resources..."
                       className="pl-8"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Category</label>
                   <Select
+                    name="category"
                     value={selectedCategory}
                     onValueChange={setSelectedCategory}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="toolkit-category">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
@@ -176,7 +179,7 @@ const AdvocacyToolkit = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Main content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="all">
@@ -186,7 +189,7 @@ const AdvocacyToolkit = () => {
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="all" className="mt-6">
                 {isLoading ? (
                   <div className="space-y-4">
@@ -199,8 +202,8 @@ const AdvocacyToolkit = () => {
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">No resources found</h3>
                     <p className="text-muted-foreground mb-4">
-                      {searchQuery || selectedCategory !== 'all' 
-                        ? "Try adjusting your search or filters" 
+                      {searchQuery || selectedCategory !== 'all'
+                        ? "Try adjusting your search or filters"
                         : "Resources will be added soon"}
                     </p>
                   </div>
@@ -208,7 +211,7 @@ const AdvocacyToolkit = () => {
                   <div className="space-y-4">
                     {filteredItems.map((item) => {
                       const itemDocuments = getDocumentsForItem(item);
-                      
+
                       return (
                         <Card key={item.id} className="overflow-hidden">
                           <div className="flex flex-col md:flex-row">
@@ -218,19 +221,19 @@ const AdvocacyToolkit = () => {
                                   {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                                 </Badge>
                               </div>
-                              
+
                               <h3 className="text-lg font-semibold mb-1">
                                 <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
                                   {item.title}
                                 </Link>
                               </h3>
-                              
+
                               {item.description && (
                                 <p className="text-muted-foreground text-sm mb-4">
                                   {item.description}
                                 </p>
                               )}
-                              
+
                               {itemDocuments.length > 0 && (
                                 <div className="space-y-2 mb-4">
                                   <h4 className="text-sm font-medium">Resources</h4>
@@ -251,12 +254,12 @@ const AdvocacyToolkit = () => {
                                   </div>
                                 </div>
                               )}
-                              
+
                               <div className="flex items-center justify-between mt-2">
                                 <span className="text-xs text-muted-foreground">
                                   Updated: {new Date(item.updated_at).toLocaleDateString()}
                                 </span>
-                                
+
                                 <Button size="sm" variant="ghost" asChild>
                                   <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
                                     Details
@@ -272,7 +275,7 @@ const AdvocacyToolkit = () => {
                   </div>
                 )}
               </TabsContent>
-              
+
               {/* These are placeholders for other tabs - we'll filter by category */}
               <TabsContent value="guides">
                 <div className="mt-6">
@@ -288,7 +291,7 @@ const AdvocacyToolkit = () => {
                         .filter(item => item.category === 'advocacy')
                         .map((item) => {
                           const itemDocuments = getDocumentsForItem(item);
-                          
+
                           return (
                             <Card key={item.id} className="overflow-hidden">
                               {/* Similar card content as "all" tab */}
@@ -299,24 +302,24 @@ const AdvocacyToolkit = () => {
                                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                                     </Badge>
                                   </div>
-                                  
+
                                   <h3 className="text-lg font-semibold mb-1">
                                     <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
                                       {item.title}
                                     </Link>
                                   </h3>
-                                  
+
                                   {item.description && (
                                     <p className="text-muted-foreground text-sm mb-4">
                                       {item.description}
                                     </p>
                                   )}
-                                  
+
                                   <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-muted-foreground">
                                       Updated: {new Date(item.updated_at).toLocaleDateString()}
                                     </span>
-                                    
+
                                     <Button size="sm" variant="ghost" asChild>
                                       <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
                                         Details
@@ -333,7 +336,7 @@ const AdvocacyToolkit = () => {
                   )}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="templates">
                 <div className="mt-6">
                   {isLoading ? (
@@ -357,24 +360,24 @@ const AdvocacyToolkit = () => {
                                       Templates
                                     </Badge>
                                   </div>
-                                  
+
                                   <h3 className="text-lg font-semibold mb-1">
                                     <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
                                       {item.title}
                                     </Link>
                                   </h3>
-                                  
+
                                   {item.description && (
                                     <p className="text-muted-foreground text-sm mb-4">
                                       {item.description}
                                     </p>
                                   )}
-                                  
+
                                   <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-muted-foreground">
                                       Updated: {new Date(item.updated_at).toLocaleDateString()}
                                     </span>
-                                    
+
                                     <Button size="sm" variant="ghost" asChild>
                                       <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
                                         Details
@@ -391,7 +394,7 @@ const AdvocacyToolkit = () => {
                   )}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="documents">
                 <div className="mt-6">
                   {isLoading ? (
@@ -415,24 +418,24 @@ const AdvocacyToolkit = () => {
                                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                                     </Badge>
                                   </div>
-                                  
+
                                   <h3 className="text-lg font-semibold mb-1">
                                     <Link to={`/advocacy-toolkit/${item.id}`} className="hover:text-kenya-green transition-colors">
                                       {item.title}
                                     </Link>
                                   </h3>
-                                  
+
                                   {item.description && (
                                     <p className="text-muted-foreground text-sm mb-4">
                                       {item.description}
                                     </p>
                                   )}
-                                  
+
                                   <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-muted-foreground">
                                       Updated: {new Date(item.updated_at).toLocaleDateString()}
                                     </span>
-                                    
+
                                     <Button size="sm" variant="ghost" asChild>
                                       <Link to={`/advocacy-toolkit/${item.id}`} className="flex items-center">
                                         Details

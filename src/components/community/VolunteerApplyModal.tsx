@@ -120,6 +120,7 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                                         <Label htmlFor="motivation" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Why do you want to volunteer?</Label>
                                         <Textarea
                                             id="motivation"
+                                            name="motivation"
                                             placeholder="Describe your motivation and relevant experience..."
                                             className="min-h-[150px] rounded-[24px] bg-slate-100/50 dark:bg-black/20 border-none shadow-inner p-5 text-sm focus-visible:ring-2 focus-visible:ring-primary/20"
                                             value={motivation}

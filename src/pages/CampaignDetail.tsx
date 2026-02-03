@@ -50,7 +50,7 @@ const campaignDetails = {
   coverImage: "/placeholder.svg",
   gallery: [
     "/placeholder.svg",
-    "/placeholder.svg", 
+    "/placeholder.svg",
     "/placeholder.svg"
   ],
   updates: [
@@ -78,24 +78,24 @@ const CampaignDetail = () => {
   const [comment, setComment] = useState("");
   const { toast } = useToast();
   const { id } = useParams<{ id: string }>();
-  
+
   // In a real app, fetch the campaign detail using the ID
   const campaign = campaignDetails;
-  
+
   const handleJoinCampaign = () => {
     toast({
       title: "Campaign Joined!",
       description: "You've successfully joined this campaign. We'll send you updates.",
     });
   };
-  
+
   const handleDonate = () => {
     toast({
       title: "Thank you for your support!",
       description: "You will be redirected to the payment page.",
     });
   };
-  
+
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (comment.trim()) {
@@ -106,15 +106,15 @@ const CampaignDetail = () => {
       setComment("");
     }
   };
-  
+
   return (
     <Layout>
       <div className="container py-6 md:py-10">
         {/* Hero section with cover image */}
         <div className="relative h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-6">
-          <img 
-            src={campaign.coverImage} 
-            alt={campaign.title} 
+          <img
+            src={campaign.coverImage}
+            alt={campaign.title}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
@@ -140,7 +140,7 @@ const CampaignDetail = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main content */}
           <div className="lg:col-span-2">
@@ -151,21 +151,21 @@ const CampaignDetail = () => {
                 <TabsTrigger value="supporters">Supporters</TabsTrigger>
                 <TabsTrigger value="comments">Comments</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="about">
                 <div className="prose dark:prose-invert max-w-none">
                   <div dangerouslySetInnerHTML={{ __html: campaign.detailedDescription }} />
                 </div>
-                
+
                 {/* Gallery */}
                 <div className="mt-8">
                   <h3 className="text-lg font-medium mb-4">Campaign Gallery</h3>
                   <div className="grid grid-cols-3 gap-4">
                     {campaign.gallery.map((image, index) => (
                       <div key={index} className="aspect-square rounded-md overflow-hidden">
-                        <img 
-                          src={image} 
-                          alt={`Campaign image ${index+1}`} 
+                        <img
+                          src={image}
+                          alt={`Campaign image ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -173,7 +173,7 @@ const CampaignDetail = () => {
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="updates">
                 <div className="space-y-6">
                   {campaign.updates.map((update) => (
@@ -191,7 +191,7 @@ const CampaignDetail = () => {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="supporters">
                 <div className="space-y-4">
                   {campaign.supporters.map((supporter, index) => (
@@ -214,7 +214,7 @@ const CampaignDetail = () => {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="comments">
                 <form onSubmit={handleSubmitComment}>
                   <div className="flex items-start gap-3 mb-6">
@@ -223,6 +223,8 @@ const CampaignDetail = () => {
                     </Avatar>
                     <div className="flex-1">
                       <Input
+                        id="campaign-comment"
+                        name="comment"
                         placeholder="Add a comment..."
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
@@ -232,7 +234,7 @@ const CampaignDetail = () => {
                     </div>
                   </div>
                 </form>
-                
+
                 <div className="flex items-center justify-center py-8 text-muted-foreground">
                   <MessageSquare className="h-5 w-5 mr-2" />
                   <span>Be the first to comment</span>
@@ -240,7 +242,7 @@ const CampaignDetail = () => {
               </TabsContent>
             </Tabs>
           </div>
-          
+
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Campaign progress */}
@@ -257,34 +259,34 @@ const CampaignDetail = () => {
                     <span className="text-sm text-muted-foreground">{campaign.participants} supporters</span>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 mb-6">
-                  <Button 
+                  <Button
                     className="w-full bg-kenya-green hover:bg-kenya-green/90"
                     onClick={handleJoinCampaign}
                   >
                     <HandHelping className="mr-2 h-4 w-4" />
                     Join Campaign
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={handleDonate}
                   >
                     <Heart className="mr-2 h-4 w-4" />
                     Support Campaign
                   </Button>
-                  
-                  <Button 
-                    variant="ghost" 
+
+                  <Button
+                    variant="ghost"
                     className="w-full"
                   >
                     <ShareIcon className="mr-2 h-4 w-4" />
                     Share
                   </Button>
                 </div>
-                
+
                 <div className="space-y-2 border-t pt-4">
                   <div className="flex items-center">
                     <CalendarIcon className="h-4 w-4 text-muted-foreground mr-2" />
@@ -292,14 +294,14 @@ const CampaignDetail = () => {
                       Started: {new Date(campaign.startDate).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-muted-foreground mr-2" />
                     <span className="text-sm">
                       Ends: {new Date(campaign.endDate).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center">
                     <Users className="h-4 w-4 text-muted-foreground mr-2" />
                     <span className="text-sm">
@@ -309,7 +311,7 @@ const CampaignDetail = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* More campaigns */}
             <Card>
               <CardContent className="p-6">
@@ -317,9 +319,9 @@ const CampaignDetail = () => {
                 <div className="space-y-4">
                   <Link to="/community/campaigns/2" className="flex items-center gap-3 group">
                     <div className="w-16 h-16 rounded overflow-hidden shrink-0">
-                      <img 
-                        src="/placeholder.svg" 
-                        alt="Campaign thumbnail" 
+                      <img
+                        src="/placeholder.svg"
+                        alt="Campaign thumbnail"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -330,9 +332,9 @@ const CampaignDetail = () => {
                   </Link>
                   <Link to="/community/campaigns/3" className="flex items-center gap-3 group">
                     <div className="w-16 h-16 rounded overflow-hidden shrink-0">
-                      <img 
-                        src="/placeholder.svg" 
-                        alt="Campaign thumbnail" 
+                      <img
+                        src="/placeholder.svg"
+                        alt="Campaign thumbnail"
                         className="w-full h-full object-cover"
                       />
                     </div>

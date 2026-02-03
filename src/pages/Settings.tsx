@@ -25,7 +25,7 @@ const Settings = () => {
   const { language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
-  
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -34,19 +34,19 @@ const Settings = () => {
   const [highContrast, setHighContrast] = useState(false);
   const [autoplayMedia, setAutoplayMedia] = useState(false);
   const [location, setLocation] = useState('nairobi');
-  
+
   const handleSaveSettings = () => {
     toast({
       title: translate("Settings saved", language),
       description: translate("Your preferences have been updated.", language),
     });
   };
-  
+
   return (
     <Layout>
       <div className="container py-8 pb-16 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">{translate("Settings", language)}</h1>
-        
+
         <Tabs defaultValue="account" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="account">
@@ -66,7 +66,7 @@ const Settings = () => {
               <span className="hidden sm:inline">{translate("Privacy", language)}</span>
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="account">
             <Card>
               <CardHeader>
@@ -80,16 +80,13 @@ const Settings = () => {
                   <h3 className="text-lg font-medium">{translate("Profile Information", language)}</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="name">{translate("Full Name", language)}</Label>
-                      <Input id="name" placeholder="John Doe" defaultValue={session?.user?.user_metadata?.full_name || ''} />
+                      <Input id="name" name="full_name" placeholder="John Doe" defaultValue={session?.user?.user_metadata?.full_name || ''} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="username">{translate("Username", language)}</Label>
-                      <Input id="username" placeholder="johndoe" defaultValue={session?.user?.user_metadata?.username || ''} />
+                      <Input id="username" name="username" placeholder="johndoe" defaultValue={session?.user?.user_metadata?.username || ''} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">{translate("Email", language)}</Label>
-                      <Input id="email" type="email" readOnly defaultValue={session?.user?.email || ''} />
+                      <Input id="email" name="email" type="email" readOnly defaultValue={session?.user?.email || ''} />
                       {session?.user?.email_confirmed_at && (
                         <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
                           {translate("Verified", language)}
@@ -98,7 +95,7 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <h3 className="text-lg font-medium">{translate("Preferences", language)}</h3>
                   <div className="space-y-4">
@@ -107,8 +104,8 @@ const Settings = () => {
                         <Label htmlFor="language">{translate("Language", language)}</Label>
                         <p className="text-sm text-muted-foreground">{translate("Select your preferred language", language)}</p>
                       </div>
-                      <Select defaultValue={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw')}>
-                        <SelectTrigger className="w-[180px]">
+                      <Select name="language" defaultValue={language} onValueChange={(value) => setLanguage(value as 'en' | 'sw')}>
+                        <SelectTrigger id="language" className="w-[180px]">
                           <SelectValue placeholder={translate("Select language", language)} />
                         </SelectTrigger>
                         <SelectContent>
@@ -117,14 +114,14 @@ const Settings = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>{translate("Region", language)}</Label>
                         <p className="text-sm text-muted-foreground">{translate("Set your location for relevant content", language)}</p>
                       </div>
-                      <Select defaultValue={location} onValueChange={setLocation}>
-                        <SelectTrigger className="w-[180px]">
+                      <Select name="region" defaultValue={location} onValueChange={setLocation}>
+                        <SelectTrigger id="region" className="w-[180px]">
                           <SelectValue placeholder={translate("Select region", language)} />
                         </SelectTrigger>
                         <SelectContent>
@@ -141,7 +138,7 @@ const Settings = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -156,13 +153,13 @@ const Settings = () => {
                     <Label htmlFor="notifications">{translate("Enable Notifications", language)}</Label>
                     <p className="text-sm text-muted-foreground">{translate("Receive updates and alerts", language)}</p>
                   </div>
-                  <Switch 
-                    id="notifications" 
-                    checked={notificationsEnabled} 
-                    onCheckedChange={setNotificationsEnabled} 
+                  <Switch
+                    id="notifications"
+                    checked={notificationsEnabled}
+                    onCheckedChange={setNotificationsEnabled}
                   />
                 </div>
-                
+
                 {notificationsEnabled && (
                   <div className="space-y-4 ml-6 border-l-2 pl-6 border-muted">
                     <div className="flex items-center justify-between">
@@ -170,27 +167,27 @@ const Settings = () => {
                         <Label htmlFor="email-notifications">{translate("Email Notifications", language)}</Label>
                         <p className="text-sm text-muted-foreground">{translate("Receive notifications via email", language)}</p>
                       </div>
-                      <Switch 
-                        id="email-notifications" 
-                        checked={emailNotifications} 
-                        onCheckedChange={setEmailNotifications} 
+                      <Switch
+                        id="email-notifications"
+                        checked={emailNotifications}
+                        onCheckedChange={setEmailNotifications}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="push-notifications">{translate("Push Notifications", language)}</Label>
                         <p className="text-sm text-muted-foreground">{translate("Receive push notifications on your device", language)}</p>
                       </div>
-                      <Switch 
-                        id="push-notifications" 
-                        checked={pushNotifications} 
-                        onCheckedChange={setPushNotifications} 
+                      <Switch
+                        id="push-notifications"
+                        checked={pushNotifications}
+                        onCheckedChange={setPushNotifications}
                       />
                     </div>
                   </div>
                 )}
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <h3 className="text-lg font-medium">{translate("Notification Types", language)}</h3>
                   <div className="space-y-4">
@@ -215,7 +212,7 @@ const Settings = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
@@ -229,10 +226,10 @@ const Settings = () => {
                   <h3 className="text-lg font-medium">{translate("Theme", language)}</h3>
                   <RadioGroup defaultValue={theme} className="grid grid-cols-3 gap-4">
                     <div>
-                      <RadioGroupItem 
-                        value="light" 
-                        id="theme-light" 
-                        className="peer sr-only" 
+                      <RadioGroupItem
+                        value="light"
+                        id="theme-light"
+                        className="peer sr-only"
                         onClick={() => theme !== 'light' && toggleTheme()}
                       />
                       <Label
@@ -244,10 +241,10 @@ const Settings = () => {
                       </Label>
                     </div>
                     <div>
-                      <RadioGroupItem 
-                        value="dark" 
-                        id="theme-dark" 
-                        className="peer sr-only" 
+                      <RadioGroupItem
+                        value="dark"
+                        id="theme-dark"
+                        className="peer sr-only"
                         onClick={() => theme !== 'dark' && toggleTheme()}
                       />
                       <Label
@@ -259,10 +256,10 @@ const Settings = () => {
                       </Label>
                     </div>
                     <div>
-                      <RadioGroupItem 
-                        value="system" 
-                        id="theme-system" 
-                        className="peer sr-only" 
+                      <RadioGroupItem
+                        value="system"
+                        id="theme-system"
+                        className="peer sr-only"
                       />
                       <Label
                         htmlFor="theme-system"
@@ -274,7 +271,7 @@ const Settings = () => {
                     </div>
                   </RadioGroup>
                 </div>
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
@@ -291,36 +288,36 @@ const Settings = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="high-contrast">{translate("High Contrast", language)}</Label>
                       <p className="text-sm text-muted-foreground">{translate("Increase contrast for better readability", language)}</p>
                     </div>
-                    <Switch 
-                      id="high-contrast" 
-                      checked={highContrast} 
-                      onCheckedChange={setHighContrast} 
+                    <Switch
+                      id="high-contrast"
+                      checked={highContrast}
+                      onCheckedChange={setHighContrast}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="autoplay-media">{translate("Autoplay Media", language)}</Label>
                       <p className="text-sm text-muted-foreground">{translate("Automatically play videos and animations", language)}</p>
                     </div>
-                    <Switch 
-                      id="autoplay-media" 
-                      checked={autoplayMedia} 
-                      onCheckedChange={setAutoplayMedia} 
+                    <Switch
+                      id="autoplay-media"
+                      checked={autoplayMedia}
+                      onCheckedChange={setAutoplayMedia}
                     />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="privacy">
             <Card>
               <CardHeader>
@@ -349,7 +346,7 @@ const Settings = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>{translate("Activity Status", language)}</Label>
@@ -359,18 +356,18 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <h3 className="text-lg font-medium">{translate("Security", language)}</h3>
                   <div className="space-y-4">
                     <Button variant="outline" className="w-full sm:w-auto">
                       {translate("Change Password", language)}
                     </Button>
-                    
+
                     <Button variant="outline" className="w-full sm:w-auto">
                       {translate("Two-Factor Authentication", language)}
                     </Button>
-                    
+
                     <div className="pt-4">
                       <div className="rounded-md bg-amber-50 dark:bg-amber-950/40 p-4">
                         <div className="flex">
@@ -392,14 +389,14 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 pt-4 border-t">
                   <h3 className="text-lg font-medium">{translate("Data Management", language)}</h3>
                   <div className="space-y-4">
                     <Button variant="outline" className="w-full sm:w-auto">
                       {translate("Download Your Data", language)}
                     </Button>
-                    
+
                     <Button variant="destructive" className="w-full sm:w-auto">
                       {translate("Delete Account", language)}
                     </Button>
@@ -409,7 +406,7 @@ const Settings = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        
+
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="outline" onClick={() => navigate(-1)}>
             {translate("Cancel", language)}

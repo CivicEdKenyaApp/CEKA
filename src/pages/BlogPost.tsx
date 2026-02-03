@@ -331,6 +331,8 @@ const BlogPostPage = () => {
                           </Avatar>
                           <div className="flex-1 space-y-3">
                             <Textarea
+                              id="reply-text"
+                              name="reply"
                               placeholder={session ? "Write your reply..." : "Sign in to reply (anonymous replies coming soon)"}
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}

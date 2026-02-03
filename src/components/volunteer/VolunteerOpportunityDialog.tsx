@@ -19,7 +19,7 @@ export default function VolunteerOpportunityDialog() {
   const { language } = useLanguage();
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  
+
   // Form state
   const [formData, setFormData] = React.useState({
     title: '',
@@ -59,10 +59,10 @@ export default function VolunteerOpportunityDialog() {
 
   const submit = async () => {
     if (!user) {
-      toast({ 
-        title: translate('Authentication Required', language), 
-        description: translate('Please sign in to submit a volunteer opportunity.', language), 
-        variant: 'destructive' 
+      toast({
+        title: translate('Authentication Required', language),
+        description: translate('Please sign in to submit a volunteer opportunity.', language),
+        variant: 'destructive'
       });
       return;
     }
@@ -70,32 +70,32 @@ export default function VolunteerOpportunityDialog() {
     // Validate required fields
     const requiredFields = ['title', 'organization', 'description', 'location', 'type', 'time', 'commitment', 'date'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]?.trim());
-    
+
     if (missingFields.length > 0) {
-      toast({ 
-        title: translate('Missing Fields', language), 
-        description: translate('Please fill in all required fields.', language), 
-        variant: 'destructive' 
+      toast({
+        title: translate('Missing Fields', language),
+        description: translate('Please fill in all required fields.', language),
+        variant: 'destructive'
       });
       return;
     }
 
     // Validate email format if provided
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
-      toast({ 
-        title: translate('Invalid Email', language), 
-        description: translate('Please enter a valid email address.', language), 
-        variant: 'destructive' 
+      toast({
+        title: translate('Invalid Email', language),
+        description: translate('Please enter a valid email address.', language),
+        variant: 'destructive'
       });
       return;
     }
 
     // Validate URL format if provided
     if (formData.applyUrl && !/^https?:\/\/.+/.test(formData.applyUrl)) {
-      toast({ 
-        title: translate('Invalid URL', language), 
-        description: translate('Please enter a valid URL starting with http:// or https://', language), 
-        variant: 'destructive' 
+      toast({
+        title: translate('Invalid URL', language),
+        description: translate('Please enter a valid URL starting with http:// or https://', language),
+        variant: 'destructive'
       });
       return;
     }
@@ -126,10 +126,10 @@ export default function VolunteerOpportunityDialog() {
 
       if (error) {
         console.error('Insert volunteer_opportunities error', error);
-        toast({ 
-          title: translate('Submission Failed', language), 
-          description: translate('Your opportunity could not be submitted. Please try again.', language), 
-          variant: 'destructive' 
+        toast({
+          title: translate('Submission Failed', language),
+          description: translate('Your opportunity could not be submitted. Please try again.', language),
+          variant: 'destructive'
         });
         return;
       }
@@ -142,18 +142,18 @@ export default function VolunteerOpportunityDialog() {
         related_id: null,
       });
 
-      toast({ 
-        title: translate('Submitted Successfully', language), 
-        description: translate('Your volunteer opportunity has been submitted for review. You will be notified once approved.', language) 
+      toast({
+        title: translate('Submitted Successfully', language),
+        description: translate('Your volunteer opportunity has been submitted for review. You will be notified once approved.', language)
       });
       reset();
       setOpen(false);
     } catch (error) {
       console.error('Submission error:', error);
-      toast({ 
-        title: translate('Error', language), 
-        description: translate('An unexpected error occurred. Please try again.', language), 
-        variant: 'destructive' 
+      toast({
+        title: translate('Error', language),
+        description: translate('An unexpected error occurred. Please try again.', language),
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
@@ -208,7 +208,7 @@ export default function VolunteerOpportunityDialog() {
             {translate('Share a volunteer opportunity with the CEKA community. All submissions are reviewed before publishing.', language)}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           {/* Basic Information */}
           <div className="space-y-4">
@@ -216,10 +216,11 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="title" className="flex items-center gap-1">
                 {translate('Title', language)} <span className="text-destructive">*</span>
               </Label>
-              <Input 
+              <Input
                 id="title"
+                name="title"
                 placeholder={translate('e.g., Civic Education Workshop Facilitator', language)}
-                value={formData.title} 
+                value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 maxLength={200}
               />
@@ -229,10 +230,11 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="organization" className="flex items-center gap-1">
                 {translate('Organization', language)} <span className="text-destructive">*</span>
               </Label>
-              <Input 
+              <Input
                 id="organization"
+                name="organization"
                 placeholder={translate('e.g., Kenya Civic Education Foundation', language)}
-                value={formData.organization} 
+                value={formData.organization}
                 onChange={(e) => handleInputChange('organization', e.target.value)}
                 maxLength={200}
               />
@@ -242,10 +244,11 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="description" className="flex items-center gap-1">
                 {translate('Description', language)} <span className="text-destructive">*</span>
               </Label>
-              <Textarea 
+              <Textarea
                 id="description"
+                name="description"
                 placeholder={translate('Describe the volunteer opportunity, responsibilities, and impact...', language)}
-                value={formData.description} 
+                value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 className="min-h-[100px]"
                 maxLength={2000}
@@ -260,10 +263,11 @@ export default function VolunteerOpportunityDialog() {
                 <MapPin className="h-3 w-3" />
                 {translate('Location', language)} <span className="text-destructive">*</span>
               </Label>
-              <Input 
+              <Input
                 id="location"
+                name="location"
                 placeholder={translate('e.g., Nairobi, Remote, Multiple Locations', language)}
-                value={formData.location} 
+                value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 maxLength={200}
               />
@@ -273,8 +277,8 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="type" className="flex items-center gap-1">
                 {translate('Type', language)} <span className="text-destructive">*</span>
               </Label>
-              <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-                <SelectTrigger>
+              <Select name="type" value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+                <SelectTrigger id="type">
                   <SelectValue placeholder={translate('Select type', language)} />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,10 +299,11 @@ export default function VolunteerOpportunityDialog() {
                 <Clock className="h-3 w-3" />
                 {translate('Time', language)} <span className="text-destructive">*</span>
               </Label>
-              <Input 
+              <Input
                 id="time"
+                name="time"
                 placeholder={translate('e.g., 9:00 AM - 4:00 PM, Flexible', language)}
-                value={formData.time} 
+                value={formData.time}
                 onChange={(e) => handleInputChange('time', e.target.value)}
                 maxLength={100}
               />
@@ -308,8 +313,8 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="commitment" className="flex items-center gap-1">
                 {translate('Commitment', language)} <span className="text-destructive">*</span>
               </Label>
-              <Select value={formData.commitment} onValueChange={(value) => handleInputChange('commitment', value)}>
-                <SelectTrigger>
+              <Select name="commitment" value={formData.commitment} onValueChange={(value) => handleInputChange('commitment', value)}>
+                <SelectTrigger id="commitment">
                   <SelectValue placeholder={translate('Select commitment level', language)} />
                 </SelectTrigger>
                 <SelectContent>
@@ -330,10 +335,11 @@ export default function VolunteerOpportunityDialog() {
                 <Calendar className="h-3 w-3" />
                 {translate('Date', language)} <span className="text-destructive">*</span>
               </Label>
-              <Input 
+              <Input
                 id="date"
+                name="date"
                 type="date"
-                value={formData.date} 
+                value={formData.date}
                 onChange={(e) => handleInputChange('date', e.target.value)}
               />
             </div>
@@ -342,8 +348,8 @@ export default function VolunteerOpportunityDialog() {
               <Label htmlFor="category">
                 {translate('Category', language)}
               </Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger>
+              <Select name="category" value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                <SelectTrigger id="category">
                   <SelectValue placeholder={translate('Select category', language)} />
                 </SelectTrigger>
                 <SelectContent>
@@ -365,11 +371,12 @@ export default function VolunteerOpportunityDialog() {
                 <Mail className="h-3 w-3" />
                 {translate('Contact Email', language)}
               </Label>
-              <Input 
+              <Input
                 id="contactEmail"
+                name="contact_email"
                 type="email"
                 placeholder={translate('contact@organization.org', language)}
-                value={formData.contactEmail} 
+                value={formData.contactEmail}
                 onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                 maxLength={255}
               />
@@ -380,11 +387,12 @@ export default function VolunteerOpportunityDialog() {
                 <LinkIcon className="h-3 w-3" />
                 {translate('Apply URL', language)}
               </Label>
-              <Input 
+              <Input
                 id="applyUrl"
+                name="apply_url"
                 type="url"
                 placeholder="https://..."
-                value={formData.applyUrl} 
+                value={formData.applyUrl}
                 onChange={(e) => handleInputChange('applyUrl', e.target.value)}
                 maxLength={500}
               />
@@ -396,10 +404,11 @@ export default function VolunteerOpportunityDialog() {
             <Label htmlFor="skillsRequired">
               {translate('Skills Required', language)} ({translate('comma-separated', language)})
             </Label>
-            <Input 
+            <Input
               id="skillsRequired"
+              name="skills_required"
               placeholder={translate('e.g., Public speaking, Community organizing, Research', language)}
-              value={formData.skillsRequired} 
+              value={formData.skillsRequired}
               onChange={(e) => handleInputChange('skillsRequired', e.target.value)}
               maxLength={500}
             />

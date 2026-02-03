@@ -30,7 +30,7 @@ const AIContextButton = ({ label, context, className, variant = 'premium' }: AIC
             <Button
                 onClick={handleClick}
                 className={cn(
-                    "bg-gradient-to-r from-kenya-green/10 to-primary/10 hover:from-kenya-green/20 hover:to-primary/20 text-primary border-none font-bold gap-2 rounded-xl transition-all hover:scale-105 active:scale-95",
+                    "bg-kenya-green/10 dark:bg-kenya-green/20 hover:bg-kenya-green/20 dark:hover:bg-kenya-green/30 text-kenya-green dark:text-kenya-green border border-kenya-green/20 dark:border-kenya-green/30 font-bold gap-2 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-sm",
                     className
                 )}
             >

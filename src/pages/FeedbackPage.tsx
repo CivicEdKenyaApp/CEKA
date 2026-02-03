@@ -20,7 +20,7 @@ const FeedbackPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!message.trim()) {
       toast({
         title: "Message Required",
@@ -29,7 +29,7 @@ const FeedbackPage = () => {
       });
       return;
     }
-    
+
     if (!session) {
       toast({
         title: "Authentication Required",
@@ -38,9 +38,9 @@ const FeedbackPage = () => {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const { error } = await supabase
         .from('feedback')
@@ -50,14 +50,14 @@ const FeedbackPage = () => {
           category,
           status: 'pending',
         });
-      
+
       if (error) throw error;
-      
+
       toast({
         title: "Feedback Submitted",
         description: "Thank you for your feedback! The developer will review it soon.",
       });
-      
+
       setMessage('');
       setCategory('general');
     } catch (error: any) {
@@ -83,7 +83,7 @@ const FeedbackPage = () => {
             </p>
           </div>
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <Card>
@@ -98,6 +98,7 @@ const FeedbackPage = () => {
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Select
+                      name="category"
                       value={category}
                       onValueChange={setCategory}
                     >
@@ -113,11 +114,12 @@ const FeedbackPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="message">Your Message</Label>
                     <Textarea
                       id="message"
+                      name="message"
                       placeholder="Share your thoughts, ideas, or report issues..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
@@ -125,7 +127,7 @@ const FeedbackPage = () => {
                       className="resize-none"
                     />
                   </div>
-                  
+
                   <Button
                     type="submit"
                     className="w-full bg-kenya-green hover:bg-kenya-green/90"
@@ -140,7 +142,7 @@ const FeedbackPage = () => {
                       </>
                     )}
                   </Button>
-                  
+
                   {!session && (
                     <p className="text-sm text-muted-foreground text-center mt-2">
                       Please sign in to submit feedback.
@@ -150,7 +152,7 @@ const FeedbackPage = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -160,30 +162,30 @@ const FeedbackPage = () => {
                 <p>
                   Hello there! Thank you for taking the time to visit the CEKA platform. This civic engagement platform has been a labor of love, built with the goal of empowering Kenyan citizens to actively participate in their democracy.
                 </p>
-                
+
                 <p>
                   The vision behind CEKA is to create a bridge between ordinary citizens and the legislative process, making governance more transparent, accessible, and participatory. By tracking bills, providing educational resources, and building community spaces for discussion, we hope to nurture a more engaged citizenry.
                 </p>
-                
+
                 <p>
                   Your feedback is incredibly valuable in shaping the future of this platform. Every suggestion, bug report, or feature request helps us improve the experience for everyone. This is a platform built for the people, by the people.
                 </p>
-                
+
                 <p>
                   Some exciting features we're working on:
                 </p>
-                
+
                 <ul>
                   <li>A comprehensive legislative tracking system that provides real-time updates on bills</li>
                   <li>Community-driven discussions that foster meaningful civic dialogue</li>
                   <li>Educational resources that make complex legislative processes understandable</li>
                   <li>Tools for organizing advocacy campaigns and volunteer efforts</li>
                 </ul>
-                
+
                 <p>
                   Thank you for being part of this journey to strengthen democracy in Kenya. Together, we can create a more informed, engaged, and empowered society.
                 </p>
-                
+
                 <p className="font-medium">
                   With gratitude,<br />
                   The CEKA Development Team
@@ -198,12 +200,12 @@ const FeedbackPage = () => {
                 >
                   <Button variant="outline">
                     <Heart className="h-4 w-4 text-red-500" />
-                    Support This Project 
+                    Support This Project
                   </Button>
                 </a>
               </CardFooter>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

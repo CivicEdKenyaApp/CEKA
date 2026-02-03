@@ -16,21 +16,21 @@ const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
-  
+
   const handleSave = () => {
     toast({
       title: translate("Success", language),
       description: translate("Your notification preferences have been updated.", language),
     });
   };
-  
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{translate("Notification Settings", language)}</h1>
         <p className="text-muted-foreground">{translate("Manage how you receive notifications", language)}</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -47,8 +47,8 @@ const NotificationSettings = () => {
               <Label htmlFor="all-notifications" className="font-medium">{translate("Enable All Notifications", language)}</Label>
               <p className="text-sm text-muted-foreground">{translate("Receive all system notifications", language)}</p>
             </div>
-            <Switch 
-              id="all-notifications" 
+            <Switch
+              id="all-notifications"
               checked={notificationsEnabled}
               onCheckedChange={(checked) => {
                 setNotificationsEnabled(checked);
@@ -59,11 +59,11 @@ const NotificationSettings = () => {
               }}
             />
           </div>
-          
+
           {notificationsEnabled && (
             <>
               <Separator />
-              
+
               <div className="ml-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -73,14 +73,14 @@ const NotificationSettings = () => {
                     </Label>
                     <p className="text-sm text-muted-foreground">{translate("Receive notifications via email", language)}</p>
                   </div>
-                  <Switch 
-                    id="email-notifications" 
-                    checked={emailNotifications} 
+                  <Switch
+                    id="email-notifications"
+                    checked={emailNotifications}
                     onCheckedChange={setEmailNotifications}
                     disabled={!notificationsEnabled}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="push-notifications" className="flex items-center">
@@ -89,9 +89,9 @@ const NotificationSettings = () => {
                     </Label>
                     <p className="text-sm text-muted-foreground">{translate("Receive push notifications on your device", language)}</p>
                   </div>
-                  <Switch 
-                    id="push-notifications" 
-                    checked={pushNotifications} 
+                  <Switch
+                    id="push-notifications"
+                    checked={pushNotifications}
                     onCheckedChange={setPushNotifications}
                     disabled={!notificationsEnabled}
                   />
@@ -101,7 +101,7 @@ const NotificationSettings = () => {
           )}
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>{translate("Notification Types", language)}</CardTitle>
@@ -112,25 +112,25 @@ const NotificationSettings = () => {
         <CardContent className="space-y-4">
           <div className="flex flex-col space-y-3">
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="legislative-updates" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
+              <input type="checkbox" id="legislative-updates" name="legislative_updates" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
               <Label htmlFor="legislative-updates">
                 {translate("Legislative Updates", language)}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="community-replies" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
+              <input type="checkbox" id="community-replies" name="community_replies" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
               <Label htmlFor="community-replies">
                 {translate("Community Replies", language)}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="resource-updates" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
+              <input type="checkbox" id="resource-updates" name="resource_updates" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
               <Label htmlFor="resource-updates">
                 {translate("New Educational Resources", language)}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="volunteer-opportunities" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
+              <input type="checkbox" id="volunteer-opportunities" name="volunteer_opportunities" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" defaultChecked />
               <Label htmlFor="volunteer-opportunities">
                 {translate("Volunteer Opportunities", language)}
               </Label>
@@ -138,7 +138,7 @@ const NotificationSettings = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       <div className="flex justify-end">
         <Button onClick={handleSave}>
           {translate("Save Changes", language)}

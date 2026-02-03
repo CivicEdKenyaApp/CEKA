@@ -17,7 +17,7 @@ interface ThumbnailGeneratorProps {
   className?: string;
 }
 
-export function ThumbnailGenerator({ 
+export function ThumbnailGenerator({
   onThumbnailGenerated,
   defaultWidth = 300,
   defaultHeight = 200,
@@ -35,7 +35,7 @@ export function ThumbnailGenerator({
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      
+
       // Auto-detect type based on file
       if (selectedFile.type.startsWith('image/')) {
         setType('image');
@@ -64,9 +64,9 @@ export function ThumbnailGenerator({
         height,
         quality
       });
-      
+
       onThumbnailGenerated?.(thumbnail);
-      
+
       toast({
         title: "Thumbnail generated",
         description: "Your thumbnail has been created successfully.",
@@ -85,14 +85,14 @@ export function ThumbnailGenerator({
 
   const handleDownload = useCallback(async () => {
     if (!file) return;
-    
+
     try {
       const thumbnail = await thumbnailService.generateThumbnail(file, type, {
         width,
         height,
         quality
       });
-      
+
       const url = URL.createObjectURL(thumbnail);
       const a = document.createElement('a');
       a.href = url;
@@ -101,7 +101,7 @@ export function ThumbnailGenerator({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Download started",
         description: "Your thumbnail is being downloaded.",
@@ -128,6 +128,7 @@ export function ThumbnailGenerator({
               <Label htmlFor="file">Select File</Label>
               <Input
                 id="file"
+                name="file"
                 type="file"
                 accept="image/*,video/*,.pdf,.doc,.docx,.txt"
                 onChange={handleFileChange}
@@ -137,7 +138,7 @@ export function ThumbnailGenerator({
 
             <div>
               <Label htmlFor="type">Thumbnail Type</Label>
-              <Select value={type} onValueChange={(value: 'image' | 'video' | 'document') => setType(value)}>
+              <Select name="type" value={type} onValueChange={(value: 'image' | 'video' | 'document') => setType(value)}>
                 <SelectTrigger id="type" className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -154,6 +155,7 @@ export function ThumbnailGenerator({
                 <Label htmlFor="width">Width</Label>
                 <Input
                   id="width"
+                  name="width"
                   type="number"
                   value={width}
                   onChange={(e) => setWidth(Number(e.target.value))}
@@ -166,6 +168,7 @@ export function ThumbnailGenerator({
                 <Label htmlFor="height">Height</Label>
                 <Input
                   id="height"
+                  name="height"
                   type="number"
                   value={height}
                   onChange={(e) => setHeight(Number(e.target.value))}
@@ -180,6 +183,7 @@ export function ThumbnailGenerator({
               <Label htmlFor="quality">Quality (0.1 - 1.0)</Label>
               <Input
                 id="quality"
+                name="quality"
                 type="number"
                 value={quality}
                 onChange={(e) => setQuality(Number(e.target.value))}

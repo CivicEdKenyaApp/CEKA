@@ -164,6 +164,8 @@ const CommunityPortal = () => {
                 <form onSubmit={handleSearch} className="relative w-full md:w-1/2">
                   <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
                   <Input
+                    id="portal-search"
+                    name="q"
                     placeholder={translate("Query threads or documents...", language)}
                     className="h-14 pl-12 pr-6 rounded-2xl bg-white dark:bg-black/40 border-none shadow-sm text-base"
                     value={searchQuery}

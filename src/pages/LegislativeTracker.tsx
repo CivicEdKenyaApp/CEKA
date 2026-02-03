@@ -238,6 +238,8 @@ const LegislativeTracker = () => {
                   </h3>
                   <div className="relative group space-y-3">
                     <Input
+                      id="bill-search"
+                      name="bill_search"
                       placeholder="Title | Year | Keyword"
                       className="h-14 rounded-2xl bg-white dark:bg-[#111] border-slate-200 dark:border-white/5 shadow-sm focus:ring-primary/20 pr-12"
                       value={searchTerm}

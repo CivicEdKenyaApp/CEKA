@@ -269,6 +269,8 @@ const SearchResults = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
+                id="search-query"
+                name="q"
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -321,8 +323,8 @@ const SearchResults = () => {
                   {/* Date Range */}
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground">Date Range</Label>
-                    <Select value={dateRange} onValueChange={(v: any) => setDateRange(v)}>
-                      <SelectTrigger className="w-full">
+                    <Select name="date_range" value={dateRange} onValueChange={(v: any) => setDateRange(v)}>
+                      <SelectTrigger id="date_range" className="w-full">
                         <Calendar className="h-4 w-4 mr-2" />
                         <SelectValue placeholder="Select range" />
                       </SelectTrigger>
@@ -338,8 +340,8 @@ const SearchResults = () => {
                   {/* Sort Order */}
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground">Sort By</Label>
-                    <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-                      <SelectTrigger className="w-full">
+                    <Select name="sort_order" value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
+                      <SelectTrigger id="sort_order" className="w-full">
                         <ArrowUpDown className="h-4 w-4 mr-2" />
                         <SelectValue placeholder="Sort order" />
                       </SelectTrigger>

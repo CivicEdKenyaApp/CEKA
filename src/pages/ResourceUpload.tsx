@@ -43,7 +43,7 @@ const ResourceUpload = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
-  
+
   const form = useForm<z.infer<typeof uploadSchema>>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
@@ -65,7 +65,7 @@ const ResourceUpload = () => {
       navigate('/auth');
       return;
     }
-    
+
     try {
       // First, insert the resource as a user contribution awaiting approval
       const { data: contribution, error: contributionError } = await supabase
@@ -79,14 +79,14 @@ const ResourceUpload = () => {
           user_id: session.user.id
         })
         .select();
-        
+
       if (contributionError) throw contributionError;
-      
+
       toast({
         title: "Resource submitted",
         description: "Your resource has been submitted for approval.",
       });
-      
+
       navigate('/resources/pending');
     } catch (error) {
       console.error('Error submitting resource:', error);
@@ -122,9 +122,7 @@ const ResourceUpload = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Resource Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Understanding Article 43 of Kenya's Constitution" {...field} />
-                        </FormControl>
+                        <Input id="title" name="title" placeholder="e.g., Understanding Article 43 of Kenya's Constitution" {...field} />
                         <FormDescription>
                           Choose a clear, descriptive title for your resource
                         </FormDescription>
@@ -139,13 +137,13 @@ const ResourceUpload = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Provide a detailed description of the resource..." 
-                            className="min-h-[120px]" 
-                            {...field} 
-                          />
-                        </FormControl>
+                        <Textarea
+                          id="description"
+                          name="description"
+                          placeholder="Provide a detailed description of the resource..."
+                          className="min-h-[120px]"
+                          {...field}
+                        />
                         <FormDescription>
                           Explain what users will learn from this resource
                         </FormDescription>
@@ -161,12 +159,12 @@ const ResourceUpload = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Category</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
+                          <Select
+                            onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger id="category">
                                 <SelectValue placeholder="Select a category" />
                               </SelectTrigger>
                             </FormControl>
@@ -191,12 +189,12 @@ const ResourceUpload = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Resource Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
+                          <Select
+                            onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger id="type">
                                 <SelectValue placeholder="Select resource type" />
                               </SelectTrigger>
                             </FormControl>
@@ -218,9 +216,7 @@ const ResourceUpload = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Resource URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/resource" {...field} />
-                        </FormControl>
+                        <Input id="url" name="url" placeholder="https://example.com/resource" {...field} />
                         <FormDescription>
                           Provide a direct link to your resource (document, video, or infographic)
                         </FormDescription>
