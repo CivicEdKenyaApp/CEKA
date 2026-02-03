@@ -35,27 +35,56 @@ interface Resource {
   thumbnail_url: string | null;
   type: string;
   is_downloadable: boolean;
+  content?: string | null; // From advocacy_toolkit
+  source?: 'resource' | 'toolkit';
 }
 
 const AdvocacyToolkit = () => {
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [items, setItems] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchResources = async () => {
+    const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // Fetch from resources
+        const { data: resData, error: resError } = await supabase
           .from('resources')
           .select('*')
           .or('category.eq.advocacy,category.eq.legal,category.eq.constitution');
 
-        if (error) throw error;
-        setResources(data || []);
+        // Fetch from advocacy_toolkit
+        const { data: toolkitData, error: toolkitError } = await supabase
+          .from('advocacy_toolkit')
+          .select('*');
+
+        if (resError) throw resError;
+        if (toolkitError) throw toolkitError;
+
+        // Map and merge
+        const mappedResources: Resource[] = (resData || []).map(r => ({
+          ...r,
+          source: 'resource'
+        }));
+
+        const mappedToolkit: Resource[] = (toolkitData || []).map(t => ({
+          id: t.id,
+          title: t.title,
+          description: t.description || '',
+          content: t.content,
+          category: t.category,
+          url: '#', // These will likely open a detail view or modal
+          thumbnail_url: null,
+          type: 'guide',
+          is_downloadable: false,
+          source: 'toolkit'
+        }));
+
+        setItems([...mappedToolkit, ...mappedResources]);
       } catch (error) {
-        console.error('Error fetching resources:', error);
+        console.error('Error fetching toolkit items:', error);
         toast({
           title: "Connection Issue",
           description: "We couldn't load the latest advocacy tools. Falling back to offline guide.",
@@ -66,15 +95,15 @@ const AdvocacyToolkit = () => {
       }
     };
 
-    fetchResources();
+    fetchAllData();
   }, [toast]);
 
-  const filteredResources = resources.filter(res =>
-    res.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    res.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredItems = items.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const constitutionResource = resources.find(r => r.title.toLowerCase().includes('constitution')) || {
+  const constitutionResource = items.find(r => r.title.toLowerCase().includes('constitution')) || {
     title: "The Constitution of Kenya (2010)",
     description: "The supreme law of the Republic of Kenya. Every person has an obligation to respect, uphold and defend this Constitution.",
     url: "https://www.klrc.go.ke/index.php/constitution-of-kenya",
@@ -239,19 +268,33 @@ const AdvocacyToolkit = () => {
                 Array(4).fill(0).map((_, i) => (
                   <div key={i} className="h-32 rounded-3xl bg-slate-200/50 dark:bg-slate-800/50 animate-pulse" />
                 ))
-              ) : filteredResources.length > 0 ? (
-                filteredResources.slice(0, 6).map((res) => (
-                  <motion.div key={res.id} whileHover={{ x: 5 }}>
-                    <Card className="rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group cursor-pointer bg-white/50 backdrop-blur-sm dark:bg-slate-950/20"
-                      onClick={() => window.open(res.url, '_blank')}
+              ) : filteredItems.length > 0 ? (
+                filteredItems.slice(0, 10).map((item) => (
+                  <motion.div key={item.id} whileHover={{ x: 5 }}>
+                    <Card className={cn(
+                      "rounded-2xl border transition-all group cursor-pointer backdrop-blur-sm",
+                      item.source === 'toolkit'
+                        ? "border-kenya-green/20 bg-kenya-green/5 dark:bg-kenya-green/10"
+                        : "border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-950/20"
+                    )}
+                      onClick={() => item.source === 'resource' ? window.open(item.url, '_blank') : toast({
+                        title: item.title,
+                        description: "Rich guide content is coming soon to the detail view!",
+                      })}
                     >
                       <CardContent className="p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                          <FileText className="h-6 w-6 text-slate-400" />
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                          item.source === 'toolkit' ? "bg-kenya-green/20 text-kenya-green" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                        )}>
+                          {item.source === 'toolkit' ? <BookOpen className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate">{res.title}</h4>
-                          <p className="text-xs text-slate-500 line-clamp-1">{res.description}</p>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm truncate">{item.title}</h4>
+                            {item.source === 'toolkit' && <Badge variant="outline" className="text-[8px] h-4 px-1 border-kenya-green/30 text-kenya-green">Toolkit</Badge>}
+                          </div>
+                          <p className="text-xs text-slate-500 line-clamp-1">{item.description}</p>
                         </div>
                         <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-kenya-green transition-colors" />
                       </CardContent>
