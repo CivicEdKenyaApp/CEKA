@@ -455,6 +455,46 @@ class AdminService {
 
     await this.logAdminAction('save_campaign', 'platform_campaign', campaign.id || 'new', campaign);
   }
+
+  /**
+   * Calendar & Civic Event Management
+   */
+  async getCivicEvents(): Promise<any[]> {
+    const { data } = await supabase
+      .from('civic_events')
+      .select('*')
+      .order('event_date', { ascending: false });
+    return data || [];
+  }
+
+  async saveCivicEvent(event: any): Promise<void> {
+    const payload = { ...event };
+    delete payload.id; // Remove ID for insert if not present
+
+    if (event.id) {
+      const { error } = await supabase
+        .from('civic_events')
+        .update(event)
+        .eq('id', event.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('civic_events')
+        .insert([event]);
+      if (error) throw error;
+    }
+
+    await this.logAdminAction('save_civic_event', 'civic_event', event.id || 'new', event);
+  }
+
+  async deleteCivicEvent(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('civic_events')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    await this.logAdminAction('delete_civic_event', 'civic_event', id);
+  }
 }
 
 export const adminService = new AdminService();

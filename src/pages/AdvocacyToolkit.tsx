@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AIContextButton from '@/components/ai/AIContextButton';
+import EmergencyHotline from '@/components/hotline/EmergencyHotline';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -187,7 +189,7 @@ const AdvocacyToolkit = () => {
                     <Card className="aspect-[3/4] w-48 bg-gradient-to-br from-kenya-green to-primary rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-white border-none transform group-hover:rotate-2 transition-transform duration-500">
                       <Scale className="h-16 w-16 mb-4 drop-shadow-lg" />
                       <div className="text-center font-bold text-lg leading-tight">
-                        KATRE <br />YA KENYA
+                        KATIBA <br />YA KENYA
                       </div>
                       <div className="mt-8 text-[8px] uppercase tracking-[0.2em] opacity-80">
                         Revised Edition 2010
@@ -212,10 +214,12 @@ const AdvocacyToolkit = () => {
                       Read Online
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </Button>
-                    <Button variant="outline" className="rounded-2xl h-12 px-8 border-slate-200 dark:border-slate-800 backdrop-blur-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
-                      Summarize with AI
-                      <Sparkles className="ml-2 h-4 w-4 text-amber-500" />
-                    </Button>
+                    <AIContextButton
+                      label="Summarize with AI"
+                      context={constitutionResource.title + ": " + constitutionResource.description}
+                      variant="outline"
+                      className="rounded-2xl h-12 px-8 border-slate-200 dark:border-slate-800 backdrop-blur-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
+                    />
                   </div>
                 </div>
               </div>
@@ -311,6 +315,10 @@ const AdvocacyToolkit = () => {
           </div>
 
           {/* Call to Action - Legal Services */}
+          <section className="pt-8 pb-12">
+            <EmergencyHotline />
+          </section>
+
           <section className="pt-8 pb-12">
             <Card className="rounded-[2.5rem] bg-gradient-to-r from-slate-900 to-slate-800 text-white border-none overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-kenya-green/20 blur-[100px] -mr-32 -mt-32" />

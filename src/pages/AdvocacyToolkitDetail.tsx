@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, FileText, Download, Calendar, Share2, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AIContextButton from '@/components/ai/AIContextButton';
 
 // Types
 interface ToolkitItem {
@@ -42,7 +43,7 @@ const AdvocacyToolkitDetail = () => {
   useEffect(() => {
     const fetchToolkitItem = async () => {
       if (!id) return;
-      
+
       setIsLoading(true);
       try {
         // Get toolkit item
@@ -53,9 +54,9 @@ const AdvocacyToolkitDetail = () => {
           .single();
 
         if (itemError) throw itemError;
-        
+
         setItem(itemData as ToolkitItem);
-        
+
         // If we have document IDs, fetch the documents
         if (itemData.document_ids && itemData.document_ids.length > 0) {
           const { data: documentsData, error: docsError } = await supabase
@@ -63,9 +64,9 @@ const AdvocacyToolkitDetail = () => {
             .select('*')
             .in('id', itemData.document_ids)
             .eq('is_approved', true);
-          
+
           if (docsError) throw docsError;
-          
+
           setDocuments(documentsData as Document[]);
         }
       } catch (error) {
@@ -80,7 +81,7 @@ const AdvocacyToolkitDetail = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchToolkitItem();
   }, [id, toast, navigate]);
 
@@ -130,7 +131,7 @@ const AdvocacyToolkitDetail = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Advocacy Toolkit
           </Link>
-          
+
           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div>
               <div className="flex flex-wrap gap-2 mb-3">
@@ -138,9 +139,9 @@ const AdvocacyToolkitDetail = () => {
                   {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                 </Badge>
               </div>
-              
+
               <h1 className="text-2xl md:text-3xl font-bold">{item.title}</h1>
-              
+
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                 <div className="flex items-center">
                   <Calendar className="mr-1 h-4 w-4" />
@@ -148,8 +149,14 @@ const AdvocacyToolkitDetail = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-2 self-start">
+              <AIContextButton
+                label="Summarize"
+                context={`${item.title}: ${item.content || item.description || ''}`}
+                variant="outline"
+                size="sm"
+              />
               <Button variant="outline" size="sm" className="flex items-center" onClick={handleShare}>
                 <Share2 className="mr-1.5 h-4 w-4" />
                 Share
@@ -157,7 +164,7 @@ const AdvocacyToolkitDetail = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             {item.description && (
@@ -170,7 +177,7 @@ const AdvocacyToolkitDetail = () => {
                 </CardContent>
               </Card>
             )}
-            
+
             {item.content && (
               <Card>
                 <CardHeader>
@@ -184,7 +191,7 @@ const AdvocacyToolkitDetail = () => {
               </Card>
             )}
           </div>
-          
+
           <div className="space-y-6">
             {documents.length > 0 && (
               <Card>
@@ -205,7 +212,7 @@ const AdvocacyToolkitDetail = () => {
                               <p className="text-xs text-muted-foreground mt-1">{doc.description}</p>
                             )}
                             <div className="mt-2">
-                              <a 
+                              <a
                                 href={doc.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -223,7 +230,7 @@ const AdvocacyToolkitDetail = () => {
                 </CardContent>
               </Card>
             )}
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Get Involved</CardTitle>

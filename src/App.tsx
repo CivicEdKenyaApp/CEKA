@@ -18,7 +18,7 @@ import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
-import EventsCalendar from '@/pages/EventsCalendar';
+import EventsCalendar from '@/pages/CivicCalendar';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ResourceDetail from '@/pages/ResourceDetail';
