@@ -227,7 +227,7 @@ const GlobalAIAssistant = () => {
                                         <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Ask about legislation or the Constitution</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2 justify-center">
-                                        {['What is Article 43?', 'Explain Finance Bill'].map(q => (
+                                        {['What is Article 43?', 'Explain Finance Bill', 'What can I do as a citizen?'].map(q => (
                                             <button
                                                 key={q}
                                                 onClick={() => {
