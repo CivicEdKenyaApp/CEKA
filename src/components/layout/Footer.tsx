@@ -66,7 +66,7 @@ const Footer = () => {
 
       <div className="container mt-16 pt-8 border-t border-slate-200 dark:border-white/5 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-muted-foreground/60">
-          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. Built for the people.</p>
+          <p>&copy; {new Date().getFullYear()} Civic Education Kenya. Empowering Kenyans through civic education.</p>
           <div className="flex gap-8">
             <Link to="/privacy" className="hover:text-primary transition-colors uppercase tracking-widest">Privacy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors uppercase tracking-widest">Terms</Link>

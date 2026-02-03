@@ -16,60 +16,41 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+import { supabase } from '@/integrations/supabase/client';
+
 interface Hotline {
+    id?: string;
     name: string;
     phone: string;
     description: string;
     organization: string;
 }
 
-const hotlines: Hotline[] = [
-    {
-        name: "Law Society of Kenya (LSK)",
-        phone: "0800720434",
-        description: "Legal representation and advocacy for justice.",
-        organization: "LSK"
-    },
-    {
-        name: "Defenders Coalition",
-        phone: "0716200100",
-        description: "Protection and support for human rights defenders.",
-        organization: "Defenders Coalition"
-    },
-    {
-        name: "Independent Medico-Legal Unit (IMLU)",
-        phone: "0706162795",
-        description: "Holistic support for victims of torture and police brutality.",
-        organization: "IMLU"
-    },
-    {
-        name: "Kenya National Commission on Human Rights (KNCHR)",
-        phone: "0800720627",
-        description: "State organ for human rights protection.",
-        organization: "KNCHR"
-    },
-    {
-        name: "Amnesty International Kenya",
-        phone: "0759464346",
-        description: "Global movement protecting human rights in Kenya.",
-        organization: "Amnesty"
-    },
-    {
-        name: "Civic Freedoms Forum (CFF)",
-        phone: "0728303864",
-        description: "Safeguarding civic space and assembly rights.",
-        organization: "CFF"
-    },
-    {
-        name: "Kenya Human Rights Commission (KHRC)",
-        phone: "0728606583",
-        description: "Grassroots human rights advocacy and monitoring.",
-        organization: "KHRC"
-    }
-];
-
 const EmergencyHotline = () => {
     const { toast } = useToast();
+    const [hotlines, setHotlines] = React.useState<Hotline[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchHotlines = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('civic_hotline')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('priority', { ascending: false });
+
+                if (error) throw error;
+                if (data) setHotlines(data);
+            } catch (err) {
+                console.error('Error fetching hotlines:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHotlines();
+    }, []);
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
