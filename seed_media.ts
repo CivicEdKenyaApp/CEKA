@@ -41,7 +41,7 @@ async function seedExhibits() {
     // 2. Simulate adding the Carousel Image (Exhibit 2)
     // Note: In a real environment, we'd use the file objects. 
     // Here we just insert the DB record to verify the frontend link.
-    const { error: itemError } = await supabase
+    const { error: itemError } = await (supabase as any)
         .from('media_items')
         .insert([
             {

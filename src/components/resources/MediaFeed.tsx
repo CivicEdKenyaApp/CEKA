@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { mediaService, type MediaContent } from '@/services/mediaService';
-import { InstagramCarousel } from './InstagramCarousel';
+import { InstagramCarousel } from '../carousel/InstagramCarousel';
 import { Grid2X2, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

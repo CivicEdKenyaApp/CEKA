@@ -42,7 +42,7 @@ export const mediaService = {
      * Fetch a single media content container with its items
      */
     async getMediaContent(slug: string): Promise<MediaContent | null> {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('media_content')
             .select(`
                 *,
@@ -58,18 +58,18 @@ export const mediaService = {
         }
 
         // Sort items by order_index
-        if (data && data.items) {
-            data.items.sort((a: any, b: any) => a.order_index - b.order_index);
+        if (data && (data as any).items) {
+            (data as any).items.sort((a: any, b: any) => a.order_index - b.order_index);
         }
 
-        return data as MediaContent;
+        return data as unknown as MediaContent;
     },
 
     /**
      * Fetch all published media content by type
      */
     async listMediaContent(type?: MediaType): Promise<MediaContent[]> {
-        let query = supabase
+        let query = (supabase as any)
             .from('media_content')
             .select('*')
             .eq('status', 'published')
@@ -86,14 +86,14 @@ export const mediaService = {
             return [];
         }
 
-        return data as MediaContent[];
+        return data as unknown as MediaContent[];
     },
 
     /**
      * Create a new media content container
      */
     async createContent(content: Partial<MediaContent>): Promise<MediaContent | null> {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('media_content')
             .insert([content])
             .select()
@@ -104,7 +104,7 @@ export const mediaService = {
             return null;
         }
 
-        return data as MediaContent;
+        return data as unknown as MediaContent;
     },
 
     /**
@@ -130,7 +130,7 @@ export const mediaService = {
         }
 
         // 3. Add to DB
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('media_items')
             .insert([{
                 content_id: contentId,
@@ -148,7 +148,7 @@ export const mediaService = {
             return null;
         }
 
-        return data as MediaItem;
+        return data as unknown as MediaItem;
     },
 
     /**
@@ -156,7 +156,7 @@ export const mediaService = {
      * (In a real scenario, this might trigger an Edge Function to merge images)
      */
     async getCarouselPDFUrl(contentId: string): Promise<string | null> {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('media_content')
             .select('metadata')
             .eq('id', contentId)
@@ -164,7 +164,7 @@ export const mediaService = {
 
         if (error || !data) return null;
 
-        return data.metadata?.pdf_url || null;
+        return (data as any).metadata?.pdf_url || null;
     }
 };
 
