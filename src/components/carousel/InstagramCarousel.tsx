@@ -4,6 +4,13 @@ import { ChevronLeft, ChevronRight, Download, Maximize2, Share2 } from 'lucide-r
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { type MediaContent, type MediaItem } from '@/services/mediaService';
+import { processingService } from '@/services/processingService';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface InstagramCarouselProps {
     content: MediaContent;
@@ -38,6 +45,34 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     };
 
+    const handleDownloadImage = async (quality: string) => {
+        // Use the processing engine to "prepare" the resolution
+        try {
+            const downloadUrl = await processingService.requestResolution(currentItem.id, quality as any);
+
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            link.download = `${content.slug}-${currentIndex + 1}-${quality}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error('Failed to process image:', err);
+        }
+    };
+
+    const getAspectRatioPadding = (ratio?: string) => {
+        switch (ratio) {
+            case '3:4': return '133.33%';
+            case '4:5': return '125%';
+            case '16:9': return '56.25%';
+            case '9:16': return '177.78%';
+            case '1:1':
+            default: return '100%';
+        }
+    };
+
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,8 +89,12 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
 
     return (
         <div className={cn("relative group max-w-xl mx-auto bg-black rounded-xl overflow-hidden shadow-2xl", className)}>
-            {/* Aspect Ratio Container (Square for IG feel) */}
-            <div className="relative aspect-square w-full">
+            {/* Aspect Ratio Container (Dynamic Height) */}
+            <motion.div
+                className="relative w-full overflow-hidden"
+                animate={{ paddingBottom: getAspectRatioPadding(currentItem.metadata?.aspect_ratio as string) }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={currentIndex}
@@ -158,7 +197,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                         ))}
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Bottom Panel (Download Action) */}
             <div className="bg-background border-t p-4 flex items-center justify-between">
@@ -167,15 +206,40 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                         {currentIndex + 1} / {items.length}
                     </p>
                 </div>
-                {content.metadata?.pdf_url && (
-                    <Button
-                        onClick={handleDownloadPDF}
-                        className="bg-kenya-red hover:bg-kenya-red/90 text-white gap-2 rounded-full h-9 px-4 text-xs font-bold"
-                    >
-                        <Download size={14} />
-                        DOWNLOAD PDF
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                className="bg-kenya-black dark:bg-white dark:text-black hover:bg-kenya-black/80 text-white gap-2 rounded-full h-9 px-4 text-xs font-bold"
+                            >
+                                <Download size={14} />
+                                SAVE IMAGE
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-xl bg-white/95 dark:bg-black/95 backdrop-blur-3xl p-2 border-kenya-red/10">
+                            {['320p', '720p', '1080p', '4k'].map((quality) => (
+                                <DropdownMenuItem
+                                    key={quality}
+                                    onClick={() => handleDownloadImage(quality)}
+                                    className="rounded-lg cursor-pointer flex justify-between items-center"
+                                >
+                                    <span>{quality} View</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase">{quality === '4k' ? 'ULTRA HD' : 'HD'}</span>
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {content.metadata?.pdf_url && (
+                        <Button
+                            onClick={handleDownloadPDF}
+                            className="bg-kenya-red hover:bg-kenya-red/90 text-white gap-2 rounded-full h-9 px-4 text-xs font-bold"
+                        >
+                            <Download size={14} />
+                            PDF
+                        </Button>
+                    )}
+                </div>
             </div>
         </div>
     );

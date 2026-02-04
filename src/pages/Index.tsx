@@ -167,7 +167,7 @@ const Index = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kenya-red/10 text-kenya-red text-xs font-bold uppercase tracking-widest">
                   <span className="animate-pulse">●</span> Education Series
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black tracking-tighter italic text-kenya-black dark:text-white uppercase leading-[0.9]">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight italic text-kenya-black dark:text-white uppercase leading-tight">
                   Visual <br />
                   <span className="text-kenya-green">Insights</span>
                 </h2>
@@ -176,8 +176,8 @@ const Index = () => {
                 </p>
                 <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
                   <Link to="/visual-insights">
-                    <Button variant="outline" className="rounded-full border-kenya-black dark:border-white hover:bg-kenya-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all font-bold px-8 h-12">
-                      VIEW ALL SERIES
+                    <Button className="rounded-full bg-kenya-green hover:bg-kenya-green/90 text-white font-bold px-8 h-12 shadow-lg shadow-kenya-green/20">
+                      EXPLORE ALL SERIES
                     </Button>
                   </Link>
                 </div>
