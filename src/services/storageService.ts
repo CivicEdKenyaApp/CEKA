@@ -293,6 +293,18 @@ export const storageService = {
     },
 
     /**
+     * Generate a structured media path for Backblaze (exponential structure)
+     */
+    generateMediaPath(filename: string, type: string, slug: string): string {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+        return `media/${type}/${year}/${month}/${day}/${slug}/${safeName}`;
+    },
+
+    /**
      * Upload with automatic path generation
      */
     async uploadAuto(file: File, folder: string = 'resources'): Promise<UploadResult> {

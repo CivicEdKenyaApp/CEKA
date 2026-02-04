@@ -10,14 +10,9 @@ import { translate } from '@/lib/utils';
 
 const PrivacySettings = () => {
   const { language } = useLanguage();
-  
+
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold mb-2">{translate("Privacy Settings", language)}</h1>
-        <p className="text-muted-foreground">{translate("Manage your privacy preferences and data", language)}</p>
-      </div>
-      
       <div className="grid gap-6">
         <Card>
           <CardHeader>
@@ -32,7 +27,7 @@ const PrivacySettings = () => {
               </div>
               <Switch id="public-profile" defaultChecked />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="activity-visibility" className="font-medium">{translate("Activity Visibility", language)}</Label>
@@ -40,7 +35,7 @@ const PrivacySettings = () => {
               </div>
               <Switch id="activity-visibility" defaultChecked />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="searchable" className="font-medium">{translate("Searchable", language)}</Label>
@@ -50,7 +45,7 @@ const PrivacySettings = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>{translate("Data Usage", language)}</CardTitle>
@@ -64,7 +59,7 @@ const PrivacySettings = () => {
               </div>
               <Switch id="analytics" defaultChecked />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="personalization" className="font-medium">{translate("Personalization", language)}</Label>
@@ -74,7 +69,7 @@ const PrivacySettings = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>{translate("Cookie Preferences", language)}</CardTitle>
@@ -88,7 +83,7 @@ const PrivacySettings = () => {
               </div>
               <Switch id="essential-cookies" defaultChecked disabled />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="preference-cookies" className="font-medium">{translate("Preference Cookies", language)}</Label>
@@ -96,7 +91,7 @@ const PrivacySettings = () => {
               </div>
               <Switch id="preference-cookies" defaultChecked />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="analytics-cookies" className="font-medium">{translate("Analytics Cookies", language)}</Label>
@@ -106,7 +101,7 @@ const PrivacySettings = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>{translate("Download Your Data", language)}</CardTitle>

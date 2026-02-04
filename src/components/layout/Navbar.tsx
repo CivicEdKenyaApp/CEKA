@@ -184,7 +184,7 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 p-2 rounded-[24px] bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-3xl border-none shadow-2xl mt-2">
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 pt-3">Identity</DropdownMenuLabel>
-                  <DropdownMenuItem asChild><Link to="/profile" className="rounded-xl p-3 cursor-pointer">Profile</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/settings/account" className="rounded-xl p-3 cursor-pointer">Profile</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/settings" className="rounded-xl p-3 cursor-pointer">Settings</Link></DropdownMenuItem>
                   {isAdmin && <DropdownMenuItem asChild><Link to="/admin/dashboard" className="rounded-xl p-3 cursor-pointer text-primary font-bold">Admin Console</Link></DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 my-2" />
