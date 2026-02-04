@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import CampaignSpotlight from '@/components/campaign/CampaignSpotlight';
+import { InstagramCarousel } from '@/components/carousel/InstagramCarousel';
+import { mediaService, type MediaContent } from '@/services/mediaService';
 
 // Types for our carousel slides
 interface CarouselSlide {
@@ -70,29 +72,38 @@ const Index = () => {
   const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [featuredMedia, setFeaturedMedia] = useState<MediaContent | null>(null);
 
   useEffect(() => {
-    const fetchCarouselSlides = async () => {
+    const fetchHomeData = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        // 1. Fetch Carousel Slides
+        const { data, error: carouselError } = await (supabase as any)
           .from('carousel_slides')
           .select('*')
           .eq('is_active', true)
           .order('order_index', { ascending: true });
 
-        if (error) throw error;
+        if (carouselError) throw carouselError;
         setCarouselSlides((data || []) as any);
+
+        // 2. Fetch Latest Instagram-style Carousel for Home
+        const media = await mediaService.listMediaContent('carousel');
+        if (media.length > 0) {
+          const latest = await mediaService.getMediaContent(media[0].slug);
+          setFeaturedMedia(latest);
+        }
       } catch (err: any) {
         setError(err.message);
-        console.error('Error fetching carousel slides:', err);
+        console.error('Error fetching homepage data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCarouselSlides();
-  }, []);
+    fetchHomeData();
+  }, [language]);
 
   // Format the slides for the MegaProjectCarousel component
   const formattedSlides = carouselSlides.map(slide => ({
@@ -144,6 +155,47 @@ const Index = () => {
         />
       </div>
       <FeaturedLegislation />
+
+      {/* Featured Instagram-style Carousel Section */}
+      {featuredMedia && (
+        <section className="bg-kenya-white dark:bg-gray-900/50 py-16 scroll-mt-20 border-y border-kenya-red/10 overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
+              {/* Text Side */}
+              <div className="flex-1 space-y-6 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kenya-red/10 text-kenya-red text-xs font-bold uppercase tracking-widest">
+                  <span className="animate-pulse">●</span> Education Series
+                </div>
+                <h2 className="text-4xl md:text-6xl font-black tracking-tighter italic text-kenya-black dark:text-white uppercase leading-[0.9]">
+                  Visual <br />
+                  <span className="text-kenya-green">Insights</span>
+                </h2>
+                <p className="text-lg text-muted-foreground leading-relaxed max-w-md mx-auto lg:mx-0">
+                  {featuredMedia.description || "Simplifying complex civic issues through visual education series. Swipe through to learn, download the full PDF to act."}
+                </p>
+                <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
+                  <Link to="/resources">
+                    <Button variant="outline" className="rounded-full border-kenya-black dark:border-white hover:bg-kenya-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all font-bold px-8 h-12">
+                      VIEW ALL SERIES
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Carousel Side */}
+              <div className="flex-1 w-full max-w-lg relative">
+                <div className="relative group">
+                  {/* Design Flourishes */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-kenya-green/10 rounded-full blur-3xl group-hover:bg-kenya-green/20 transition-colors pointer-events-none"></div>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-kenya-red/10 rounded-full blur-3xl group-hover:bg-kenya-red/20 transition-colors pointer-events-none"></div>
+
+                  <InstagramCarousel content={featuredMedia} className="shadow-2xl hover:scale-[1.02] transition-transform duration-500 relative z-10" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Secondary Ad Space: Between Legislation and Resources */}
       <section className="container mx-auto py-8">
