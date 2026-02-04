@@ -88,26 +88,13 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const currentItem = items[currentIndex];
 
     return (
-        <div className={cn("relative group max-w-xl mx-auto flex flex-col bg-white dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-kenya-red/5", className)}>
-            {/* Top Bar - Header */}
-            <div className="px-6 py-4 bg-white/50 dark:bg-black/50 backdrop-blur-md flex justify-between items-center border-b border-kenya-red/10">
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-kenya-red mb-0.5">{content.type}</span>
-                    <h3 className="text-sm font-bold text-kenya-black dark:text-white line-clamp-1">{content.title}</h3>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-kenya-black dark:text-white hover:bg-kenya-red/10 rounded-full transition-colors">
-                        <Share2 size={16} />
-                    </Button>
-                </div>
-            </div>
-
-            {/* Media Container (Unobstructed) */}
-            <div className="relative bg-black group/media">
+        <div className={cn("relative group max-w-xl mx-auto flex flex-col bg-transparent", className)}>
+            {/* Media Container (100% Unobstructed) */}
+            <div className="relative overflow-hidden rounded-2xl bg-transparent">
                 <motion.div
-                    className="relative w-full overflow-hidden"
+                    className="relative w-full"
                     animate={{ paddingBottom: getAspectRatioPadding(currentItem.metadata?.aspect_ratio as string) }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 >
                     <AnimatePresence initial={false} custom={direction}>
                         <motion.div
@@ -131,16 +118,16 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                             animate="center"
                             exit="exit"
                             transition={{
-                                x: { type: "spring", stiffness: 300, damping: 30 },
+                                x: { type: "spring", stiffness: 350, damping: 35 },
                                 opacity: { duration: 0.2 }
                             }}
-                            className="absolute inset-0 flex items-center justify-center placeholder-glow"
+                            className="absolute inset-0 flex items-center justify-center overflow-hidden"
                         >
                             {currentItem.type === 'image' ? (
                                 <img
                                     src={currentItem.file_url || ''}
-                                    alt={`${content.title} - Slide ${currentIndex + 1}`}
-                                    className="w-full h-full object-cover"
+                                    alt={content.title}
+                                    className="w-full h-full object-cover transition-opacity duration-300"
                                     loading="lazy"
                                 />
                             ) : currentItem.type === 'video' ? (
@@ -150,82 +137,82 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                                     className="w-full h-full object-contain"
                                 />
                             ) : (
-                                <div className="flex flex-col items-center justify-center text-white/50">
-                                    <Maximize2 size={48} className="mb-2" />
-                                    <span>Unsupported Media Type</span>
+                                <div className="flex flex-col items-center justify-center text-muted-foreground/30">
+                                    <Maximize2 size={40} strokeWidth={1.5} className="mb-2" />
+                                    <span className="text-xs uppercase tracking-widest font-medium">Unsupported Media</span>
                                 </div>
                             )}
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Internal Navigation Overlays (Discreet arrows) */}
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    {/* Navigation - Discreet Dots */}
+                    <div className="absolute inset-y-0 left-0 pl-2 flex items-center">
                         {currentIndex > 0 && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={prevSlide}
-                                className="pointer-events-auto rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-sm border-none h-10 w-10 opacity-0 group-hover/media:opacity-100 transition-opacity duration-300"
+                                className="h-8 w-8 rounded-full bg-background/20 hover:bg-background/40 text-background backdrop-blur-sm border-none opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <ChevronLeft size={24} />
+                                <ChevronLeft size={18} />
                             </Button>
                         )}
                     </div>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
                         {currentIndex < items.length - 1 && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={nextSlide}
-                                className="pointer-events-auto rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-sm border-none h-10 w-10 opacity-0 group-hover/media:opacity-100 transition-opacity duration-300"
+                                className="h-8 w-8 rounded-full bg-background/20 hover:bg-background/40 text-background backdrop-blur-sm border-none opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <ChevronRight size={24} />
+                                <ChevronRight size={18} />
                             </Button>
                         )}
                     </div>
                 </motion.div>
             </div>
 
-            {/* Bottom Panel - Controls & Indicators */}
-            <div className="bg-white dark:bg-[#111] px-6 py-5 flex flex-col gap-5 border-t border-kenya-red/10">
-                {/* Progress Indicators */}
-                <div className="flex justify-between items-center">
-                    <div className="flex gap-1.5">
+            {/* Bottom Controls - Minimalist */}
+            <div className="pt-4 flex flex-col gap-4">
+                {/* Indicators & Counter */}
+                <div className="flex justify-between items-center px-1">
+                    <div className="flex gap-1">
                         {items.length > 1 && items.map((_, i) => (
                             <div
                                 key={i}
                                 className={cn(
-                                    "h-1 w-8 rounded-full transition-all duration-500",
-                                    i === currentIndex ? "bg-kenya-red" : "bg-kenya-red/20"
+                                    "h-1 rounded-full transition-all duration-300",
+                                    i === currentIndex ? "w-6 bg-kenya-red" : "w-2 bg-muted-foreground/20"
                                 )}
                             />
                         ))}
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest tabular-nums">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
                         {currentIndex + 1} / {items.length}
                     </span>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-3">
+                {/* Simplified Actions */}
+                <div className="flex gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                className="flex-1 bg-kenya-black hover:bg-kenya-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90 text-white gap-2 rounded-2xl h-12 text-xs font-bold shadow-xl shadow-black/10 transition-all active:scale-[0.98]"
+                                variant="outline"
+                                className="flex-1 rounded-full border-muted-foreground/20 hover:border-kenya-red/50 hover:bg-kenya-red/5 text-xs font-bold transition-all"
                             >
-                                <Download size={16} />
+                                <Download size={14} className="mr-2" />
                                 SAVE IMAGE
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56 rounded-2xl bg-white/95 dark:bg-black/95 backdrop-blur-3xl p-2 border-kenya-red/10 shadow-2xl">
+                        <DropdownMenuContent align="start" className="w-48 rounded-2xl p-2 shadow-2xl border-muted-foreground/10 bg-background/95 backdrop-blur-xl">
                             {['320p', '720p', '1080p', '4k'].map((quality) => (
                                 <DropdownMenuItem
                                     key={quality}
                                     onClick={() => handleDownloadImage(quality)}
-                                    className="rounded-xl cursor-pointer flex justify-between items-center py-3 px-4 focus:bg-kenya-red/10 focus:text-kenya-red transition-colors"
+                                    className="rounded-lg cursor-pointer py-2 px-3 focus:bg-kenya-red/10 focus:text-kenya-red text-xs font-medium"
                                 >
-                                    <span className="font-bold text-xs">{quality} Resolution</span>
-                                    <span className="text-[10px] opacity-60 font-black">{quality === '4k' ? 'ULTRA' : 'HD'}</span>
+                                    {quality} Resolution
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
@@ -234,9 +221,9 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                     {content.metadata?.pdf_url && (
                         <Button
                             onClick={handleDownloadPDF}
-                            className="bg-kenya-red hover:bg-kenya-red/90 text-white gap-2 rounded-2xl h-12 px-6 text-xs font-bold shadow-xl shadow-kenya-red/20 transition-all active:scale-[0.98]"
+                            className="bg-kenya-red hover:bg-kenya-red/90 text-white rounded-full px-6 text-xs font-bold"
                         >
-                            <Download size={16} />
+                            <Download size={14} className="mr-2" />
                             PDF
                         </Button>
                     )}

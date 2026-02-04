@@ -159,7 +159,7 @@ const Index = () => {
 
       {/* Featured Instagram-style Carousel Section */}
       {featuredMedia && (
-        <section className="bg-kenya-white dark:bg-gray-900/50 py-16 scroll-mt-20 border-y border-kenya-red/10 overflow-hidden">
+        <section className="bg-background py-16 scroll-mt-20 overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
               {/* Text Side */}
@@ -185,13 +185,7 @@ const Index = () => {
 
               {/* Carousel Side */}
               <div className="flex-1 w-full max-w-lg relative">
-                <div className="relative group">
-                  {/* Design Flourishes */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-kenya-green/10 rounded-full blur-3xl group-hover:bg-kenya-green/20 transition-colors pointer-events-none"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-kenya-red/10 rounded-full blur-3xl group-hover:bg-kenya-red/20 transition-colors pointer-events-none"></div>
-
-                  <InstagramCarousel content={featuredMedia} className="shadow-2xl hover:scale-[1.02] transition-transform duration-500 relative z-10" />
-                </div>
+                <InstagramCarousel content={featuredMedia} className="relative z-10" />
               </div>
             </div>
           </div>
