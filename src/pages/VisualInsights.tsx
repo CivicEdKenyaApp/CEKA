@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '@/components/layout/Layout';
-import { MediaFeed } from '@/components/resources/MediaFeed';
+import MediaFeed from '@/components/resources/MediaFeed';
 import { motion } from 'framer-motion';
 
 const VisualInsights = () => {

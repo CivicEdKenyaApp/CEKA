@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { mediaService, type MediaContent } from '@/services/mediaService';
-import { InstagramCarousel } from '../carousel/InstagramCarousel';
+import InstagramCarousel from '../carousel/InstagramCarousel';
 import { Grid2X2, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const MediaFeed: React.FC = () => {
+const MediaFeed: React.FC = () => {
     const [content, setContent] = useState<MediaContent[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'feed' | 'grid'>('feed');

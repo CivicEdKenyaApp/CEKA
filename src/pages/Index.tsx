@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import CampaignSpotlight from '@/components/campaign/CampaignSpotlight';
-import { InstagramCarousel } from '@/components/carousel/InstagramCarousel';
+import InstagramCarousel from '@/components/carousel/InstagramCarousel';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import { Button } from '@/components/ui/button';
 

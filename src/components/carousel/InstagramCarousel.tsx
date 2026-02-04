@@ -10,7 +10,7 @@ interface InstagramCarouselProps {
     className?: string;
 }
 
-export const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, className }) => {
+const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, className }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0);
     const items = content.items || [];
