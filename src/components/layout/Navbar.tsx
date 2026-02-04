@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
-  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home
+  FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home, MapPin, Image
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/ui/Logo';
@@ -46,7 +46,8 @@ const getItemIcon = (path: string) => {
     case '/community': return MessageSquare;
     case '/calendar': return Calendar;
     case '/join-community': return Heart;
-    case '/nasaka-iebc': return LayoutGrid;
+    case '/nasaka-iebc': return MapPin;
+    case '/visual-insights': return Image;
     case '/peoples-audit': return Radio;
     case '/shambles': return Users;
     default: return ChevronRight;
@@ -92,6 +93,7 @@ const Navbar = () => {
       items: [
         { name: translate('Legislative Tracker', language), path: '/legislative-tracker', description: translate('Stay informed about bills and legislative changes in Kenya', language) },
         { name: translate('Resource Hub', language), path: '/resources', description: translate('Central hub for all civic documents', language) },
+        { name: translate('Visual Insights', language), path: '/visual-insights', description: translate('Interactive educational carousels and PDF series', language) },
         { name: translate('Civic Blog', language), path: '/blog', description: translate('Insights and news', language) }
       ]
     },

@@ -14,6 +14,7 @@ import { translate } from '@/lib/utils';
 import CampaignSpotlight from '@/components/campaign/CampaignSpotlight';
 import { InstagramCarousel } from '@/components/carousel/InstagramCarousel';
 import { mediaService, type MediaContent } from '@/services/mediaService';
+import { Button } from '@/components/ui/button';
 
 // Types for our carousel slides
 interface CarouselSlide {
@@ -174,7 +175,7 @@ const Index = () => {
                   {featuredMedia.description || "Simplifying complex civic issues through visual education series. Swipe through to learn, download the full PDF to act."}
                 </p>
                 <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
-                  <Link to="/resources">
+                  <Link to="/visual-insights">
                     <Button variant="outline" className="rounded-full border-kenya-black dark:border-white hover:bg-kenya-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all font-bold px-8 h-12">
                       VIEW ALL SERIES
                     </Button>
