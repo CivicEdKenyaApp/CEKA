@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import InstagramCarousel from '../carousel/InstagramCarousel';
+import { placeholderService } from '@/services/placeholderService';
 import { Grid2X2, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -186,9 +187,12 @@ const MediaFeed: React.FC = () => {
                             onClick={() => setViewMode('feed')}
                         >
                             <img
-                                src={item.cover_url || item.items?.[0]?.file_url || ''}
+                                src={item.cover_url || item.items?.[0]?.file_url || placeholderService.getPlaceholderByTags(item.tags || [])}
                                 alt={item.title}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = placeholderService.getPlaceholderByTags(item.tags || []);
+                                }}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                                 <p className="text-white text-xs font-bold text-center uppercase tracking-tight">{item.title}</p>

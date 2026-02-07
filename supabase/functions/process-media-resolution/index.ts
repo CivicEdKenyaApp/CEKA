@@ -37,7 +37,14 @@ serve(async (req) => {
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Check if we already have this version cached
+        // Storage Configuration (Reusing existing VITE_B2_ secrets)
+        const storageConfig = {
+            accessKeyId: Deno.env.get('VITE_B2_KEY_ID'),
+            secretAccessKey: Deno.env.get('VITE_B2_APP_KEY'),
+            bucketName: Deno.env.get('VITE_B2_BUCKET_NAME'),
+            endpoint: Deno.env.get('VITE_B2_ENDPOINT'),
+            region: Deno.env.get('VITE_B2_REGION')
+        };
         const { data: item } = await supabase
             .from('media_items')
             .select('metadata')

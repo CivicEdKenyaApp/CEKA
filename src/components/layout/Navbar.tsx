@@ -47,7 +47,7 @@ const getItemIcon = (path: string) => {
     case '/calendar': return Calendar;
     case '/join-community': return Heart;
     case '/nasaka-iebc': return MapPin;
-    case '/visual-insights': return Image;
+    case '/pieces': return Image;
     case '/peoples-audit': return Radio;
     case '/shambles': return Users;
     default: return ChevronRight;
@@ -93,7 +93,7 @@ const Navbar = () => {
       items: [
         { name: translate('Legislative Tracker', language), path: '/legislative-tracker', description: translate('Stay informed about bills and legislative changes in Kenya', language) },
         { name: translate('Resource Hub', language), path: '/resources', description: translate('Central hub for all civic documents', language) },
-        { name: translate('Visual Insights', language), path: '/visual-insights', description: translate('Interactive educational carousels and PDF series', language) },
+        { name: translate('Pieces', language), path: '/pieces', description: translate('Interactive educational carousels and PDF series', language) },
         { name: translate('Civic Blog', language), path: '/blog', description: translate('Insights and news', language) }
       ]
     },

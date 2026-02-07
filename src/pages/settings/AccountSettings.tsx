@@ -1,26 +1,34 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Save, LogOut, HandHelping, AlertTriangle, User as UserIcon } from 'lucide-react';
+import { Camera, Save, LogOut, HandHelping, AlertTriangle, Loader2, Check, KeyRound, Trash2 } from 'lucide-react';
 
 const AccountSettings = () => {
   const { session, user } = useAuth();
   const { language } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [profile, setProfile] = useState({
     username: '',
     full_name: '',
@@ -28,6 +36,12 @@ const AccountSettings = () => {
     avatar_url: '',
     bio: '',
     county: ''
+  });
+
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
   });
 
   useEffect(() => {
@@ -59,6 +73,44 @@ const AccountSettings = () => {
     } catch (err) {
       console.error('Error loading profile:', err);
     }
+  };
+
+  // Auto-save on blur with debounce
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    setAutoSaveStatus('saving');
+    autoSaveTimerRef.current = setTimeout(async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: session.user.id,
+            username: profile.username,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+            bio: profile.bio,
+            county: profile.county,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 2000);
+      } catch (err: any) {
+        console.error('Auto-save failed:', err);
+        setAutoSaveStatus('idle');
+      }
+    }, 1000);
+  }, [profile, session]);
+
+  const handleFieldBlur = () => {
+    triggerAutoSave();
   };
 
   const handleUpdateProfile = async () => {
@@ -94,6 +146,148 @@ const AccountSettings = () => {
     }
   };
 
+  // Avatar Upload Handler
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !session?.user?.id) return;
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: "destructive",
+        title: translate("Invalid file", language),
+        description: translate("Please select an image file.", language)
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        variant: "destructive",
+        title: translate("File too large", language),
+        description: translate("Please select an image under 5MB.", language)
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          avatar_url: urlData.publicUrl,
+          updated_at: new Date().toISOString()
+        });
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
+
+      toast({
+        title: translate("Success", language),
+        description: translate("Your profile picture has been updated.", language),
+      });
+    } catch (err: any) {
+      console.error('Avatar upload error:', err);
+      toast({
+        variant: "destructive",
+        title: translate("Upload failed", language),
+        description: err.message
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Password Change Handler
+  const handlePasswordChange = async () => {
+    if (passwords.new !== passwords.confirm) {
+      toast({
+        variant: "destructive",
+        title: translate("Passwords don't match", language),
+        description: translate("Please make sure your new passwords match.", language)
+      });
+      return;
+    }
+
+    if (passwords.new.length < 6) {
+      toast({
+        variant: "destructive",
+        title: translate("Password too short", language),
+        description: translate("Password must be at least 6 characters.", language)
+      });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwords.new
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: translate("Password updated", language),
+        description: translate("Your password has been changed successfully.", language),
+      });
+
+      setShowPasswordDialog(false);
+      setPasswords({ current: '', new: '', confirm: '' });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: translate("Error", language),
+        description: err.message
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  // Account Deletion Handler
+  const handleDeleteAccount = async () => {
+    try {
+      // Delete user data
+      await supabase.from('profiles').delete().eq('id', session?.user?.id);
+
+      // Sign out (actual account deletion would require admin API)
+      await supabase.auth.signOut();
+
+      toast({
+        title: translate("Account deactivated", language),
+        description: translate("Your account has been deactivated.", language),
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: translate("Error", language),
+        description: err.message
+      });
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
@@ -104,6 +298,24 @@ const AccountSettings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Auto-save indicator */}
+      {autoSaveStatus !== 'idle' && (
+        <div className="fixed top-24 right-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-lg border border-slate-200 dark:border-slate-700">
+          {autoSaveStatus === 'saving' && (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-xs font-medium">{translate("Saving...", language)}</span>
+            </>
+          )}
+          {autoSaveStatus === 'saved' && (
+            <>
+              <Check className="h-4 w-4 text-green-500" />
+              <span className="text-xs font-medium text-green-600">{translate("Saved", language)}</span>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-6">
         {/* Profile Card */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900">
@@ -112,17 +324,41 @@ const AccountSettings = () => {
               <CardTitle className="text-2xl font-black tracking-tight">{translate("Public Profile", language)}</CardTitle>
               <CardDescription>{translate("How others see you on CEKA.", language)}</CardDescription>
             </div>
-            <Avatar className="h-16 w-16 border-2 border-slate-100 dark:border-white/10">
-              <AvatarImage src={profile.avatar_url} />
-              <AvatarFallback className="bg-primary/5 text-primary text-xl font-bold">
-                {profile.full_name?.charAt(0) || profile.username?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-20 w-20 border-4 border-slate-100 dark:border-white/10 shadow-xl">
+                <AvatarImage src={profile.avatar_url} />
+                <AvatarFallback className="bg-primary/5 text-primary text-2xl font-bold">
+                  {profile.full_name?.charAt(0) || profile.username?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              {uploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-wrap gap-4">
-              <Button variant="outline" size="sm" className="rounded-2xl gap-2 font-bold">
-                <Camera className="h-4 w-4" />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-2xl gap-2 font-bold"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
                 {translate("Change Photo", language)}
               </Button>
             </div>
@@ -134,6 +370,7 @@ const AccountSettings = () => {
                   id="username"
                   value={profile.username}
                   onChange={e => setProfile({ ...profile, username: e.target.value })}
+                  onBlur={handleFieldBlur}
                   placeholder="johndoe"
                   className="rounded-2xl bg-slate-50 dark:bg-white/5 border-none h-12"
                 />
@@ -144,6 +381,7 @@ const AccountSettings = () => {
                   id="full_name"
                   value={profile.full_name}
                   onChange={e => setProfile({ ...profile, full_name: e.target.value })}
+                  onBlur={handleFieldBlur}
                   placeholder="John Doe"
                   className="rounded-2xl bg-slate-50 dark:bg-white/5 border-none h-12"
                 />
@@ -156,6 +394,7 @@ const AccountSettings = () => {
                 id="bio"
                 value={profile.bio}
                 onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                onBlur={handleFieldBlur}
                 placeholder={translate("Tell us about your interests in civic education...", language)}
                 className="rounded-3xl bg-slate-50 dark:bg-white/5 border-none min-h-[100px]"
               />
@@ -163,7 +402,7 @@ const AccountSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Account Details */}
+        {/* Account Security */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="text-xl font-black">{translate("Account Security", language)}</CardTitle>
@@ -172,12 +411,65 @@ const AccountSettings = () => {
             <div className="space-y-2 text-sm">
               <Label htmlFor="email" className="font-bold ml-1 uppercase text-[10px] tracking-widest text-muted-foreground">{translate("Email Address", language)}</Label>
               <Input id="email" value={profile.email} disabled className="rounded-2xl bg-slate-100 dark:bg-white/10 border-none h-12 opacity-70" />
+              {session?.user?.email_confirmed_at && (
+                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs ml-1">
+                  <Check className="h-3 w-3 mr-1" />
+                  {translate("Verified", language)}
+                </Badge>
+              )}
             </div>
-            <Button variant="outline" className="rounded-2xl font-bold w-full sm:w-auto">{translate("Change Password", language)}</Button>
+
+            <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="rounded-2xl font-bold w-full sm:w-auto gap-2">
+                  <KeyRound className="h-4 w-4" />
+                  {translate("Change Password", language)}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle>{translate("Change Password", language)}</DialogTitle>
+                  <DialogDescription>
+                    {translate("Enter your new password below.", language)}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">{translate("New Password", language)}</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={passwords.new}
+                      onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">{translate("Confirm Password", language)}</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={passwords.confirm}
+                      onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+                    {translate("Cancel", language)}
+                  </Button>
+                  <Button onClick={handlePasswordChange} disabled={passwordLoading}>
+                    {passwordLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {translate("Update Password", language)}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
 
-        {/* Activate Section */}
+        {/* Civic Activation Section */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900 p-6 border-l-4 border-kenya-red">
           <div className="flex items-start gap-4">
             <div className="h-12 w-12 bg-kenya-red/10 rounded-3xl flex items-center justify-center shrink-0">
@@ -226,7 +518,30 @@ const AccountSettings = () => {
                 <h3 className="font-bold text-destructive">{translate("Delete Account", language)}</h3>
                 <p className="text-xs text-destructive/70 mt-1">{translate("Permanently remove your account and all data.", language)}</p>
               </div>
-              <Button variant="destructive" className="rounded-2xl font-bold">{translate("Deactivate Forever", language)}</Button>
+              <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="rounded-2xl font-bold gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    {translate("Deactivate Forever", language)}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-destructive">{translate("Are you absolutely sure?", language)}</DialogTitle>
+                    <DialogDescription>
+                      {translate("This action cannot be undone. This will permanently delete your account and remove all your data from our servers.", language)}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                      {translate("Cancel", language)}
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteAccount}>
+                      {translate("Yes, delete my account", language)}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </div>

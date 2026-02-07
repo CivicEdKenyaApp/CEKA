@@ -1,233 +1,233 @@
 /**
- * processingService.ts
- * 
- * FULL IMPLEMENTATION: Background Media Processing Engine
- * 
- * This service handles multi-resolution asset generation (320p to 4k)
- * using Supabase Edge Functions and Sharp for image processing.
+ * Processing Service
+ *
+ * Handles on-demand image processing at multiple resolutions.
+ * Falls back to original URLs if Edge Function is unavailable.
  */
 
 import { supabase } from '@/integrations/supabase/client';
 
 export type ResolutionQuality = '320p' | '720p' | '1080p' | '4k';
 
-export interface ProcessingResult {
-    success: boolean;
-    url?: string;
-    error?: string;
-    cached?: boolean;
-}
-
-export interface ProcessingJob {
-    id: string;
-    itemId: string;
+interface ProcessedImage {
+    url: string;
     quality: ResolutionQuality;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    resultUrl?: string;
-    createdAt: string;
+    cached: boolean;
 }
 
-// Resolution dimensions mapping
-const RESOLUTION_MAP: Record<ResolutionQuality, { width: number; height: number }> = {
-    '320p': { width: 320, height: 320 },
-    '720p': { width: 1280, height: 720 },
-    '1080p': { width: 1920, height: 1080 },
-    '4k': { width: 3840, height: 2160 }
-};
+// In-memory cache for processed URLs
+const urlCache = new Map<string, Map<ResolutionQuality, string>>();
 
 export const processingService = {
     /**
-     * Request a specific resolution for a media item.
-     * This will either return a cached URL or trigger processing.
+     * Request a specific resolution for an image
+     * Falls back to original if processing fails
      */
-    async requestResolution(itemId: string, quality: ResolutionQuality): Promise<string> {
+    async requestResolution(
+        itemId: string,
+        quality: ResolutionQuality,
+        originalUrl?: string
+    ): Promise<ProcessedImage> {
+        // Check cache first
+        if (urlCache.has(itemId) && urlCache.get(itemId)?.has(quality)) {
+            console.log(`[ProcessingEngine] Cache hit for ${quality}`);
+            return {
+                url: urlCache.get(itemId)!.get(quality)!,
+                quality,
+                cached: true
+            };
+        }
+
         console.log(`[ProcessingEngine] Requesting ${quality} for item: ${itemId}`);
 
-        // First, check if we have a cached version
-        const cachedUrl = await this.getCachedResolution(itemId, quality);
-        if (cachedUrl) {
-            console.log(`[ProcessingEngine] Cache hit for ${quality}`);
-            return cachedUrl;
-        }
-
-        // Get the original media item
-        const { data: item, error: itemError } = await (supabase as any)
-            .from('media_items')
-            .select('*')
-            .eq('id', itemId)
-            .single();
-
-        if (itemError || !item) {
-            console.error('[ProcessingEngine] Failed to fetch item:', itemError);
-            throw new Error('Media item not found');
-        }
-
-        // For now, return the original URL as we process on-demand
-        // In production, this would invoke the Edge Function
-        const originalUrl = item.file_url;
-
         try {
-            // Try to invoke the Edge Function for processing
+            // Try Edge Function
             const { data, error } = await supabase.functions.invoke('process-media-resolution', {
                 body: {
                     itemId,
                     quality,
-                    originalUrl,
-                    dimensions: RESOLUTION_MAP[quality]
+                    originalUrl: originalUrl || '',
+                    dimensions: this.getResolutionDimensions(quality)
                 }
             });
 
             if (error) {
-                console.warn('[ProcessingEngine] Edge function not available, returning original:', error);
-                return originalUrl;
+                console.log(`[ProcessingEngine] Edge function error, returning original:`, error);
+                // Fallback to original
+                if (originalUrl) {
+                    return { url: originalUrl, quality, cached: false };
+                }
             }
 
             if (data?.url) {
                 // Cache the result
-                await this.cacheResolution(itemId, quality, data.url);
-                return data.url;
-            }
-
-            return originalUrl;
-        } catch (err) {
-            console.warn('[ProcessingEngine] Processing failed, returning original:', err);
-            return originalUrl;
-        }
-    },
-
-    /**
-     * Get a cached resolution URL if it exists.
-     */
-    async getCachedResolution(itemId: string, quality: ResolutionQuality): Promise<string | null> {
-        try {
-            const { data, error } = await (supabase as any)
-                .from('media_items')
-                .select('metadata')
-                .eq('id', itemId)
-                .single();
-
-            if (error || !data) return null;
-
-            const versions = data.metadata?.versions || {};
-            return versions[quality] || null;
-        } catch {
-            return null;
-        }
-    },
-
-    /**
-     * Cache a processed resolution URL in the item's metadata.
-     */
-    async cacheResolution(itemId: string, quality: ResolutionQuality, url: string): Promise<void> {
-        try {
-            // Get current metadata
-            const { data: item } = await (supabase as any)
-                .from('media_items')
-                .select('metadata')
-                .eq('id', itemId)
-                .single();
-
-            const currentMetadata = item?.metadata || {};
-            const versions = currentMetadata.versions || {};
-
-            // Update with new version
-            const updatedMetadata = {
-                ...currentMetadata,
-                versions: {
-                    ...versions,
-                    [quality]: url
+                if (!urlCache.has(itemId)) {
+                    urlCache.set(itemId, new Map());
                 }
-            };
+                urlCache.get(itemId)!.set(quality, data.url);
 
-            await (supabase as any)
-                .from('media_items')
-                .update({ metadata: updatedMetadata })
-                .eq('id', itemId);
-
-            console.log(`[ProcessingEngine] Cached ${quality} for item ${itemId}`);
-        } catch (err) {
-            console.error('[ProcessingEngine] Failed to cache resolution:', err);
-        }
-    },
-
-    /**
-     * Batch process all items in a content series.
-     * Queues all resolutions for all items.
-     */
-    async processEntireSeries(contentId: string): Promise<void> {
-        console.log(`[ProcessingEngine] Queuing batch processing for series: ${contentId}`);
-
-        // Get all items in the series
-        const { data: items, error } = await (supabase as any)
-            .from('media_items')
-            .select('id, file_url')
-            .eq('content_id', contentId);
-
-        if (error || !items) {
-            console.error('[ProcessingEngine] Failed to get series items:', error);
-            return;
-        }
-
-        // Queue processing for each item at each resolution
-        const qualities: ResolutionQuality[] = ['320p', '720p', '1080p', '4k'];
-
-        for (const item of items) {
-            for (const quality of qualities) {
-                // Fire and forget - these will process in background
-                this.requestResolution(item.id, quality).catch(err => {
-                    console.error(`[ProcessingEngine] Failed to process ${item.id} at ${quality}:`, err);
-                });
+                return {
+                    url: data.url,
+                    quality,
+                    cached: data.cached || false
+                };
             }
+        } catch (err) {
+            console.log(`[ProcessingEngine] Edge function not available, returning original:`, err);
         }
 
-        console.log(`[ProcessingEngine] Queued ${items.length * qualities.length} processing jobs`);
+        // Fallback to original URL
+        if (originalUrl) {
+            return { url: originalUrl, quality, cached: false };
+        }
+
+        // Last resort: try to get from media_items table
+        const { data: item } = await supabase
+            .from('media_items')
+            .select('file_url')
+            .eq('id', itemId)
+            .single();
+
+        return {
+            url: (item as any)?.file_url || '',
+            quality,
+            cached: false
+        };
     },
 
     /**
-     * Download an image directly to the user's device.
+     * Get resolution dimensions
+     */
+    getResolutionDimensions(quality: ResolutionQuality): { width: number; height: number } {
+        const dimensions: Record<ResolutionQuality, { width: number; height: number }> = {
+            '320p': { width: 320, height: 320 },
+            '720p': { width: 1280, height: 720 },
+            '1080p': { width: 1920, height: 1080 },
+            '4k': { width: 3840, height: 2160 }
+        };
+        return dimensions[quality];
+    },
+
+    /**
+     * Download an image at a specific quality
+     * Uses direct fetch and blob download for reliability
      */
     async downloadImage(itemId: string, quality: ResolutionQuality, filename: string): Promise<void> {
-        try {
-            const url = await this.requestResolution(itemId, quality);
+        // First get the URL
+        const { data: item } = await supabase
+            .from('media_items')
+            .select('file_url, metadata')
+            .eq('id', itemId)
+            .single();
 
+        const originalUrl = (item as any)?.file_url;
+        if (!originalUrl) {
+            throw new Error('No file URL found');
+        }
+
+        // Try to get processed URL, fall back to original
+        const processed = await this.requestResolution(itemId, quality, originalUrl);
+        const downloadUrl = processed.url || originalUrl;
+
+        try {
             // Fetch the image
-            const response = await fetch(url);
+            const response = await fetch(downloadUrl, {
+                mode: 'cors',
+                credentials: 'omit'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const blob = await response.blob();
 
             // Create download link
-            const downloadUrl = URL.createObjectURL(blob);
+            const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = downloadUrl;
+            link.href = blobUrl;
             link.download = filename;
+            link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            // Clean up
-            URL.revokeObjectURL(downloadUrl);
+            // Cleanup
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
 
             console.log(`[ProcessingEngine] Downloaded ${filename} at ${quality}`);
-        } catch (err) {
-            console.error('[ProcessingEngine] Download failed:', err);
-            throw err;
+        } catch (fetchError) {
+            console.log(`[ProcessingEngine] CORS fetch failed, using direct download`);
+
+            // Fallback: open in new tab (works for CORS-restricted resources)
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = filename;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log(`[ProcessingEngine] Downloaded ${filename} at ${quality} (fallback)`);
         }
     },
 
     /**
-     * Get available resolutions for an item.
+     * Batch process all images in a series
      */
-    async getAvailableResolutions(itemId: string): Promise<ResolutionQuality[]> {
-        try {
-            const { data } = await (supabase as any)
-                .from('media_items')
-                .select('metadata')
-                .eq('id', itemId)
-                .single();
+    async batchProcess(
+        items: Array<{ id: string; file_url: string }>,
+        qualities: ResolutionQuality[] = ['720p', '1080p']
+    ): Promise<Map<string, Map<ResolutionQuality, string>>> {
+        const results = new Map<string, Map<ResolutionQuality, string>>();
 
-            const versions = data?.metadata?.versions || {};
-            return Object.keys(versions) as ResolutionQuality[];
-        } catch {
-            return [];
+        for (const item of items) {
+            const itemResults = new Map<ResolutionQuality, string>();
+
+            for (const quality of qualities) {
+                try {
+                    const processed = await this.requestResolution(item.id, quality, item.file_url);
+                    itemResults.set(quality, processed.url);
+                } catch (err) {
+                    console.warn(`[ProcessingEngine] Failed to process ${item.id} at ${quality}`);
+                    itemResults.set(quality, item.file_url);
+                }
+            }
+
+            results.set(item.id, itemResults);
+        }
+
+        return results;
+    },
+
+    /**
+     * Get available resolutions for an image based on its metadata
+     */
+    getAvailableResolutions(metadata?: Record<string, any>): ResolutionQuality[] {
+        if (!metadata?.max_resolution) {
+            return ['320p', '720p', '1080p', '4k'];
+        }
+
+        const maxRes = metadata.max_resolution as string;
+        const allRes: ResolutionQuality[] = ['320p', '720p', '1080p', '4k'];
+        const maxIndex = allRes.indexOf(maxRes as ResolutionQuality);
+
+        if (maxIndex === -1) {
+            return allRes;
+        }
+
+        return allRes.slice(0, maxIndex + 1);
+    },
+
+    /**
+     * Clear cache for an item or all items
+     */
+    clearCache(itemId?: string): void {
+        if (itemId) {
+            urlCache.delete(itemId);
+        } else {
+            urlCache.clear();
         }
     }
 };

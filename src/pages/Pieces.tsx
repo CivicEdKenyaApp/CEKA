@@ -1,10 +1,32 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React from 'react';
 import Layout from '@/components/layout/Layout';
 import MediaFeed from '@/components/resources/MediaFeed';
 import { motion } from 'framer-motion';
-import { ExternalLink, Instagram, Facebook, Twitter, Youtube, Users, TrendingUp, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ExternalLink, Instagram, Facebook, Twitter, Users, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+
+// Upscrolled Logo SVG Component
+const UpscrolledLogo: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+    <svg
+        viewBox="0 0 256 256"
+        className={className}
+        fill="currentColor"
+    >
+        <g transform="translate(0,256) scale(0.1,-0.1)">
+            <path d="M680 1786 c0 -128 4 -256 10 -285 30 -158 156 -294 318 -342 l42 -12
+0 -299 0 -299 120 150 c76 95 128 152 142 155 13 3 79 7 148 9 111 3 131 6
+182 31 84 40 152 106 190 184 31 63 33 72 33 177 0 99 -3 116 -27 168 -45 95
+-150 184 -260 221 -16 5 -18 23 -18 191 l0 185 -440 0 -440 0 0 -234z" />
+        </g>
+    </svg>
+);
+
+// TikTok Icon Component
+const TikTokIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+    </svg>
+);
 
 // CEKA Social Media Accounts - Full Data
 const CEKA_SOCIALS = [
@@ -24,11 +46,7 @@ const CEKA_SOCIALS = [
         followers: '1,700+',
         reach: null,
         url: 'https://tiktok.com/@civiceducationkenya',
-        icon: () => (
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-            </svg>
-        ),
+        icon: TikTokIcon,
         color: 'bg-black',
         textColor: 'text-white'
     },
@@ -48,7 +66,7 @@ const CEKA_SOCIALS = [
         followers: 'New',
         reach: null,
         url: 'https://upscrolled.com/civiceducationkenya',
-        icon: TrendingUp,
+        icon: UpscrolledLogo,
         color: 'bg-blue-600',
         textColor: 'text-white'
     },
@@ -124,7 +142,7 @@ const CEKA_ABOUT = {
     tagline: 'Know Your Rights. Use Your Voice. Shape Your Future.'
 };
 
-const VisualInsights = () => {
+const Pieces = () => {
     return (
         <Layout>
             <div className="container mx-auto py-12 px-4">
@@ -143,7 +161,7 @@ const VisualInsights = () => {
                         transition={{ delay: 0.1 }}
                         className="text-4xl md:text-5xl font-black tracking-tighter text-kenya-black dark:text-white uppercase"
                     >
-                        Our <span className="text-kenya-green">Posts</span>
+                        Our <span className="text-kenya-green">Pieces</span>
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -235,4 +253,4 @@ const VisualInsights = () => {
     );
 };
 
-export default VisualInsights;
+export default Pieces;

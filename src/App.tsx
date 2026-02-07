@@ -54,7 +54,7 @@ import AppearanceSettings from '@/pages/settings/AppearanceSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsConditions from '@/pages/TermsConditions';
-import VisualInsights from '@/pages/VisualInsights';
+import Pieces from '@/pages/Pieces';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -167,7 +167,8 @@ const AppContent = () => {
         <Route path="/discussion/:id" element={<DiscussionDetail />} />
         <Route path="/campaign/:id" element={<CampaignDetail />} />
         <Route path="/search" element={<SearchResults />} />
-        <Route path="/visual-insights" element={<VisualInsights />} />
+        <Route path="/pieces" element={<Pieces />} />
+        <Route path="/visual-insights" element={<Navigate to="/pieces" replace />} />
         <Route path="/document/:id" element={<DocumentViewerPage />} />
         <Route path="/thumbnail-demo" element={<ThumbnailDemo />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

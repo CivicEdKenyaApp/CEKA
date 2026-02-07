@@ -175,7 +175,7 @@ const Index = () => {
                   Simplifying complex civic, social and legal issues through visual education series. Swipe through to learn, download to share and act.
                 </p>
                 <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
-                  <Link to="/visual-insights">
+                  <Link to="/pieces">
                     <Button className="rounded-full bg-kenya-green hover:bg-kenya-green/90 text-white font-bold px-8 h-12 shadow-lg shadow-kenya-green/20">
                       EXPLORE ALL PIECES
                     </Button>
