@@ -3,6 +3,7 @@
  * 
  * Orchestrates Instagram-style media content (carousels, PDF series, videos).
  * Connects Supabase (metadata) with Backblaze/Storage (assets).
+ * Supports pagination for infinite scroll.
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +25,7 @@ export interface MediaContent {
     created_at: string;
     updated_at: string;
     items?: MediaItem[];
+    tags?: string[];
 }
 
 export interface MediaItem {
@@ -35,6 +37,14 @@ export interface MediaItem {
     order_index: number;
     metadata: Record<string, any>;
     created_at: string;
+}
+
+export interface PaginatedResult<T> {
+    data: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
 }
 
 export const mediaService = {
@@ -66,23 +76,89 @@ export const mediaService = {
     },
 
     /**
-     * Fetch all published media content by type
+     * Fetch all published media content by type with optional pagination
      */
-    async listMediaContent(type?: MediaType): Promise<MediaContent[]> {
+    async listMediaContent(
+        type?: MediaType,
+        page: number = 1,
+        pageSize: number = 50
+    ): Promise<MediaContent[]> {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
         let query = (supabase as any)
             .from('media_content')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('status', 'published')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(from, to);
 
         if (type) {
             query = query.eq('type', type);
         }
 
-        const { data, error } = await query;
+        const { data, error, count } = await query;
 
         if (error) {
             console.error('[MediaService] Error listing content:', error);
+            return [];
+        }
+
+        return data as unknown as MediaContent[];
+    },
+
+    /**
+     * Fetch paginated media content
+     */
+    async listMediaContentPaginated(
+        type?: MediaType,
+        page: number = 1,
+        pageSize: number = 10
+    ): Promise<PaginatedResult<MediaContent>> {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        let query = (supabase as any)
+            .from('media_content')
+            .select('*', { count: 'exact' })
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .range(from, to);
+
+        if (type) {
+            query = query.eq('type', type);
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+            console.error('[MediaService] Error listing content:', error);
+            return { data: [], total: 0, page, pageSize, hasMore: false };
+        }
+
+        return {
+            data: data as unknown as MediaContent[],
+            total: count || 0,
+            page,
+            pageSize,
+            hasMore: (from + data.length) < (count || 0)
+        };
+    },
+
+    /**
+     * Search media content by title or tags
+     */
+    async searchMediaContent(query: string): Promise<MediaContent[]> {
+        const { data, error } = await (supabase as any)
+            .from('media_content')
+            .select('*')
+            .eq('status', 'published')
+            .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.error('[MediaService] Error searching content:', error);
             return [];
         }
 
@@ -108,6 +184,49 @@ export const mediaService = {
     },
 
     /**
+     * Update existing media content
+     */
+    async updateContent(id: string, updates: Partial<MediaContent>): Promise<MediaContent | null> {
+        const { data, error } = await (supabase as any)
+            .from('media_content')
+            .update({ ...updates, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('[MediaService] Error updating content:', error);
+            return null;
+        }
+
+        return data as unknown as MediaContent;
+    },
+
+    /**
+     * Delete media content and all its items
+     */
+    async deleteContent(id: string): Promise<boolean> {
+        // First delete all items
+        await (supabase as any)
+            .from('media_items')
+            .delete()
+            .eq('content_id', id);
+
+        // Then delete the content
+        const { error } = await (supabase as any)
+            .from('media_content')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('[MediaService] Error deleting content:', error);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
      * Add an item to a content container (uploads to storage and adds to DB)
      */
     async addMediaItem(
@@ -121,7 +240,7 @@ export const mediaService = {
         // 1. Generate path
         const path = storageService.generateMediaPath(file.name, type, slug);
 
-        // 2. Upload to Backblaze
+        // 2. Upload to storage
         const uploadResult: UploadResult = await storageService.upload(file, path);
 
         if (!uploadResult.success) {
@@ -129,7 +248,13 @@ export const mediaService = {
             return null;
         }
 
-        // 3. Add to DB
+        // 3. Detect aspect ratio from image
+        let aspectRatio = '1:1';
+        if (type === 'image') {
+            aspectRatio = await this.detectAspectRatio(file);
+        }
+
+        // 4. Add to DB
         const { data, error } = await (supabase as any)
             .from('media_items')
             .insert([{
@@ -138,7 +263,12 @@ export const mediaService = {
                 file_path: path,
                 file_url: uploadResult.url,
                 order_index: orderIndex,
-                metadata
+                metadata: {
+                    ...metadata,
+                    aspect_ratio: aspectRatio,
+                    original_size: file.size,
+                    original_name: file.name
+                }
             }])
             .select()
             .single();
@@ -152,8 +282,82 @@ export const mediaService = {
     },
 
     /**
+     * Delete a media item
+     */
+    async deleteMediaItem(itemId: string): Promise<boolean> {
+        // Get the item first to delete from storage
+        const { data: item } = await (supabase as any)
+            .from('media_items')
+            .select('file_path')
+            .eq('id', itemId)
+            .single();
+
+        if (item?.file_path) {
+            await storageService.delete(item.file_path);
+        }
+
+        const { error } = await (supabase as any)
+            .from('media_items')
+            .delete()
+            .eq('id', itemId);
+
+        if (error) {
+            console.error('[MediaService] Error deleting item:', error);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Detect aspect ratio from an image file
+     */
+    async detectAspectRatio(file: File): Promise<string> {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const width = img.width;
+                const height = img.height;
+
+                // Common aspect ratios
+                const ratios: [number, string][] = [
+                    [1, '1:1'],
+                    [4 / 3, '4:3'],
+                    [3 / 4, '3:4'],
+                    [16 / 9, '16:9'],
+                    [9 / 16, '9:16'],
+                    [4 / 5, '4:5'],
+                    [5 / 4, '5:4'],
+                    [3 / 2, '3:2'],
+                    [2 / 3, '2:3'],
+                    [21 / 9, '21:9']
+                ];
+
+                const actualRatio = width / height;
+                let closestRatio = '1:1';
+                let minDiff = Infinity;
+
+                for (const [ratio, name] of ratios) {
+                    const diff = Math.abs(actualRatio - ratio);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestRatio = name;
+                    }
+                }
+
+                URL.revokeObjectURL(img.src);
+                resolve(closestRatio);
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                resolve('1:1');
+            };
+            img.src = URL.createObjectURL(file);
+        });
+    },
+
+    /**
      * Generate a PDF download URL for a carousel
-     * (In a real scenario, this might trigger an Edge Function to merge images)
      */
     async getCarouselPDFUrl(contentId: string): Promise<string | null> {
         const { data, error } = await (supabase as any)
@@ -165,6 +369,92 @@ export const mediaService = {
         if (error || !data) return null;
 
         return (data as any).metadata?.pdf_url || null;
+    },
+
+    /**
+     * Reorder items within a content container
+     */
+    async reorderItems(contentId: string, itemIds: string[]): Promise<boolean> {
+        try {
+            for (let i = 0; i < itemIds.length; i++) {
+                await (supabase as any)
+                    .from('media_items')
+                    .update({ order_index: i })
+                    .eq('id', itemIds[i])
+                    .eq('content_id', contentId);
+            }
+            return true;
+        } catch (error) {
+            console.error('[MediaService] Error reordering items:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Update item metadata (e.g., aspect ratio, captions)
+     */
+    async updateItemMetadata(itemId: string, metadata: Record<string, any>): Promise<boolean> {
+        const { data: item } = await (supabase as any)
+            .from('media_items')
+            .select('metadata')
+            .eq('id', itemId)
+            .single();
+
+        const updatedMetadata = { ...item?.metadata, ...metadata };
+
+        const { error } = await (supabase as any)
+            .from('media_items')
+            .update({ metadata: updatedMetadata })
+            .eq('id', itemId);
+
+        if (error) {
+            console.error('[MediaService] Error updating item metadata:', error);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Get statistics for media content
+     */
+    async getMediaStats(): Promise<{
+        total: number;
+        byType: Record<MediaType, number>;
+        recent: number;
+    }> {
+        const { count: total } = await (supabase as any)
+            .from('media_content')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'published');
+
+        const types: MediaType[] = ['carousel', 'pdf_series', 'video', 'document'];
+        const byType: Record<MediaType, number> = {} as any;
+
+        for (const type of types) {
+            const { count } = await (supabase as any)
+                .from('media_content')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'published')
+                .eq('type', type);
+            byType[type] = count || 0;
+        }
+
+        // Recent = last 7 days
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const { count: recent } = await (supabase as any)
+            .from('media_content')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'published')
+            .gte('created_at', weekAgo.toISOString());
+
+        return {
+            total: total || 0,
+            byType,
+            recent: recent || 0
+        };
     }
 };
 

@@ -1,27 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import InstagramCarousel from '../carousel/InstagramCarousel';
-import { Grid2X2, List, Filter } from 'lucide-react';
+import { Grid2X2, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const ITEMS_PER_PAGE = 6;
 
 const MediaFeed: React.FC = () => {
     const [content, setContent] = useState<MediaContent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<'feed' | 'grid'>('feed');
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
 
+    // Initial fetch
     useEffect(() => {
         const fetchMedia = async () => {
             try {
                 const data = await mediaService.listMediaContent();
-                // For each content, fetch its items
                 const fullData = await Promise.all(
-                    data.map(async (item) => {
+                    data.slice(0, ITEMS_PER_PAGE).map(async (item) => {
                         const detailed = await mediaService.getMediaContent(item.slug);
                         return detailed || item;
                     })
                 );
                 setContent(fullData);
+                setHasMore(data.length > ITEMS_PER_PAGE);
             } catch (error) {
                 console.error('Failed to fetch media feed:', error);
             } finally {
@@ -31,6 +39,63 @@ const MediaFeed: React.FC = () => {
 
         fetchMedia();
     }, []);
+
+    // Load more function
+    const loadMore = useCallback(async () => {
+        if (loadingMore || !hasMore) return;
+
+        setLoadingMore(true);
+        try {
+            const allData = await mediaService.listMediaContent();
+            const startIdx = page * ITEMS_PER_PAGE;
+            const endIdx = startIdx + ITEMS_PER_PAGE;
+            const newItems = allData.slice(startIdx, endIdx);
+
+            if (newItems.length === 0) {
+                setHasMore(false);
+                return;
+            }
+
+            const fullNewItems = await Promise.all(
+                newItems.map(async (item) => {
+                    const detailed = await mediaService.getMediaContent(item.slug);
+                    return detailed || item;
+                })
+            );
+
+            setContent(prev => [...prev, ...fullNewItems]);
+            setPage(prev => prev + 1);
+            setHasMore(endIdx < allData.length);
+        } catch (error) {
+            console.error('Failed to load more:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [page, loadingMore, hasMore]);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        if (loading) return;
+
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observerRef.current.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, [loading, hasMore, loadingMore, loadMore]);
 
     if (loading) {
         return (
@@ -53,9 +118,9 @@ const MediaFeed: React.FC = () => {
         <div className="max-w-4xl mx-auto py-8 px-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-black italic tracking-tighter text-kenya-black dark:text-white uppercase">
-                        Civic <span className="text-kenya-red">Gallery</span>
-                    </h1>
+                    <h2 className="text-2xl font-bold tracking-tight text-kenya-black dark:text-white">
+                        Our <span className="text-kenya-red">Posts</span>
+                    </h2>
                     <p className="text-muted-foreground text-sm">Visual education series and carousels</p>
                 </div>
 
@@ -86,7 +151,7 @@ const MediaFeed: React.FC = () => {
                     {content.length > 0 ? content.map((item) => (
                         <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="mb-4">
-                                <h2 className="text-xl font-bold">{item.title}</h2>
+                                <h3 className="text-xl font-bold">{item.title}</h3>
                                 {item.description && (
                                     <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
                                 )}
@@ -98,6 +163,19 @@ const MediaFeed: React.FC = () => {
                             <p>No visual media published yet.</p>
                         </div>
                     )}
+
+                    {/* Infinite Scroll Trigger */}
+                    <div ref={loadMoreRef} className="py-8 flex justify-center">
+                        {loadingMore && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span className="text-sm">Loading more...</span>
+                            </div>
+                        )}
+                        {!hasMore && content.length > 0 && (
+                            <p className="text-sm text-muted-foreground">You've reached the end</p>
+                        )}
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
@@ -105,10 +183,10 @@ const MediaFeed: React.FC = () => {
                         <div
                             key={item.id}
                             className="aspect-square relative group cursor-pointer overflow-hidden bg-muted"
-                            onClick={() => setViewMode('feed')} // Simple transition back to feed for now
+                            onClick={() => setViewMode('feed')}
                         >
                             <img
-                                src={item.cover_url || ''}
+                                src={item.cover_url || item.items?.[0]?.file_url || ''}
                                 alt={item.title}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />

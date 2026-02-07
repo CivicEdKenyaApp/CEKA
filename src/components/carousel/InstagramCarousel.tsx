@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Download, Maximize2, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Maximize2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { type MediaContent, type MediaItem } from '@/services/mediaService';
-import { processingService } from '@/services/processingService';
+import { processingService, type ResolutionQuality } from '@/services/processingService';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,6 +20,7 @@ interface InstagramCarouselProps {
 const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, className }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0);
+    const [downloading, setDownloading] = useState<string | null>(null);
     const items = content.items || [];
 
     const nextSlide = () => {
@@ -45,32 +46,39 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     };
 
-    const handleDownloadImage = async (quality: string) => {
-        // Use the processing engine to "prepare" the resolution
-        try {
-            const downloadUrl = await processingService.requestResolution(currentItem.id, quality as any);
+    const handleDownloadImage = async (quality: ResolutionQuality) => {
+        const currentItem = items[currentIndex];
+        if (!currentItem) return;
 
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.target = '_blank';
-            link.download = `${content.slug}-${currentIndex + 1}-${quality}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        setDownloading(quality);
+        try {
+            const filename = `${content.slug}-${currentIndex + 1}-${quality}.jpg`;
+            await processingService.downloadImage(currentItem.id, quality, filename);
         } catch (err) {
-            console.error('Failed to process image:', err);
+            console.error('Failed to download image:', err);
+            // Fallback: open in new tab
+            const url = currentItem.file_url;
+            if (url) window.open(url, '_blank');
+        } finally {
+            setDownloading(null);
         }
     };
 
-    const getAspectRatioPadding = (ratio?: string) => {
-        switch (ratio) {
-            case '3:4': return '133.33%';
-            case '4:5': return '125%';
-            case '16:9': return '56.25%';
-            case '9:16': return '177.78%';
-            case '1:1':
-            default: return '100%';
-        }
+    // Aspect ratio padding calculator - supports all common ratios
+    const getAspectRatioPadding = (ratio?: string): string => {
+        const ratioMap: Record<string, string> = {
+            '4:3': '75%',
+            '3:4': '133.33%',
+            '4:5': '125%',
+            '5:4': '80%',
+            '16:9': '56.25%',
+            '9:16': '177.78%',
+            '21:9': '42.86%',
+            '2:3': '150%',
+            '3:2': '66.67%',
+            '1:1': '100%'
+        };
+        return ratioMap[ratio || '1:1'] || '100%';
     };
 
     // Keyboard navigation
@@ -86,14 +94,15 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     if (items.length === 0) return null;
 
     const currentItem = items[currentIndex];
+    const aspectRatio = currentItem.metadata?.aspect_ratio as string;
 
     return (
         <div className={cn("relative group max-w-xl mx-auto flex flex-col bg-transparent", className)}>
-            {/* Media Container (100% Unobstructed) */}
-            <div className="relative overflow-hidden rounded-2xl bg-transparent">
+            {/* Media Container - 100% Unobstructed with Dynamic Aspect Ratio */}
+            <div className="relative overflow-hidden rounded-2xl bg-muted/5">
                 <motion.div
                     className="relative w-full"
-                    animate={{ paddingBottom: getAspectRatioPadding(currentItem.metadata?.aspect_ratio as string) }}
+                    animate={{ paddingBottom: getAspectRatioPadding(aspectRatio) }}
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 >
                     <AnimatePresence initial={false} custom={direction}>
@@ -127,7 +136,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                                 <img
                                     src={currentItem.file_url || ''}
                                     alt={content.title}
-                                    className="w-full h-full object-cover transition-opacity duration-300"
+                                    className="w-full h-full object-cover"
                                     loading="lazy"
                                 />
                             ) : currentItem.type === 'video' ? (
@@ -145,74 +154,98 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Navigation - Discreet Dots */}
-                    <div className="absolute inset-y-0 left-0 pl-2 flex items-center">
-                        {currentIndex > 0 && (
+                    {/* Navigation Arrows - Appear on hover */}
+                    {currentIndex > 0 && (
+                        <div className="absolute inset-y-0 left-0 pl-2 flex items-center">
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={prevSlide}
-                                className="h-8 w-8 rounded-full bg-background/20 hover:bg-background/40 text-background backdrop-blur-sm border-none opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-9 w-9 rounded-full bg-white/80 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-foreground backdrop-blur-sm shadow-lg border-0 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <ChevronLeft size={18} />
+                                <ChevronLeft size={20} />
                             </Button>
-                        )}
-                    </div>
-                    <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                        {currentIndex < items.length - 1 && (
+                        </div>
+                    )}
+                    {currentIndex < items.length - 1 && (
+                        <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={nextSlide}
-                                className="h-8 w-8 rounded-full bg-background/20 hover:bg-background/40 text-background backdrop-blur-sm border-none opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-9 w-9 rounded-full bg-white/80 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-foreground backdrop-blur-sm shadow-lg border-0 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <ChevronRight size={18} />
+                                <ChevronRight size={20} />
                             </Button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </motion.div>
             </div>
 
-            {/* Bottom Controls - Minimalist */}
+            {/* Bottom Controls - Below the image, not on top */}
             <div className="pt-4 flex flex-col gap-4">
                 {/* Indicators & Counter */}
                 <div className="flex justify-between items-center px-1">
                     <div className="flex gap-1">
                         {items.length > 1 && items.map((_, i) => (
-                            <div
+                            <button
                                 key={i}
+                                onClick={() => {
+                                    setDirection(i > currentIndex ? 1 : -1);
+                                    setCurrentIndex(i);
+                                }}
                                 className={cn(
-                                    "h-1 rounded-full transition-all duration-300",
-                                    i === currentIndex ? "w-6 bg-kenya-red" : "w-2 bg-muted-foreground/20"
+                                    "h-1.5 rounded-full transition-all duration-300 cursor-pointer hover:opacity-80",
+                                    i === currentIndex
+                                        ? "w-6 bg-kenya-red"
+                                        : "w-1.5 bg-muted-foreground/20 hover:bg-muted-foreground/40"
                                 )}
+                                aria-label={`Go to slide ${i + 1}`}
                             />
                         ))}
                     </div>
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest tabular-nums">
                         {currentIndex + 1} / {items.length}
                     </span>
                 </div>
 
-                {/* Simplified Actions */}
+                {/* Download Actions */}
                 <div className="flex gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="flex-1 rounded-full border-muted-foreground/20 hover:border-kenya-red/50 hover:bg-kenya-red/5 text-xs font-bold transition-all"
+                                disabled={!!downloading}
+                                className="flex-1 rounded-full border-muted-foreground/20 hover:border-kenya-red/50 hover:bg-kenya-red/5 text-xs font-medium transition-all"
                             >
-                                <Download size={14} className="mr-2" />
-                                SAVE IMAGE
+                                {downloading ? (
+                                    <>
+                                        <Loader2 size={14} className="mr-2 animate-spin" />
+                                        Downloading {downloading}...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download size={14} className="mr-2" />
+                                        Save Image
+                                    </>
+                                )}
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-48 rounded-2xl p-2 shadow-2xl border-muted-foreground/10 bg-background/95 backdrop-blur-xl">
-                            {['320p', '720p', '1080p', '4k'].map((quality) => (
+                        <DropdownMenuContent
+                            align="start"
+                            className="w-48 rounded-xl p-1.5 shadow-xl border-muted-foreground/10 bg-background/98 backdrop-blur-xl"
+                        >
+                            {(['320p', '720p', '1080p', '4k'] as ResolutionQuality[]).map((quality) => (
                                 <DropdownMenuItem
                                     key={quality}
                                     onClick={() => handleDownloadImage(quality)}
-                                    className="rounded-lg cursor-pointer py-2 px-3 focus:bg-kenya-red/10 focus:text-kenya-red text-xs font-medium"
+                                    disabled={!!downloading}
+                                    className="rounded-lg cursor-pointer py-2.5 px-3 focus:bg-kenya-red/10 focus:text-kenya-red text-sm"
                                 >
-                                    {quality} Resolution
+                                    <span className="font-medium">{quality}</span>
+                                    <span className="ml-auto text-xs text-muted-foreground">
+                                        {quality === '4k' ? 'Ultra HD' : quality === '1080p' ? 'Full HD' : 'HD'}
+                                    </span>
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
@@ -221,7 +254,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                     {content.metadata?.pdf_url && (
                         <Button
                             onClick={handleDownloadPDF}
-                            className="bg-kenya-red hover:bg-kenya-red/90 text-white rounded-full px-6 text-xs font-bold"
+                            className="bg-kenya-red hover:bg-kenya-red/90 text-white rounded-full px-5 text-xs font-medium"
                         >
                             <Download size={14} className="mr-2" />
                             PDF
