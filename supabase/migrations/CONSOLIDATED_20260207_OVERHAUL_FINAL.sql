@@ -213,6 +213,34 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'scraper_sources') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.scraper_sources;
     END IF;
+
+    -- Pipeline Config
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'pipeline_config') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.pipeline_config;
+    END IF;
 EXCEPTION WHEN OTHERS THEN 
     RAISE NOTICE 'Skipped Realtime addition.';
+END $$;
+
+-- 6. TACTICAL PIPELINE CONFIGURATION
+-- ------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.pipeline_config (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    filename text UNIQUE NOT NULL,
+    content text NOT NULL,
+    description text,
+    updated_at timestamp with time zone DEFAULT now(),
+    updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.pipeline_config ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can manage pipeline config' AND tablename = 'pipeline_config') THEN
+        CREATE POLICY "Admins can manage pipeline config" ON public.pipeline_config FOR ALL
+        USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+    END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
