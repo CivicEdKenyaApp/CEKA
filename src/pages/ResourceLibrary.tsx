@@ -33,6 +33,7 @@ import { translate } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { placeholderService } from '@/services/placeholderService';
 
 // Resource type definition
 interface Resource {
@@ -290,7 +291,7 @@ const ResourceLibrary = () => {
   // Render resource card based on view mode
   const renderResourceCard = (resource: Resource) => {
     const isSelected = selectedResources.includes(resource.id);
-    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id];
+    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id] || placeholderService.getPlaceholderByTags(resource.tags);
 
     if (viewMode === 'grid') {
       return (

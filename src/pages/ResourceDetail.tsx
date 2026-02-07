@@ -14,6 +14,7 @@ import { useDocument } from '@/hooks/use-document';
 import { useViewCount } from '@/hooks/useViewCount';
 import { useViewTracking } from '@/hooks/useViewTracking';
 import { normalizeDownloadUrl, getYouTubeEmbedUrl } from '@/utils/url';
+import { placeholderService } from '@/services/placeholderService';
 
 type Resource = Tables<'resources'>;
 
@@ -64,10 +65,10 @@ const ResourceDetail = () => {
     const fetchResource = async () => {
       try {
         if (!id) return;
-        
+
         // First check mock resources
         const mockResource = mockResources.find(r => r.id === id);
-        
+
         if (mockResource) {
           // Normalize URL for in-app viewing
           const normalized = { ...mockResource, url: normalizeDownloadUrl(mockResource.url) };
@@ -75,16 +76,16 @@ const ResourceDetail = () => {
           setLoading(false);
           return;
         }
-        
+
         // If not found in mock, try Supabase
         const { data, error } = await supabase
           .from('resources')
           .select('*')
           .eq('id', id)
           .single();
-          
+
         if (error) throw error;
-        
+
         const normalizedDb = data ? { ...data, url: normalizeDownloadUrl((data as any).url) } : null;
         setResource(normalizedDb as Resource);
       } catch (error) {
@@ -113,7 +114,7 @@ const ResourceDetail = () => {
   useEffect(() => {
     // If it's a video and auto-play/interaction happens, we can later call trackVideoPlay()
     // We keep this returned function for potential cleanup
-    return () => {};
+    return () => { };
   }, [trackVideoPlay]);
 
   const { isLoading: isDocumentLoading } = useDocument({
@@ -141,7 +142,7 @@ const ResourceDetail = () => {
       title: "Download started",
       description: "Your download has begun.",
     });
-    
+
     if (resource) {
       const finalUrl = normalizeDownloadUrl((resource as any).downloadUrl || resource.url);
       if (finalUrl) window.open(finalUrl, '_blank');
@@ -248,9 +249,9 @@ const ResourceDetail = () => {
                     title={(resource as any).title}
                   />
                 )}
-                
+
                 <Separator className="my-6" />
-                
+
                 <div className="flex flex-wrap gap-4">
                   <Button className="bg-kenya-green hover:bg-kenya-green/90" onClick={handleDownload}>
                     <Download className="mr-2 h-4 w-4" />
@@ -266,8 +267,8 @@ const ResourceDetail = () => {
 
             <h2 className="text-xl font-semibold mb-4">About this Resource</h2>
             <p className="text-muted-foreground">
-              This {(resource as any).type?.toLowerCase()} provides information about {(resource as any).category} in Kenya. 
-              It is part of our civic education materials designed to help citizens understand 
+              This {(resource as any).type?.toLowerCase()} provides information about {(resource as any).category} in Kenya.
+              It is part of our civic education materials designed to help citizens understand
               their rights and responsibilities.
             </p>
           </div>
@@ -275,12 +276,29 @@ const ResourceDetail = () => {
           <div>
             <Card>
               <CardContent className="p-6">
-                <div className="flex justify-center mb-6 bg-muted p-6 rounded-lg">
-                  {getResourceIcon((resource as any).type || '')}
+                <div className="aspect-video w-full mb-6 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                  {(resource as any).thumbnail_url ? (
+                    <img
+                      src={(resource as any).thumbnail_url}
+                      alt={resource.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (resource as any).type?.toLowerCase() === 'video' ? (
+                    <div className="text-primary flex flex-col items-center gap-2">
+                      <Video className="h-10 w-10" />
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Video Resource</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={placeholderService.getPlaceholderByTags((resource as any).tags || [])}
+                      alt="Placeholder"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
-                
+
                 <h3 className="font-semibold mb-4">Resource Information</h3>
-                
+
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Type:</span>
@@ -299,16 +317,16 @@ const ResourceDetail = () => {
                     <span className="font-medium">{new Date((resource as any).updated_at).toLocaleDateString()}</span>
                   </div>
                 </div>
-                
+
                 <Separator className="my-4" />
-                
+
                 <h3 className="font-semibold mb-4">Related Resources</h3>
-                
+
                 <div className="space-y-3">
                   {relatedResources.map(related => (
-                    <Link 
-                      key={related.id} 
-                      to={`/resources/${related.id}`} 
+                    <Link
+                      key={related.id}
+                      to={`/resources/${related.id}`}
                       className="flex items-center p-2 hover:bg-muted rounded-md transition-colors"
                     >
                       {(() => {
