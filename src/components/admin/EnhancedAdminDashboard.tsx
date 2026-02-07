@@ -19,6 +19,7 @@ import VolunteerManager from './VolunteerManager';
 import CampaignManager from './CampaignManager';
 import BulkUploadManager from './BulkUploadManager';
 import EventManager from './EventManager';
+import LegislativeIntelligence from './LegislativeIntelligence';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const EnhancedAdminDashboard = () => {
@@ -180,9 +181,13 @@ const EnhancedAdminDashboard = () => {
             <TabsTrigger value="events" className="rounded-xl px-6 py-3">Events</TabsTrigger>
             <TabsTrigger value="campaigns" className="rounded-xl px-6 py-3">Campaigns</TabsTrigger>
             <TabsTrigger value="uploads" className="rounded-xl px-6 py-3">Uploads</TabsTrigger>
-            <TabsTrigger value="sessions" className="rounded-xl px-6 py-3">Sessions</TabsTrigger>
-            <TabsTrigger value="changes" className="rounded-xl px-6 py-3">Audit</TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl px-6 py-3">System</TabsTrigger>
+            <TabsTrigger value="sessions" className="rounded-xl px-2 py-3">Sessions</TabsTrigger>
+            <TabsTrigger value="intelligence" className="rounded-xl px-2 py-3 gap-1">
+              <Activity className="h-3 w-3" />
+              Intel
+            </TabsTrigger>
+            <TabsTrigger value="changes" className="rounded-xl px-2 py-3">Audit</TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-xl px-2 py-3">System</TabsTrigger>
           </TabsList>
         </div>
 
@@ -199,11 +204,37 @@ const EnhancedAdminDashboard = () => {
                   <CardContent>
                     <div className="text-3xl font-black">{stats.total_users.toLocaleString()}</div>
                     <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                      <span className="text-kenya-green font-bold">+{stats.recent_signups}</span> new this week
+                      <span className="text-kenya-green font-bold">+{stats.recent_signups}</span> signups
                     </p>
                   </CardContent>
                 </Card>
-                {/* Repeat for other stats with similar glass-card style */}
+
+                <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-primary transition-all group-hover:w-2" />
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Legislative Trace</CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black">{stats.total_bills}</div>
+                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                      <span className="text-kenya-green font-bold">Live Monitoring</span>
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 transition-all group-hover:w-2" />
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Storage Vault</CardTitle>
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black">B2</div>
+                    <p className="text-[10px] text-muted-foreground mt-1">Private Proxy Active</p>
+                  </CardContent>
+                </Card>
+
                 <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
                   <div className="absolute top-0 left-0 w-1 h-full bg-kenya-red transition-all group-hover:w-2" />
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -212,31 +243,7 @@ const EnhancedAdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-black">{stats.total_posts + stats.total_resources}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                      <span className="text-kenya-green font-bold">Live Synced</span>
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 transition-all group-hover:w-2" />
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-black">{stats.active_sessions > 0 ? '99.9%' : 'Checking...'}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{stats.active_sessions} active sessions</p>
-                  </CardContent>
-                </Card>
-                <Card className="glass-card border-none shadow-ios-high dark:shadow-ios-high-dark overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-primary transition-all group-hover:w-2" />
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Active Assemblies</CardTitle>
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-black">{stats.total_discussions}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{stats.total_interactions} interactions today</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Resources & Posts</p>
                   </CardContent>
                 </Card>
               </>
@@ -405,6 +412,10 @@ const EnhancedAdminDashboard = () => {
 
         <TabsContent value="sessions">
           <AdminSessionManager />
+        </TabsContent>
+
+        <TabsContent value="intelligence">
+          <LegislativeIntelligence />
         </TabsContent>
 
         <TabsContent value="uploads">
