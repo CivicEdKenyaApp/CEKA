@@ -283,14 +283,9 @@ const ResourceDetail = () => {
                       alt={resource.title}
                       className="w-full h-full object-cover"
                     />
-                  ) : (resource as any).type?.toLowerCase() === 'video' ? (
-                    <div className="text-primary flex flex-col items-center gap-2">
-                      <Video className="h-10 w-10" />
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Video Resource</span>
-                    </div>
                   ) : (
                     <img
-                      src={placeholderService.getPlaceholderByTags((resource as any).tags || [])}
+                      src={placeholderService.getPlaceholderByTags((resource as any).tags || [], (resource as any).type)}
                       alt="Placeholder"
                       className="w-full h-full object-cover"
                     />

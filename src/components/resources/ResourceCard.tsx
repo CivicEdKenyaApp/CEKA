@@ -7,6 +7,7 @@ import { ExternalLink, Download, BookOpen, MapPin, Video, FileText, ImageIcon, G
 import { formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { placeholderService } from '@/services/placeholderService';
 
 export interface ResourceCardProps {
   resource: {
@@ -79,32 +80,29 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
       }
     }
 
-    // 3. Premium Fallback Gradients
+    // 3. Advanced Placeholder Utility (Go Ham Logic)
+    // Prioritizes File Types (pdf, video, infographic, image) before tag-based scoring
+    const placeholderUrl = placeholderService.getPlaceholderByTags(resource.tags || [], resource.type);
     const type = resource.type.toLowerCase();
-    let gradient = "from-slate-400 to-slate-600";
-    let Icon = FileText;
 
-    if (type === 'video') {
-      gradient = "from-kenya-blue to-primary";
-      Icon = Video;
-    } else if (type === 'infographic' || type === 'image') {
-      gradient = "from-kenya-green to-kenya-green-dark";
-      Icon = ImageIcon;
-    } else if (type === 'document' || type === 'pdf') {
-      gradient = "from-amber-400 to-amber-600";
-      Icon = BookOpen;
-    } else if (type === 'constitution') {
-      gradient = "from-kenya-red to-kenya-red-dark";
-      Icon = Gavel;
-    }
+    let Icon = FileText;
+    if (type === 'video') Icon = Video;
+    else if (type === 'infographic' || type === 'image') Icon = ImageIcon;
+    else if (type === 'document' || type === 'pdf') Icon = BookOpen;
+    else if (type === 'constitution') Icon = Gavel;
 
     return (
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-6 text-white overflow-hidden`}>
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <Icon className="w-48 h-48 -mr-12 -mb-12 absolute bottom-0 right-0 rotate-12" />
+      <div className="absolute inset-0 bg-muted flex flex-col items-center justify-center overflow-hidden">
+        <img
+          src={placeholderUrl}
+          alt={resource.title}
+          className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+        <div className="relative z-10 flex flex-col items-center text-white drop-shadow-lg">
+          <Icon className="h-10 w-10 mb-2 opacity-90" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">{type}</p>
         </div>
-        <Icon className="h-12 w-12 mb-3 relative z-10" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] relative z-10 opacity-80">{type}</p>
       </div>
     );
   };

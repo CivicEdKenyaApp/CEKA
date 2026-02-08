@@ -271,6 +271,7 @@ const ResourceLibrary = () => {
       case 'video':
         return <Video className="w-5 h-5" />;
       case 'image':
+      case 'infographic':
         return <ImageIcon className="w-5 h-5" />;
       case 'audio':
         return <BookOpen className="w-5 h-5" />;
@@ -291,7 +292,7 @@ const ResourceLibrary = () => {
   // Render resource card based on view mode
   const renderResourceCard = (resource: Resource) => {
     const isSelected = selectedResources.includes(resource.id);
-    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id] || placeholderService.getPlaceholderByTags(resource.tags);
+    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id] || placeholderService.getPlaceholderByTags(resource.tags, resource.type);
 
     if (viewMode === 'grid') {
       return (
@@ -378,20 +379,14 @@ const ResourceLibrary = () => {
         >
           <Card className={`transition-shadow hover:shadow-md ${isSelected ? 'border-primary' : ''}`}>
             <div className="flex items-start p-4">
-              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md">
-                {resource.thumbnail ? (
-                  <img
-                    src={resource.thumbnail}
-                    alt={resource.title}
-                    className="w-full h-full object-cover rounded-md"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full w-full">
-                    {getTypeIcon(resource.type)}
-                  </div>
-                )}
+              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md overflow-hidden">
+                <img
+                  src={thumbnail}
+                  alt={resource.title}
+                  className="w-full h-full object-cover rounded-md"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 mb-1">

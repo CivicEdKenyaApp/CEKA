@@ -5,7 +5,7 @@
  * Uses a weighted scoring system for best-fit selection.
  */
 
-export type PlaceholderType = 'legal' | 'governance' | 'community' | 'constitution';
+export type PlaceholderType = 'image' | 'infographics' | 'document' | 'pdf';
 
 interface PlaceholderConfig {
     url: string;
@@ -14,60 +14,36 @@ interface PlaceholderConfig {
 }
 
 const PLACEHOLDER_MAPPING: Record<PlaceholderType, PlaceholderConfig> = {
-    constitution: {
+    image: {
         url: '4.png',
-        label: 'Constitution & Rights',
+        label: 'Image / Visual',
         tags: [
-            'constitution', 'rights', 'bill of rights', 'justice', 'charter', 'sovereignty',
-            'freedom', 'liberty', 'amendment', 'bbi', 'referendum', 'katiba', 'preamble',
-            'judiciary', 'bench', 'supremacy', 'devolution', 'chapters', 'schedules',
-            'fundamental', 'civil liberties', 'protests', 'activism', 'civic space',
-            'human rights', 'equality', 'equity', 'rule of law', 'constitutionalism',
-            'national accord', 'sovereign', 'citizen rights', 'legal framework', 'democracy',
-            'protection', 'enforcement', 'articles', 'section', 'clause', 'presidential',
-            'judgement', 'ruling', 'verdict', 'bench', 'magistrate'
+            'image', 'photo', 'picture', 'visual', 'gallery', 'portrait', 'scenery',
+            'photography', 'rendering', 'asset'
         ]
     },
-    governance: {
+    infographics: {
         url: '5.png',
-        label: 'Governance & Politics',
+        label: 'Infographics',
         tags: [
-            'governance', 'politics', 'elections', 'parliament', 'senate', 'county', 'mca',
-            'governor', 'president', 'cabinet', 'policy', 'state', 'government', 'iebc',
-            'eacc', 'dci', 'audit', 'transparency', 'accountability', 'leadership',
-            'integrity', 'public finance', 'budget', 'debt', 'imf', 'world bank', 'taxes',
-            'finance bill', 'kra', 'revenue', 'spending', 'infrastructure', 'manifesto',
-            'diplomacy', 'foreign policy', 'vetting', 'appointments', 'hansard',
-            'standing orders', 'legislation', 'proclamation', 'decree', 'executive',
-            'legislature', 'assembly', 'devolution', 'ward', 'constituency', 'polling'
+            'infographic', 'infographics', 'data', 'chart', 'graph', 'statistics',
+            'viz', 'visualization', 'explainer', 'summary', 'breakdown'
         ]
     },
-    legal: {
+    document: {
         url: '6.png',
-        label: 'Law & Litigation',
+        label: 'Document',
         tags: [
-            'law', 'litigation', 'court', 'case', 'suit', 'petition', 'affidavit', 'summon',
-            'witness', 'accused', 'defender', 'prosecutor', 'lsk', 'advocate', 'lawyer',
-            'magistrate', 'high court', 'supreme court', 'appeals', 'magistrate', 'dispute',
-            'arbitration', 'mediation', 'damages', 'injunction', 'stay order', 'contempt',
-            'bail', 'bond', 'jail', 'prison', 'penal code', 'evidence', 'forensics',
-            'cybercrime', 'tort', 'contract', 'land law', 'family law', 'succession',
-            'probate', 'conveyancing', 'intellectual property', 'commercial law', 'criminal',
-            'defense', 'testimony', 'trial', 'hearing', 'chambers', 'bar'
+            'document', 'doc', 'text', 'paper', 'manuscript', 'file', 'archive',
+            'records', 'protocol', 'guidelines', 'handbook', 'manual', 'constitution'
         ]
     },
-    community: {
+    pdf: {
         url: '7.png',
-        label: 'Community & Engagement',
+        label: 'PDF',
         tags: [
-            'community', 'engagement', 'participation', 'youth', 'volunteers', 'civic',
-            'discussion', 'voice', 'dialogue', 'townhall', 'baraza', 'neighborhood',
-            'grassroots', 'mobilization', 'campaign', 'awareness', 'education', 'training',
-            'workshop', 'seminar', 'webinar', 'resource', 'hub', 'collective', 'synergy',
-            'mutual aid', 'welfare', 'harambee', 'resilience', 'sustainability', 'environment',
-            'health', 'sanitation', 'schools', 'tvet', 'university', 'social justice',
-            'empowerment', 'advocacy', 'lobbying', 'network', 'coalition', 'unity',
-            'peace', 'reconciliation', 'safety', 'security', 'welfare', 'village'
+            'pdf', 'portable', 'adobe', 'scan', 'booklet', 'act',
+            'rights', 'legislation', 'parliament', 'bills', 'legal', 'governance'
         ]
     }
 };
@@ -78,52 +54,78 @@ const PUBLIC_ASSETS_BASE = '/placeholders/';
 export const placeholderService = {
     /**
      * Get the best placeholder URL based on tags using a weighted scoring system
+     * HIGHEST PRIORITY (STRICT): 
+     * 4 = Image, 5 = Infographics, 6 = Document, 7 = PDF
      */
-    getPlaceholderByTags(tags: string[] = []): string {
-        if (!tags || tags.length === 0) return this.getPlaceholderByType('community');
+    getPlaceholderByTags(tags: string[] = [], resourceType: string = ''): string {
+        const normalizedTags = (tags || []).map(t => t.toLowerCase().trim());
+        const type = (resourceType || '').toLowerCase().trim();
 
-        const normalizedTags = tags.map(t => t.toLowerCase().trim());
+        // 1. HIGHEST PRIORITY (Go Ham logic: enforce strict mapping)
+
+        // 7 = PDF
+        if (type === 'pdf' || normalizedTags.includes('pdf')) {
+            return this.getPlaceholderByType('pdf'); // 7.png
+        }
+
+        // 6 = Document
+        if (type === 'document' || type === 'doc' || normalizedTags.includes('document') || normalizedTags.includes('doc')) {
+            return this.getPlaceholderByType('document'); // 6.png
+        }
+
+        // 5 = Infographics
+        if (type === 'infographic' || type === 'infographics' || normalizedTags.includes('infographic') || normalizedTags.includes('infographics')) {
+            return this.getPlaceholderByType('infographics'); // 5.png
+        }
+
+        // 4 = Image (fallback for visuals)
+        if (type === 'image' || type === 'photo' || normalizedTags.includes('image') || normalizedTags.includes('photo')) {
+            return this.getPlaceholderByType('image'); // 4.png
+        }
+
+        // 2. TAG SCORING SYSTEM (Fallback for ambiguous matches)
+        if (normalizedTags.length === 0) return this.getPlaceholderByType('document');
 
         const scores: Record<PlaceholderType, number> = {
-            constitution: 0,
-            governance: 0,
-            legal: 0,
-            community: 0
+            image: 0,
+            infographics: 0,
+            document: 0,
+            pdf: 0
         };
 
-        for (const [type, config] of Object.entries(PLACEHOLDER_MAPPING)) {
-            const pType = type as PlaceholderType;
+        for (const [pType, config] of Object.entries(PLACEHOLDER_MAPPING)) {
+            const currentType = pType as PlaceholderType;
 
             normalizedTags.forEach(userTag => {
                 config.tags.forEach(standardTag => {
                     // Exact match = 10 pts
                     if (userTag === standardTag) {
-                        scores[pType] += 10;
+                        scores[currentType] += 10;
                     }
                     // Partial match = 3 pts
                     else if (userTag.includes(standardTag) || standardTag.includes(userTag)) {
-                        scores[pType] += 3;
+                        scores[currentType] += 3;
                     }
                 });
             });
         }
 
         // Find type with highest score
-        let bestMatch: PlaceholderType = 'community';
+        let bestMatch: PlaceholderType = 'document';
         let maxScore = -1;
 
-        for (const [type, score] of Object.entries(scores)) {
+        for (const [pType, score] of Object.entries(scores)) {
             if (score > maxScore) {
                 maxScore = score;
-                bestMatch = type as PlaceholderType;
+                bestMatch = pType as PlaceholderType;
             }
         }
 
-        // If no score, default to community
-        if (maxScore === 0) bestMatch = 'community';
+        // If no score, default to document
+        if (maxScore === 0) bestMatch = 'document';
 
-        console.log(`[PlaceholderEngine] Selected: ${bestMatch} (score: ${maxScore}) for tags:`, tags);
-        return `${PUBLIC_ASSETS_BASE}${PLACEHOLDER_MAPPING[bestMatch].url}`;
+        console.debug(`[PlaceholderEngine] Selected: ${bestMatch} (score: ${maxScore}) for type: ${type}, tags:`, tags);
+        return this.getPlaceholderByType(bestMatch);
     },
 
     /**
