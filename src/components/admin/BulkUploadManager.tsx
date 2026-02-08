@@ -21,14 +21,17 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Backblaze B2 Configuration
+// Backblaze B2 Configuration - Match actual .env variables
 const B2_CONFIG = {
     keyId: import.meta.env.VITE_B2_KEY_ID || '',
-    applicationKey: import.meta.env.VITE_B2_APPLICATION_KEY || '',
-    bucketId: import.meta.env.VITE_B2_BUCKET_ID || '',
-    bucketName: import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources',
-    endpoint: import.meta.env.VITE_B2_ENDPOINT || ''
+    applicationKey: import.meta.env.VITE_B2_APP_KEY || '', // .env uses VITE_B2_APP_KEY
+    bucketName: import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources-vault',
+    endpoint: import.meta.env.VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com',
+    region: import.meta.env.VITE_B2_REGION || 'eu-central-003'
 };
+
+// Store bucketId after auth (needed for B2 native API)
+let cachedBucketId: string | null = null;
 
 interface UploadFile {
     id: string;
@@ -49,6 +52,10 @@ interface B2AuthResponse {
     authorizationToken: string;
     apiUrl: string;
     downloadUrl: string;
+    allowed: {
+        bucketId: string;
+        bucketName: string;
+    };
 }
 
 interface B2UploadUrlResponse {
@@ -68,7 +75,7 @@ const BulkUploadManager: React.FC = () => {
     const folderInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
-    const isB2Configured = B2_CONFIG.keyId && B2_CONFIG.applicationKey && B2_CONFIG.bucketId;
+    const isB2Configured = B2_CONFIG.keyId && B2_CONFIG.applicationKey && B2_CONFIG.bucketName;
 
     // Get file icon based on type
     const getFileIcon = (type: string) => {
@@ -214,8 +221,14 @@ const BulkUploadManager: React.FC = () => {
             const auth: B2AuthResponse = {
                 authorizationToken: authData.authorizationToken,
                 apiUrl: authData.apiUrl,
-                downloadUrl: authData.downloadUrl
+                downloadUrl: authData.downloadUrl,
+                allowed: authData.allowed
             };
+
+            // Cache bucketId from auth response
+            if (authData.allowed?.bucketId) {
+                cachedBucketId = authData.allowed.bucketId;
+            }
 
             setB2Auth(auth);
             return auth;
@@ -240,7 +253,7 @@ const BulkUploadManager: React.FC = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    bucketId: B2_CONFIG.bucketId
+                    bucketId: auth.allowed?.bucketId || cachedBucketId
                 })
             });
 
@@ -360,11 +373,10 @@ const BulkUploadManager: React.FC = () => {
                 .insert({
                     title: metadata.title,
                     description: metadata.description,
-                    resource_type: getCategoryType(uploadFile.category),
-                    url: b2Url,
-                    thumbnail_url: uploadFile.type.startsWith('image/') ? b2Url : null,
-                    published: true
-                });
+                    type: getCategoryType(uploadFile.category),
+                    category: uploadFile.category,
+                    url: b2Url
+                } as any);
         }
     };
 
