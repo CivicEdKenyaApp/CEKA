@@ -68,12 +68,38 @@ const FeatureCard = ({ title, description, icon, to, color }: any) => {
   );
 };
 
+const GREEN_UNDER_SIEGE: MediaContent = {
+  id: 'green-under-siege-hardcoded',
+  type: 'carousel',
+  title: 'Green Under Siege',
+  description: 'A Civic Education Kenya special on environmental protection and the impact of climate change in Kenya.',
+  slug: 'green-under-siege',
+  cover_url: '/content/green-under-siege/4.png',
+  status: 'published',
+  metadata: {
+    pdf_url: '/content/green-under-siege/green-under-siege.pdf'
+  },
+  tags: ['environment', 'special-edition'],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  items: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((n, i) => ({
+    id: `gus-item-${n}`,
+    content_id: 'green-under-siege-hardcoded',
+    type: 'image',
+    file_path: `/content/green-under-siege/${n}.png`,
+    file_url: `/content/green-under-siege/${n}.png`,
+    order_index: i,
+    metadata: { aspect_ratio: '1:1' },
+    created_at: new Date().toISOString()
+  }))
+};
+
 const Index = () => {
   const { language } = useLanguage();
   const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [featuredMedia, setFeaturedMedia] = useState<MediaContent | null>(null);
+  const [featuredMedia, setFeaturedMedia] = useState<MediaContent | null>(GREEN_UNDER_SIEGE);
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -92,11 +118,18 @@ const Index = () => {
         // 2. Fetch Latest Instagram-style Carousel for Home
         const media = await mediaService.listMediaContent('carousel');
         if (media.length > 0) {
+          // If the first one is the one we already have hardcoded (slug match), 
+          // or if we just want to show the latest dynamic one below/instead
+          // For now, we prefer the special edition "Green Under Siege"
           const latest = await mediaService.getMediaContent(media[0].slug);
-          setFeaturedMedia(latest);
+          if (latest && latest.slug !== 'green-under-siege') {
+            // If there's another featured one, we could use it, 
+            // but the user specifically wants the special one featured.
+            // setFeaturedMedia(latest); 
+          }
         }
       } catch (err: any) {
-        setError(err.message);
+        // setError(err.message); // Don't block the whole page if carousel fails
         console.error('Error fetching homepage data:', err);
       } finally {
         setLoading(false);

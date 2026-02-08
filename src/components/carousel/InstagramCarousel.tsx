@@ -25,6 +25,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0);
     const [downloading, setDownloading] = useState<string | null>(null);
+    const [isCheckingPdf, setIsCheckingPdf] = useState(false);
     const [availableQualities, setAvailableQualities] = useState<ResolutionQuality[]>(['320p', '720p', '1080p', '4k']);
     const items = content.items || [];
 
@@ -58,10 +59,50 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     };
 
-    const handleDownloadPDF = () => {
-        const pdfUrl = content.metadata?.pdf_url;
-        if (pdfUrl) {
-            // Direct download attempt
+    const handleDownloadPDF = async () => {
+        const rawPdfUrl = content.metadata?.pdf_url;
+        if (!rawPdfUrl) {
+            console.warn('No PDF URL found for this content');
+            return;
+        }
+
+        // Encode URL to handle spaces and special characters
+        const pdfUrl = rawPdfUrl.startsWith('http') ? rawPdfUrl : encodeURI(rawPdfUrl);
+
+        setIsCheckingPdf(true);
+        try {
+            // Attempt to fetch as blob for cleaner download and error detection
+            const response = await fetch(pdfUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            // SECURITY CHECK: Ensure we actually got a PDF and not the index.html fallback
+            const contentType = response.headers.get('content-type');
+            if (contentType && !contentType.includes('application/pdf')) {
+                throw new Error(`Invalid content type: expected application/pdf but got ${contentType}`);
+            }
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${content.slug || 'document'}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up
+            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+        } catch (err) {
+            console.error('Advanced PDF download failed, falling back to direct link or erroring:', err);
+
+            // If we know it's not a PDF, don't try to download it as one
+            if (err instanceof Error && err.message.includes('Invalid content type')) {
+                alert("This PDF is currently unavailable for download. The link might be broken or the file is missing.");
+                return;
+            }
+
+            // Fallback: direct download attempt
             const link = document.createElement('a');
             link.href = pdfUrl;
             link.download = `${content.slug || 'document'}.pdf`;
@@ -69,8 +110,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        } else {
-            console.warn('No PDF URL found for this content');
+        } finally {
+            setIsCheckingPdf(false);
         }
     };
 
@@ -316,10 +357,15 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                     {content.metadata?.pdf_url && (
                         <Button
                             onClick={handleDownloadPDF}
+                            disabled={isCheckingPdf}
                             className="bg-kenya-red hover:bg-kenya-red/90 text-white rounded-full px-5 text-xs font-medium"
                         >
-                            <Download size={14} className="mr-2" />
-                            PDF
+                            {isCheckingPdf ? (
+                                <Loader2 size={14} className="mr-2 animate-spin" />
+                            ) : (
+                                <Download size={14} className="mr-2" />
+                            )}
+                            {isCheckingPdf ? "Checking..." : "PDF"}
                         </Button>
                     )}
                 </div>

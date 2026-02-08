@@ -17,7 +17,7 @@ const GREEN_UNDER_SIEGE: MediaContent = {
     cover_url: '/content/green-under-siege/4.png',
     status: 'published',
     metadata: {
-        pdf_url: '/content/green-under-siege/GREEN UNDER SIEGE A CIVIC EDUCATION KE SPECIAL (1).pdf'
+        pdf_url: '/content/green-under-siege/green-under-siege.pdf'
     },
     tags: ['environment', 'special-edition'],
     created_at: new Date().toISOString(),
