@@ -186,23 +186,24 @@ class StorageService {
     async getAuthorizedUrl(pathOrUrl: string): Promise<string> {
         await this.initialize();
 
-        // 1. If it's a full URL, check if it's Backblaze
+        // CRITICAL: If this is a B2 URL, ALWAYS use B2 signing regardless of init state
+        if (pathOrUrl.includes('backblazeb2.com')) {
+            const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
+            return signed || pathOrUrl;
+        }
+
+        // If it's a full non-B2 URL, return as-is
         if (pathOrUrl.startsWith('http')) {
-            if (this.useBackblaze && pathOrUrl.includes('backblazeb2.com')) {
-                const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
-                return signed || pathOrUrl;
-            }
-            // If it's already a Supabase public URL, just return it
             return pathOrUrl;
         }
 
-        // 2. If it's a path, decide based on provider
+        // If it's a path and we're configured for B2, sign via B2
         if (this.useBackblaze) {
             const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
             return signed || pathOrUrl;
         }
 
-        // Supabase Storage signed URL
+        // Supabase Storage signed URL (fallback)
         try {
             const parts = pathOrUrl.split('/');
             const bucket = parts[0];

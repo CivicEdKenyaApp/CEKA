@@ -91,15 +91,12 @@ export const mediaService = {
             content.metadata.pdf_url = await storageService.getAuthorizedUrl(content.metadata.pdf_url);
         }
 
-        // 3. Resolve all Items
+        // 3. Resolve all Items - ALWAYS use file_url (full B2 URL) for domain detection
         if (content.items && content.items.length > 0) {
             const hydratedItems = await Promise.all(
                 content.items.map(async (item) => {
-                    // Use file_path (Key) directly for signing if available, else resolve the URL
-                    if (item.file_path) {
-                        const signed = await storageService.getAuthorizedUrl(item.file_path);
-                        return { ...item, file_url: signed };
-                    } else if (item.file_url) {
+                    // Priority: Use full file_url so we can detect the B2 domain
+                    if (item.file_url) {
                         const signed = await storageService.getAuthorizedUrl(item.file_url);
                         return { ...item, file_url: signed };
                     }
