@@ -183,6 +183,43 @@ class StorageService {
         }
     }
 
+    async getAuthorizedUrl(pathOrUrl: string): Promise<string> {
+        await this.initialize();
+
+        // 1. If it's a full URL, check if it's Backblaze
+        if (pathOrUrl.startsWith('http')) {
+            if (this.useBackblaze && pathOrUrl.includes('backblazeb2.com')) {
+                const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
+                return signed || pathOrUrl;
+            }
+            // If it's already a Supabase public URL, just return it
+            return pathOrUrl;
+        }
+
+        // 2. If it's a path, decide based on provider
+        if (this.useBackblaze) {
+            const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
+            return signed || pathOrUrl;
+        }
+
+        // Supabase Storage signed URL
+        try {
+            const parts = pathOrUrl.split('/');
+            const bucket = parts[0];
+            const filePath = parts.slice(1).join('/');
+
+            const { data, error } = await supabase.storage
+                .from(bucket)
+                .createSignedUrl(filePath, 3600);
+
+            if (error) throw error;
+            return data.signedUrl;
+        } catch (error) {
+            console.error('[Storage] Error creating Supabase signed URL:', error);
+            return pathOrUrl;
+        }
+    }
+
     getStorageProvider(): string {
         return this.useBackblaze ? 'backblaze' : 'supabase';
     }

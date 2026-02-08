@@ -62,17 +62,54 @@ export const mediaService = {
             .eq('status', 'published')
             .single();
 
-        if (error) {
+        if (error || !data) {
             console.error('[MediaService] Error fetching content:', error);
             return null;
         }
 
         // Sort items by order_index
-        if (data && (data as any).items) {
-            (data as any).items.sort((a: any, b: any) => a.order_index - b.order_index);
+        if (data.items) {
+            data.items.sort((a: any, b: any) => a.order_index - b.order_index);
         }
 
-        return data as unknown as MediaContent;
+        // HYDRATE: If storage is private, resolve signed URLs for everything
+        return await this.hydrateMediaUrls(data as unknown as MediaContent);
+    },
+
+    /**
+     * Automatically converts all B2 public URLs in a MediaContent object to signed ones.
+     * Essential for private buckets.
+     */
+    async hydrateMediaUrls(content: MediaContent): Promise<MediaContent> {
+        // 1. Resolve Cover URL
+        if (content.cover_url) {
+            content.cover_url = await storageService.getAuthorizedUrl(content.cover_url);
+        }
+
+        // 2. Resolve PDF URL in metadata if present
+        if (content.metadata?.pdf_url) {
+            content.metadata.pdf_url = await storageService.getAuthorizedUrl(content.metadata.pdf_url);
+        }
+
+        // 3. Resolve all Items
+        if (content.items && content.items.length > 0) {
+            const hydratedItems = await Promise.all(
+                content.items.map(async (item) => {
+                    // Use file_path (Key) directly for signing if available, else resolve the URL
+                    if (item.file_path) {
+                        const signed = await storageService.getAuthorizedUrl(item.file_path);
+                        return { ...item, file_url: signed };
+                    } else if (item.file_url) {
+                        const signed = await storageService.getAuthorizedUrl(item.file_url);
+                        return { ...item, file_url: signed };
+                    }
+                    return item;
+                })
+            );
+            content.items = hydratedItems;
+        }
+
+        return content;
     },
 
     /**

@@ -46,7 +46,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
 
     // Aspect ratio padding calculator - Convert string ratio (e.g., "4:5") to percentage
     const getAspectRatioPadding = (ratio?: string | null): string => {
-        if (!ratio) return '100% (Square Default)';
+        if (!ratio || ratio.includes('Square')) return '100%';
 
         // Handle named ratios
         const ratioMap: Record<string, string> = {
@@ -95,6 +95,11 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                 console.log(`[Carousel] Dynamic ratio locked: ${ratio.toFixed(4)} for ${content.slug}`);
             }
         }
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        console.error(`[Carousel] Failed to load image: ${items[currentIndex]?.file_url}`);
     };
 
     const nextSlide = () => {
@@ -275,7 +280,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                                         )}
                                         loading="lazy"
                                         draggable={false}
-                                        onLoad={() => setImageLoading(false)}
+                                        onLoad={handleImageLoad}
+                                        onError={handleImageError}
                                     />
                                 </>
                             ) : currentItem.type === 'video' ? (

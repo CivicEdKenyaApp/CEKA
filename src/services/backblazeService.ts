@@ -179,6 +179,43 @@ export const backblazeService = {
     },
 
     /**
+     * Intelligently resolves a URL to a signed one if it belongs to Backblaze.
+     * This allows us to keep the bucket PRIVATE while still showing images.
+     */
+    async resolveSignedUrl(url: string | null): Promise<string | null> {
+        if (!url || !isB2Configured()) return url;
+
+        // Only resolve if it's a B2 URL
+        if (!url.includes('backblazeb2.com')) return url;
+
+        try {
+            // Extract the path (Key) from the URL
+            // URL format typically: https://s3.region.backblazeb2.com/bucket-name/path/to/file.ext
+            const bucketSearch = `/${B2_BUCKET_NAME}/`;
+            const parts = url.split(bucketSearch);
+
+            if (parts.length < 2) {
+                // Try fallback logic if the URL structure is different
+                const urlObj = new URL(url);
+                // B2 sometimes uses path-style: /bucket/key or virtual-host: bucket.s3.../key
+                if (urlObj.pathname.startsWith(`/${B2_BUCKET_NAME}/`)) {
+                    return await this.getSignedUrl(urlObj.pathname.replace(`/${B2_BUCKET_NAME}/`, ''));
+                }
+                return url;
+            }
+
+            const path = parts[1];
+            // Remove any query params if present
+            const cleanPath = path.split('?')[0];
+
+            return await this.getSignedUrl(cleanPath);
+        } catch (error) {
+            console.error('[Backblaze] Error resolving signed URL:', error);
+            return url;
+        }
+    },
+
+    /**
      * Delete a file from Backblaze B2
      */
     async deleteFile(path: string): Promise<boolean> {

@@ -304,6 +304,22 @@ class BackblazeStorageService {
     isConfigured(): boolean {
         return !!this.config;
     }
+
+    /**
+     * Convert a B2 path or URL to a signed (authorized) URL.
+     * This allows private bucket access from the frontend.
+     */
+    async getAuthorizedUrl(pathOrUrl: string): Promise<string | null> {
+        await this.initialize();
+
+        // If it's a full URL, use resolveSignedUrl
+        if (pathOrUrl.startsWith('http')) {
+            return await backblazeService.resolveSignedUrl(pathOrUrl);
+        }
+
+        // If it's a path, get a signed URL directly
+        return await backblazeService.getSignedUrl(pathOrUrl);
+    }
 }
 
 const backblazeStorage = new BackblazeStorageService();
