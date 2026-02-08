@@ -26,9 +26,17 @@ class StorageService {
         if (this.initialized) return;
 
         try {
-            // Try to initialize Backblaze
-            this.useBackblaze = await backblazeStorage.initialize();
-            console.log(`[StorageService] Using ${this.useBackblaze ? 'Backblaze B2' : 'Supabase Storage'}`);
+            // Respect VITE_STORAGE_PROVIDER if set to 'supabase' specifically
+            const provider = import.meta.env.VITE_STORAGE_PROVIDER;
+
+            if (provider === 'supabase') {
+                console.log('[StorageService] Forced to Supabase Storage by environment config');
+                this.useBackblaze = false;
+            } else {
+                // Try to initialize Backblaze
+                this.useBackblaze = await backblazeStorage.initialize();
+                console.log(`[StorageService] Using ${this.useBackblaze ? 'Backblaze B2' : 'Supabase Storage'}`);
+            }
         } catch (error) {
             console.warn('[StorageService] Backblaze init failed, using Supabase:', error);
             this.useBackblaze = false;

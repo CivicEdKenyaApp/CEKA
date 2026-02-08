@@ -1,7 +1,8 @@
-// Backblaze B2 Storage Service
-// Handles uploads to Backblaze B2 with Supabase metadata sync
+// Backblaze Storage Service - B2 Cloud Storage Integration
+// Hybrid approach: B2 for primary storage, Supabase as fallback
 
 import { supabase } from '@/integrations/supabase/client';
+import { backblazeService, isB2Configured } from './backblazeService';
 
 export interface BackblazeConfig {
     keyId: string;
@@ -33,10 +34,6 @@ export interface FileMetadata {
     metadata?: Record<string, any>;
 }
 
-// For development/demo mode, we'll use Supabase Storage as fallback
-// while maintaining the same interface for when B2 is configured
-const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'supabase';
-
 class BackblazeStorageService {
     private config: BackblazeConfig | null = null;
     private authToken: string | null = null;
@@ -44,22 +41,50 @@ class BackblazeStorageService {
     private downloadUrl: string | null = null;
     private uploadUrl: string | null = null;
     private uploadAuthToken: string | null = null;
+    private initialized = false;
+    private initPromise: Promise<boolean> | null = null;
 
     async initialize(): Promise<boolean> {
-        // Try to get B2 config from environment or Supabase secrets
-        const keyId = import.meta.env.VITE_B2_KEY_ID;
-        const appKey = import.meta.env.VITE_B2_APPLICATION_KEY;
-        const bucketId = import.meta.env.VITE_B2_BUCKET_ID;
-        const bucketName = import.meta.env.VITE_B2_BUCKET_NAME;
-        const endpoint = import.meta.env.VITE_B2_ENDPOINT || 'https://api.backblazeb2.com';
+        // Prevent multiple simultaneous initializations
+        if (this.initPromise) return this.initPromise;
+        if (this.initialized) return !!this.config;
 
-        if (keyId && appKey && bucketId && bucketName) {
-            this.config = { keyId, applicationKey: appKey, bucketId, bucketName, endpoint };
-            return await this.authorize();
+        this.initPromise = this._doInitialize();
+        return this.initPromise;
+    }
+
+    private async _doInitialize(): Promise<boolean> {
+        try {
+            // Sync with .env names
+            const keyId = import.meta.env.VITE_B2_KEY_ID;
+            const appKey = import.meta.env.VITE_B2_APP_KEY; // Fixed: was VITE_B2_APPLICATION_KEY
+            const bucketName = import.meta.env.VITE_B2_BUCKET_NAME;
+            const endpoint = import.meta.env.VITE_B2_ENDPOINT;
+            const region = import.meta.env.VITE_B2_REGION;
+
+            if (keyId && appKey && bucketName) {
+                this.config = {
+                    keyId,
+                    applicationKey: appKey,
+                    bucketId: '', // Not strictly needed for S3 API
+                    bucketName,
+                    endpoint: endpoint || 'https://s3.us-west-004.backblazeb2.com'
+                };
+
+                const ready = isB2Configured();
+                this.initialized = true;
+                return ready;
+            }
+
+            // Not configured - use Supabase fallback silently
+            console.debug('[Storage] B2 not configured, using Supabase Storage');
+            this.initialized = true;
+            return false;
+        } catch (error) {
+            console.debug('[Storage] B2 init error, using Supabase fallback');
+            this.initialized = true;
+            return false;
         }
-
-        console.log('[BackblazeStorage] No B2 config found, using Supabase Storage fallback');
-        return false;
     }
 
     private async authorize(): Promise<boolean> {
@@ -75,7 +100,7 @@ class BackblazeStorageService {
             });
 
             if (!response.ok) {
-                console.error('[BackblazeStorage] Authorization failed:', response.status);
+                console.debug('[Storage] B2 authorization failed:', response.status);
                 return false;
             }
 
@@ -100,10 +125,10 @@ class BackblazeStorageService {
                 this.uploadAuthToken = uploadData.authorizationToken;
             }
 
-            console.log('[BackblazeStorage] Authorized successfully');
+            console.debug('[Storage] B2 authorized successfully');
             return true;
         } catch (error) {
-            console.error('[BackblazeStorage] Authorization error:', error);
+            console.debug('[Storage] B2 authorization error');
             return false;
         }
     }
@@ -114,6 +139,9 @@ class BackblazeStorageService {
         onProgress?: (progress: number) => void
     ): Promise<UploadResult> {
         const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+        // Ensure initialized
+        await this.initialize();
 
         // Use Supabase Storage fallback if B2 is not configured
         if (!this.config || !this.uploadUrl) {
@@ -129,37 +157,20 @@ class BackblazeStorageService {
         onProgress?: (progress: number) => void
     ): Promise<UploadResult> {
         try {
-            // Calculate SHA1 hash for B2
-            const arrayBuffer = await file.arrayBuffer();
-            const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const sha1Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
             onProgress?.(10);
 
-            const response = await fetch(this.uploadUrl!, {
-                method: 'POST',
-                headers: {
-                    'Authorization': this.uploadAuthToken!,
-                    'X-Bz-File-Name': encodeURIComponent(fileName),
-                    'Content-Type': file.type || 'application/octet-stream',
-                    'Content-Length': String(file.size),
-                    'X-Bz-Content-Sha1': sha1Hash
-                },
-                body: arrayBuffer
+            // Use the S3-compatible backblazeService for much better reliability
+            const result = await backblazeService.uploadFile(file, fileName, {
+                contentType: file.type
             });
 
-            onProgress?.(80);
+            onProgress?.(90);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Upload failed');
+            if (!result.success) {
+                throw new Error(result.error);
             }
 
-            const result = await response.json();
-
-            // Construct public URL
-            const fileUrl = `${this.downloadUrl}/file/${this.config!.bucketName}/${fileName}`;
+            const fileUrl = result.url || '';
 
             onProgress?.(100);
 
@@ -172,24 +183,20 @@ class BackblazeStorageService {
                 storagePath: fileName,
                 storageUrl: fileUrl,
                 metadata: {
-                    b2FileId: result.fileId,
-                    b2FileName: result.fileName,
-                    contentSha1: sha1Hash
+                    provider: 'backblaze_s3',
+                    s3_path: fileName
                 }
             });
 
             return {
                 success: true,
-                fileId: result.fileId,
-                fileName: result.fileName,
+                fileName: fileName,
                 fileUrl: fileUrl
             };
         } catch (error) {
-            console.error('[BackblazeStorage] B2 upload error:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Upload failed'
-            };
+            console.error('[Storage] B2 upload error:', error);
+            // Fallback to Supabase
+            return await this.uploadToSupabase(file, fileName, onProgress);
         }
     }
 
@@ -236,7 +243,7 @@ class BackblazeStorageService {
                 fileUrl: urlData.publicUrl
             };
         } catch (error) {
-            console.error('[BackblazeStorage] Supabase upload error:', error);
+            console.error('[Storage] Supabase upload error:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Upload failed'
@@ -245,26 +252,30 @@ class BackblazeStorageService {
     }
 
     private async saveMetadataToSupabase(metadata: FileMetadata): Promise<void> {
-        const { data: { user } } = await supabase.auth.getUser();
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
 
-        await supabase.from('resource_files' as any).insert({
-            title: metadata.title,
-            description: metadata.description || '',
-            file_name: metadata.fileName,
-            file_size: metadata.fileSize,
-            mime_type: metadata.mimeType,
-            storage_provider: this.config ? 'backblaze' : 'supabase',
-            storage_path: metadata.storagePath,
-            storage_url: metadata.storageUrl,
-            thumbnail_url: metadata.thumbnailUrl,
-            extracted_text: metadata.extractedText,
-            metadata: metadata.metadata || {},
-            uploaded_by: user?.id
-        });
+            await supabase.from('resource_files' as any).insert({
+                title: metadata.title,
+                description: metadata.description || '',
+                file_name: metadata.fileName,
+                file_size: metadata.fileSize,
+                mime_type: metadata.mimeType,
+                storage_provider: this.config ? 'backblaze' : 'supabase',
+                storage_path: metadata.storagePath,
+                storage_url: metadata.storageUrl,
+                thumbnail_url: metadata.thumbnailUrl,
+                extracted_text: metadata.extractedText,
+                metadata: metadata.metadata || {},
+                uploaded_by: user?.id
+            });
+        } catch (error) {
+            // Metadata save is non-blocking - log but don't fail
+            console.debug('[Storage] Metadata save failed:', error);
+        }
     }
 
     async deleteFile(filePath: string): Promise<boolean> {
-        // For now, handle Supabase deletion
         try {
             const { error } = await supabase.storage
                 .from('resources')
@@ -279,7 +290,7 @@ class BackblazeStorageService {
 
             return true;
         } catch (error) {
-            console.error('[BackblazeStorage] Delete error:', error);
+            console.error('[Storage] Delete error:', error);
             return false;
         }
     }
@@ -287,7 +298,11 @@ class BackblazeStorageService {
     getStorageMode(): string {
         return this.config ? 'backblaze' : 'supabase';
     }
+
+    isConfigured(): boolean {
+        return !!this.config;
+    }
 }
 
-export const backblazeStorage = new BackblazeStorageService();
+const backblazeStorage = new BackblazeStorageService();
 export default backblazeStorage;

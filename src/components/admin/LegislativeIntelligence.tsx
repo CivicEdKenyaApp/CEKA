@@ -87,10 +87,22 @@ const LegislativeIntelligence = () => {
         try {
             setRunningPipeline(type);
             const result = await intelService.triggerPipeline({ type });
-            toast({ title: 'Pipeline Started', description: `Job ${result.jobId} created` });
+            toast({
+                title: 'Job Queued',
+                description: `Pipeline job ${result.jobId.slice(0, 8)}... created and queued for processing`
+            });
             await loadData();
-        } catch (error) {
-            toast({ title: 'Error', description: 'Failed to trigger pipeline', variant: 'destructive' });
+        } catch (error: any) {
+            // If the error is about edge function, job might still be created
+            if (error?.message?.includes('CORS') || error?.message?.includes('edge')) {
+                toast({
+                    title: 'Job Created',
+                    description: 'Job queued. Edge function unavailable for auto-processing.',
+                    variant: 'default'
+                });
+            } else {
+                toast({ title: 'Error', description: 'Failed to create pipeline job', variant: 'destructive' });
+            }
         } finally {
             setRunningPipeline(null);
         }

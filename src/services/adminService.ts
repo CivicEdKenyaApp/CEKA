@@ -262,11 +262,20 @@ class AdminService {
   }
 
   async getActiveSessions(): Promise<AdminSession[]> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('admin_sessions')
       .select('*')
       .eq('is_active', true)
       .order('last_active', { ascending: false });
+
+    // Throw error with proper info for caller to handle RLS issues
+    if (error) {
+      const enhancedError: any = new Error(error.message);
+      enhancedError.code = error.code;
+      enhancedError.status = 403; // RLS typically returns 403
+      throw enhancedError;
+    }
+
     return (data as AdminSession[] || []);
   }
 

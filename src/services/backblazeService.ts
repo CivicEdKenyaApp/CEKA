@@ -12,8 +12,16 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 const B2_KEY_ID = import.meta.env.VITE_B2_KEY_ID || '';
 const B2_APP_KEY = import.meta.env.VITE_B2_APP_KEY || '';
 const B2_BUCKET_NAME = import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources';
-const B2_ENDPOINT = import.meta.env.VITE_B2_ENDPOINT || 'https://s3.us-west-004.backblazeb2.com';
-const B2_REGION = import.meta.env.VITE_B2_REGION || 'us-west-004';
+
+// Ensure endpoint has protocol
+let rawEndpoint = import.meta.env.VITE_B2_ENDPOINT || 's3.us-west-004.backblazeb2.com';
+if (!rawEndpoint.startsWith('http')) {
+    rawEndpoint = `https://${rawEndpoint}`;
+}
+const B2_ENDPOINT = rawEndpoint;
+
+// Derive region from endpoint if not provided
+const B2_REGION = import.meta.env.VITE_B2_REGION || (B2_ENDPOINT.includes('s3.') ? B2_ENDPOINT.split('.')[1] : 'us-west-004');
 
 // Initialize S3 client for Backblaze B2
 const b2Client = new S3Client({
