@@ -10,21 +10,30 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Helper to get B2 config dynamically from environment
 const getB2Config = () => {
-    // We check multiple sources because Vite's standard injection can be unreliable in some dev environments
-    const keyId = import.meta.env.VITE_B2_KEY_ID || (window as any).process?.env?.VITE_B2_KEY_ID || '';
-    const appKey = import.meta.env.VITE_B2_APP_KEY || (window as any).process?.env?.VITE_B2_APP_KEY || '';
-    const bucketName = import.meta.env.VITE_B2_BUCKET_NAME || (window as any).process?.env?.VITE_B2_BUCKET_NAME || 'ceka-resources-vault';
-    const endpoint = import.meta.env.VITE_B2_ENDPOINT || (window as any).process?.env?.VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com';
-    const region = import.meta.env.VITE_B2_REGION || (window as any).process?.env?.VITE_B2_REGION || 'eu-central-003';
+    // We check multiple sources because Vite's standard injection can be unstable in built production bundles
+    const keyId = import.meta.env.VITE_B2_KEY_ID || (window as any).process?.env?.VITE_B2_KEY_ID || (globalThis as any).VITE_B2_KEY_ID || '';
+    const appKey = import.meta.env.VITE_B2_APP_KEY || (window as any).process?.env?.VITE_B2_APP_KEY || (globalThis as any).VITE_B2_APP_KEY || '';
+    const bucketName = import.meta.env.VITE_B2_BUCKET_NAME || (window as any).process?.env?.VITE_B2_BUCKET_NAME || (globalThis as any).VITE_B2_BUCKET_NAME || 'ceka-resources-vault';
+    const endpoint = import.meta.env.VITE_B2_ENDPOINT || (window as any).process?.env?.VITE_B2_ENDPOINT || (globalThis as any).VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com';
+    const region = import.meta.env.VITE_B2_REGION || (window as any).process?.env?.VITE_B2_REGION || (globalThis as any).VITE_B2_REGION || 'eu-central-003';
 
-    // Diagnostic logging - strictly checks presence, NOT values
-    if (import.meta.env.VITE_B2_KEY_ID) {
+    // Diagnostic logging - checks existence and length, never values
+    const sources = {
+        importMeta: !!import.meta.env.VITE_B2_KEY_ID,
+        processEnv: !!(window as any).process?.env?.VITE_B2_KEY_ID,
+        globalThis: !!(globalThis as any).VITE_B2_KEY_ID
+    };
+
+    if (sources.importMeta) {
         console.log('[B2] Config Source: import.meta.env');
-    } else if ((window as any).process?.env?.VITE_B2_KEY_ID) {
+    } else if (sources.processEnv) {
         console.log('[B2] Config Source: process.env (Vite forced define)');
+    } else if (sources.globalThis) {
+        console.log('[B2] Config Source: globalThis (Global injection)');
     } else {
-        console.error('[B2] CRITICAL: No credentials found in any environment source!');
+        console.error('[B2] CRITICAL: No credentials found in ANY environment source!', sources);
     }
+
 
     return {
         keyId,
