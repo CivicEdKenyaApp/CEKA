@@ -113,26 +113,8 @@ class StorageService {
 
     async uploadAvatar(file: File, userId: string): Promise<UploadResult> {
         const fileName = `${userId}-${Date.now()}.${file.name.split('.').pop()}`;
-        const path = `avatars/${fileName}`;
 
         try {
-            // Check if avatars bucket exists, if not create using admin endpoint
-            const { data: buckets } = await supabase.storage.listBuckets();
-            const avatarsBucket = buckets?.find(b => b.name === 'avatars');
-
-            if (!avatarsBucket) {
-                // Try to create bucket via storage admin
-                const { error: createError } = await supabase.storage.createBucket('avatars', {
-                    public: true,
-                    fileSizeLimit: 5 * 1024 * 1024, // 5MB
-                    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-                });
-
-                if (createError && !createError.message.includes('already exists')) {
-                    console.error('[Storage] Could not create avatars bucket:', createError);
-                }
-            }
-
             const { data, error } = await supabase.storage
                 .from('avatars')
                 .upload(fileName, file, {
@@ -195,6 +177,10 @@ class StorageService {
 
     getStorageProvider(): string {
         return this.useBackblaze ? 'backblaze' : 'supabase';
+    }
+
+    isBackblazeEnabled(): boolean {
+        return this.useBackblaze;
     }
 }
 
