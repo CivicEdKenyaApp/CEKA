@@ -174,7 +174,7 @@ export const mediaService = {
             (data as any).items.sort((a: any, b: any) => a.order_index - b.order_index);
         }
 
-        return data as unknown as MediaContent;
+        return await this.hydrateMediaUrls(data as unknown as MediaContent);
     },
 
     /**

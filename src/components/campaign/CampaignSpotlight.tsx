@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import storageService from '@/services/storageService';
 
 interface Campaign {
     id: string;
@@ -33,7 +34,18 @@ const CampaignSpotlight: React.FC<CampaignSpotlightProps> = ({ section }) => {
                     .limit(1);
 
                 if (error) throw error;
-                setCampaigns((data as any) || []);
+
+                // HYDRATE campaign images for B2 proxy
+                const rawCampaigns = data || [];
+                const hydratedCampaigns = await Promise.all(rawCampaigns.map(async (camp: any) => {
+                    if (camp.image_url) {
+                        const authorizedUrl = await storageService.getAuthorizedUrl(camp.image_url);
+                        return { ...camp, image_url: authorizedUrl };
+                    }
+                    return camp;
+                }));
+
+                setCampaigns(hydratedCampaigns as any);
             } catch (err) {
                 console.error('Error fetching campaigns:', err);
             } finally {

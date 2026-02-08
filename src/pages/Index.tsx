@@ -15,6 +15,7 @@ import CampaignSpotlight from '@/components/campaign/CampaignSpotlight';
 import InstagramCarousel from '@/components/carousel/InstagramCarousel';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import { Button } from '@/components/ui/button';
+import storageService from '@/services/storageService';
 
 // Types for our carousel slides
 interface CarouselSlide {
@@ -87,7 +88,18 @@ const Index = () => {
           .order('order_index', { ascending: true });
 
         if (carouselError) throw carouselError;
-        setCarouselSlides((data || []) as any);
+
+        // HYDRATE carousel images for B2 proxy
+        const rawSlides = data || [];
+        const hydratedSlides = await Promise.all(rawSlides.map(async (slide: any) => {
+          if (slide.image_url) {
+            const authorizedUrl = await storageService.getAuthorizedUrl(slide.image_url);
+            return { ...slide, image_url: authorizedUrl };
+          }
+          return slide;
+        }));
+
+        setCarouselSlides(hydratedSlides as any);
 
         // 2. Fetch Featured Instagram-style Carousel for Home
         const featured = await mediaService.getFeaturedMedia();
