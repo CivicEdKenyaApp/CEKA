@@ -8,35 +8,54 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// B2 Configuration from environment variables
-const B2_KEY_ID = import.meta.env.VITE_B2_KEY_ID || '';
-const B2_APP_KEY = import.meta.env.VITE_B2_APP_KEY || '';
-const B2_BUCKET_NAME = import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources';
+// Helper to get B2 config dynamically from environment
+const getB2Config = () => {
+    const keyId = import.meta.env.VITE_B2_KEY_ID || '';
+    const appKey = import.meta.env.VITE_B2_APP_KEY || '';
+    const bucketName = import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources-vault';
+    const endpoint = import.meta.env.VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com';
+    const region = import.meta.env.VITE_B2_REGION || (endpoint.includes('s3.') ? endpoint.split('.')[1] : 'eu-central-003');
 
-// Ensure endpoint has protocol
-let rawEndpoint = import.meta.env.VITE_B2_ENDPOINT || 's3.us-west-004.backblazeb2.com';
-if (!rawEndpoint.startsWith('http')) {
-    rawEndpoint = `https://${rawEndpoint}`;
-}
-const B2_ENDPOINT = rawEndpoint;
+    return {
+        keyId,
+        appKey,
+        bucketName,
+        endpoint: endpoint.startsWith('http') ? endpoint : `https://${endpoint}`,
+        region
+    };
+};
 
-// Derive region from endpoint if not provided
-const B2_REGION = import.meta.env.VITE_B2_REGION || (B2_ENDPOINT.includes('s3.') ? B2_ENDPOINT.split('.')[1] : 'us-west-004');
+// Internal client instance
+let _b2Client: S3Client | null = null;
 
-// Initialize S3 client for Backblaze B2
-const b2Client = new S3Client({
-    region: B2_REGION,
-    endpoint: B2_ENDPOINT,
-    credentials: {
-        accessKeyId: B2_KEY_ID,
-        secretAccessKey: B2_APP_KEY,
-    },
-    forcePathStyle: true, // Required for B2
-});
+// Get or create S3 client with current credentials
+const getB2Client = () => {
+    const config = getB2Config();
+
+    if (!config.keyId || !config.appKey) {
+        console.warn('[B2] Cannot initialize client: Missing VITE_B2_KEY_ID or VITE_B2_APP_KEY');
+        return null;
+    }
+
+    if (!_b2Client) {
+        console.log('[B2] Initializing S3 Client with endpoint:', config.endpoint);
+        _b2Client = new S3Client({
+            region: config.region,
+            endpoint: config.endpoint,
+            credentials: {
+                accessKeyId: config.keyId,
+                secretAccessKey: config.appKey,
+            },
+            forcePathStyle: true,
+        });
+    }
+    return _b2Client;
+};
 
 // Check if B2 is configured
 export const isB2Configured = (): boolean => {
-    return !!(B2_KEY_ID && B2_APP_KEY && B2_BUCKET_NAME);
+    const config = getB2Config();
+    return !!(config.keyId && config.appKey && config.bucketName);
 };
 
 export interface UploadResult {
@@ -71,22 +90,26 @@ export const backblazeService = {
             return { success: false, error: 'Backblaze B2 is not configured' };
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return { success: false, error: 'Failed to initialize B2 client' };
+
         try {
             const arrayBuffer = await file.arrayBuffer();
             const contentType = options.contentType || file.type || 'application/octet-stream';
 
             const command = new PutObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
                 Body: new Uint8Array(arrayBuffer),
                 ContentType: contentType,
                 Metadata: options.metadata,
             });
 
-            await b2Client.send(command);
+            await client.send(command);
 
             // Generate public URL
-            const url = `${B2_ENDPOINT}/${B2_BUCKET_NAME}/${path}`;
+            const url = `${config.endpoint}/${config.bucketName}/${path}`;
 
             return {
                 success: true,
@@ -117,20 +140,24 @@ export const backblazeService = {
             return { success: false, error: 'Backblaze B2 is not configured' };
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return { success: false, error: 'Failed to initialize B2 client' };
+
         try {
             const body = typeof data === 'string' ? new TextEncoder().encode(data) : new Uint8Array(data);
 
             const command = new PutObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
                 Body: body,
                 ContentType: contentType,
                 Metadata: metadata,
             });
 
-            await b2Client.send(command);
+            await client.send(command);
 
-            const url = `${B2_ENDPOINT}/${B2_BUCKET_NAME}/${path}`;
+            const url = `${config.endpoint}/${config.bucketName}/${path}`;
 
             return {
                 success: true,
@@ -152,19 +179,26 @@ export const backblazeService = {
      * Generate a signed URL for temporary access
      */
     async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string | null> {
-        // REMOVED isB2Configured check - we trust the env vars are set
-        if (!B2_KEY_ID || !B2_APP_KEY) {
+        const config = getB2Config();
+        const client = getB2Client();
+
+        if (!config.keyId || !config.appKey) {
             console.warn('[B2] Missing credentials for signed URL generation');
+            return null;
+        }
+
+        if (!client) {
+            console.warn('[B2] Client not initialized for signed URL');
             return null;
         }
 
         try {
             const command = new GetObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
             });
 
-            const signedUrl = await getSignedUrl(b2Client, command, { expiresIn });
+            const signedUrl = await getSignedUrl(client, command, { expiresIn });
             console.log(`[B2] Generated signed URL for: ${path}`);
             return signedUrl;
         } catch (error) {
@@ -178,7 +212,8 @@ export const backblazeService = {
      * Get public URL for a file
      */
     getPublicUrl(path: string): string {
-        return `${B2_ENDPOINT}/${B2_BUCKET_NAME}/${path}`;
+        const config = getB2Config();
+        return `${config.endpoint}/${config.bucketName}/${path}`;
     },
 
     /**
@@ -191,8 +226,10 @@ export const backblazeService = {
         // Only resolve if it's a B2 URL
         if (!url.includes('backblazeb2.com')) return url;
 
-        // Check creds directly instead of isB2Configured
-        if (!B2_KEY_ID || !B2_APP_KEY) {
+        const config = getB2Config();
+
+        // Check creds directly
+        if (!config.keyId || !config.appKey) {
             console.warn('[B2] Cannot sign URL - missing credentials');
             return url;
         }
@@ -200,15 +237,15 @@ export const backblazeService = {
         try {
             // Extract the path (Key) from the URL
             // URL format typically: https://s3.region.backblazeb2.com/bucket-name/path/to/file.ext
-            const bucketSearch = `/${B2_BUCKET_NAME}/`;
+            const bucketSearch = `/${config.bucketName}/`;
             const parts = url.split(bucketSearch);
 
             if (parts.length < 2) {
                 // Try fallback logic if the URL structure is different
                 const urlObj = new URL(url);
                 // B2 sometimes uses path-style: /bucket/key or virtual-host: bucket.s3.../key
-                if (urlObj.pathname.startsWith(`/${B2_BUCKET_NAME}/`)) {
-                    const extractedPath = urlObj.pathname.replace(`/${B2_BUCKET_NAME}/`, '');
+                if (urlObj.pathname.startsWith(`/${config.bucketName}/`)) {
+                    const extractedPath = urlObj.pathname.replace(`/${config.bucketName}/`, '');
                     console.log(`[B2] Extracted path via fallback: ${extractedPath}`);
                     return await this.getSignedUrl(extractedPath);
                 }
@@ -237,13 +274,17 @@ export const backblazeService = {
             return false;
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return false;
+
         try {
             const command = new DeleteObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
             });
 
-            await b2Client.send(command);
+            await client.send(command);
             return true;
         } catch (error) {
             console.error('B2 delete error:', error);
@@ -260,14 +301,18 @@ export const backblazeService = {
             return [];
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return [];
+
         try {
             const command = new ListObjectsV2Command({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Prefix: prefix,
                 MaxKeys: maxKeys,
             });
 
-            const response = await b2Client.send(command);
+            const response = await client.send(command);
 
             return (response.Contents || []).map(item => ({
                 key: item.Key || '',
@@ -288,13 +333,17 @@ export const backblazeService = {
             return false;
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return false;
+
         try {
             const command = new GetObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
             });
 
-            await b2Client.send(command);
+            await client.send(command);
             return true;
         } catch {
             return false;
@@ -309,13 +358,17 @@ export const backblazeService = {
             return null;
         }
 
+        const config = getB2Config();
+        const client = getB2Client();
+        if (!client) return null;
+
         try {
             const command = new GetObjectCommand({
-                Bucket: B2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: path,
             });
 
-            const response = await b2Client.send(command);
+            const response = await client.send(command);
 
             if (response.Body) {
                 const bytes = await response.Body.transformToByteArray();

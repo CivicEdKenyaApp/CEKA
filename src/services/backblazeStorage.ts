@@ -55,33 +55,32 @@ class BackblazeStorageService {
 
     private async _doInitialize(): Promise<boolean> {
         try {
-            // Sync with .env names
-            const keyId = import.meta.env.VITE_B2_KEY_ID;
-            const appKey = import.meta.env.VITE_B2_APP_KEY; // Fixed: was VITE_B2_APPLICATION_KEY
-            const bucketName = import.meta.env.VITE_B2_BUCKET_NAME;
-            const endpoint = import.meta.env.VITE_B2_ENDPOINT;
-            const region = import.meta.env.VITE_B2_REGION;
+            const ready = isB2Configured();
+            if (ready) {
+                // Sync internal config for legacy methods if still used
+                const bucketName = import.meta.env.VITE_B2_BUCKET_NAME;
+                const keyId = import.meta.env.VITE_B2_KEY_ID;
+                const endpoint = import.meta.env.VITE_B2_ENDPOINT;
 
-            if (keyId && appKey && bucketName) {
                 this.config = {
-                    keyId,
-                    applicationKey: appKey,
-                    bucketId: '', // Not strictly needed for S3 API
-                    bucketName,
-                    endpoint: endpoint || 'https://s3.us-west-004.backblazeb2.com'
+                    keyId: keyId || '',
+                    applicationKey: import.meta.env.VITE_B2_APP_KEY || '',
+                    bucketId: '',
+                    bucketName: bucketName || 'ceka-resources-vault',
+                    endpoint: (endpoint || 's3.eu-central-003.backblazeb2.com').startsWith('http')
+                        ? (endpoint || 's3.eu-central-003.backblazeb2.com')
+                        : `https://${endpoint || 's3.eu-central-003.backblazeb2.com'}`
                 };
 
-                const ready = isB2Configured();
-                this.initialized = true;
-                return ready;
+                console.log('[BackblazeStorage] Configured and ready');
+            } else {
+                console.debug('[Storage] B2 not configured in environment');
             }
 
-            // Not configured - use Supabase fallback silently
-            console.debug('[Storage] B2 not configured, using Supabase Storage');
             this.initialized = true;
-            return false;
+            return ready;
         } catch (error) {
-            console.debug('[Storage] B2 init error, using Supabase fallback');
+            console.error('[Storage] B2 init error:', error);
             this.initialized = true;
             return false;
         }

@@ -138,7 +138,9 @@ export const mediaService = {
             return [];
         }
 
-        return data as unknown as MediaContent[];
+        // HYDRATE cover URLs for the feed cards
+        const results = data as unknown as MediaContent[];
+        return await Promise.all(results.map(content => this.hydrateMediaUrls(content)));
     },
 
     /**

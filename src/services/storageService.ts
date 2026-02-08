@@ -165,6 +165,19 @@ class StorageService {
         return await this.upload(file, path, { folder: 'resources', onProgress });
     }
 
+    generateMediaPath(fileName: string, type: string, slug: string): string {
+        const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const extension = sanitizedName.split('.').pop() || '';
+        const baseName = sanitizedName.replace(/\.[^/.]+$/, "");
+
+        // carousels/green-under-siege/1.png
+        if (type === 'carousel-item') {
+            return `carousels/${slug}/${sanitizedName}`;
+        }
+
+        return `media/${slug}/${type}/${Date.now()}-${sanitizedName}`;
+    }
+
     async delete(path: string): Promise<boolean> {
         try {
             const parts = path.split('/');
