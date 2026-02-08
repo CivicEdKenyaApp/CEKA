@@ -7,10 +7,12 @@ export interface ScraperSource {
     id: string;
     name: string;
     url: string;
-    is_active: boolean;
+    selector_config?: any;
     last_scraped_at: string | null;
+    status: string;
+    frequency_hours?: number;
     created_at: string;
-    updated_at: string;
+    created_by?: string;
 }
 
 export interface ProcessingJob {
@@ -43,8 +45,7 @@ class IntelService {
     // Get all scraper sources
     async getSources(): Promise<ScraperSource[]> {
         try {
-            const { data, error } = await supabase
-                .from('scraper_sources')
+            const { data, error } = await (supabase.from('scraper_sources' as any) as any)
                 .select('*')
                 .order('name', { ascending: true });
 
@@ -65,17 +66,16 @@ class IntelService {
     private getDefaultSources(): ScraperSource[] {
         const now = new Date().toISOString();
         return [
-            { id: '1', name: 'Kenya Gazette', url: 'http://kenyalaw.org/kenya_gazette/', is_active: true, last_scraped_at: null, created_at: now, updated_at: now },
-            { id: '2', name: 'National Assembly Bills', url: 'http://www.parliament.go.ke/the-national-assembly/house-business/bills', is_active: true, last_scraped_at: null, created_at: now, updated_at: now },
-            { id: '3', name: 'The Senate Bills', url: 'http://www.parliament.go.ke/the-senate/house-business/bills', is_active: true, last_scraped_at: null, created_at: now, updated_at: now }
+            { id: '1', name: 'Kenya Gazette', url: 'http://kenyalaw.org/kenya_gazette/', status: 'active', last_scraped_at: null, created_at: now },
+            { id: '2', name: 'National Assembly Bills', url: 'http://www.parliament.go.ke/the-national-assembly/house-business/bills', status: 'active', last_scraped_at: null, created_at: now },
+            { id: '3', name: 'The Senate Bills', url: 'http://www.parliament.go.ke/the-senate/house-business/bills', status: 'active', last_scraped_at: null, created_at: now }
         ];
     }
 
     // Get recent jobs - matches ACTUAL processing_jobs table schema
     async getJobs(limit: number = 20): Promise<ProcessingJob[]> {
         try {
-            const { data, error } = await supabase
-                .from('processing_jobs')
+            const { data, error } = await (supabase.from('processing_jobs' as any) as any)
                 .select('*')
                 .order('created_at', { ascending: false })
                 .limit(limit);
@@ -171,8 +171,7 @@ if __name__ == "__main__":
             const jobType = config.type === 'custom' ? 'crawl' : 'crawl';
 
             // Create job record matching ACTUAL schema
-            const { data, error: jobError } = await supabase
-                .from('processing_jobs')
+            const { data, error: jobError } = await (supabase.from('processing_jobs' as any) as any)
                 .insert({
                     job_name: jobName, // Required - not null constraint
                     job_type: jobType,
@@ -224,8 +223,7 @@ if __name__ == "__main__":
     async rerunJob(jobId: string): Promise<void> {
         try {
             // Get original job details
-            const { data: originalJob, error: fetchError } = await supabase
-                .from('processing_jobs')
+            const { data: originalJob, error: fetchError } = await (supabase.from('processing_jobs' as any) as any)
                 .select('*')
                 .eq('id', jobId)
                 .single();
@@ -237,8 +235,7 @@ if __name__ == "__main__":
             const job = originalJob as unknown as ProcessingJob;
 
             // Create new job based on original
-            const { error: insertError } = await supabase
-                .from('processing_jobs')
+            const { error: insertError } = await (supabase.from('processing_jobs' as any) as any)
                 .insert({
                     job_name: job.job_name, // Must have job_name
                     job_type: job.job_type || 'crawl',
@@ -271,12 +268,11 @@ if __name__ == "__main__":
     // Add a new source
     async addSource(source: Partial<ScraperSource>): Promise<ScraperSource | null> {
         try {
-            const { data, error } = await supabase
-                .from('scraper_sources')
+            const { data, error } = await (supabase.from('scraper_sources' as any) as any)
                 .insert({
                     name: source.name,
                     url: source.url,
-                    is_active: source.is_active ?? true
+                    status: source.status ?? 'active'
                 })
                 .select()
                 .single();
@@ -296,11 +292,9 @@ if __name__ == "__main__":
     // Update a source
     async updateSource(id: string, updates: Partial<ScraperSource>): Promise<boolean> {
         try {
-            const { error } = await supabase
-                .from('scraper_sources')
+            const { error } = await (supabase.from('scraper_sources' as any) as any)
                 .update({
                     ...updates,
-                    updated_at: new Date().toISOString()
                 })
                 .eq('id', id);
 
@@ -319,7 +313,7 @@ if __name__ == "__main__":
     // Delete a source
     async deleteSource(id: string): Promise<boolean> {
         try {
-            const { error } = await supabase
+            const { error } = await (supabase.from('scraper_sources' as any) as any)
                 .from('scraper_sources')
                 .delete()
                 .eq('id', id);
@@ -339,8 +333,7 @@ if __name__ == "__main__":
     // Update job progress
     async updateJobProgress(jobId: string, progress: number, step: string): Promise<void> {
         try {
-            await supabase
-                .from('processing_jobs')
+            await (supabase.from('processing_jobs' as any) as any)
                 .update({
                     progress,
                     current_step: step,

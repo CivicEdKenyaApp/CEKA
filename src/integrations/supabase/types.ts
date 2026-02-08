@@ -1776,6 +1776,42 @@ export type Database = {
           },
         ]
       }
+      scraper_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          frequency_hours: number | null
+          id: string
+          last_scraped_at: string | null
+          name: string
+          selector_config: Json | null
+          status: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          frequency_hours?: number | null
+          id?: string
+          last_scraped_at?: string | null
+          name: string
+          selector_config?: Json | null
+          status?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          frequency_hours?: number | null
+          id?: string
+          last_scraped_at?: string | null
+          name?: string
+          selector_config?: Json | null
+          status?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       system_metrics: {
         Row: {
           created_at: string

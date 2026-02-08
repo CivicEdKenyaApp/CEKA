@@ -29,7 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { notificationService } from '@/services/notificationService';
-import { translate } from '@/lib/utils';
+import { translate, cn } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,19 +82,8 @@ const ResourceLibrary = () => {
           .from('resources' as any)
           .select('*');
 
-        if (searchTerm.trim()) {
-          query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-        }
-
-        if (selectedCategories.length > 0) {
-          query = query.in('category', selectedCategories);
-        }
-
-        if (selectedTypes.length > 0) {
-          query = query.in('type', selectedTypes);
-        }
-
-        // Apply sorting on the server where possible, or finalize in useMemo
+        // We fetch all to handle complex local filtering for tags/metadata
+        // but sorting is done on server where possible
         if (sortBy === 'date') {
           query = query.order('created_at', { ascending: sortDirection === 'asc' });
         } else if (sortBy === 'alphabetical') {
@@ -125,9 +114,9 @@ const ResourceLibrary = () => {
         setResources(mappedResources);
 
         // Derive categories if not already fetched separately
-        if (categories.length === 0) {
-          const uniqueCats = Array.from(new Set(mappedResources.map(r => r.category)));
-          setCategories(uniqueCats);
+        const uniqueCats = Array.from(new Set(mappedResources.map(r => r.category)));
+        if (categories.length === 0 || !categories.includes(uniqueCats[0])) {
+          setCategories(prev => Array.from(new Set([...prev, ...uniqueCats])));
         }
       } catch (error) {
         console.error('Error loading resources:', error);
@@ -143,7 +132,7 @@ const ResourceLibrary = () => {
 
     const debounceTimer = setTimeout(fetchResources, 400);
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection, toast]);
+  }, [sortBy, sortDirection, toast]); // Removed searchTerm from trigger to handle it locally for smoothness
 
   // Handle auto-thumbnail generation for videos/media
   useEffect(() => {
@@ -176,21 +165,32 @@ const ResourceLibrary = () => {
 
   // Filter and sort resources based on current state
   const filteredResources = useMemo(() => {
-    let filtered = allResources;
+    let filtered = [...resources];
 
-    // Apply search term filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(resource =>
-        resource.title.toLowerCase().includes(term) ||
-        resource.description.toLowerCase().includes(term) ||
-        (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(term)))
-      );
+    // Apply search term filter (Case-insensitive, checks multiple fields)
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      const terms = term.split(' ').filter(t => t.length > 0);
+
+      filtered = filtered.filter(resource => {
+        const title = (resource.title || '').toLowerCase();
+        const desc = (resource.description || '').toLowerCase();
+        const category = (resource.category || '').toLowerCase();
+        const tags = (resource.tags || []).map(t => t.toLowerCase());
+
+        // Match if ALL search words are found in ANY field
+        return terms.every(word =>
+          title.includes(word) ||
+          desc.includes(word) ||
+          category.includes(word) ||
+          tags.some(t => t.includes(word))
+        );
+      });
     }
 
-    // Apply category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(resource => selectedCategories.includes(resource.category));
+    // Apply category filter (Sync with activeCategory)
+    if (activeCategory !== 'All') {
+      filtered = filtered.filter(resource => resource.category === activeCategory);
     }
 
     // Apply type filter
@@ -201,22 +201,20 @@ const ResourceLibrary = () => {
     // Apply sorting
     return filtered.sort((a, b) => {
       if (sortBy === 'date') {
-        return sortDirection === 'asc'
-          ? new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime()
-          : new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+        const dateA = new Date(a.dateAdded).getTime();
+        const dateB = new Date(b.dateAdded).getTime();
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
       } else if (sortBy === 'popularity') {
-        const aPopularity = a.views + a.downloads;
-        const bPopularity = b.views + b.downloads;
-        return sortDirection === 'asc'
-          ? aPopularity - bPopularity
-          : bPopularity - aPopularity;
+        const aPopularity = (a.views || 0) + (a.downloads || 0);
+        const bPopularity = (b.views || 0) + (b.downloads || 0);
+        return sortDirection === 'asc' ? aPopularity - bPopularity : bPopularity - aPopularity;
       } else { // alphabetical
         return sortDirection === 'asc'
           ? a.title.localeCompare(b.title)
           : b.title.localeCompare(a.title);
       }
     });
-  }, [allResources, searchTerm, selectedCategories, selectedTypes, sortBy, sortDirection]);
+  }, [resources, searchTerm, activeCategory, selectedTypes, sortBy, sortDirection]);
 
   // Group resources by category for the tabbed interface
   const resourcesByCategory = useMemo(() => {
@@ -436,72 +434,95 @@ const ResourceLibrary = () => {
   return (
     <Layout>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
-              <BookOpen className="h-8 w-8 text-primary" />
-              {translate("Resource Vault", language)}
-            </h1>
-            <p className="text-muted-foreground text-sm font-medium">
-              {translate("Access the repository of civic knowledge and national protocols", language)}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 bg-muted/20 p-1 rounded-2xl backdrop-blur-md">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-xl px-4 gap-2 font-bold group">
-                  <Filter className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform" />
-                  {activeCategory}
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 p-2 rounded-[24px] glass-card border-none shadow-2xl">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 pt-2">Categories</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => { setActiveCategory('All'); setSelectedCategories([]) }} className="rounded-xl p-3 cursor-pointer">All Resources</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {categories.map(cat => (
-                  <DropdownMenuItem
-                    key={cat}
-                    onClick={() => { setActiveCategory(cat); setSelectedCategories([cat]) }}
-                    className="rounded-xl p-3 cursor-pointer"
-                  >
-                    {cat}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="h-8 w-[1px] bg-border mx-1" />
-
-            <div className="flex bg-muted/50 p-1 rounded-xl">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className="h-8 w-8 rounded-lg"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-                className="h-8 w-8 rounded-lg"
-              >
-                <List className="h-4 w-4" />
-              </Button>
+        <div className="flex flex-col gap-8 mb-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+                <BookOpen className="h-8 w-8 text-primary" />
+                {translate("Resource Vault", language)}
+              </h1>
+              <p className="text-muted-foreground text-sm font-medium">
+                {translate("Access the repository of civic knowledge and national protocols", language)}
+              </p>
             </div>
 
-            <Button onClick={() => navigate('/resources/upload')} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl h-10 px-6 shadow-lg shadow-primary/20">
-              <Plus className="mr-2 h-4 w-4" />
-              {translate("Upload", language)}
-            </Button>
-          </div>
-        </div>
+            <div className="flex items-center gap-3 bg-muted/20 p-1 rounded-2xl backdrop-blur-md">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-xl px-4 gap-2 font-bold group">
+                    <Filter className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform" />
+                    Sort
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 p-2 rounded-[24px] glass-card border-none shadow-2xl">
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 pt-2">Sort By</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setSortBy('date')} className="rounded-xl p-3 cursor-pointer">Latest Arrivals</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('popularity')} className="rounded-xl p-3 cursor-pointer">Most Popular</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('alphabetical')} className="rounded-xl p-3 cursor-pointer">Alphabetical</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 pt-2">Direction</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setSortDirection('desc')} className="rounded-xl p-3 cursor-pointer">Descending</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortDirection('asc')} className="rounded-xl p-3 cursor-pointer">Ascending</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-        <div className="space-y-10">
-          <div className="relative max-w-2xl mx-auto mb-12">
+              <div className="h-8 w-[1px] bg-border mx-1" />
+
+              <div className="flex bg-muted/50 p-1 rounded-xl">
+                <Button
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 w-8 rounded-lg"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 w-8 rounded-lg"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Button onClick={() => navigate('/resources/upload')} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl h-10 px-6 shadow-lg shadow-primary/20">
+                <Plus className="mr-2 h-4 w-4" />
+                {translate("Upload", language)}
+              </Button>
+            </div>
+          </div>
+
+          {/* iOS-inspired Category Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+            <Button
+              variant={activeCategory === 'All' ? 'default' : 'outline'}
+              className={cn(
+                "rounded-full px-5 py-5 text-sm font-bold transition-all shadow-sm",
+                activeCategory === 'All' ? "shadow-primary/20 scale-105" : "hover:border-primary/50"
+              )}
+              onClick={() => { setActiveCategory('All'); setSelectedCategories([]); }}
+            >
+              All Topics
+            </Button>
+            {categories.map(cat => (
+              <Button
+                key={cat}
+                variant={activeCategory === cat ? 'default' : 'outline'}
+                className={cn(
+                  "rounded-full px-5 py-5 text-sm font-bold transition-all shadow-sm whitespace-nowrap",
+                  activeCategory === cat ? "shadow-primary/20 scale-105" : "hover:border-primary/50"
+                )}
+                onClick={() => { setActiveCategory(cat); setSelectedCategories([cat]); }}
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+
+          <div className="relative max-w-2xl mx-auto w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               id="resource-search"
