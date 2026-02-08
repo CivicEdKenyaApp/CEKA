@@ -45,7 +45,12 @@ export const useViewCount = (resourceId: string, resourceType: string) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      // Safe cleanup with delay to prevent closure race conditions
+      setTimeout(() => {
+        try {
+          supabase.removeChannel(subscription).catch(() => { });
+        } catch (e) { }
+      }, 50);
     };
   }, [resourceId, resourceType]);
 

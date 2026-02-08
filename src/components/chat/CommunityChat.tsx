@@ -225,7 +225,13 @@ const CommunityChat = () => {
             })
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        return () => {
+            setTimeout(() => {
+                try {
+                    supabase.removeChannel(channel).catch(() => { });
+                } catch (e) { }
+            }, 50);
+        };
     }, [activeRoom, session]);
 
     // Presence tracking for online members
@@ -256,7 +262,13 @@ const CommunityChat = () => {
                 }
             });
 
-        return () => { supabase.removeChannel(presenceChannel); };
+        return () => {
+            setTimeout(() => {
+                try {
+                    supabase.removeChannel(presenceChannel).catch(() => { });
+                } catch (e) { }
+            }, 50);
+        };
     }, [session, user]);
 
     // Infinite Scroll Handler (Intersection Observer)

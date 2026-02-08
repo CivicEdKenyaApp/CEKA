@@ -276,6 +276,8 @@ class NotificationService {
           const oldChannel = this.channel;
           this.channel = null;
           try {
+            // Properly await unsubscription and removal
+            await oldChannel.unsubscribe();
             await supabase.removeChannel(oldChannel);
           } catch (e) {
             // Ignore abort/removal errors
@@ -336,9 +338,16 @@ class NotificationService {
       if (this.channel) {
         const chan = this.channel;
         this.channel = null;
-        // Immediate disconnect locally to stop callbacks
-        chan.unsubscribe().catch(() => { });
-        supabase.removeChannel(chan).catch(() => { });
+
+        // Safer cleanup pattern: small delay to avoid "closed before established" race conditions
+        setTimeout(() => {
+          try {
+            chan.unsubscribe().catch(() => { });
+            supabase.removeChannel(chan).catch(() => { });
+          } catch (e) {
+            // Silent catch
+          }
+        }, 50);
       }
     };
   }

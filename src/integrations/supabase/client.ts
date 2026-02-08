@@ -13,7 +13,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         params: {
             eventsPerSecond: 10
         },
-        heartbeatIntervalMs: 30000,
+        heartbeatIntervalMs: 15000,
     },
     auth: {
         persistSession: true,

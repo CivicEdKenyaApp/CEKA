@@ -195,20 +195,24 @@ export const backblazeService = {
     },
 
     /**
-     * Generate a signed URL for temporary access
+     * Generate a signed URL for temporary access.
+     * Uses the Edge Function proxy for 100% reliability in production.
      */
     async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string | null> {
         const config = getB2Config();
-        const client = getB2Client();
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cajrvemigxghnfmyopiy.supabase.co';
+        const isDev = import.meta.env.MODE === 'development';
 
-        if (!config.keyId || !config.appKey) {
-            console.warn('[B2] Missing credentials for signed URL generation');
-            return null;
+        // Use the Edge Proxy as the primary method, especially if keys are missing from the bundle
+        if (!isDev || !config.keyId || !config.appKey) {
+            console.log(`[B2] Routing path through Edge Proxy: ${path}`);
+            return `${SUPABASE_URL}/functions/v1/b2-proxy?path=${encodeURIComponent(path)}`;
         }
 
+        const client = getB2Client();
         if (!client) {
-            console.warn('[B2] Client not initialized for signed URL');
-            return null;
+            console.warn('[B2] Client not initialized for signed URL, falling back to proxy');
+            return `${SUPABASE_URL}/functions/v1/b2-proxy?path=${encodeURIComponent(path)}`;
         }
 
         try {
@@ -218,11 +222,11 @@ export const backblazeService = {
             });
 
             const signedUrl = await getSignedUrl(client, command, { expiresIn });
-            console.log(`[B2] Generated signed URL for: ${path}`);
+            console.log(`[B2] Generated legacy signed URL for: ${path}`);
             return signedUrl;
         } catch (error) {
-            console.error('[B2] Signed URL error:', error);
-            return null;
+            console.error('[B2] Signed URL error, falling back to proxy:', error);
+            return `${SUPABASE_URL}/functions/v1/b2-proxy?path=${encodeURIComponent(path)}`;
         }
     },
 
@@ -236,8 +240,8 @@ export const backblazeService = {
     },
 
     /**
-     * Intelligently resolves a URL to a signed one if it belongs to Backblaze.
-     * This allows us to keep the bucket PRIVATE while still showing images.
+     * Intelligently resolves a URL to a proxy URL if it belongs to Backblaze.
+     * This uses the Edge Function proxy for 100% reliability in production.
      */
     async resolveSignedUrl(url: string | null): Promise<string | null> {
         if (!url) return url;
@@ -246,40 +250,50 @@ export const backblazeService = {
         if (!url.includes('backblazeb2.com')) return url;
 
         const config = getB2Config();
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cajrvemigxghnfmyopiy.supabase.co';
 
-        // Check creds directly
-        if (!config.keyId || !config.appKey) {
-            console.warn('[B2] Cannot sign URL - missing credentials');
-            return url;
-        }
+        console.log(`[B2] Routing B2 URL through Edge Proxy for 100% reliability: ${url.substring(0, 60)}...`);
 
         try {
             // Extract the path (Key) from the URL
-            // URL format typically: https://s3.region.backblazeb2.com/bucket-name/path/to/file.ext
+            // B2 sometimes uses path-style: /bucket/key or virtual-host: bucket.s3.../key
+            let path = '';
             const bucketSearch = `/${config.bucketName}/`;
-            const parts = url.split(bucketSearch);
 
-            if (parts.length < 2) {
-                // Try fallback logic if the URL structure is different
+            if (url.includes(bucketSearch)) {
+                path = url.split(bucketSearch)[1];
+            } else {
                 const urlObj = new URL(url);
-                // B2 sometimes uses path-style: /bucket/key or virtual-host: bucket.s3.../key
                 if (urlObj.pathname.startsWith(`/${config.bucketName}/`)) {
-                    const extractedPath = urlObj.pathname.replace(`/${config.bucketName}/`, '');
-                    console.log(`[B2] Extracted path via fallback: ${extractedPath}`);
-                    return await this.getSignedUrl(extractedPath);
+                    path = urlObj.pathname.replace(`/${config.bucketName}/`, '');
+                } else {
+                    // If bucket name isn't in path, it might be the whole path or something else
+                    // but our URLs are usually path-style
+                    path = urlObj.pathname.substring(1);
                 }
-                console.warn(`[B2] Could not extract path from URL: ${url}`);
+            }
+
+            if (!path) {
+                console.warn(`[B2] Could not extract path from B2 URL: ${url}`);
                 return url;
             }
 
-            const path = parts[1];
             // Remove any query params if present
             const cleanPath = path.split('?')[0];
-            console.log(`[B2] Signing path: ${cleanPath}`);
 
-            return await this.getSignedUrl(cleanPath);
+            // Construct the Proxy URL
+            // This Edge Function handles the B2 Auth internally using server-side secrets
+            const proxyUrl = `${SUPABASE_URL}/functions/v1/b2-proxy?path=${encodeURIComponent(cleanPath)}`;
+
+            console.log(`[B2] Success: Proxy URL generated for ${cleanPath}`);
+            return proxyUrl;
         } catch (error) {
-            console.error('[B2] Error resolving signed URL:', error);
+            console.error('[B2] Error resolving via proxy fallback:', error);
+            // If proxy construction fails, try legacy browser signing if keys are available
+            if (config.keyId && config.appKey) {
+                console.log('[B2] Attempting legacy browser-side signing as fallback...');
+                return await this.getSignedUrl(url.split(config.bucketName + '/')[1] || url);
+            }
             return url;
         }
     },
