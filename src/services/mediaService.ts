@@ -108,6 +108,40 @@ export const mediaService = {
     },
 
     /**
+     * Get the current featured media content
+     */
+    async getFeaturedMedia(): Promise<MediaContent | null> {
+        // We look for content with a 'featured' tag or just the latest special edition
+        const { data, error } = await (supabase as any)
+            .from('media_content')
+            .select(`
+                *,
+                items:media_items(*)
+            `)
+            .eq('status', 'published')
+            .contains('tags', ['special-edition'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error || !data) {
+            // Fallback: just get the latest published carousel
+            const latest = await this.listMediaContent('carousel', 1, 1);
+            if (latest.length > 0) {
+                return await this.getMediaContent(latest[0].slug);
+            }
+            return null;
+        }
+
+        // Sort items by order_index
+        if (data && (data as any).items) {
+            (data as any).items.sort((a: any, b: any) => a.order_index - b.order_index);
+        }
+
+        return data as unknown as MediaContent;
+    },
+
+    /**
      * Fetch paginated media content
      */
     async listMediaContentPaginated(

@@ -138,7 +138,9 @@ class BackblazeStorageService {
         folder: string = 'resources',
         onProgress?: (progress: number) => void
     ): Promise<UploadResult> {
-        const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        // Support deep paths (e.g. "carousels/special/2026")
+        const cleanFolderName = folder.endsWith('/') ? folder.slice(0, -1) : folder;
+        const fileName = `${cleanFolderName}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
         // Ensure initialized
         await this.initialize();

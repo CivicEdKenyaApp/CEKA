@@ -26,24 +26,34 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const [direction, setDirection] = useState(0);
     const [downloading, setDownloading] = useState<string | null>(null);
     const [isCheckingPdf, setIsCheckingPdf] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
     const [availableQualities, setAvailableQualities] = useState<ResolutionQuality[]>(['320p', '720p', '1080p', '4k']);
     const items = content.items || [];
 
-    // Motion values for swipe
-    const x = useMotionValue(0);
-    const opacity = useTransform(x, [-200, 0, 200], [0.5, 1, 0.5]);
+    // Reset index when content changes
+    useEffect(() => {
+        setCurrentIndex(0);
+        setDirection(0);
+        setImageLoading(true);
+    }, [content.id, content.slug]);
+
+    // Motion values for swipe feedback (drag offset)
+    const dragX = useMotionValue(0);
+    const dragOpacity = useTransform(dragX, [-200, 0, 200], [0.5, 1, 0.5]);
 
     const nextSlide = () => {
         if (currentIndex < items.length - 1) {
             setDirection(1);
-            setCurrentIndex(currentIndex + 1);
+            setCurrentIndex(prev => prev + 1);
+            setImageLoading(true);
         }
     };
 
     const prevSlide = () => {
         if (currentIndex > 0) {
             setDirection(-1);
-            setCurrentIndex(currentIndex - 1);
+            setCurrentIndex(prev => prev - 1);
+            setImageLoading(true);
         }
     };
 
@@ -198,30 +208,32 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                     animate={{ paddingBottom: getAspectRatioPadding(aspectRatio) }}
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 >
-                    <AnimatePresence initial={false} custom={direction} mode="popLayout">
+                    <AnimatePresence initial={false} custom={direction}>
                         <motion.div
-                            key={currentIndex}
+                            key={`${content.id}-${currentIndex}`} // Unique key per item and content
                             custom={direction}
-                            style={{ x, opacity }}
                             drag="x"
                             dragConstraints={{ left: 0, right: 0 }}
                             dragElastic={0.1}
                             onDragEnd={handleDragEnd}
+                            // Using standard variants for transition, not shared motion values in style
                             variants={{
                                 enter: (direction: number) => ({
-                                    x: direction > 0 ? '100%' : '-100%',
+                                    x: direction > 0 ? '100.5%' : '-100.5%', // Added small buffer to prevent gap
                                     opacity: 0,
                                     scale: 0.95
                                 }),
                                 center: {
                                     x: 0,
                                     opacity: 1,
-                                    scale: 1
+                                    scale: 1,
+                                    zIndex: 1
                                 },
                                 exit: (direction: number) => ({
-                                    x: direction < 0 ? '100%' : '-100%',
+                                    x: direction < 0 ? '100.5%' : '-100.5%',
                                     opacity: 0,
-                                    scale: 0.95
+                                    scale: 0.95,
+                                    zIndex: 0
                                 })
                             }}
                             initial="enter"
@@ -229,19 +241,30 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                             exit="exit"
                             transition={{
                                 x: { type: "spring", stiffness: 300, damping: 30 },
-                                opacity: { duration: 0.2 },
-                                scale: { type: "spring", stiffness: 400, damping: 35 }
+                                opacity: { duration: 0.25 },
+                                scale: { type: "spring", stiffness: 350, damping: 35 }
                             }}
-                            className="absolute inset-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
+                            className="absolute inset-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing bg-black/5"
                         >
                             {currentItem.type === 'image' ? (
-                                <img
-                                    src={currentItem.file_url || ''}
-                                    alt={content.title}
-                                    className="w-full h-full object-cover select-none pointer-events-none"
-                                    loading="lazy"
-                                    draggable={false}
-                                />
+                                <>
+                                    {imageLoading && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-muted/10">
+                                            <Loader2 className="w-8 h-8 animate-spin text-primary/30" />
+                                        </div>
+                                    )}
+                                    <img
+                                        src={currentItem.file_url || ''}
+                                        alt={content.title}
+                                        className={cn(
+                                            "w-full h-full object-cover select-none pointer-events-none transition-opacity duration-300",
+                                            imageLoading ? "opacity-0" : "opacity-100"
+                                        )}
+                                        loading="lazy"
+                                        draggable={false}
+                                        onLoad={() => setImageLoading(false)}
+                                    />
+                                </>
                             ) : currentItem.type === 'video' ? (
                                 <video
                                     src={currentItem.file_url || ''}

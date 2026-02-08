@@ -72,8 +72,8 @@ const PLACEHOLDER_MAPPING: Record<PlaceholderType, PlaceholderConfig> = {
     }
 };
 
-// Base path for public assets bucket (routed through Supabase Edge Function Proxy for Private Buckets)
-const PUBLIC_ASSETS_BASE = 'https://cajrvemigxghnfmyopiy.supabase.co/functions/v1/b2-proxy?path=placeholders/';
+// Base path for placeholders (using local public folder for immediate reliability)
+const PUBLIC_ASSETS_BASE = '/placeholders/';
 
 export const placeholderService = {
     /**

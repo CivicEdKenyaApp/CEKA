@@ -8,32 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const ITEMS_PER_PAGE = 6;
 
-const GREEN_UNDER_SIEGE: MediaContent = {
-    id: 'green-under-siege-hardcoded',
-    type: 'carousel',
-    title: 'Green Under Siege',
-    description: 'A Civic Education Kenya special on environmental protection and the impact of climate change in Kenya.',
-    slug: 'green-under-siege',
-    cover_url: '/content/green-under-siege/4.png',
-    status: 'published',
-    metadata: {
-        pdf_url: '/content/green-under-siege/green-under-siege.pdf'
-    },
-    tags: ['environment', 'special-edition'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    items: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((n, i) => ({
-        id: `gus-item-${n}`,
-        content_id: 'green-under-siege-hardcoded',
-        type: 'image',
-        file_path: `/content/green-under-siege/${n}.png`,
-        file_url: `/content/green-under-siege/${n}.png`,
-        order_index: i,
-        metadata: { aspect_ratio: '1:1' },
-        created_at: new Date().toISOString()
-    }))
-};
-
 const MediaFeed: React.FC = () => {
     const [content, setContent] = useState<MediaContent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -48,20 +22,21 @@ const MediaFeed: React.FC = () => {
     useEffect(() => {
         const fetchMedia = async () => {
             try {
-                const data = await mediaService.listMediaContent();
+                // Fetch all published carousels
+                const data = await mediaService.listMediaContent('carousel', 1, ITEMS_PER_PAGE);
+
+                // Fetch detailed content for each summary (to get items/slides)
                 const fullData = await Promise.all(
-                    data.slice(0, ITEMS_PER_PAGE).map(async (item) => {
+                    data.map(async (item) => {
                         const detailed = await mediaService.getMediaContent(item.slug);
                         return detailed || item;
                     })
                 );
-                // Prepend the Special Edition
-                setContent([GREEN_UNDER_SIEGE, ...fullData]);
-                setHasMore(data.length > ITEMS_PER_PAGE);
+
+                setContent(fullData);
+                setHasMore(data.length >= ITEMS_PER_PAGE);
             } catch (error) {
                 console.error('Failed to fetch media feed:', error);
-                // Even on error, show the hardcoded one
-                setContent([GREEN_UNDER_SIEGE]);
             } finally {
                 setLoading(false);
             }
@@ -76,26 +51,24 @@ const MediaFeed: React.FC = () => {
 
         setLoadingMore(true);
         try {
-            const allData = await mediaService.listMediaContent();
-            const startIdx = page * ITEMS_PER_PAGE;
-            const endIdx = startIdx + ITEMS_PER_PAGE;
-            const newItems = allData.slice(startIdx, endIdx);
+            const nextPage = page + 1;
+            const data = await mediaService.listMediaContent('carousel', nextPage, ITEMS_PER_PAGE);
 
-            if (newItems.length === 0) {
+            if (data.length === 0) {
                 setHasMore(false);
                 return;
             }
 
             const fullNewItems = await Promise.all(
-                newItems.map(async (item) => {
+                data.map(async (item) => {
                     const detailed = await mediaService.getMediaContent(item.slug);
                     return detailed || item;
                 })
             );
 
             setContent(prev => [...prev, ...fullNewItems]);
-            setPage(prev => prev + 1);
-            setHasMore(endIdx < allData.length);
+            setPage(nextPage);
+            setHasMore(data.length >= ITEMS_PER_PAGE);
         } catch (error) {
             console.error('Failed to load more:', error);
         } finally {
