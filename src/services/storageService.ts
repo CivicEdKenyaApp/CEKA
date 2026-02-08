@@ -186,9 +186,13 @@ class StorageService {
     async getAuthorizedUrl(pathOrUrl: string): Promise<string> {
         await this.initialize();
 
+        console.log(`[StorageService] getAuthorizedUrl called with: ${pathOrUrl.substring(0, 80)}...`);
+
         // CRITICAL: If this is a B2 URL, ALWAYS use B2 signing regardless of init state
         if (pathOrUrl.includes('backblazeb2.com')) {
+            console.log('[StorageService] Detected B2 URL, routing to B2 signing...');
             const signed = await backblazeStorage.getAuthorizedUrl(pathOrUrl);
+            console.log(`[StorageService] B2 signing result: ${signed ? 'SUCCESS' : 'FAILED'}`);
             return signed || pathOrUrl;
         }
 

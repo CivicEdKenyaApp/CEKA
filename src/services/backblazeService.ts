@@ -152,8 +152,9 @@ export const backblazeService = {
      * Generate a signed URL for temporary access
      */
     async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string | null> {
-        if (!isB2Configured()) {
-            console.warn('Backblaze B2 is not configured');
+        // REMOVED isB2Configured check - we trust the env vars are set
+        if (!B2_KEY_ID || !B2_APP_KEY) {
+            console.warn('[B2] Missing credentials for signed URL generation');
             return null;
         }
 
@@ -164,12 +165,14 @@ export const backblazeService = {
             });
 
             const signedUrl = await getSignedUrl(b2Client, command, { expiresIn });
+            console.log(`[B2] Generated signed URL for: ${path}`);
             return signedUrl;
         } catch (error) {
-            console.error('B2 signed URL error:', error);
+            console.error('[B2] Signed URL error:', error);
             return null;
         }
     },
+
 
     /**
      * Get public URL for a file
@@ -183,10 +186,16 @@ export const backblazeService = {
      * This allows us to keep the bucket PRIVATE while still showing images.
      */
     async resolveSignedUrl(url: string | null): Promise<string | null> {
-        if (!url || !isB2Configured()) return url;
+        if (!url) return url;
 
         // Only resolve if it's a B2 URL
         if (!url.includes('backblazeb2.com')) return url;
+
+        // Check creds directly instead of isB2Configured
+        if (!B2_KEY_ID || !B2_APP_KEY) {
+            console.warn('[B2] Cannot sign URL - missing credentials');
+            return url;
+        }
 
         try {
             // Extract the path (Key) from the URL
@@ -199,18 +208,22 @@ export const backblazeService = {
                 const urlObj = new URL(url);
                 // B2 sometimes uses path-style: /bucket/key or virtual-host: bucket.s3.../key
                 if (urlObj.pathname.startsWith(`/${B2_BUCKET_NAME}/`)) {
-                    return await this.getSignedUrl(urlObj.pathname.replace(`/${B2_BUCKET_NAME}/`, ''));
+                    const extractedPath = urlObj.pathname.replace(`/${B2_BUCKET_NAME}/`, '');
+                    console.log(`[B2] Extracted path via fallback: ${extractedPath}`);
+                    return await this.getSignedUrl(extractedPath);
                 }
+                console.warn(`[B2] Could not extract path from URL: ${url}`);
                 return url;
             }
 
             const path = parts[1];
             // Remove any query params if present
             const cleanPath = path.split('?')[0];
+            console.log(`[B2] Signing path: ${cleanPath}`);
 
             return await this.getSignedUrl(cleanPath);
         } catch (error) {
-            console.error('[Backblaze] Error resolving signed URL:', error);
+            console.error('[B2] Error resolving signed URL:', error);
             return url;
         }
     },
