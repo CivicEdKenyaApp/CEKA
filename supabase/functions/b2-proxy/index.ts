@@ -6,10 +6,10 @@ const corsHeaders = {
 };
 
 /**
- * B2 Asset Proxy
+ * B2 Asset Proxy (v4 - Native API Flow)
  * 
  * Securely fetches assets from a private Backblaze B2 bucket
- * and streams them to the frontend. Reuses existing VITE_B2_ secrets.
+ * using the Native B2 API which is more reliable for simple proxying.
  */
 serve(async (req) => {
     // Handle CORS
@@ -28,38 +28,51 @@ serve(async (req) => {
             });
         }
 
-        // Get credentials from environment
-        const B2_KEY_ID = Deno.env.get('VITE_B2_KEY_ID');
-        const B2_APP_KEY = Deno.env.get('VITE_B2_APP_KEY');
-        const B2_BUCKET = Deno.env.get('VITE_B2_BUCKET_NAME');
-        const B2_ENDPOINT = Deno.env.get('VITE_B2_ENDPOINT'); // e.g. s3.eu-central-003.backblazeb2.com
+        // Get credentials from environment (trying both VITE_ and non-prefixed)
+        const B2_KEY_ID = Deno.env.get('VITE_B2_KEY_ID') || Deno.env.get('B2_KEY_ID');
+        const B2_APP_KEY = Deno.env.get('VITE_B2_APP_KEY') || Deno.env.get('B2_APP_KEY');
+        const B2_BUCKET = Deno.env.get('VITE_B2_BUCKET_NAME') || Deno.env.get('B2_BUCKET_NAME');
 
-        if (!B2_KEY_ID || !B2_APP_KEY || !B2_BUCKET || !B2_ENDPOINT) {
+        if (!B2_KEY_ID || !B2_APP_KEY || !B2_BUCKET) {
+            console.error('[B2-Proxy] Missing secrets:', { keyId: !!B2_KEY_ID, appKey: !!B2_APP_KEY, bucket: !!B2_BUCKET });
             return new Response(JSON.stringify({ error: 'Storage configuration missing in Edge Function secrets' }), {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
 
-        console.log(`[B2-Proxy] Fetching: ${path} from bucket: ${B2_BUCKET}`);
+        // 1. Authorize with B2 to get a download token
+        const authResponse = await fetch('https://api.backblazeb2.com/b2api/v2/b2_authorize_account', {
+            headers: {
+                'Authorization': `Basic ${btoa(`${B2_KEY_ID}:${B2_APP_KEY}`)}`
+            }
+        });
 
-        // Construct the B2 S3-Compatible Download URL
-        // Format: https://[bucket].[endpoint]/[path]
-        const b2Url = `https://${B2_BUCKET}.${B2_ENDPOINT}/${path}`;
+        if (!authResponse.ok) {
+            const errText = await authResponse.text();
+            console.error('[B2-Proxy] B2 Auth failed:', errText);
+            return new Response(JSON.stringify({ error: 'B2 Authorization failed' }), {
+                status: 502,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
 
-        // 1. Authorize with B2 to get a token (Basic Auth)
-        const authHeader = `Basic ${btoa(`${B2_KEY_ID}:${B2_APP_KEY}`)}`;
+        const { authorizationToken, downloadUrl } = await authResponse.json();
 
-        // 2. Fetch from B2 with Auth
+        // 2. Fetch the file using the download token
+        const b2Url = `${downloadUrl}/file/${B2_BUCKET}/${path}`;
+
+        console.log(`[B2-Proxy] Fetching: ${path}`);
+
         const response = await fetch(b2Url, {
             method: 'GET',
             headers: {
-                'Authorization': authHeader
+                'Authorization': authorizationToken
             }
         });
 
         if (!response.ok) {
-            console.error(`[B2-Proxy] B2 error: ${response.status} ${response.statusText}`);
+            console.error(`[B2-Proxy] B2 download error: ${response.status}`);
             return new Response(JSON.stringify({ error: 'Failed to fetch asset from B2' }), {
                 status: response.status,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }

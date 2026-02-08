@@ -230,7 +230,7 @@ const CommunityChat = () => {
                 try {
                     supabase.removeChannel(channel).catch(() => { });
                 } catch (e) { }
-            }, 50);
+            }, 200);
         };
     }, [activeRoom, session]);
 
@@ -267,7 +267,7 @@ const CommunityChat = () => {
                 try {
                     supabase.removeChannel(presenceChannel).catch(() => { });
                 } catch (e) { }
-            }, 50);
+            }, 200);
         };
     }, [session, user]);
 

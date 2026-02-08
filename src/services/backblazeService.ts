@@ -31,7 +31,8 @@ const getB2Config = () => {
     } else if (sources.globalThis) {
         console.log('[B2] Config Source: globalThis (Global injection)');
     } else {
-        console.error('[B2] CRITICAL: No credentials found in ANY environment source!', sources);
+        // Reduced to info because we use server-side proxying in production
+        console.info('[B2] Local credentials missing. Using server-side Edge Proxy fallback.');
     }
 
 
@@ -282,10 +283,8 @@ export const backblazeService = {
             const cleanPath = path.split('?')[0];
 
             // Construct the Proxy URL
-            // This Edge Function handles the B2 Auth internally using server-side secrets
             const proxyUrl = `${SUPABASE_URL}/functions/v1/b2-proxy?path=${encodeURIComponent(cleanPath)}`;
 
-            console.log(`[B2] Success: Proxy URL generated for ${cleanPath}`);
             return proxyUrl;
         } catch (error) {
             console.error('[B2] Error resolving via proxy fallback:', error);

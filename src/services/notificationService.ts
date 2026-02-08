@@ -339,7 +339,7 @@ class NotificationService {
         const chan = this.channel;
         this.channel = null;
 
-        // Safer cleanup pattern: small delay to avoid "closed before established" race conditions
+        // Safer cleanup pattern: 200ms delay to avoid "closed before established" race conditions
         setTimeout(() => {
           try {
             chan.unsubscribe().catch(() => { });
@@ -347,7 +347,7 @@ class NotificationService {
           } catch (e) {
             // Silent catch
           }
-        }, 50);
+        }, 200);
       }
     };
   }
