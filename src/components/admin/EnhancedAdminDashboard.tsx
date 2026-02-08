@@ -9,7 +9,7 @@ import {
   Menu, X, ChevronDown, Bell, User, MoreVertical, Globe, Settings, Shield, Search, ChevronRight,
   FileText, PenTool, MessageSquare, Calendar, Heart, LayoutGrid, Radio, Users, Home, BookOpen,
   PlusCircle, Edit3, Activity, TrendingUp, Eye, UserCheck, Clock, AlertTriangle, Download,
-  RefreshCw, Plus
+  RefreshCw, Plus, Sparkles
 } from 'lucide-react';
 import { adminService, AdminDashboardStats, UserActivityStats, ModerationQueueItem } from '@/services/adminService';
 import { AdminSessionManager } from './AdminSessionManager';
@@ -20,6 +20,9 @@ import CampaignManager from './CampaignManager';
 import BulkUploadManager from './BulkUploadManager';
 import EventManager from './EventManager';
 import LegislativeIntelligence from './LegislativeIntelligence';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import CyberpunkBentoDashboard from './CyberpunkBentoDashboard';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const EnhancedAdminDashboard = () => {
@@ -139,8 +142,8 @@ const EnhancedAdminDashboard = () => {
 
   if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading enhanced admin dashboard...</div>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <CEKALoader size="lg" variant="orbit" text="Initializing Tactical Command..." />
       </div>
     );
   }
@@ -166,10 +169,14 @@ const EnhancedAdminDashboard = () => {
 
       <Tabs defaultValue="overview" className="space-y-6">
         <div className="overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 hide-scrollbar">
-          <TabsList className="flex h-auto p-1 bg-muted/30 backdrop-blur-sm rounded-2xl w-max lg:w-full lg:grid lg:grid-cols-8">
-            <TabsTrigger value="overview" className="rounded-xl px-6 py-3">Overview</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-xl px-6 py-3">Analytics</TabsTrigger>
-            <TabsTrigger value="appraisal" className="rounded-xl px-6 py-3 gap-2">
+          <TabsList className="flex h-auto p-1 bg-muted/30 backdrop-blur-sm rounded-2xl w-max lg:w-full">
+            <TabsTrigger value="overview" className="rounded-xl px-4 py-3">Overview</TabsTrigger>
+            <TabsTrigger value="enhanced" className="rounded-xl px-4 py-3 gap-1">
+              <Sparkles className="h-3 w-3" />
+              Enhanced
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl px-4 py-3">Analytics</TabsTrigger>
+            <TabsTrigger value="appraisal" className="rounded-xl px-4 py-3 gap-2">
               Appraisal
               {moderationQueue.length > 0 && (
                 <Badge className="h-4 w-4 p-0 flex items-center justify-center bg-kenya-red text-[8px] animate-pulse">
@@ -177,17 +184,17 @@ const EnhancedAdminDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="volunteers" className="rounded-xl px-6 py-3">Volunteers</TabsTrigger>
-            <TabsTrigger value="events" className="rounded-xl px-6 py-3">Events</TabsTrigger>
-            <TabsTrigger value="campaigns" className="rounded-xl px-6 py-3">Campaigns</TabsTrigger>
-            <TabsTrigger value="uploads" className="rounded-xl px-6 py-3">Uploads</TabsTrigger>
-            <TabsTrigger value="sessions" className="rounded-xl px-2 py-3">Sessions</TabsTrigger>
-            <TabsTrigger value="intelligence" className="rounded-xl px-2 py-3 gap-1">
+            <TabsTrigger value="volunteers" className="rounded-xl px-4 py-3">Volunteers</TabsTrigger>
+            <TabsTrigger value="events" className="rounded-xl px-4 py-3">Events</TabsTrigger>
+            <TabsTrigger value="campaigns" className="rounded-xl px-4 py-3">Campaigns</TabsTrigger>
+            <TabsTrigger value="uploads" className="rounded-xl px-4 py-3">Uploads</TabsTrigger>
+            <TabsTrigger value="sessions" className="rounded-xl px-3 py-3">Sessions</TabsTrigger>
+            <TabsTrigger value="intelligence" className="rounded-xl px-3 py-3 gap-1">
               <Activity className="h-3 w-3" />
               Intel
             </TabsTrigger>
-            <TabsTrigger value="changes" className="rounded-xl px-2 py-3">Audit</TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-xl px-2 py-3">System</TabsTrigger>
+            <TabsTrigger value="changes" className="rounded-xl px-3 py-3">Audit</TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-xl px-3 py-3">System</TabsTrigger>
           </TabsList>
         </div>
 
@@ -334,64 +341,13 @@ const EnhancedAdminDashboard = () => {
           </div>
         </TabsContent>
 
+        {/* Enhanced Cyberpunk View */}
+        <TabsContent value="enhanced" className="-mx-4 -mt-4">
+          <CyberpunkBentoDashboard />
+        </TabsContent>
+
         <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                User Activity (Last 30 Days)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={activityStats}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="new_users" stroke="#8884d8" name="New Users" />
-                  <Line type="monotone" dataKey="active_users" stroke="#82ca9d" name="Active Users" />
-                  <Line type="monotone" dataKey="blog_posts" stroke="#ffc658" name="Blog Posts" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Content Creation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={activityStats.slice(-7)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="blog_posts" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Engagement Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={activityStats.slice(-7)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="discussions" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+          <AnalyticsDashboard />
         </TabsContent>
 
         <TabsContent value="appraisal">

@@ -1,316 +1,202 @@
-/**
- * Unified Storage Service
- * 
- * Abstraction layer that provides a single interface for multiple storage providers:
- * - Backblaze B2
- * - Cloudflare R2
- * - Supabase Storage (fallback)
- * 
- * The active provider is determined by environment configuration
- */
+// Storage Service - Hybrid Storage with Backblaze B2 Primary and Supabase Fallback
+// Handles file uploads with automatic provider selection and metadata sync
 
-import { backblazeService, isB2Configured, type UploadResult, type FileInfo } from './backblazeService';
-import { cloudflareR2Service, isR2Configured } from './cloudflareR2Service';
 import { supabase } from '@/integrations/supabase/client';
+import backblazeStorage from './backblazeStorage';
 
-// Storage provider types
-export type StorageProvider = 'backblaze' | 'r2' | 'supabase' | 'auto';
+export interface UploadOptions {
+    folder?: string;
+    upsert?: boolean;
+    onProgress?: (progress: number) => void;
+}
 
-// Get provider from environment or use auto-detection
-const STORAGE_PROVIDER = (import.meta.env.VITE_STORAGE_PROVIDER as StorageProvider) || 'auto';
-const SUPABASE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'resources';
+export interface UploadResult {
+    success: boolean;
+    url?: string;
+    path?: string;
+    error?: string;
+    provider?: 'supabase' | 'backblaze';
+}
 
-// Re-export types
-export type { UploadResult, FileInfo };
+class StorageService {
+    private initialized = false;
+    private useBackblaze = false;
 
-/**
- * Determine the best available storage provider
- */
-const getActiveProvider = (): StorageProvider => {
-    if (STORAGE_PROVIDER !== 'auto') {
-        return STORAGE_PROVIDER;
+    async initialize(): Promise<void> {
+        if (this.initialized) return;
+
+        try {
+            // Try to initialize Backblaze
+            this.useBackblaze = await backblazeStorage.initialize();
+            console.log(`[StorageService] Using ${this.useBackblaze ? 'Backblaze B2' : 'Supabase Storage'}`);
+        } catch (error) {
+            console.warn('[StorageService] Backblaze init failed, using Supabase:', error);
+            this.useBackblaze = false;
+        }
+
+        this.initialized = true;
     }
 
-    // Auto-detect based on configured credentials
-    if (isB2Configured()) return 'backblaze';
-    if (isR2Configured()) return 'r2';
-    return 'supabase';
-};
+    async upload(file: File, path: string, options: UploadOptions = {}): Promise<UploadResult> {
+        await this.initialize();
 
-/**
- * Supabase storage operations (fallback)
- */
-const supabaseStorage = {
-    async uploadFile(file: File, path: string): Promise<UploadResult> {
+        const folder = options.folder || 'resources';
+        const fullPath = path.startsWith(folder) ? path : `${folder}/${path}`;
+
+        console.log(`[Storage] Uploading to ${this.useBackblaze ? 'backblaze' : 'supabase'}: ${fullPath}`);
+
+        if (this.useBackblaze) {
+            try {
+                const result = await backblazeStorage.uploadFile(file, folder, options.onProgress);
+                if (result.success) {
+                    return {
+                        success: true,
+                        url: result.fileUrl,
+                        path: result.fileName,
+                        provider: 'backblaze'
+                    };
+                }
+                throw new Error(result.error);
+            } catch (error) {
+                console.warn('[Storage] Backblaze upload failed, falling back to Supabase:', error);
+                // Fall through to Supabase
+            }
+        }
+
+        // Supabase Storage upload
+        return await this.uploadToSupabase(file, fullPath, options);
+    }
+
+    private async uploadToSupabase(file: File, path: string, options: UploadOptions): Promise<UploadResult> {
         try {
+            // Extract bucket from path
+            const parts = path.split('/');
+            const bucket = parts[0];
+            const filePath = parts.slice(1).join('/');
+
+            options.onProgress?.(10);
+
             const { data, error } = await supabase.storage
-                .from(SUPABASE_BUCKET)
-                .upload(path, file, {
+                .from(bucket)
+                .upload(filePath, file, {
                     cacheControl: '3600',
-                    upsert: true,
+                    upsert: options.upsert ?? true
+                });
+
+            if (error) {
+                console.error('[Storage] Supabase upload error:', error);
+                throw error;
+            }
+
+            options.onProgress?.(80);
+
+            const { data: urlData } = supabase.storage
+                .from(bucket)
+                .getPublicUrl(filePath);
+
+            options.onProgress?.(100);
+
+            return {
+                success: true,
+                url: urlData.publicUrl,
+                path: data.path,
+                provider: 'supabase'
+            };
+        } catch (error: any) {
+            console.error('[Storage] Upload failed:', error);
+            return {
+                success: false,
+                error: error.message || 'Upload failed'
+            };
+        }
+    }
+
+    async uploadAvatar(file: File, userId: string): Promise<UploadResult> {
+        const fileName = `${userId}-${Date.now()}.${file.name.split('.').pop()}`;
+        const path = `avatars/${fileName}`;
+
+        try {
+            // Check if avatars bucket exists, if not create using admin endpoint
+            const { data: buckets } = await supabase.storage.listBuckets();
+            const avatarsBucket = buckets?.find(b => b.name === 'avatars');
+
+            if (!avatarsBucket) {
+                // Try to create bucket via storage admin
+                const { error: createError } = await supabase.storage.createBucket('avatars', {
+                    public: true,
+                    fileSizeLimit: 5 * 1024 * 1024, // 5MB
+                    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                });
+
+                if (createError && !createError.message.includes('already exists')) {
+                    console.error('[Storage] Could not create avatars bucket:', createError);
+                }
+            }
+
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: true
                 });
 
             if (error) throw error;
 
             const { data: urlData } = supabase.storage
-                .from(SUPABASE_BUCKET)
-                .getPublicUrl(path);
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            // Update profile with new avatar URL
+            await supabase
+                .from('profiles')
+                .update({ avatar_url: urlData.publicUrl })
+                .eq('id', userId);
 
             return {
                 success: true,
-                path: data.path,
                 url: urlData.publicUrl,
-                size: file.size,
-                contentType: file.type,
+                path: data.path,
+                provider: 'supabase'
             };
-        } catch (error) {
-            console.error('Supabase upload error:', error);
+        } catch (error: any) {
+            console.error('[Storage] Avatar upload error:', error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Upload failed',
+                error: error.message || 'Avatar upload failed'
             };
         }
-    },
+    }
 
-    async deleteFile(path: string): Promise<boolean> {
+    async uploadResource(file: File, onProgress?: (progress: number) => void): Promise<UploadResult> {
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${Date.now()}-${sanitizedName}`;
+        const path = `resources/${fileName}`;
+
+        return await this.upload(file, path, { folder: 'resources', onProgress });
+    }
+
+    async delete(path: string): Promise<boolean> {
         try {
-            const { error } = await supabase.storage
-                .from(SUPABASE_BUCKET)
-                .remove([path]);
+            const parts = path.split('/');
+            const bucket = parts[0];
+            const filePath = parts.slice(1).join('/');
 
-            return !error;
-        } catch {
+            const { error } = await supabase.storage
+                .from(bucket)
+                .remove([filePath]);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('[Storage] Delete error:', error);
             return false;
         }
-    },
+    }
 
-    getPublicUrl(path: string): string {
-        const { data } = supabase.storage
-            .from(SUPABASE_BUCKET)
-            .getPublicUrl(path);
-        return data.publicUrl;
-    },
+    getStorageProvider(): string {
+        return this.useBackblaze ? 'backblaze' : 'supabase';
+    }
+}
 
-    async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string | null> {
-        try {
-            const { data, error } = await supabase.storage
-                .from(SUPABASE_BUCKET)
-                .createSignedUrl(path, expiresIn);
-
-            if (error) throw error;
-            return data.signedUrl;
-        } catch {
-            return null;
-        }
-    },
-
-    async listFiles(prefix: string = ''): Promise<FileInfo[]> {
-        try {
-            const { data, error } = await supabase.storage
-                .from(SUPABASE_BUCKET)
-                .list(prefix);
-
-            if (error) throw error;
-
-            return (data || []).map(item => ({
-                key: item.name,
-                size: item.metadata?.size || 0,
-                lastModified: new Date(item.updated_at || item.created_at),
-            }));
-        } catch {
-            return [];
-        }
-    },
-};
-
-/**
- * Unified Storage Service API
- */
-export const storageService = {
-    /**
-     * Get the currently active storage provider
-     */
-    get provider(): StorageProvider {
-        return getActiveProvider();
-    },
-
-    /**
-     * Check if external storage is configured
-     */
-    get isExternalStorageConfigured(): boolean {
-        return isB2Configured() || isR2Configured();
-    },
-
-    /**
-     * Get configuration status for all providers
-     */
-    getProviderStatus(): Record<StorageProvider, boolean> {
-        return {
-            backblaze: isB2Configured(),
-            r2: isR2Configured(),
-            supabase: true, // Always available
-            auto: true,
-        };
-    },
-
-    /**
-     * Upload a file to storage
-     */
-    async upload(file: File, path: string, options?: { contentType?: string }): Promise<UploadResult> {
-        const provider = getActiveProvider();
-        console.log(`[Storage] Uploading to ${provider}: ${path}`);
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.uploadFile(file, path, options);
-            case 'r2':
-                return cloudflareR2Service.uploadFile(file, path, options);
-            case 'supabase':
-            default:
-                return supabaseStorage.uploadFile(file, path);
-        }
-    },
-
-    /**
-     * Upload raw data to storage
-     */
-    async uploadData(
-        data: Uint8Array | ArrayBuffer | string,
-        path: string,
-        contentType: string = 'application/octet-stream'
-    ): Promise<UploadResult> {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.uploadData(data, path, contentType);
-            case 'r2':
-                return cloudflareR2Service.uploadData(data, path, contentType);
-            case 'supabase':
-            default:
-                // Convert to File for Supabase
-                const blob = new Blob([data as any], { type: contentType });
-                const file = new File([blob], path.split('/').pop() || 'file', { type: contentType });
-                return supabaseStorage.uploadFile(file, path);
-        }
-    },
-
-    /**
-     * Delete a file from storage
-     */
-    async delete(path: string): Promise<boolean> {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.deleteFile(path);
-            case 'r2':
-                return cloudflareR2Service.deleteFile(path);
-            case 'supabase':
-            default:
-                return supabaseStorage.deleteFile(path);
-        }
-    },
-
-    /**
-     * Get public URL for a file
-     */
-    getPublicUrl(path: string): string {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.getPublicUrl(path);
-            case 'r2':
-                return cloudflareR2Service.getPublicUrl(path);
-            case 'supabase':
-            default:
-                return supabaseStorage.getPublicUrl(path);
-        }
-    },
-
-    /**
-     * Get signed URL for temporary access
-     */
-    async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string | null> {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.getSignedUrl(path, expiresIn);
-            case 'r2':
-                return cloudflareR2Service.getSignedUrl(path, expiresIn);
-            case 'supabase':
-            default:
-                return supabaseStorage.getSignedUrl(path, expiresIn);
-        }
-    },
-
-    /**
-     * List files in a directory
-     */
-    async list(prefix: string = '', maxKeys: number = 100): Promise<FileInfo[]> {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.listFiles(prefix, maxKeys);
-            case 'r2':
-                return cloudflareR2Service.listFiles(prefix, maxKeys);
-            case 'supabase':
-            default:
-                return supabaseStorage.listFiles(prefix);
-        }
-    },
-
-    /**
-     * Check if a file exists
-     */
-    async exists(path: string): Promise<boolean> {
-        const provider = getActiveProvider();
-
-        switch (provider) {
-            case 'backblaze':
-                return backblazeService.fileExists(path);
-            case 'r2':
-                return cloudflareR2Service.fileExists(path);
-            case 'supabase':
-            default:
-                const files = await supabaseStorage.listFiles(path);
-                return files.length > 0;
-        }
-    },
-
-    /**
-     * Generate a unique file path with timestamp
-     */
-    generatePath(filename: string, folder: string = 'uploads'): string {
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(2, 8);
-        const extension = filename.split('.').pop() || '';
-        const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-        return `${folder}/${timestamp}-${randomStr}-${safeName}`;
-    },
-
-    /**
-     * Generate a structured media path for Backblaze (exponential structure)
-     */
-    generateMediaPath(filename: string, type: string, slug: string): string {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-        return `media/${type}/${year}/${month}/${day}/${slug}/${safeName}`;
-    },
-
-    /**
-     * Upload with automatic path generation
-     */
-    async uploadAuto(file: File, folder: string = 'resources'): Promise<UploadResult> {
-        const path = this.generatePath(file.name, folder);
-        return this.upload(file, path);
-    },
-};
-
+export const storageService = new StorageService();
 export default storageService;

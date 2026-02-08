@@ -18,7 +18,8 @@ import {
     Layout,
     ToggleLeft,
     ToggleRight,
-    Eye
+    Eye,
+    XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

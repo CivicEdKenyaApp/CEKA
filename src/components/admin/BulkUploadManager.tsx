@@ -1,201 +1,262 @@
-// Admin Bulk Upload Manager with OCR Support
-// Supports folder uploads, multiple file types, and text extraction for deep search
+// Bulk Upload Manager - Enhanced with Backblaze Storage, OCR, and Progress Tracking
+// Supports folder/file uploads with automatic metadata sync
 
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { storageService } from '@/services/storageService';
-import { supabase } from '@/integrations/supabase/client';
 import {
-    Upload, FolderUp, FileText, Image, Video, File, CheckCircle, XCircle,
-    Loader2, Search, Database, Sparkles, AlertTriangle, Info
+    Upload, Folder, FileText, Image, Video, File,
+    CheckCircle, XCircle, AlertCircle, Clock, Trash2,
+    RefreshCw, Search, Database, Cloud, Zap, FileSearch
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import storageService from '@/services/storageService';
 
-// Supported file types
-const SUPPORTED_EXTENSIONS = {
-    documents: ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt'],
-    images: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
-    videos: ['.mp4', '.webm', '.mov', '.avi'],
-    audio: ['.mp3', '.wav', '.ogg', '.m4a'],
-    data: ['.json', '.csv', '.xlsx', '.xls']
-};
-
-interface UploadedFile {
+interface UploadFile {
+    id: string;
     file: File;
+    name: string;
+    size: number;
+    type: string;
     status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
     progress: number;
     url?: string;
-    extractedText?: string;
     error?: string;
+    extractedText?: string;
 }
 
+const FILE_ICONS: Record<string, React.ReactNode> = {
+    pdf: <FileText className="h-4 w-4 text-red-500" />,
+    doc: <FileText className="h-4 w-4 text-blue-500" />,
+    docx: <FileText className="h-4 w-4 text-blue-500" />,
+    jpg: <Image className="h-4 w-4 text-green-500" />,
+    jpeg: <Image className="h-4 w-4 text-green-500" />,
+    png: <Image className="h-4 w-4 text-green-500" />,
+    gif: <Image className="h-4 w-4 text-purple-500" />,
+    mp4: <Video className="h-4 w-4 text-pink-500" />,
+    webm: <Video className="h-4 w-4 text-pink-500" />,
+    default: <File className="h-4 w-4 text-slate-500" />
+};
+
 const BulkUploadManager: React.FC = () => {
-    const [files, setFiles] = useState<UploadedFile[]>([]);
+    const [files, setFiles] = useState<UploadFile[]>([]);
     const [uploading, setUploading] = useState(false);
-    const [enableOCR, setEnableOCR] = useState(true);
     const [targetFolder, setTargetFolder] = useState('resources');
-    const [insertToDatabase, setInsertToDatabase] = useState(true);
+    const [enableOcr, setEnableOcr] = useState(false);
+    const [insertToResources, setInsertToResources] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const folderInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
-    // Handle file/folder selection
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = Array.from(e.target.files || []);
-        const newFiles: UploadedFile[] = selectedFiles.map(file => ({
+    // Format file size
+    const formatSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    // Get file icon
+    const getFileIcon = (filename: string) => {
+        const ext = filename.split('.').pop()?.toLowerCase() || '';
+        return FILE_ICONS[ext] || FILE_ICONS.default;
+    };
+
+    // Handle file selection
+    const handleFilesSelected = useCallback((fileList: FileList | null) => {
+        if (!fileList) return;
+
+        const newFiles: UploadFile[] = Array.from(fileList).map(file => ({
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
             status: 'pending',
             progress: 0
         }));
+
         setFiles(prev => [...prev, ...newFiles]);
+    }, []);
+
+    // Drag and drop handlers
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
     };
 
-    // Get file icon based on extension
-    const getFileIcon = (filename: string) => {
-        const ext = '.' + filename.split('.').pop()?.toLowerCase();
-        if (SUPPORTED_EXTENSIONS.documents.includes(ext)) return <FileText className="h-4 w-4" />;
-        if (SUPPORTED_EXTENSIONS.images.includes(ext)) return <Image className="h-4 w-4" />;
-        if (SUPPORTED_EXTENSIONS.videos.includes(ext)) return <Video className="h-4 w-4" />;
-        return <File className="h-4 w-4" />;
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
     };
 
-    // Extract text using OCR (calls Supabase Edge Function)
-    const extractTextFromFile = async (file: File): Promise<string | null> => {
-        if (!enableOCR) return null;
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
 
-        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-        const ocrFormats = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        const items = e.dataTransfer.items;
+        const filePromises: Promise<File>[] = [];
 
-        if (!ocrFormats.includes(ext)) return null;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i].webkitGetAsEntry();
+            if (item) {
+                if (item.isFile) {
+                    filePromises.push(new Promise((resolve) => {
+                        (item as FileSystemFileEntry).file(resolve);
+                    }));
+                } else if (item.isDirectory) {
+                    traverseDirectory(item as FileSystemDirectoryEntry, filePromises);
+                }
+            }
+        }
 
+        Promise.all(filePromises).then(files => {
+            const uploadFiles: UploadFile[] = files.map(file => ({
+                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                file,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                status: 'pending',
+                progress: 0
+            }));
+            setFiles(prev => [...prev, ...uploadFiles]);
+        });
+    };
+
+    // Traverse directory recursively
+    const traverseDirectory = (entry: FileSystemDirectoryEntry, filePromises: Promise<File>[]) => {
+        const reader = entry.createReader();
+        reader.readEntries(entries => {
+            entries.forEach(entry => {
+                if (entry.isFile) {
+                    filePromises.push(new Promise((resolve) => {
+                        (entry as FileSystemFileEntry).file(resolve);
+                    }));
+                } else if (entry.isDirectory) {
+                    traverseDirectory(entry as FileSystemDirectoryEntry, filePromises);
+                }
+            });
+        });
+    };
+
+    // Upload single file
+    const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
         try {
-            // Convert file to base64
-            const buffer = await file.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            // Update status to uploading
+            setFiles(prev => prev.map(f =>
+                f.id === uploadFile.id ? { ...f, status: 'uploading' as const, progress: 10 } : f
+            ));
 
-            const { data, error } = await supabase.functions.invoke('extract-text', {
-                body: {
-                    fileData: base64,
-                    filename: file.name,
-                    mimeType: file.type
+            // Upload to storage
+            const result = await storageService.upload(uploadFile.file, uploadFile.name, {
+                folder: targetFolder,
+                onProgress: (progress) => {
+                    setFiles(prev => prev.map(f =>
+                        f.id === uploadFile.id ? { ...f, progress } : f
+                    ));
                 }
             });
 
-            if (error) throw error;
-            return data?.text || null;
-        } catch (err) {
-            console.warn('OCR extraction failed for', file.name, err);
-            return null;
-        }
-    };
-
-    // Upload a single file
-    const uploadFile = async (uploadedFile: UploadedFile, index: number) => {
-        // Update status to uploading
-        setFiles(prev => {
-            const updated = [...prev];
-            updated[index] = { ...updated[index], status: 'uploading', progress: 10 };
-            return updated;
-        });
-
-        try {
-            // Upload to storage
-            const path = `${targetFolder}/${Date.now()}-${uploadedFile.file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-            const result = await storageService.upload(uploadedFile.file, path);
-
-            if (!result.success) throw new Error(result.error);
-
-            setFiles(prev => {
-                const updated = [...prev];
-                updated[index] = { ...updated[index], progress: 50, status: 'processing' };
-                return updated;
-            });
-
-            // Extract text if OCR enabled
-            let extractedText: string | null = null;
-            if (enableOCR) {
-                extractedText = await extractTextFromFile(uploadedFile.file);
+            if (!result.success) {
+                throw new Error(result.error || 'Upload failed');
             }
 
-            setFiles(prev => {
-                const updated = [...prev];
-                updated[index] = { ...updated[index], progress: 75 };
-                return updated;
-            });
+            // OCR extraction if enabled
+            let extractedText = '';
+            if (enableOcr && ['application/pdf', 'image/jpeg', 'image/png', 'image/gif'].includes(uploadFile.type)) {
+                setFiles(prev => prev.map(f =>
+                    f.id === uploadFile.id ? { ...f, status: 'processing' as const, progress: 80 } : f
+                ));
 
-            // Insert into database if enabled
-            if (insertToDatabase) {
-                const ext = '.' + uploadedFile.file.name.split('.').pop()?.toLowerCase();
-                let fileType = 'document';
-                if (SUPPORTED_EXTENSIONS.images.includes(ext)) fileType = 'image';
-                if (SUPPORTED_EXTENSIONS.videos.includes(ext)) fileType = 'video';
+                try {
+                    const { data: ocrData, error: ocrError } = await supabase.functions.invoke('extract-text', {
+                        body: { fileUrl: result.url, fileType: uploadFile.type }
+                    });
 
-                await supabase.from('resources').insert({
-                    title: uploadedFile.file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-                    description: extractedText?.slice(0, 500) || 'Uploaded resource',
-                    type: fileType,
-                    url: result.url,
-                    category: 'General',
-                    file_size: uploadedFile.file.size,
-                    extracted_text: extractedText,
+                    if (!ocrError && ocrData?.text) {
+                        extractedText = ocrData.text;
+                    }
+                } catch (ocrErr) {
+                    console.warn('OCR extraction failed:', ocrErr);
+                }
+            }
+
+            // Insert into resources table if enabled
+            if (insertToResources) {
+                await supabase.from('resources' as any).insert({
+                    title: uploadFile.name.replace(/\.[^.]+$/, ''),
+                    file_url: result.url,
+                    file_path: result.path,
+                    file_type: uploadFile.type,
+                    file_size: uploadFile.size,
+                    extracted_text: extractedText || null,
+                    category: 'uploaded',
                     created_at: new Date().toISOString()
                 });
             }
 
-            setFiles(prev => {
-                const updated = [...prev];
-                updated[index] = {
-                    ...updated[index],
-                    status: 'success',
-                    progress: 100,
-                    url: result.url,
-                    extractedText: extractedText || undefined
-                };
-                return updated;
-            });
+            // Update status to success
+            setFiles(prev => prev.map(f =>
+                f.id === uploadFile.id
+                    ? { ...f, status: 'success' as const, progress: 100, url: result.url, extractedText }
+                    : f
+            ));
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload error:', error);
-            setFiles(prev => {
-                const updated = [...prev];
-                updated[index] = {
-                    ...updated[index],
-                    status: 'error',
-                    error: error instanceof Error ? error.message : 'Upload failed'
-                };
-                return updated;
-            });
+            setFiles(prev => prev.map(f =>
+                f.id === uploadFile.id
+                    ? { ...f, status: 'error' as const, progress: 0, error: error.message }
+                    : f
+            ));
         }
     };
 
-    // Start bulk upload
+    // Start all uploads
     const startUpload = async () => {
-        setUploading(true);
-
-        const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'error');
-
-        for (let i = 0; i < files.length; i++) {
-            if (files[i].status === 'pending' || files[i].status === 'error') {
-                await uploadFile(files[i], i);
-            }
+        const pendingFiles = files.filter(f => f.status === 'pending');
+        if (pendingFiles.length === 0) {
+            toast({ title: "No files", description: "Add files to upload first" });
+            return;
         }
 
-        const successCount = files.filter(f => f.status === 'success').length;
-        const errorCount = files.filter(f => f.status === 'error').length;
+        setUploading(true);
 
-        toast({
-            title: 'Upload Complete',
-            description: `${successCount} files uploaded successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
-            variant: errorCount > 0 ? 'destructive' : 'default'
-        });
+        // Process files with concurrency limit
+        const concurrency = 3;
+        for (let i = 0; i < pendingFiles.length; i += concurrency) {
+            const batch = pendingFiles.slice(i, i + concurrency);
+            await Promise.all(batch.map(f => uploadFile(f)));
+        }
 
         setUploading(false);
+
+        const successful = files.filter(f => f.status === 'success').length;
+        const failed = files.filter(f => f.status === 'error').length;
+
+        toast({
+            title: "Upload Complete",
+            description: `${successful} succeeded, ${failed} failed`,
+            variant: failed > 0 ? "destructive" : "default"
+        });
+    };
+
+    // Remove file from list
+    const removeFile = (id: string) => {
+        setFiles(prev => prev.filter(f => f.id !== id));
     };
 
     // Clear completed files
@@ -203,29 +264,43 @@ const BulkUploadManager: React.FC = () => {
         setFiles(prev => prev.filter(f => f.status !== 'success'));
     };
 
-    const pendingCount = files.filter(f => f.status === 'pending').length;
-    const successCount = files.filter(f => f.status === 'success').length;
-    const errorCount = files.filter(f => f.status === 'error').length;
+    // Clear all files
+    const clearAll = () => {
+        setFiles([]);
+    };
+
+    // Retry failed uploads
+    const retryFailed = () => {
+        setFiles(prev => prev.map(f =>
+            f.status === 'error' ? { ...f, status: 'pending' as const, progress: 0, error: undefined } : f
+        ));
+    };
+
+    const stats = {
+        total: files.length,
+        pending: files.filter(f => f.status === 'pending').length,
+        uploading: files.filter(f => f.status === 'uploading' || f.status === 'processing').length,
+        success: files.filter(f => f.status === 'success').length,
+        error: files.filter(f => f.status === 'error').length
+    };
 
     return (
-        <Card className="border-0 shadow-lg bg-white dark:bg-white/5">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <FolderUp className="h-5 w-5 text-kenya-green" />
-                    Bulk Upload Manager
-                </CardTitle>
-                <CardDescription>
+        <div className="space-y-6">
+            {/* Header */}
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight">Bulk Upload Manager</h2>
+                <p className="text-sm text-muted-foreground">
                     Upload folders and files with automatic OCR text extraction for deep search
-                </CardDescription>
-            </CardHeader>
+                </p>
+            </div>
 
-            <CardContent className="space-y-6">
-                {/* Upload Options */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-white/5 rounded-xl">
+            {/* Settings */}
+            <Card className="rounded-2xl">
+                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                         <Label>Target Storage Folder</Label>
                         <Select value={targetFolder} onValueChange={setTargetFolder}>
-                            <SelectTrigger>
+                            <SelectTrigger className="rounded-xl">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -237,167 +312,240 @@ const BulkUploadManager: React.FC = () => {
                         </Select>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="enable-ocr"
-                                checked={enableOCR}
-                                onCheckedChange={(c) => setEnableOCR(!!c)}
-                            />
-                            <Label htmlFor="enable-ocr" className="flex items-center gap-2 cursor-pointer">
-                                <Sparkles className="h-4 w-4 text-primary" />
-                                Enable OCR Text Extraction
-                            </Label>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="insert-db"
-                                checked={insertToDatabase}
-                                onCheckedChange={(c) => setInsertToDatabase(!!c)}
-                            />
-                            <Label htmlFor="insert-db" className="flex items-center gap-2 cursor-pointer">
-                                <Database className="h-4 w-4 text-primary" />
-                                Insert into Resources Table
-                            </Label>
-                        </div>
+                    <div className="flex items-center gap-3 pt-6">
+                        <Checkbox
+                            id="enableOcr"
+                            checked={enableOcr}
+                            onCheckedChange={(checked) => setEnableOcr(!!checked)}
+                        />
+                        <Label htmlFor="enableOcr" className="cursor-pointer flex items-center gap-2">
+                            <FileSearch className="h-4 w-4 text-blue-500" />
+                            Enable OCR Text Extraction
+                        </Label>
                     </div>
-                </div>
 
-                {/* File Drop Zone */}
-                <div className="relative">
+                    <div className="flex items-center gap-3 pt-6">
+                        <Checkbox
+                            id="insertToResources"
+                            checked={insertToResources}
+                            onCheckedChange={(checked) => setInsertToResources(!!checked)}
+                        />
+                        <Label htmlFor="insertToResources" className="cursor-pointer flex items-center gap-2">
+                            <Database className="h-4 w-4 text-emerald-500" />
+                            Insert into Resources Table
+                        </Label>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-6">
+                        <Badge variant="outline" className="gap-1">
+                            <Cloud className="h-3 w-3" />
+                            {storageService.getStorageProvider() === 'backblaze' ? 'Backblaze B2' : 'Supabase Storage'}
+                        </Badge>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Drop Zone */}
+            <Card
+                className={cn(
+                    "rounded-2xl border-2 border-dashed transition-all cursor-pointer",
+                    isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50"
+                )}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+            >
+                <CardContent className="py-12 text-center">
                     <input
+                        ref={folderInputRef}
+                        type="file"
+                        // @ts-ignore - webkitdirectory is not in types
+                        webkitdirectory="true"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => handleFilesSelected(e.target.files)}
+                    />
+                    <input
+                        ref={fileInputRef}
                         type="file"
                         multiple
-                        // @ts-ignore - webkitdirectory is a non-standard attribute
-                        webkitdirectory=""
-                        directory=""
-                        onChange={handleFileSelect}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        className="hidden"
+                        onChange={(e) => handleFilesSelected(e.target.files)}
                     />
-                    <div className="border-2 border-dashed border-slate-300 dark:border-white/20 rounded-2xl p-10 text-center hover:border-kenya-green hover:bg-kenya-green/5 transition-colors">
-                        <FolderUp className="h-12 w-12 mx-auto text-slate-400 mb-4" />
-                        <p className="font-bold text-lg">Drop a folder or click to select</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            Supports: PDF, DOC, Images, Videos, and more
-                        </p>
-                    </div>
-                </div>
 
-                {/* Single File Upload */}
-                <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                        <input
-                            type="file"
-                            multiple
-                            onChange={handleFileSelect}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <Button variant="outline" className="w-full rounded-xl">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Add Individual Files
+                    <Folder className={cn(
+                        "h-12 w-12 mx-auto mb-4 transition-colors",
+                        isDragging ? "text-primary" : "text-muted-foreground"
+                    )} />
+
+                    <p className="text-muted-foreground mb-4">
+                        Drop a folder or click to select
+                    </p>
+
+                    <div className="flex gap-2 justify-center">
+                        <Button
+                            variant="outline"
+                            onClick={() => folderInputRef.current?.click()}
+                            className="rounded-xl gap-2"
+                        >
+                            <Folder className="h-4 w-4" /> Select Folder
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="rounded-xl gap-2"
+                        >
+                            <Upload className="h-4 w-4" /> Add Individual Files
                         </Button>
                     </div>
-                </div>
 
-                {/* File List */}
-                {files.length > 0 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <Badge variant="secondary">{files.length} files</Badge>
-                                {successCount > 0 && <Badge className="bg-green-500">{successCount} uploaded</Badge>}
-                                {errorCount > 0 && <Badge variant="destructive">{errorCount} failed</Badge>}
-                            </div>
-                            {successCount > 0 && (
-                                <Button variant="ghost" size="sm" onClick={clearCompleted}>
-                                    Clear Completed
-                                </Button>
-                            )}
+                    <p className="text-xs text-muted-foreground mt-4">
+                        Supports: PDF, DOC, Images, Videos, and more
+                    </p>
+                </CardContent>
+            </Card>
+
+            {/* OCR Info */}
+            {enableOcr && (
+                <Card className="rounded-xl bg-blue-500/5 border-blue-500/20">
+                    <CardContent className="py-4 flex items-start gap-3">
+                        <Search className="h-5 w-5 text-blue-500 mt-0.5" />
+                        <div>
+                            <h4 className="font-semibold text-blue-500">OCR Deep Search</h4>
+                            <p className="text-sm text-muted-foreground">
+                                When enabled, text will be extracted from PDFs and images and stored alongside your files.
+                                This enables deep search across all your uploaded content.
+                            </p>
                         </div>
+                    </CardContent>
+                </Card>
+            )}
 
-                        <div className="max-h-64 overflow-y-auto space-y-2">
-                            <AnimatePresence>
-                                {files.map((f, i) => (
-                                    <motion.div
-                                        key={f.file.name + i}
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl"
-                                    >
-                                        <div className="text-slate-500">{getFileIcon(f.file.name)}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">{f.file.name}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {(f.file.size / 1024 / 1024).toFixed(2)} MB
-                                            </p>
-                                        </div>
+            {/* Stats & Actions */}
+            {files.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex gap-2">
+                        <Badge variant="outline">{stats.total} files</Badge>
+                        <Badge className="bg-yellow-500/20 text-yellow-600">{stats.pending} pending</Badge>
+                        <Badge className="bg-blue-500/20 text-blue-600">{stats.uploading} active</Badge>
+                        <Badge className="bg-emerald-500/20 text-emerald-600">{stats.success} done</Badge>
+                        {stats.error > 0 && (
+                            <Badge className="bg-red-500/20 text-red-600">{stats.error} failed</Badge>
+                        )}
+                    </div>
 
-                                        {f.status === 'pending' && (
-                                            <Badge variant="secondary">Pending</Badge>
-                                        )}
-                                        {(f.status === 'uploading' || f.status === 'processing') && (
-                                            <div className="flex items-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                                <Progress value={f.progress} className="w-20 h-2" />
-                                            </div>
-                                        )}
-                                        {f.status === 'success' && (
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                                {f.extractedText && (
-                                                    <Badge variant="outline" className="text-[10px]">
-                                                        <Search className="h-3 w-3 mr-1" />
-                                                        OCR
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        )}
-                                        {f.status === 'error' && (
-                                            <div className="flex items-center gap-2">
-                                                <XCircle className="h-4 w-4 text-red-500" />
-                                                <span className="text-xs text-red-500">{f.error}</span>
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-
+                    <div className="flex gap-2">
                         <Button
                             onClick={startUpload}
-                            disabled={uploading || pendingCount === 0}
-                            className="w-full bg-kenya-green hover:bg-kenya-green/90 rounded-xl h-12 font-bold"
+                            disabled={uploading || stats.pending === 0}
+                            className="rounded-xl gap-2"
                         >
                             {uploading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Uploading...
-                                </>
+                                <RefreshCw className="h-4 w-4 animate-spin" />
                             ) : (
-                                <>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload {pendingCount} {pendingCount === 1 ? 'File' : 'Files'}
-                                </>
+                                <Zap className="h-4 w-4" />
                             )}
+                            {uploading ? 'Uploading...' : 'Start Upload'}
+                        </Button>
+                        {stats.error > 0 && (
+                            <Button variant="outline" onClick={retryFailed} className="rounded-xl gap-2">
+                                <RefreshCw className="h-4 w-4" /> Retry Failed
+                            </Button>
+                        )}
+                        {stats.success > 0 && (
+                            <Button variant="outline" onClick={clearCompleted} className="rounded-xl gap-2">
+                                <CheckCircle className="h-4 w-4" /> Clear Completed
+                            </Button>
+                        )}
+                        <Button variant="ghost" onClick={clearAll} className="rounded-xl text-destructive">
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
-                )}
-
-                {/* Info Note */}
-                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
-                    <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800 dark:text-blue-200">
-                        <p className="font-medium">OCR Deep Search</p>
-                        <p className="text-xs mt-1 opacity-80">
-                            When enabled, text will be extracted from PDFs and images and stored alongside your files.
-                            This enables deep search across all your uploaded content.
-                        </p>
-                    </div>
                 </div>
-            </CardContent>
-        </Card>
+            )}
+
+            {/* File List */}
+            <div className="space-y-2">
+                <AnimatePresence>
+                    {files.map((file) => (
+                        <motion.div
+                            key={file.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                        >
+                            <Card className={cn(
+                                "rounded-xl transition-all",
+                                file.status === 'success' && "bg-emerald-500/5 border-emerald-500/20",
+                                file.status === 'error' && "bg-red-500/5 border-red-500/20"
+                            )}>
+                                <CardContent className="py-3 flex items-center gap-4">
+                                    <div className="flex-shrink-0">
+                                        {getFileIcon(file.name)}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium truncate">{file.name}</span>
+                                            <span className="text-xs text-muted-foreground">{formatSize(file.size)}</span>
+                                        </div>
+
+                                        {(file.status === 'uploading' || file.status === 'processing') && (
+                                            <Progress value={file.progress} className="h-1 mt-1" />
+                                        )}
+
+                                        {file.error && (
+                                            <p className="text-xs text-red-500 mt-1">{file.error}</p>
+                                        )}
+
+                                        {file.extractedText && (
+                                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                                                OCR: {file.extractedText.slice(0, 100)}...
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        {file.status === 'pending' && (
+                                            <Clock className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                        {(file.status === 'uploading' || file.status === 'processing') && (
+                                            <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
+                                        )}
+                                        {file.status === 'success' && (
+                                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                        )}
+                                        {file.status === 'error' && (
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                        )}
+
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeFile(file.id)}
+                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
+
+            {/* Empty State */}
+            {files.length === 0 && (
+                <Card className="rounded-2xl border-dashed">
+                    <CardContent className="py-12 text-center">
+                        <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No files added yet. Drop files or folders above to get started.</p>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     );
 };
 
