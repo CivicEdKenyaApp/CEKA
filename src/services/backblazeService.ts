@@ -10,23 +10,20 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Helper to get B2 config dynamically from environment
 const getB2Config = () => {
-    // 1. Check import.meta.env (Vite standard)
-    // 2. Check process.env (Mapped via Vite 'define' in config)
-    // 3. Last Resort: Hardcoded fallbacks from .env (verified current values)
-
-    const keyId = import.meta.env.VITE_B2_KEY_ID || (window as any).process?.env?.VITE_B2_KEY_ID || '003dc3adf1d5dd00000000002';
-    const appKey = import.meta.env.VITE_B2_APP_KEY || (window as any).process?.env?.VITE_B2_APP_KEY || 'K003IRTq61WHSwOmf4P1dt+HSs9Ykpg';
+    // We check multiple sources because Vite's standard injection can be unreliable in some dev environments
+    const keyId = import.meta.env.VITE_B2_KEY_ID || (window as any).process?.env?.VITE_B2_KEY_ID || '';
+    const appKey = import.meta.env.VITE_B2_APP_KEY || (window as any).process?.env?.VITE_B2_APP_KEY || '';
     const bucketName = import.meta.env.VITE_B2_BUCKET_NAME || (window as any).process?.env?.VITE_B2_BUCKET_NAME || 'ceka-resources-vault';
     const endpoint = import.meta.env.VITE_B2_ENDPOINT || (window as any).process?.env?.VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com';
     const region = import.meta.env.VITE_B2_REGION || (window as any).process?.env?.VITE_B2_REGION || 'eu-central-003';
 
-    // Diagnostic to see which source actually provides keys
-    if (!import.meta.env.VITE_B2_KEY_ID && (window as any).process?.env?.VITE_B2_KEY_ID) {
-        console.log('[B2] Config Source: process.env (Vite Define)');
-    } else if (!import.meta.env.VITE_B2_KEY_ID && !((window as any).process?.env?.VITE_B2_KEY_ID)) {
-        console.warn('[B2] Config Source: HARDCODED FALLBACK (Env vars missing in browser)');
-    } else {
+    // Diagnostic logging - strictly checks presence, NOT values
+    if (import.meta.env.VITE_B2_KEY_ID) {
         console.log('[B2] Config Source: import.meta.env');
+    } else if ((window as any).process?.env?.VITE_B2_KEY_ID) {
+        console.log('[B2] Config Source: process.env (Vite forced define)');
+    } else {
+        console.error('[B2] CRITICAL: No credentials found in any environment source!');
     }
 
     return {

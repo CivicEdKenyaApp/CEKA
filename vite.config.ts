@@ -6,6 +6,9 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  console.log('[ViteConfig] Mode:', mode);
+  console.log('[ViteConfig] CWD:', process.cwd());
+  console.log('[ViteConfig] Env keys loaded:', Object.keys(env).filter(k => k.startsWith('VITE_')));
 
   return {
     server: {
@@ -23,9 +26,18 @@ export default defineConfig(({ mode }) => {
       },
     },
     // Explicitly define env variables to ensure they're available to the client
-    define: {
-      'process.env': env,
-    }
+    // We map each VITE_ variable individually to ensure maximum compatibility
+    define: Object.keys(env).reduce<Record<string, any>>((prev, key) => {
+      if (key.startsWith('VITE_')) {
+        prev[`process.env.${key}`] = JSON.stringify(env[key]);
+        prev[`import.meta.env.${key}`] = JSON.stringify(env[key]);
+      }
+      return prev;
+    }, {
+      'process.env': {}
+    })
+
   };
 });
+
 
