@@ -124,7 +124,6 @@ export const placeholderService = {
         // If no score, default to document
         if (maxScore === 0) bestMatch = 'document';
 
-        console.debug(`[PlaceholderEngine] Selected: ${bestMatch} (score: ${maxScore}) for type: ${type}, tags:`, tags);
         return this.getPlaceholderByType(bestMatch);
     },
 
