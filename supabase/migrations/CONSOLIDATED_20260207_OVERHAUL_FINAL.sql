@@ -20,6 +20,46 @@ ALTER TABLE public.bills ADD COLUMN IF NOT EXISTS vault_id text;
 ALTER TABLE public.bills ADD COLUMN IF NOT EXISTS vault_metadata jsonb DEFAULT '{}'::jsonb;
 ALTER TABLE public.bills ADD COLUMN IF NOT EXISTS follow_count integer DEFAULT 0;
 
+-- 0.1 IS_ADMIN SECURITY DEFINER (Critical Core)
+-- ---------------------------------------------------
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean AS $$
+BEGIN
+  -- 1. SERVICE ROLE BYPASS
+  IF (auth.role() = 'service_role') THEN
+    RETURN true;
+  END IF;
+
+  -- 2. ROOT EMAIL BYPASS
+  IF (auth.jwt()->>'email' = 'civiceducationkenya@gmail.com') THEN
+    RETURN true;
+  END IF;
+
+  -- 3. ROLE TABLE CHECK
+  IF EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() 
+    AND role = 'admin'
+  ) THEN
+    RETURN true;
+  END IF;
+
+  -- 4. PROFILE TABLE FALLBACK
+  IF EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() 
+    AND (is_admin = true OR preferences->>'role' = 'admin')
+  ) THEN
+    RETURN true;
+  END IF;
+
+  RETURN false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon;
+
 -- 1. INFRASTRUCTURE TABLES (IF NOT EXISTS)
 -- ------------------------------------------
 
@@ -128,6 +168,14 @@ CREATE TABLE IF NOT EXISTS public.system_metrics (
     UNIQUE(metric_name, metric_date)
 );
 
+CREATE TABLE IF NOT EXISTS public.chat_interactions (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    interaction_type text NOT NULL,
+    details jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
 -- 2. SEARCH & ANALYTICS VIEWS
 -- ------------------------------------------
 
@@ -168,18 +216,42 @@ ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 
-DO $$
-BEGIN
     -- Scrapers
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can manage scraper sources' AND tablename = 'scraper_sources') THEN
         CREATE POLICY "Admins can manage scraper sources" ON public.scraper_sources FOR ALL
-        USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+        USING (public.is_admin());
     END IF;
-    
+
     -- Jobs
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins can view processing jobs' AND tablename = 'processing_jobs') THEN
         CREATE POLICY "Admins can view processing jobs" ON public.processing_jobs FOR ALL
-        USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+        USING (public.is_admin());
+    END IF;
+
+    -- Jobs
+
+    -- Admin Sessions
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access sessions' AND tablename = 'admin_sessions') THEN
+        CREATE POLICY "Admins full access sessions" ON public.admin_sessions FOR ALL
+        USING (public.is_admin());
+    END IF;
+
+    -- Admin Notifications
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access notifications' AND tablename = 'admin_notifications') THEN
+        CREATE POLICY "Admins full access notifications" ON public.admin_notifications FOR ALL
+        USING (public.is_admin());
+    END IF;
+
+    -- Audit Logs
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access audit logs' AND tablename = 'admin_audit_log') THEN
+        CREATE POLICY "Admins full access audit logs" ON public.admin_audit_log FOR ALL
+        USING (public.is_admin());
+    END IF;
+
+    -- System Metrics
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access metrics' AND tablename = 'system_metrics') THEN
+        CREATE POLICY "Admins full access metrics" ON public.system_metrics FOR ALL
+        USING (public.is_admin());
     END IF;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
@@ -218,6 +290,21 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'pipeline_config') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.pipeline_config;
     END IF;
+
+    -- Realtime for Jobs Monitoring
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'admin_notifications') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_notifications;
+    END IF;
+
+    -- Admin Sessions Realtime
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'admin_sessions') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_sessions;
+    END IF;
+
+    -- Replica Identity for Realtime
+    ALTER TABLE public.processing_jobs REPLICA IDENTITY FULL;
+    ALTER TABLE public.scraper_sources REPLICA IDENTITY FULL;
+    ALTER TABLE public.pipeline_config REPLICA IDENTITY FULL;
 EXCEPTION WHEN OTHERS THEN 
     RAISE NOTICE 'Skipped Realtime addition.';
 END $$;

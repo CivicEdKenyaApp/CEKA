@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
 }
 
 interface ManageRequest {
@@ -13,6 +15,7 @@ interface ManageRequest {
 }
 
 Deno.serve(async (req) => {
+    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
     }
@@ -30,17 +33,19 @@ Deno.serve(async (req) => {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
         if (userError || !user) throw new Error('Unauthorized');
 
-        const { data: roleData } = await supabaseClient
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
+        if (user.email !== 'civiceducationkenya@gmail.com') {
+            const { data: roleData } = await supabaseClient
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', user.id)
+                .maybeSingle();
 
-        if (roleData?.role !== 'admin') {
-            return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
-                status: 403,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
+            if (roleData?.role !== 'admin') {
+                return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
+                    status: 403,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
         }
 
         const body: ManageRequest = await req.json();
