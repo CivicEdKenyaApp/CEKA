@@ -28,6 +28,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const [isCheckingPdf, setIsCheckingPdf] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
     const [availableQualities, setAvailableQualities] = useState<ResolutionQuality[]>(['320p', '720p', '1080p', '4k']);
+    const [masterRatio, setMasterRatio] = useState<string | null>(null);
     const items = content.items || [];
 
     // Reset index when content changes
@@ -35,11 +36,66 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         setCurrentIndex(0);
         setDirection(0);
         setImageLoading(true);
+        // Clear master ratio to re-detect for new content
+        setMasterRatio(null);
     }, [content.id, content.slug]);
 
     // Motion values for swipe feedback (drag offset)
     const dragX = useMotionValue(0);
     const dragOpacity = useTransform(dragX, [-200, 0, 200], [0.5, 1, 0.5]);
+
+    // Aspect ratio padding calculator - Convert string ratio (e.g., "4:5") to percentage
+    const getAspectRatioPadding = (ratio?: string | null): string => {
+        if (!ratio) return '100% (Square Default)';
+
+        // Handle named ratios
+        const ratioMap: Record<string, string> = {
+            '4:3': '75%',
+            '3:4': '133.33%',
+            '4:5': '125%',
+            '5:4': '80%',
+            '16:9': '56.25%',
+            '9:16': '177.78%',
+            '21:9': '42.86%',
+            '2:3': '150%',
+            '3:2': '66.67%',
+            '1:1': '100%',
+            'square': '100%',
+            'portrait': '125%',
+            'landscape': '56.25%'
+        };
+
+        if (ratioMap[ratio]) return ratioMap[ratio];
+
+        // Handle numeric/computed ratios (decimal value of height/width)
+        if (!ratio.includes(':')) {
+            const num = parseFloat(ratio);
+            if (!isNaN(num) && num > 0) return `${num * 100}%`;
+        }
+
+        // Parse "width:height" format
+        const parts = ratio.split(':');
+        if (parts.length === 2) {
+            const [w, h] = parts.map(Number);
+            if (w && h) return `${(h / w) * 100}%`;
+        }
+
+        return '100%';
+    };
+
+    const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        setImageLoading(false);
+
+        // If we haven't locked in a master ratio for this carousel, do it now based on the first slide
+        if (!masterRatio && currentIndex === 0) {
+            const img = e.currentTarget;
+            if (img.naturalWidth > 0) {
+                const ratio = img.naturalHeight / img.naturalWidth;
+                setMasterRatio(ratio.toString());
+                console.log(`[Carousel] Dynamic ratio locked: ${ratio.toFixed(4)} for ${content.slug}`);
+            }
+        }
+    };
 
     const nextSlide = () => {
         if (currentIndex < items.length - 1) {
@@ -61,7 +117,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const { offset, velocity } = info;
 
-        // Check if swipe exceeds threshold or velocity
         if (offset.x < -SWIPE_THRESHOLD || velocity.x < -SWIPE_VELOCITY_THRESHOLD) {
             nextSlide();
         } else if (offset.x > SWIPE_THRESHOLD || velocity.x > SWIPE_VELOCITY_THRESHOLD) {
@@ -71,21 +126,14 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
 
     const handleDownloadPDF = async () => {
         const rawPdfUrl = content.metadata?.pdf_url;
-        if (!rawPdfUrl) {
-            console.warn('No PDF URL found for this content');
-            return;
-        }
+        if (!rawPdfUrl) return;
 
-        // Encode URL to handle spaces and special characters
         const pdfUrl = rawPdfUrl.startsWith('http') ? rawPdfUrl : encodeURI(rawPdfUrl);
-
         setIsCheckingPdf(true);
         try {
-            // Attempt to fetch as blob for cleaner download and error detection
             const response = await fetch(pdfUrl);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            // SECURITY CHECK: Ensure we actually got a PDF and not the index.html fallback
             const contentType = response.headers.get('content-type');
             if (contentType && !contentType.includes('application/pdf')) {
                 throw new Error(`Invalid content type: expected application/pdf but got ${contentType}`);
@@ -100,26 +148,10 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            // Clean up
             setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
         } catch (err) {
-            console.error('Advanced PDF download failed, falling back to direct link or erroring:', err);
-
-            // If we know it's not a PDF, don't try to download it as one
-            if (err instanceof Error && err.message.includes('Invalid content type')) {
-                alert("This PDF is currently unavailable for download. The link might be broken or the file is missing.");
-                return;
-            }
-
-            // Fallback: direct download attempt
-            const link = document.createElement('a');
-            link.href = pdfUrl;
-            link.download = `${content.slug || 'document'}.pdf`;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            console.error('PDF download failed:', err);
+            window.open(pdfUrl, '_blank');
         } finally {
             setIsCheckingPdf(false);
         }
@@ -134,8 +166,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
             const filename = `${content.slug}-${currentIndex + 1}-${quality}.jpg`;
             await processingService.downloadImage(currentItem.id, quality, filename);
         } catch (err) {
-            console.error('Failed to download image:', err);
-            // Fallback: direct download
+            console.error('Image download failed:', err);
             const url = currentItem.file_url;
             if (url) {
                 const link = document.createElement('a');
@@ -162,27 +193,9 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                 setAvailableQualities(resOrder.slice(0, maxIndex + 1));
             }
         } else {
-            // Default: show all
             setAvailableQualities(['320p', '720p', '1080p', '4k']);
         }
     }, [currentIndex, items]);
-
-    // Aspect ratio padding calculator
-    const getAspectRatioPadding = (ratio?: string): string => {
-        const ratioMap: Record<string, string> = {
-            '4:3': '75%',
-            '3:4': '133.33%',
-            '4:5': '125%',
-            '5:4': '80%',
-            '16:9': '56.25%',
-            '9:16': '177.78%',
-            '21:9': '42.86%',
-            '2:3': '150%',
-            '3:2': '66.67%',
-            '1:1': '100%'
-        };
-        return ratioMap[ratio || '1:1'] || '100%';
-    };
 
     // Keyboard navigation
     useEffect(() => {
@@ -192,20 +205,20 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentIndex]);
+    }, [currentIndex, items]);
 
     if (items.length === 0) return null;
 
     const currentItem = items[currentIndex];
-    const aspectRatio = currentItem.metadata?.aspect_ratio as string;
+    // Prioritize dynamically detected masterRatio, then fall back to per-item metadata
+    const activeRatio = masterRatio || (currentItem.metadata?.aspect_ratio as string);
 
     return (
         <div className={cn("relative group max-w-xl mx-auto flex flex-col bg-transparent", className)}>
-            {/* Media Container - 100% Unobstructed with Dynamic Aspect Ratio */}
             <div className="relative overflow-hidden rounded-2xl bg-muted/5">
                 <motion.div
                     className="relative w-full touch-pan-y"
-                    animate={{ paddingBottom: getAspectRatioPadding(aspectRatio) }}
+                    animate={{ paddingBottom: getAspectRatioPadding(activeRatio) }}
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 >
                     <AnimatePresence initial={false} custom={direction}>

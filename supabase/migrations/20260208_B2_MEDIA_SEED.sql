@@ -69,9 +69,9 @@ BEGIN
         'The Price of Compromise',
         'A deep dive into the historical and modern implications of political compromise in the Kenyan context.',
         'the-price-of-compromise',
-        v_b2_base || '/carousels/price-of-compromise/1.webp',
+        v_b2_base || '/carousels/price-of-compromise/1.png',
         'published',
-        json_build_object('pdf_url', v_b2_base || '/carousels/price-of-compromise/The Price of Compromise.pdf'),
+        json_build_object('pdf_url', v_b2_base || '/carousels/price-of-compromise/price-of-compromise.pdf'),
         ARRAY['history', 'politics', 'special-edition']
     )
     ON CONFLICT (slug) DO UPDATE SET
@@ -92,8 +92,8 @@ BEGIN
         VALUES (
             v_poc_id,
             'image',
-            'carousels/price-of-compromise/' || i || '.webp',
-            v_b2_base || '/carousels/price-of-compromise/' || i || '.webp',
+            'carousels/price-of-compromise/' || i || '.png',
+            v_b2_base || '/carousels/price-of-compromise/' || i || '.png',
             i - 1,
             json_build_object('aspect_ratio', '4:5')
         );
