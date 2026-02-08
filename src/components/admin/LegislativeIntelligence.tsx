@@ -1,488 +1,586 @@
+// Legislative Intelligence - Pipeline Management
+// Direct Supabase integration with proper error handling
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import {
-    Globe, Search, Play, Plus, Trash2, RefreshCw,
-    ExternalLink, CheckCircle2, AlertCircle, Clock, Activity,
-    Settings, Edit3, Save, Code, FileCode, Terminal,
-    ChevronUp, ChevronDown, ListRestart, Eye, Power, X
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { intelService, ScraperSource, ProcessingJob } from '@/services/intelService';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { intelService, ScraperSource, ProcessingJob, PipelineConfig } from '@/services/intelService';
+import {
+    Play, Pause, RefreshCw, Settings, Code, Globe, Clock,
+    CheckCircle2, XCircle, Loader2, Plus, Trash2, Edit,
+    Activity, Zap, Database, FileText, ExternalLink, AlertTriangle
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// Interfaces are now imported from intelService
-
-const LegislativeIntelligence = () => {
+const LegislativeIntelligence: React.FC = () => {
     const [sources, setSources] = useState<ScraperSource[]>([]);
     const [jobs, setJobs] = useState<ProcessingJob[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [newUrl, setNewUrl] = useState('');
-    const [newName, setNewName] = useState('');
-
-    // Editor State
     const [scripts, setScripts] = useState<string[]>([]);
     const [selectedScript, setSelectedScript] = useState<string>('');
-    const [scriptContent, setScriptContent] = useState<string>('');
-    const [isSaving, setIsSaving] = useState(false);
-
-    const [editingSource, setEditingSource] = useState<ScraperSource | null>(null);
-    const [viewingLogs, setViewingLogs] = useState<ProcessingJob | null>(null);
-
+    const [scriptContent, setScriptContent] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [savingScript, setSavingScript] = useState(false);
+    const [activeTab, setActiveTab] = useState('pipelines');
+    const [showAddSource, setShowAddSource] = useState(false);
+    const [newSource, setNewSource] = useState({ name: '', url: '', is_active: true });
     const { toast } = useToast();
 
-    useEffect(() => {
-        fetchData();
-        loadScripts();
-        const interval = setInterval(fetchData, 10000); // Polling for jobs
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchData = async () => {
+    // Load data
+    const loadData = useCallback(async () => {
         try {
-            const sourcesData = await intelService.getSources();
-            const jobsData = await intelService.getJobs(10);
-            if (sourcesData) setSources(sourcesData);
-            if (jobsData) setJobs(jobsData);
-        } catch (err) {
-            console.error('Error fetching data:', err);
+            setLoading(true);
+
+            // Load sources and jobs in parallel
+            const [sourcesData, jobsData, scriptsData] = await Promise.all([
+                intelService.getSources(),
+                intelService.getJobs(20),
+                intelService.getPipelineScripts()
+            ]);
+
+            setSources(sourcesData);
+            setJobs(jobsData);
+            setScripts(scriptsData);
+
+            // Load first script content
+            if (scriptsData.length > 0 && !selectedScript) {
+                setSelectedScript(scriptsData[0]);
+                const content = await intelService.getScriptContent(scriptsData[0]);
+                setScriptContent(content);
+            }
+        } catch (error) {
+            console.error('Error loading intel data:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load intelligence data",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedScript, toast]);
 
-    const loadScripts = async () => {
-        try {
-            const scriptList = await intelService.getPipelineScripts();
-            setScripts(scriptList);
-            if (scriptList.length > 0 && !selectedScript) {
-                handleLoadScript(scriptList[0]);
-            }
-        } catch (err) {
-            console.error('Error loading scripts:', err);
-        }
-    };
+    useEffect(() => {
+        loadData();
 
-    const handleLoadScript = async (name: string) => {
+        // Poll for job updates every 10 seconds
+        const interval = setInterval(async () => {
+            const jobsData = await intelService.getJobs(20);
+            setJobs(jobsData);
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [loadData]);
+
+    // Load script content when selection changes
+    const handleScriptSelect = async (scriptName: string) => {
+        setSelectedScript(scriptName);
         try {
-            setSelectedScript(name);
-            const content = await intelService.getScriptContent(name);
+            const content = await intelService.getScriptContent(scriptName);
             setScriptContent(content);
-        } catch (err) {
-            toast({ title: "Error", description: "Failed to load script", variant: "destructive" });
+        } catch (error) {
+            console.error('Error loading script:', error);
         }
     };
 
+    // Save script content
     const handleSaveScript = async () => {
         if (!selectedScript) return;
-        setIsSaving(true);
+
+        setSavingScript(true);
         try {
             await intelService.saveScriptContent(selectedScript, scriptContent);
-            toast({ title: "Success", description: "Pipeline script deployed" });
-        } catch (err: any) {
-            toast({ title: "Save Failed", description: err.message, variant: "destructive" });
+            toast({ title: "Saved", description: `${selectedScript} saved successfully` });
+        } catch (error) {
+            toast({
+                title: "Save Failed",
+                description: "Edge Function may not be deployed",
+                variant: "destructive"
+            });
         } finally {
-            setIsSaving(false);
+            setSavingScript(false);
         }
     };
 
+    // Trigger pipeline
+    const handleTriggerPipeline = async (type: PipelineConfig['type']) => {
+        try {
+            const { jobId } = await intelService.triggerPipeline({ type });
+            toast({
+                title: "Pipeline Started",
+                description: `Job ${jobId} created for ${type} pipeline`
+            });
+
+            // Refresh jobs
+            const jobsData = await intelService.getJobs(20);
+            setJobs(jobsData);
+        } catch (error) {
+            toast({
+                title: "Pipeline Error",
+                description: "Failed to start pipeline. Check if the processing_jobs table exists.",
+                variant: "destructive"
+            });
+        }
+    };
+
+    // Rerun job
+    const handleRerunJob = async (jobId: string) => {
+        try {
+            await intelService.rerunJob(jobId);
+            toast({ title: "Job Requeued", description: "Job has been added to the queue" });
+
+            // Refresh jobs
+            const jobsData = await intelService.getJobs(20);
+            setJobs(jobsData);
+        } catch (error) {
+            toast({
+                title: "Rerun Failed",
+                description: "Failed to rerun job. Check the processing_jobs table.",
+                variant: "destructive"
+            });
+        }
+    };
+
+    // Toggle source active state
+    const handleToggleSource = async (source: ScraperSource) => {
+        try {
+            await intelService.updateSource(source.id, { is_active: !source.is_active });
+            setSources(sources.map(s =>
+                s.id === source.id ? { ...s, is_active: !s.is_active } : s
+            ));
+            toast({ title: "Updated", description: `${source.name} ${!source.is_active ? 'enabled' : 'disabled'}` });
+        } catch (error) {
+            toast({
+                title: "Update Failed",
+                description: "Failed to update source",
+                variant: "destructive"
+            });
+        }
+    };
+
+    // Add new source
     const handleAddSource = async () => {
-        if (!newUrl || !newName) {
-            toast({ title: "Error", description: "Name and URL are required", variant: "destructive" });
+        if (!newSource.name || !newSource.url) {
+            toast({ title: "Validation Error", description: "Name and URL are required", variant: "destructive" });
             return;
         }
 
         try {
-            const { error } = await supabase
-                .from('scraper_sources' as any)
-                .insert([{ name: newName, url: newUrl }]);
-
-            if (error) throw error;
-
-            toast({ title: "Success", description: "Scraper source added" });
-            setNewUrl('');
-            setNewName('');
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Error", description: err.message, variant: "destructive" });
-        }
-    };
-
-    const handleTriggerScrape = async (source: ScraperSource) => {
-        try {
-            await intelService.triggerPipeline({ type: source.name.toLowerCase().includes('bill') ? 'bills' : 'gazette' });
+            const created = await intelService.createSource(newSource);
+            setSources([...sources, created]);
+            setNewSource({ name: '', url: '', is_active: true });
+            setShowAddSource(false);
+            toast({ title: "Source Added", description: `${newSource.name} has been added` });
+        } catch (error) {
             toast({
-                title: "Crawl Started",
-                description: `Deployment job for ${source.name} is now in queue.`
+                title: "Add Failed",
+                description: "Failed to add source",
+                variant: "destructive"
             });
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Trigger Failed", description: err.message, variant: "destructive" });
         }
     };
 
-    const handleRerunJob = async (jobId: string) => {
-        try {
-            await intelService.rerunJob(jobId);
-            toast({ title: "Rerun Initiated", description: "Job has been duplicated and queued." });
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Rerun Failed", description: err.message, variant: "destructive" });
-        }
-    };
-
-    const handleReorderSource = async (id: string, direction: 'up' | 'down') => {
-        const index = sources.findIndex(s => s.id === id);
-        if (index === -1) return;
-        if (direction === 'up' && index === 0) return;
-        if (direction === 'down' && index === sources.length - 1) return;
-
-        // Note: Real implementation would update a 'sort_order' column in DB
-        const newSources = [...sources];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        [newSources[index], newSources[targetIndex]] = [newSources[targetIndex], newSources[index]];
-        setSources(newSources);
-
-        toast({ title: "Priority Updated", description: "Scraper order adjusted locally." });
-    };
-
-    const handleUpdateSourceStatus = async (id: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-        try {
-            await intelService.updateSource(id, { status: newStatus });
-            toast({ title: "Source Updated", description: `Scraper is now ${newStatus}.` });
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Update Failed", description: err.message, variant: "destructive" });
-        }
-    };
-
+    // Delete source
     const handleDeleteSource = async (id: string) => {
-        if (!confirm("Are you sure? This will remove the scraper metadata permanently.")) return;
+        if (!confirm('Are you sure you want to delete this source?')) return;
+
         try {
             await intelService.deleteSource(id);
-            toast({ title: "Source Deleted", description: "Scraper metadata removed." });
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+            setSources(sources.filter(s => s.id !== id));
+            toast({ title: "Deleted", description: "Source has been removed" });
+        } catch (error) {
+            toast({
+                title: "Delete Failed",
+                description: "Failed to delete source",
+                variant: "destructive"
+            });
         }
     };
 
-    const handleSaveEdit = async () => {
-        if (!editingSource) return;
-        try {
-            await intelService.updateSource(editingSource.id, {
-                name: editingSource.name,
-                url: editingSource.url,
-                frequency_hours: editingSource.frequency_hours
-            });
-            toast({ title: "Success", description: "Scraper configuration updated." });
-            setEditingSource(null);
-            fetchData();
-        } catch (err: any) {
-            toast({ title: "Update Failed", description: err.message, variant: "destructive" });
-        }
+    // Status badge
+    const StatusBadge = ({ status }: { status: ProcessingJob['status'] }) => {
+        const config = {
+            pending: { className: 'bg-amber-500/10 text-amber-500 border-amber-500/20', icon: Clock },
+            processing: { className: 'bg-blue-500/10 text-blue-500 border-blue-500/20', icon: Loader2 },
+            completed: { className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: CheckCircle2 },
+            failed: { className: 'bg-red-500/10 text-red-500 border-red-500/20', icon: XCircle }
+        };
+
+        const { className, icon: Icon } = config[status];
+
+        return (
+            <Badge variant="outline" className={cn("gap-1", className)}>
+                <Icon className={cn("h-3 w-3", status === 'processing' && "animate-spin")} />
+                {status}
+            </Badge>
+        );
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-[400px]">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading Intelligence Hub...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <Tabs defaultValue="sources" className="space-y-6">
-            <div className="flex items-center justify-between mb-2">
-                <TabsList className="bg-muted/50 p-1 rounded-2xl h-12">
-                    <TabsTrigger value="sources" className="rounded-xl px-4 gap-2">
-                        <Globe className="h-4 w-4" />
-                        Sources
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                        <Activity className="h-6 w-6 text-primary" />
+                        Legislative Intelligence
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Pipeline management and data collection</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" className="rounded-xl gap-2" onClick={loadData}>
+                        <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                        Refresh
+                    </Button>
+                </div>
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="rounded-xl">
+                    <TabsTrigger value="pipelines" className="rounded-lg gap-1">
+                        <Zap className="h-4 w-4" /> Pipelines
                     </TabsTrigger>
-                    <TabsTrigger value="queue" className="rounded-xl px-4 gap-2">
-                        <Activity className="h-4 w-4" />
-                        Queue
+                    <TabsTrigger value="sources" className="rounded-lg gap-1">
+                        <Globe className="h-4 w-4" /> Sources
                     </TabsTrigger>
-                    <TabsTrigger value="pipeline" className="rounded-xl px-4 gap-2">
-                        <Code className="h-4 w-4" />
-                        Pipeline Code
+                    <TabsTrigger value="jobs" className="rounded-lg gap-1">
+                        <Database className="h-4 w-4" /> Jobs
+                    </TabsTrigger>
+                    <TabsTrigger value="editor" className="rounded-lg gap-1">
+                        <Code className="h-4 w-4" /> Editor
                     </TabsTrigger>
                 </TabsList>
 
-                <Button
-                    onClick={() => intelService.triggerPipeline({ type: 'bills' })}
-                    className="bg-primary hover:bg-primary/90 rounded-2xl h-12 font-bold shadow-ios-low"
-                >
-                    <Terminal className="mr-2 h-4 w-4" />
-                    Force Run Pipeline
-                </Button>
-            </div>
-
-            <TabsContent value="sources">
-                <div className="grid lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
-                        <Card className="rounded-[32px] border-none shadow-ios-high bg-white dark:bg-[#111]">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Plus className="h-5 w-5 text-primary" />
-                                    Add Intelligence Source
+                {/* Pipelines Tab */}
+                <TabsContent value="pipelines" className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="cursor-pointer hover:border-primary transition-colors group">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-blue-500" />
+                                    Bills Pipeline
                                 </CardTitle>
-                                <CardDescription>Establish new legislative monitoring endpoints</CardDescription>
+                                <CardDescription>Parliament bills and legislation</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Source Name</Label>
-                                    <Input
-                                        placeholder="Parliament Portal..."
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                        className="rounded-xl h-12"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>URL Endpoint</Label>
-                                    <Input
-                                        placeholder="https://..."
-                                        value={newUrl}
-                                        onChange={(e) => setNewUrl(e.target.value)}
-                                        className="rounded-xl h-12"
-                                    />
-                                </div>
-                                <Button onClick={handleAddSource} className="w-full rounded-xl bg-primary h-12 font-bold">
-                                    Link Scraper Engine
+                            <CardContent>
+                                <Button
+                                    className="w-full rounded-xl gap-2"
+                                    onClick={() => handleTriggerPipeline('bills')}
+                                >
+                                    <Play className="h-4 w-4" /> Run Pipeline
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="cursor-pointer hover:border-primary transition-colors group">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-emerald-500" />
+                                    Gazette Pipeline
+                                </CardTitle>
+                                <CardDescription>Kenya Gazette notices and publications</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button
+                                    className="w-full rounded-xl gap-2"
+                                    onClick={() => handleTriggerPipeline('gazette')}
+                                >
+                                    <Play className="h-4 w-4" /> Run Pipeline
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="cursor-pointer hover:border-primary transition-colors group">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-rose-500" />
+                                    Healthcare Pipeline
+                                </CardTitle>
+                                <CardDescription>Health policies and regulations</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button
+                                    className="w-full rounded-xl gap-2"
+                                    onClick={() => handleTriggerPipeline('healthcare')}
+                                >
+                                    <Play className="h-4 w-4" /> Run Pipeline
                                 </Button>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="lg:col-span-2 space-y-4">
-                        {sources.map(source => (
-                            <div key={source.id} className="p-5 rounded-3xl bg-white dark:bg-white/5 border border-border/50 shadow-ios-low flex items-center justify-between group">
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-3 rounded-2xl ${source.status === 'active' ? 'bg-kenya-green/10 text-kenya-green' : 'bg-muted text-muted-foreground'}`}>
-                                        <Globe className="h-5 w-5" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold text-base">{source.name}</span>
-                                            {source.status === 'active' && <Badge className="bg-kenya-green/10 text-kenya-green border-none text-[8px] uppercase tracking-widest">Live</Badge>}
-                                        </div>
-                                        <span className="text-xs text-muted-foreground truncate max-w-[300px]">{source.url}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Switch
-                                        checked={source.status === 'active'}
-                                        onCheckedChange={() => handleUpdateSourceStatus(source.id, source.status)}
-                                    />
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => setEditingSource(source)}>
-                                                <Edit3 className="h-4 w-4" />
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="rounded-[32px]">
-                                            <DialogHeader>
-                                                <DialogTitle>Adjust Scraper Intelligence</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4 py-4">
-                                                <div className="space-y-2">
-                                                    <Label>Name</Label>
-                                                    <Input value={editingSource?.name} onChange={e => setEditingSource(prev => prev ? { ...prev, name: e.target.value } : null)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>URL</Label>
-                                                    <Input value={editingSource?.url} onChange={e => setEditingSource(prev => prev ? { ...prev, url: e.target.value } : null)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Scrape Frequency (Hours)</Label>
-                                                    <Input type="number" value={editingSource?.frequency_hours} onChange={e => setEditingSource(prev => prev ? { ...prev, frequency_hours: parseInt(e.target.value) } : null)} />
-                                                </div>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setEditingSource(null)}>Cancel</Button>
-                                                <Button onClick={handleSaveEdit}>Save recalibration</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                    <Button
-                                        onClick={() => handleTriggerScrape(source)}
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-kenya-green hover:bg-kenya-green/10"
-                                    >
-                                        <Play className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        onClick={() => handleDeleteSource(source.id)}
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-kenya-red hover:bg-kenya-red/10"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                    <div className="flex flex-col gap-0.5 ml-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => handleReorderSource(source.id, 'up')}
-                                        >
-                                            <ChevronUp className="h-3 w-3" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => handleReorderSource(source.id, 'down')}
-                                        >
-                                            <ChevronDown className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </TabsContent>
-
-            <TabsContent value="queue">
-                <Card className="rounded-[32px] border-none shadow-ios-high bg-white dark:bg-[#111]">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="flex items-center gap-2">
-                                <Activity className="h-5 w-5 text-kenya-green" />
-                                Intelligence Queue
-                            </CardTitle>
-                            <CardDescription>Real-time status of neural scraping and analysis jobs</CardDescription>
-                        </div>
-                        <Button variant="outline" onClick={fetchData} className="rounded-xl h-10">
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Refresh
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-6">
+                    {/* Recent Jobs Summary */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Recent Pipeline Activity</CardTitle>
+                        </CardHeader>
+                        <CardContent>
                             {jobs.length === 0 ? (
-                                <div className="py-12 text-center opacity-40">
-                                    <Clock className="h-8 w-8 mx-auto mb-2" />
-                                    <p className="text-xs uppercase font-black tracking-widest">No Recent Activity</p>
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <p>No pipeline jobs found.</p>
+                                    <p className="text-xs mt-1">Run the SQL migration to create the processing_jobs table.</p>
                                 </div>
                             ) : (
-                                jobs.map(job => (
-                                    <div key={job.id} className="p-4 rounded-2xl border border-border/50 bg-slate-50/50 dark:bg-white/5 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                {job.status === 'completed' ? <CheckCircle2 className="h-5 w-5 text-kenya-green" /> :
-                                                    job.status === 'processing' ? <RefreshCw className="h-5 w-5 text-primary animate-spin" /> :
-                                                        <AlertCircle className="h-5 w-5 text-kenya-red" />}
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-sm">{job.job_name}</span>
-                                                    <span className="text-[10px] text-muted-foreground uppercase">{new Date(job.created_at).toLocaleString()}</span>
-                                                </div>
+                                <div className="space-y-2">
+                                    {jobs.slice(0, 5).map((job) => (
+                                        <div key={job.id} className="flex items-center gap-4 p-3 rounded-lg border">
+                                            <StatusBadge status={job.status} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm truncate">{job.job_type}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(job.created_at).toLocaleString()}
+                                                </p>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="sm" className="rounded-xl gap-2 h-8" onClick={() => handleRerunJob(job.id)}>
-                                                    <ListRestart className="h-3.5 w-3.5" />
-                                                    Rerun
-                                                </Button>
+                                            {job.status === 'processing' && (
+                                                <Progress value={job.progress} className="w-20 h-2" />
+                                            )}
+                                            {(job.status === 'failed' || job.status === 'completed') && (
                                                 <Button
-                                                    variant="outline"
+                                                    variant="ghost"
                                                     size="sm"
-                                                    className="rounded-xl gap-2 h-8"
-                                                    onClick={() => setViewingLogs(job)}
+                                                    onClick={() => handleRerunJob(job.id)}
                                                 >
-                                                    <Eye className="h-3.5 w-3.5" />
-                                                    Logs
+                                                    <RefreshCw className="h-4 w-4" />
                                                 </Button>
-                                            </div>
+                                            )}
                                         </div>
-                                        {viewingLogs?.id === job.id && (
-                                            <div className="p-4 bg-black/5 dark:bg-black/20 rounded-xl font-mono text-[10px] text-muted-foreground animate-in slide-in-from-top-2">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="font-bold">TRANSCRIPT LOGS</span>
-                                                    <Button variant="ghost" size="sm" className="h-6" onClick={() => setViewingLogs(null)}>
-                                                        <X className="h-3 w-3" />
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Sources Tab */}
+                <TabsContent value="sources" className="space-y-4">
+                    <div className="flex justify-end">
+                        <Dialog open={showAddSource} onOpenChange={setShowAddSource}>
+                            <DialogTrigger asChild>
+                                <Button className="rounded-xl gap-2">
+                                    <Plus className="h-4 w-4" /> Add Source
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Add Scraper Source</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>Name</Label>
+                                        <Input
+                                            value={newSource.name}
+                                            onChange={(e) => setNewSource({ ...newSource, name: e.target.value })}
+                                            placeholder="e.g., Kenya Law Reports"
+                                            className="rounded-xl"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>URL</Label>
+                                        <Input
+                                            value={newSource.url}
+                                            onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
+                                            placeholder="https://..."
+                                            className="rounded-xl"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Switch
+                                            checked={newSource.is_active}
+                                            onCheckedChange={(checked) => setNewSource({ ...newSource, is_active: checked })}
+                                        />
+                                        <Label>Active</Label>
+                                    </div>
+                                    <Button className="w-full rounded-xl" onClick={handleAddSource}>
+                                        Add Source
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+
+                    {sources.length === 0 ? (
+                        <Card>
+                            <CardContent className="py-12 text-center">
+                                <Globe className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                <p className="text-muted-foreground">No scraper sources configured.</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Run the SQL migration to create default sources.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {sources.map((source) => (
+                                <Card key={source.id} className={cn(
+                                    "transition-colors",
+                                    source.is_active ? "border-emerald-500/20" : "opacity-60"
+                                )}>
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-start justify-between">
+                                            <div className="space-y-1">
+                                                <CardTitle className="text-base flex items-center gap-2">
+                                                    <Globe className="h-4 w-4" />
+                                                    {source.name}
+                                                </CardTitle>
+                                                <a
+                                                    href={source.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                                                >
+                                                    {source.url.substring(0, 40)}...
+                                                    <ExternalLink className="h-3 w-3" />
+                                                </a>
+                                            </div>
+                                            <Switch
+                                                checked={source.is_active}
+                                                onCheckedChange={() => handleToggleSource(source)}
+                                            />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-xs text-muted-foreground">
+                                                Last scraped: {source.last_scraped_at
+                                                    ? new Date(source.last_scraped_at).toLocaleDateString()
+                                                    : 'Never'}
+                                            </p>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-red-500"
+                                                onClick={() => handleDeleteSource(source.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+
+                {/* Jobs Tab */}
+                <TabsContent value="jobs">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>All Processing Jobs</CardTitle>
+                            <CardDescription>History of all pipeline executions</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {jobs.length === 0 ? (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <Database className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                    <p>No jobs found.</p>
+                                    <p className="text-xs mt-1">Start a pipeline to see jobs here.</p>
+                                </div>
+                            ) : (
+                                <ScrollArea className="h-[400px]">
+                                    <div className="space-y-2 pr-4">
+                                        {jobs.map((job) => (
+                                            <div key={job.id} className="p-4 rounded-lg border space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <StatusBadge status={job.status} />
+                                                        <span className="font-medium">{job.job_type}</span>
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleRerunJob(job.id)}
+                                                        disabled={job.status === 'processing'}
+                                                    >
+                                                        <RefreshCw className="h-4 w-4 mr-1" /> Rerun
                                                     </Button>
                                                 </div>
-                                                <pre className="whitespace-pre-wrap">
-                                                    {JSON.stringify(job.processing_logs || { message: "Waiting for stream..." }, null, 2)}
-                                                </pre>
+
+                                                {job.status === 'processing' && (
+                                                    <Progress value={job.progress} className="h-2" />
+                                                )}
+
+                                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                    <span>Created: {new Date(job.created_at).toLocaleString()}</span>
+                                                    {job.completed_at && (
+                                                        <span>Completed: {new Date(job.completed_at).toLocaleString()}</span>
+                                                    )}
+                                                </div>
+
+                                                {job.error_message && (
+                                                    <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded">
+                                                        {job.error_message}
+                                                    </p>
+                                                )}
                                             </div>
-                                        )}
-                                        <div className="space-y-1">
-                                            <div className="flex items-center justify-between text-[10px] uppercase font-black tracking-widest text-muted-foreground">
-                                                <span>{job.current_step}</span>
-                                                <span>{job.progress}%</span>
-                                            </div>
-                                            <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full transition-all duration-500 ${job.status === 'failed' ? 'bg-kenya-red' : 'bg-primary'}`}
-                                                    style={{ width: `${job.progress}%` }}
-                                                />
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                ))
+                                </ScrollArea>
                             )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="pipeline">
-                <div className="grid lg:grid-cols-4 gap-6 h-[600px]">
-                    <Card className="lg:col-span-1 rounded-[32px] border-none shadow-ios-high overflow-hidden bg-white dark:bg-[#111]">
-                        <ScrollArea className="h-full">
-                            <CardHeader>
-                                <CardTitle className="text-sm uppercase tracking-widest font-black opacity-50">Active Scripts</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-2 space-y-1">
-                                {scripts.map(script => (
-                                    <button
-                                        key={script}
-                                        onClick={() => handleLoadScript(script)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all ${selectedScript === script ? 'bg-primary text-white shadow-ios-low' : 'hover:bg-muted'
-                                            }`}
-                                    >
-                                        {script.endsWith('.py') ? <FileCode className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
-                                        <span className="text-xs font-bold font-mono">{script}</span>
-                                    </button>
-                                ))}
-                            </CardContent>
-                        </ScrollArea>
+                        </CardContent>
                     </Card>
+                </TabsContent>
 
-                    <Card className="lg:col-span-3 rounded-[32px] border-none shadow-ios-high overflow-hidden flex flex-col bg-[#1e1e1e] border-2 border-primary/20">
-                        <div className="p-4 bg-muted/10 border-b border-white/5 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Code className="h-4 w-4 text-primary" />
-                                <span className="text-xs font-mono font-bold text-white/80">{selectedScript || 'Pipeline Editor'}</span>
-                            </div>
-                            <Button
-                                onClick={handleSaveScript}
-                                disabled={isSaving || !selectedScript}
-                                className="bg-kenya-green hover:bg-kenya-green/90 rounded-xl h-9 gap-2"
-                            >
-                                {isSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                                Deploy Changes
-                            </Button>
-                        </div>
-                        <ScrollArea className="flex-1">
+                {/* Editor Tab */}
+                <TabsContent value="editor" className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Select value={selectedScript} onValueChange={handleScriptSelect}>
+                            <SelectTrigger className="w-[200px] rounded-xl">
+                                <SelectValue placeholder="Select script" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {scripts.map((script) => (
+                                    <SelectItem key={script} value={script}>
+                                        {script}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            onClick={handleSaveScript}
+                            disabled={savingScript || !selectedScript}
+                            className="rounded-xl gap-2"
+                        >
+                            {savingScript ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            Save Script
+                        </Button>
+                    </div>
+
+                    <Card>
+                        <CardContent className="p-0">
                             <Textarea
                                 value={scriptContent}
                                 onChange={(e) => setScriptContent(e.target.value)}
-                                className="min-h-full w-full bg-transparent border-none font-mono text-xs p-6 text-slate-300 focus-visible:ring-0 leading-relaxed"
-                                spellCheck={false}
-                                placeholder="# Select a script from the left to start recalibrating the pipeline..."
+                                className="font-mono text-sm min-h-[500px] border-0 rounded-xl focus-visible:ring-0"
+                                placeholder="Select a script to edit..."
                             />
-                        </ScrollArea>
+                        </CardContent>
                     </Card>
-                </div>
-            </TabsContent>
-        </Tabs>
+                </TabsContent>
+            </Tabs>
+        </div>
     );
 };
 

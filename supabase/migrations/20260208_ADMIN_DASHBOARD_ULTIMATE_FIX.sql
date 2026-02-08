@@ -117,14 +117,21 @@ DROP POLICY IF EXISTS "Public can read volunteer_opportunities" ON public.volunt
 CREATE POLICY "Public can read volunteer_opportunities" ON public.volunteer_opportunities FOR SELECT USING (true);
 
 -- =========================================================================
--- SECTION 6: PLATFORM CAMPAIGNS TABLE + RLS
+-- SECTION 6: PLATFORM CAMPAIGNS TABLE + RLS (SAFE CHECK)
 -- =========================================================================
 
-ALTER TABLE public.platform_campaigns ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Admins can manage platform_campaigns" ON public.platform_campaigns;
-CREATE POLICY "Admins can manage platform_campaigns" ON public.platform_campaigns FOR ALL USING (public.is_admin());
-DROP POLICY IF EXISTS "Public can read active campaigns" ON public.platform_campaigns;
-CREATE POLICY "Public can read active campaigns" ON public.platform_campaigns FOR SELECT USING (is_active = true);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'platform_campaigns' AND table_schema = 'public') THEN
+        ALTER TABLE public.platform_campaigns ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "Admins can manage platform_campaigns" ON public.platform_campaigns;
+        CREATE POLICY "Admins can manage platform_campaigns" ON public.platform_campaigns FOR ALL USING (public.is_admin());
+        
+        DROP POLICY IF EXISTS "Public can read active campaigns" ON public.platform_campaigns;
+        CREATE POLICY "Public can read active campaigns" ON public.platform_campaigns FOR SELECT USING (is_active = true);
+    END IF;
+END $$;
 
 -- =========================================================================
 -- SECTION 7: PROFILE TABLE ADDITIONS
@@ -171,18 +178,82 @@ ALTER TABLE public.user_activity_log ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins can read chat_interactions" ON public.chat_interactions;
 CREATE POLICY "Admins can read chat_interactions" ON public.chat_interactions FOR SELECT USING (public.is_admin());
+DROP POLICY IF EXISTS "Users can insert chat" ON public.chat_interactions;
+CREATE POLICY "Users can insert chat" ON public.chat_interactions FOR INSERT WITH CHECK (auth.uid() = user_id OR auth.uid() IS NOT NULL);
 
 DROP POLICY IF EXISTS "Admins can read page_views" ON public.page_views;
 CREATE POLICY "Admins can read page_views" ON public.page_views FOR SELECT USING (public.is_admin());
+DROP POLICY IF EXISTS "Anyone can insert page_views" ON public.page_views;
+CREATE POLICY "Anyone can insert page_views" ON public.page_views FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admins can read user_activity_log" ON public.user_activity_log;
 CREATE POLICY "Admins can read user_activity_log" ON public.user_activity_log FOR SELECT USING (public.is_admin());
-
 DROP POLICY IF EXISTS "Users can insert own activity" ON public.user_activity_log;
 CREATE POLICY "Users can insert own activity" ON public.user_activity_log FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- =========================================================================
--- SECTION 9: RESOURCE METADATA TABLE (For Backblaze Sync)
+-- SECTION 9: PROCESSING JOBS TABLE (FOR INTEL PIPELINE)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS public.processing_jobs (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    source_id uuid,
+    job_type text NOT NULL,
+    status text DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+    progress integer DEFAULT 0,
+    total_items integer,
+    processed_items integer,
+    error_message text,
+    started_at timestamptz,
+    completed_at timestamptz,
+    metadata jsonb DEFAULT '{}'::jsonb,
+    logs text[],
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+-- Ensure columns exist if table was already there
+ALTER TABLE public.processing_jobs ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.processing_jobs ADD COLUMN IF NOT EXISTS job_type text NOT NULL DEFAULT 'crawl';
+
+ALTER TABLE public.processing_jobs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage processing_jobs" ON public.processing_jobs;
+CREATE POLICY "Admins can manage processing_jobs" ON public.processing_jobs FOR ALL USING (public.is_admin());
+
+-- =========================================================================
+-- SECTION 10: SCRAPER SOURCES TABLE (FOR INTEL PIPELINE)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS public.scraper_sources (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name text NOT NULL,
+    url text NOT NULL,
+    is_active boolean DEFAULT true,
+    last_scraped_at timestamptz,
+    scrape_frequency text DEFAULT 'daily',
+    selector_config jsonb DEFAULT '{}'::jsonb,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+-- Ensure columns exist if table was already there (Fixes ERROR: 42703)
+ALTER TABLE public.scraper_sources ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true;
+ALTER TABLE public.scraper_sources ADD COLUMN IF NOT EXISTS scrape_frequency text DEFAULT 'daily';
+ALTER TABLE public.scraper_sources ADD COLUMN IF NOT EXISTS selector_config jsonb DEFAULT '{}'::jsonb;
+
+ALTER TABLE public.scraper_sources ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage scraper_sources" ON public.scraper_sources;
+CREATE POLICY "Admins can manage scraper_sources" ON public.scraper_sources FOR ALL USING (public.is_admin());
+
+-- Insert default sources
+INSERT INTO public.scraper_sources (name, url, is_active) VALUES
+    ('Kenya Gazette', 'http://kenyalaw.org/kenya_gazette/', true),
+    ('National Assembly Bills', 'http://www.parliament.go.ke/the-national-assembly/house-business/bills', true),
+    ('The Senate Bills', 'http://www.parliament.go.ke/the-senate/house-business/bills', true)
+ON CONFLICT DO NOTHING;
+
+-- =========================================================================
+-- SECTION 11: RESOURCE METADATA TABLE (For Backblaze Sync)
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS public.resource_files (
@@ -197,11 +268,19 @@ CREATE TABLE IF NOT EXISTS public.resource_files (
     storage_url text NOT NULL,
     thumbnail_url text,
     extracted_text text,
+    category text DEFAULT 'general',
+    tags text[],
     metadata jsonb DEFAULT '{}'::jsonb,
     uploaded_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
+
+-- Ensure columns exist if table was already there
+ALTER TABLE public.resource_files ADD COLUMN IF NOT EXISTS storage_provider text DEFAULT 'backblaze';
+ALTER TABLE public.resource_files ADD COLUMN IF NOT EXISTS extracted_text text;
+ALTER TABLE public.resource_files ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.resource_files ADD COLUMN IF NOT EXISTS category text DEFAULT 'general';
 
 ALTER TABLE public.resource_files ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can manage resource_files" ON public.resource_files;
@@ -210,7 +289,7 @@ DROP POLICY IF EXISTS "Public can read resource_files" ON public.resource_files;
 CREATE POLICY "Public can read resource_files" ON public.resource_files FOR SELECT USING (true);
 
 -- =========================================================================
--- SECTION 10: STORAGE BUCKETS
+-- SECTION 12: STORAGE BUCKETS
 -- =========================================================================
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -222,7 +301,7 @@ VALUES ('resources', 'resources', true, 52428800)
 ON CONFLICT (id) DO NOTHING;
 
 -- =========================================================================
--- SECTION 11: STORAGE POLICIES
+-- SECTION 13: STORAGE POLICIES
 -- =========================================================================
 
 -- Avatars: Users can upload their own, public read
@@ -260,7 +339,7 @@ CREATE POLICY "Resources admin delete" ON storage.objects FOR DELETE
 USING (bucket_id = 'resources' AND public.is_admin());
 
 -- =========================================================================
--- SECTION 12: REALTIME PUBLICATIONS (SAFE)
+-- SECTION 14: REALTIME PUBLICATIONS (SAFE)
 -- =========================================================================
 
 DO $$
@@ -286,28 +365,70 @@ END $$;
 ALTER TABLE public.admin_sessions REPLICA IDENTITY FULL;
 ALTER TABLE public.admin_notifications REPLICA IDENTITY FULL;
 ALTER TABLE public.civic_events REPLICA IDENTITY FULL;
+ALTER TABLE public.processing_jobs REPLICA IDENTITY FULL;
 
 -- =========================================================================
--- SECTION 13: ANALYTICS HELPER FUNCTIONS
+-- SECTION 15: ANALYTICS HELPER FUNCTIONS
 -- =========================================================================
 
 CREATE OR REPLACE FUNCTION public.get_dashboard_stats()
 RETURNS jsonb AS $$
 DECLARE
     result jsonb;
+    v_total_users bigint;
+    v_total_posts bigint;
+    v_total_resources bigint;
+    v_total_bills bigint;
+    v_active_sessions bigint;
+    v_recent_signups bigint;
+    v_pending_drafts bigint;
+    v_total_discussions bigint;
+    v_total_page_views bigint;
+    v_total_chat bigint;
 BEGIN
-    SELECT jsonb_build_object(
-        'total_users', (SELECT COUNT(*) FROM public.profiles),
-        'total_posts', (SELECT COUNT(*) FROM public.blog_posts),
-        'total_resources', (SELECT COUNT(*) FROM public.resources),
-        'total_bills', (SELECT COUNT(*) FROM public.bills),
-        'active_sessions', (SELECT COUNT(*) FROM public.admin_sessions WHERE is_active = true),
-        'recent_signups', (SELECT COUNT(*) FROM public.profiles WHERE created_at > now() - interval '7 days'),
-        'pending_drafts', (SELECT COUNT(*) FROM public.blog_posts WHERE status = 'draft'),
-        'total_discussions', (SELECT COUNT(*) FROM public.forum_posts),
-        'total_page_views', (SELECT COUNT(*) FROM public.page_views),
-        'total_chat_interactions', (SELECT COUNT(*) FROM public.chat_interactions)
-    ) INTO result;
+    -- Get counts with error handling
+    SELECT COUNT(*) INTO v_total_users FROM public.profiles;
+    
+    SELECT COUNT(*) INTO v_total_posts FROM public.blog_posts WHERE status = 'published';
+    
+    SELECT COUNT(*) INTO v_total_resources FROM public.resources;
+    
+    -- Check if bills table exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'bills' AND table_schema = 'public') THEN
+        SELECT COUNT(*) INTO v_total_bills FROM public.bills;
+    ELSE
+        v_total_bills := 0;
+    END IF;
+    
+    SELECT COUNT(*) INTO v_active_sessions FROM public.admin_sessions WHERE is_active = true;
+    
+    SELECT COUNT(*) INTO v_recent_signups FROM public.profiles WHERE created_at > now() - interval '7 days';
+    
+    SELECT COUNT(*) INTO v_pending_drafts FROM public.blog_posts WHERE status = 'draft';
+    
+    -- Check if forum_posts exists
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'forum_posts' AND table_schema = 'public') THEN
+        SELECT COUNT(*) INTO v_total_discussions FROM public.forum_posts;
+    ELSE
+        v_total_discussions := 0;
+    END IF;
+    
+    SELECT COUNT(*) INTO v_total_page_views FROM public.page_views;
+    
+    SELECT COUNT(*) INTO v_total_chat FROM public.chat_interactions;
+    
+    result := jsonb_build_object(
+        'total_users', COALESCE(v_total_users, 0),
+        'total_posts', COALESCE(v_total_posts, 0),
+        'total_resources', COALESCE(v_total_resources, 0),
+        'total_bills', COALESCE(v_total_bills, 0),
+        'active_sessions', COALESCE(v_active_sessions, 0),
+        'recent_signups', COALESCE(v_recent_signups, 0),
+        'pending_drafts', COALESCE(v_pending_drafts, 0),
+        'total_discussions', COALESCE(v_total_discussions, 0),
+        'total_page_views', COALESCE(v_total_page_views, 0),
+        'total_chat_interactions', COALESCE(v_total_chat, 0)
+    );
     
     RETURN result;
 END;
@@ -341,8 +462,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Helper function for admin check
+CREATE OR REPLACE FUNCTION public.check_user_is_admin()
+RETURNS boolean AS $$
+BEGIN
+    RETURN public.is_admin();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 GRANT EXECUTE ON FUNCTION public.get_dashboard_stats() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_activity_timeline(integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.check_user_is_admin() TO authenticated;
+
+-- =========================================================================
+-- SECTION 16: USER ROLES TABLE (IF NOT EXISTS)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS public.user_roles (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    role text NOT NULL DEFAULT 'user',
+    granted_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at timestamptz DEFAULT now(),
+    UNIQUE(user_id, role)
+);
+
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage user_roles" ON public.user_roles;
+CREATE POLICY "Admins can manage user_roles" ON public.user_roles FOR ALL USING (public.is_admin());
+DROP POLICY IF EXISTS "Users can read own roles" ON public.user_roles;
+CREATE POLICY "Users can read own roles" ON public.user_roles FOR SELECT USING (auth.uid() = user_id);
 
 -- =========================================================================
 -- COMPLETE! All tables, policies, and functions are now in place.

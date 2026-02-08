@@ -1,25 +1,34 @@
-// Bulk Upload Manager - Enhanced with Backblaze Storage, OCR, and Progress Tracking
-// Supports folder/file uploads with automatic metadata sync
+// Bulk Upload Manager - Backblaze B2 Only + Supabase Metadata
+// Uploads ONLY go to Backblaze, metadata syncs to Supabase
 
 import React, { useState, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
-    Upload, Folder, FileText, Image, Video, File,
-    CheckCircle, XCircle, AlertCircle, Clock, Trash2,
-    RefreshCw, Search, Database, Cloud, Zap, FileSearch
+    Upload, FolderUp, FileText, Image, Video, Music, Archive,
+    CheckCircle2, XCircle, Loader2, Trash2, Eye, RefreshCw,
+    CloudUpload, Database, Sparkles
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import storageService from '@/services/storageService';
+
+// Backblaze B2 Configuration
+const B2_CONFIG = {
+    keyId: import.meta.env.VITE_B2_KEY_ID || '',
+    applicationKey: import.meta.env.VITE_B2_APPLICATION_KEY || '',
+    bucketId: import.meta.env.VITE_B2_BUCKET_ID || '',
+    bucketName: import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources',
+    endpoint: import.meta.env.VITE_B2_ENDPOINT || ''
+};
 
 interface UploadFile {
     id: string;
@@ -27,241 +36,481 @@ interface UploadFile {
     name: string;
     size: number;
     type: string;
-    status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
+    status: 'pending' | 'uploading' | 'extracting' | 'complete' | 'error';
     progress: number;
-    url?: string;
     error?: string;
+    b2Url?: string;
     extractedText?: string;
+    category: string;
+    description: string;
 }
 
-const FILE_ICONS: Record<string, React.ReactNode> = {
-    pdf: <FileText className="h-4 w-4 text-red-500" />,
-    doc: <FileText className="h-4 w-4 text-blue-500" />,
-    docx: <FileText className="h-4 w-4 text-blue-500" />,
-    jpg: <Image className="h-4 w-4 text-green-500" />,
-    jpeg: <Image className="h-4 w-4 text-green-500" />,
-    png: <Image className="h-4 w-4 text-green-500" />,
-    gif: <Image className="h-4 w-4 text-purple-500" />,
-    mp4: <Video className="h-4 w-4 text-pink-500" />,
-    webm: <Video className="h-4 w-4 text-pink-500" />,
-    default: <File className="h-4 w-4 text-slate-500" />
-};
+interface B2AuthResponse {
+    authorizationToken: string;
+    apiUrl: string;
+    downloadUrl: string;
+}
+
+interface B2UploadUrlResponse {
+    uploadUrl: string;
+    authorizationToken: string;
+}
 
 const BulkUploadManager: React.FC = () => {
     const [files, setFiles] = useState<UploadFile[]>([]);
-    const [uploading, setUploading] = useState(false);
-    const [targetFolder, setTargetFolder] = useState('resources');
-    const [enableOcr, setEnableOcr] = useState(false);
-    const [insertToResources, setInsertToResources] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const folderInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [enableOCR, setEnableOCR] = useState(false);
+    const [insertToResources, setInsertToResources] = useState(true);
+    const [defaultCategory, setDefaultCategory] = useState('general');
+    const [globalDescription, setGlobalDescription] = useState('');
+    const [b2Auth, setB2Auth] = useState<B2AuthResponse | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const folderInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+
+    const isB2Configured = B2_CONFIG.keyId && B2_CONFIG.applicationKey && B2_CONFIG.bucketId;
+
+    // Get file icon based on type
+    const getFileIcon = (type: string) => {
+        if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
+        if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
+        if (type.startsWith('audio/')) return <Music className="h-4 w-4" />;
+        if (type.includes('pdf') || type.includes('document')) return <FileText className="h-4 w-4" />;
+        if (type.includes('zip') || type.includes('rar')) return <Archive className="h-4 w-4" />;
+        return <FileText className="h-4 w-4" />;
+    };
 
     // Format file size
     const formatSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    };
-
-    // Get file icon
-    const getFileIcon = (filename: string) => {
-        const ext = filename.split('.').pop()?.toLowerCase() || '';
-        return FILE_ICONS[ext] || FILE_ICONS.default;
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
     };
 
     // Handle file selection
-    const handleFilesSelected = useCallback((fileList: FileList | null) => {
-        if (!fileList) return;
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = event.target.files;
+        if (!selectedFiles) return;
 
-        const newFiles: UploadFile[] = Array.from(fileList).map(file => ({
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        const newFiles: UploadFile[] = Array.from(selectedFiles).map((file) => ({
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             file,
             name: file.name,
             size: file.size,
-            type: file.type,
+            type: file.type || 'application/octet-stream',
             status: 'pending',
-            progress: 0
+            progress: 0,
+            category: defaultCategory,
+            description: globalDescription
         }));
 
-        setFiles(prev => [...prev, ...newFiles]);
-    }, []);
-
-    // Drag and drop handlers
-    const handleDragEnter = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
+        setFiles((prev) => [...prev, ...newFiles]);
+        event.target.value = '';
     };
 
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    };
+    // Handle drag and drop
+    const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const droppedFiles = event.dataTransfer.files;
+        const droppedItems = event.dataTransfer.items;
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
+        const fileList: File[] = [];
 
-        const items = e.dataTransfer.items;
-        const filePromises: Promise<File>[] = [];
+        const processEntry = async (entry: FileSystemEntry) => {
+            if (entry.isFile) {
+                const fileEntry = entry as FileSystemFileEntry;
+                return new Promise<File>((resolve) => {
+                    fileEntry.file((file) => resolve(file));
+                });
+            } else if (entry.isDirectory) {
+                const dirEntry = entry as FileSystemDirectoryEntry;
+                const reader = dirEntry.createReader();
+                return new Promise<File[]>((resolve) => {
+                    reader.readEntries(async (entries) => {
+                        const files: File[] = [];
+                        for (const e of entries) {
+                            const result = await processEntry(e);
+                            if (Array.isArray(result)) {
+                                files.push(...result);
+                            } else {
+                                files.push(result);
+                            }
+                        }
+                        resolve(files);
+                    });
+                });
+            }
+            return null;
+        };
 
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i].webkitGetAsEntry();
-            if (item) {
-                if (item.isFile) {
-                    filePromises.push(new Promise((resolve) => {
-                        (item as FileSystemFileEntry).file(resolve);
-                    }));
-                } else if (item.isDirectory) {
-                    traverseDirectory(item as FileSystemDirectoryEntry, filePromises);
+        const processItems = async () => {
+            for (let i = 0; i < droppedItems.length; i++) {
+                const item = droppedItems[i];
+                const entry = item.webkitGetAsEntry();
+                if (entry) {
+                    const result = await processEntry(entry);
+                    if (result) {
+                        if (Array.isArray(result)) {
+                            fileList.push(...result);
+                        } else {
+                            fileList.push(result);
+                        }
+                    }
                 }
             }
-        }
 
-        Promise.all(filePromises).then(files => {
-            const uploadFiles: UploadFile[] = files.map(file => ({
-                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            if (fileList.length === 0) {
+                for (let i = 0; i < droppedFiles.length; i++) {
+                    fileList.push(droppedFiles[i]);
+                }
+            }
+
+            const newFiles: UploadFile[] = fileList.map((file) => ({
+                id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 file,
                 name: file.name,
                 size: file.size,
-                type: file.type,
+                type: file.type || 'application/octet-stream',
                 status: 'pending',
-                progress: 0
+                progress: 0,
+                category: defaultCategory,
+                description: globalDescription
             }));
-            setFiles(prev => [...prev, ...uploadFiles]);
-        });
-    };
 
-    // Traverse directory recursively
-    const traverseDirectory = (entry: FileSystemDirectoryEntry, filePromises: Promise<File>[]) => {
-        const reader = entry.createReader();
-        reader.readEntries(entries => {
-            entries.forEach(entry => {
-                if (entry.isFile) {
-                    filePromises.push(new Promise((resolve) => {
-                        (entry as FileSystemFileEntry).file(resolve);
-                    }));
-                } else if (entry.isDirectory) {
-                    traverseDirectory(entry as FileSystemDirectoryEntry, filePromises);
-                }
+            setFiles((prev) => [...prev, ...newFiles]);
+        };
+
+        processItems();
+    }, [defaultCategory, globalDescription]);
+
+    // Authenticate with Backblaze B2
+    const authenticateB2 = async (): Promise<B2AuthResponse | null> => {
+        if (!isB2Configured) {
+            toast({
+                title: "Backblaze Not Configured",
+                description: "Please set B2 environment variables",
+                variant: "destructive"
             });
-        });
-    };
+            return null;
+        }
 
-    // Upload single file
-    const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
+        if (b2Auth) return b2Auth;
+
         try {
-            // Update status to uploading
-            setFiles(prev => prev.map(f =>
-                f.id === uploadFile.id ? { ...f, status: 'uploading' as const, progress: 10 } : f
-            ));
+            const credentials = btoa(`${B2_CONFIG.keyId}:${B2_CONFIG.applicationKey}`);
 
-            // Upload to storage
-            const result = await storageService.upload(uploadFile.file, uploadFile.name, {
-                folder: targetFolder,
-                onProgress: (progress) => {
-                    setFiles(prev => prev.map(f =>
-                        f.id === uploadFile.id ? { ...f, progress } : f
-                    ));
+            const response = await fetch('https://api.backblazeb2.com/b2api/v2/b2_authorize_account', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Basic ${credentials}`
                 }
             });
 
-            if (!result.success) {
-                throw new Error(result.error || 'Upload failed');
+            if (!response.ok) {
+                throw new Error('B2 authentication failed');
             }
 
-            // OCR extraction if enabled
-            let extractedText = '';
-            if (enableOcr && ['application/pdf', 'image/jpeg', 'image/png', 'image/gif'].includes(uploadFile.type)) {
-                setFiles(prev => prev.map(f =>
-                    f.id === uploadFile.id ? { ...f, status: 'processing' as const, progress: 80 } : f
-                ));
+            const authData = await response.json();
+            const auth: B2AuthResponse = {
+                authorizationToken: authData.authorizationToken,
+                apiUrl: authData.apiUrl,
+                downloadUrl: authData.downloadUrl
+            };
 
-                try {
-                    const { data: ocrData, error: ocrError } = await supabase.functions.invoke('extract-text', {
-                        body: { fileUrl: result.url, fileType: uploadFile.type }
-                    });
-
-                    if (!ocrError && ocrData?.text) {
-                        extractedText = ocrData.text;
-                    }
-                } catch (ocrErr) {
-                    console.warn('OCR extraction failed:', ocrErr);
-                }
-            }
-
-            // Insert into resources table if enabled
-            if (insertToResources) {
-                await supabase.from('resources' as any).insert({
-                    title: uploadFile.name.replace(/\.[^.]+$/, ''),
-                    file_url: result.url,
-                    file_path: result.path,
-                    file_type: uploadFile.type,
-                    file_size: uploadFile.size,
-                    extracted_text: extractedText || null,
-                    category: 'uploaded',
-                    created_at: new Date().toISOString()
-                });
-            }
-
-            // Update status to success
-            setFiles(prev => prev.map(f =>
-                f.id === uploadFile.id
-                    ? { ...f, status: 'success' as const, progress: 100, url: result.url, extractedText }
-                    : f
-            ));
-
-        } catch (error: any) {
-            console.error('Upload error:', error);
-            setFiles(prev => prev.map(f =>
-                f.id === uploadFile.id
-                    ? { ...f, status: 'error' as const, progress: 0, error: error.message }
-                    : f
-            ));
+            setB2Auth(auth);
+            return auth;
+        } catch (error) {
+            console.error('B2 auth error:', error);
+            toast({
+                title: "B2 Authentication Failed",
+                description: "Check your Backblaze credentials",
+                variant: "destructive"
+            });
+            return null;
         }
     };
 
-    // Start all uploads
-    const startUpload = async () => {
-        const pendingFiles = files.filter(f => f.status === 'pending');
-        if (pendingFiles.length === 0) {
-            toast({ title: "No files", description: "Add files to upload first" });
+    // Get B2 upload URL
+    const getB2UploadUrl = async (auth: B2AuthResponse): Promise<B2UploadUrlResponse | null> => {
+        try {
+            const response = await fetch(`${auth.apiUrl}/b2api/v2/b2_get_upload_url`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': auth.authorizationToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bucketId: B2_CONFIG.bucketId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get B2 upload URL');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('B2 upload URL error:', error);
+            return null;
+        }
+    };
+
+    // Upload single file to B2
+    const uploadFileToB2 = async (
+        uploadFile: UploadFile,
+        uploadUrl: B2UploadUrlResponse,
+        downloadUrl: string
+    ): Promise<{ url: string; fileName: string } | null> => {
+        try {
+            const buffer = await uploadFile.file.arrayBuffer();
+            const sha1 = await crypto.subtle.digest('SHA-1', buffer);
+            const sha1Hex = Array.from(new Uint8Array(sha1))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+
+            const timestamp = Date.now();
+            const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const b2FileName = `uploads/${timestamp}_${safeName}`;
+
+            const response = await fetch(uploadUrl.uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': uploadUrl.authorizationToken,
+                    'Content-Type': uploadFile.type,
+                    'Content-Length': uploadFile.size.toString(),
+                    'X-Bz-File-Name': encodeURIComponent(b2FileName),
+                    'X-Bz-Content-Sha1': sha1Hex
+                },
+                body: buffer
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Upload failed');
+            }
+
+            const data = await response.json();
+            const publicUrl = `${downloadUrl}/file/${B2_CONFIG.bucketName}/${b2FileName}`;
+
+            return {
+                url: publicUrl,
+                fileName: b2FileName
+            };
+        } catch (error) {
+            console.error('B2 upload error:', error);
+            return null;
+        }
+    };
+
+    // Extract text via OCR (Supabase Edge Function)
+    const extractText = async (url: string): Promise<string | null> => {
+        try {
+            const { data, error } = await supabase.functions.invoke('extract-text', {
+                body: { url }
+            });
+
+            if (error) throw error;
+            return data?.text || null;
+        } catch (error) {
+            console.error('OCR error:', error);
+            return null;
+        }
+    };
+
+    // Save metadata to Supabase
+    const saveMetadataToSupabase = async (
+        uploadFile: UploadFile,
+        b2Url: string,
+        b2Path: string,
+        extractedText?: string
+    ) => {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const metadata = {
+            title: uploadFile.name.replace(/\.[^/.]+$/, ''),
+            description: uploadFile.description || `Uploaded via Bulk Upload Manager`,
+            file_name: uploadFile.name,
+            file_size: uploadFile.size,
+            mime_type: uploadFile.type,
+            storage_provider: 'backblaze',
+            storage_path: b2Path,
+            storage_url: b2Url,
+            category: uploadFile.category,
+            extracted_text: extractedText || null,
+            uploaded_by: user?.id || null,
+            metadata: {
+                original_upload_time: new Date().toISOString(),
+                ocr_enabled: enableOCR
+            }
+        };
+
+        const { error } = await supabase
+            .from('resource_files' as any)
+            .insert(metadata);
+
+        if (error) {
+            console.error('Supabase metadata error:', error);
+            throw error;
+        }
+
+        // Also insert to resources table if enabled
+        if (insertToResources) {
+            await supabase
+                .from('resources')
+                .insert({
+                    title: metadata.title,
+                    description: metadata.description,
+                    resource_type: getCategoryType(uploadFile.category),
+                    url: b2Url,
+                    thumbnail_url: uploadFile.type.startsWith('image/') ? b2Url : null,
+                    published: true
+                });
+        }
+    };
+
+    const getCategoryType = (category: string): string => {
+        const typeMap: Record<string, string> = {
+            'general': 'document',
+            'constitution': 'legal',
+            'legislation': 'legal',
+            'policy': 'policy',
+            'educational': 'educational',
+            'media': 'media'
+        };
+        return typeMap[category] || 'document';
+    };
+
+    // Update file status
+    const updateFileStatus = (
+        id: string,
+        updates: Partial<UploadFile>
+    ) => {
+        setFiles((prev) =>
+            prev.map((f) => (f.id === id ? { ...f, ...updates } : f))
+        );
+    };
+
+    // Upload all files
+    const handleUploadAll = async () => {
+        if (!isB2Configured) {
+            toast({
+                title: "Backblaze Not Configured",
+                description: "Please configure B2 environment variables to enable uploads",
+                variant: "destructive"
+            });
             return;
         }
 
-        setUploading(true);
-
-        // Process files with concurrency limit
-        const concurrency = 3;
-        for (let i = 0; i < pendingFiles.length; i += concurrency) {
-            const batch = pendingFiles.slice(i, i + concurrency);
-            await Promise.all(batch.map(f => uploadFile(f)));
+        const pendingFiles = files.filter((f) => f.status === 'pending');
+        if (pendingFiles.length === 0) {
+            toast({ title: "No files to upload", variant: "destructive" });
+            return;
         }
 
-        setUploading(false);
+        setIsUploading(true);
 
-        const successful = files.filter(f => f.status === 'success').length;
-        const failed = files.filter(f => f.status === 'error').length;
+        try {
+            // Authenticate with B2
+            const auth = await authenticateB2();
+            if (!auth) {
+                setIsUploading(false);
+                return;
+            }
 
-        toast({
-            title: "Upload Complete",
-            description: `${successful} succeeded, ${failed} failed`,
-            variant: failed > 0 ? "destructive" : "default"
-        });
+            // Process files in batches of 3
+            const batchSize = 3;
+            for (let i = 0; i < pendingFiles.length; i += batchSize) {
+                const batch = pendingFiles.slice(i, i + batchSize);
+
+                await Promise.all(
+                    batch.map(async (uploadFile) => {
+                        try {
+                            updateFileStatus(uploadFile.id, { status: 'uploading', progress: 10 });
+
+                            // Get upload URL
+                            const uploadUrl = await getB2UploadUrl(auth);
+                            if (!uploadUrl) {
+                                throw new Error('Failed to get upload URL');
+                            }
+
+                            updateFileStatus(uploadFile.id, { progress: 30 });
+
+                            // Upload to B2
+                            const result = await uploadFileToB2(uploadFile, uploadUrl, auth.downloadUrl);
+                            if (!result) {
+                                throw new Error('Upload to B2 failed');
+                            }
+
+                            updateFileStatus(uploadFile.id, {
+                                progress: 60,
+                                b2Url: result.url
+                            });
+
+                            // OCR if enabled and applicable
+                            let extractedText: string | undefined;
+                            if (enableOCR && (
+                                uploadFile.type === 'application/pdf' ||
+                                uploadFile.type.startsWith('image/')
+                            )) {
+                                updateFileStatus(uploadFile.id, { status: 'extracting', progress: 75 });
+                                const text = await extractText(result.url);
+                                if (text) {
+                                    extractedText = text;
+                                    updateFileStatus(uploadFile.id, { extractedText: text });
+                                }
+                            }
+
+                            updateFileStatus(uploadFile.id, { progress: 85 });
+
+                            // Save metadata to Supabase
+                            await saveMetadataToSupabase(
+                                uploadFile,
+                                result.url,
+                                result.fileName,
+                                extractedText
+                            );
+
+                            updateFileStatus(uploadFile.id, {
+                                status: 'complete',
+                                progress: 100
+                            });
+                        } catch (error) {
+                            console.error(`Upload error for ${uploadFile.name}:`, error);
+                            updateFileStatus(uploadFile.id, {
+                                status: 'error',
+                                error: error instanceof Error ? error.message : 'Upload failed',
+                                progress: 0
+                            });
+                        }
+                    })
+                );
+            }
+
+            const completedCount = files.filter((f) => f.status === 'complete').length;
+            toast({
+                title: "Upload Complete",
+                description: `${completedCount} files uploaded to Backblaze B2`
+            });
+        } catch (error) {
+            console.error('Bulk upload error:', error);
+            toast({
+                title: "Upload Error",
+                description: "Some files failed to upload",
+                variant: "destructive"
+            });
+        } finally {
+            setIsUploading(false);
+        }
     };
 
-    // Remove file from list
+    // Remove file from queue
     const removeFile = (id: string) => {
-        setFiles(prev => prev.filter(f => f.id !== id));
+        setFiles((prev) => prev.filter((f) => f.id !== id));
     };
 
     // Clear completed files
     const clearCompleted = () => {
-        setFiles(prev => prev.filter(f => f.status !== 'success'));
+        setFiles((prev) => prev.filter((f) => f.status !== 'complete'));
     };
 
     // Clear all files
@@ -269,284 +518,315 @@ const BulkUploadManager: React.FC = () => {
         setFiles([]);
     };
 
-    // Retry failed uploads
-    const retryFailed = () => {
-        setFiles(prev => prev.map(f =>
-            f.status === 'error' ? { ...f, status: 'pending' as const, progress: 0, error: undefined } : f
-        ));
-    };
-
-    const stats = {
-        total: files.length,
-        pending: files.filter(f => f.status === 'pending').length,
-        uploading: files.filter(f => f.status === 'uploading' || f.status === 'processing').length,
-        success: files.filter(f => f.status === 'success').length,
-        error: files.filter(f => f.status === 'error').length
-    };
+    const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+    const completedCount = files.filter((f) => f.status === 'complete').length;
+    const errorCount = files.filter((f) => f.status === 'error').length;
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">Bulk Upload Manager</h2>
-                <p className="text-sm text-muted-foreground">
-                    Upload folders and files with automatic OCR text extraction for deep search
-                </p>
-            </div>
-
-            {/* Settings */}
-            <Card className="rounded-2xl">
-                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                        <Label>Target Storage Folder</Label>
-                        <Select value={targetFolder} onValueChange={setTargetFolder}>
-                            <SelectTrigger className="rounded-xl">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="resources">Resources</SelectItem>
-                                <SelectItem value="documents">Documents</SelectItem>
-                                <SelectItem value="media">Media</SelectItem>
-                                <SelectItem value="legislation">Legislation</SelectItem>
-                            </SelectContent>
-                        </Select>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CloudUpload className="h-5 w-5 text-primary" />
+                        Bulk Upload Manager
+                    </CardTitle>
+                    <CardDescription>
+                        Upload files directly to Backblaze B2. Metadata syncs to Supabase.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {/* Configuration Status */}
+                    <div className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl",
+                        isB2Configured
+                            ? "bg-emerald-500/10 border border-emerald-500/20"
+                            : "bg-amber-500/10 border border-amber-500/20"
+                    )}>
+                        {isB2Configured ? (
+                            <>
+                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                <div>
+                                    <p className="font-medium text-emerald-500">Backblaze B2 Connected</p>
+                                    <p className="text-xs text-muted-foreground">Bucket: {B2_CONFIG.bucketName}</p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <XCircle className="h-5 w-5 text-amber-500" />
+                                <div>
+                                    <p className="font-medium text-amber-500">Backblaze Not Configured</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Set VITE_B2_KEY_ID, VITE_B2_APPLICATION_KEY, VITE_B2_BUCKET_ID in .env
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-3 pt-6">
-                        <Checkbox
-                            id="enableOcr"
-                            checked={enableOcr}
-                            onCheckedChange={(checked) => setEnableOcr(!!checked)}
-                        />
-                        <Label htmlFor="enableOcr" className="cursor-pointer flex items-center gap-2">
-                            <FileSearch className="h-4 w-4 text-blue-500" />
-                            Enable OCR Text Extraction
-                        </Label>
-                    </div>
-
-                    <div className="flex items-center gap-3 pt-6">
-                        <Checkbox
-                            id="insertToResources"
-                            checked={insertToResources}
-                            onCheckedChange={(checked) => setInsertToResources(!!checked)}
-                        />
-                        <Label htmlFor="insertToResources" className="cursor-pointer flex items-center gap-2">
-                            <Database className="h-4 w-4 text-emerald-500" />
-                            Insert into Resources Table
-                        </Label>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-6">
-                        <Badge variant="outline" className="gap-1">
-                            <Cloud className="h-3 w-3" />
-                            {storageService.getStorageProvider() === 'backblaze' ? 'Backblaze B2' : 'Supabase Storage'}
-                        </Badge>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Drop Zone */}
-            <Card
-                className={cn(
-                    "rounded-2xl border-2 border-dashed transition-all cursor-pointer",
-                    isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50"
-                )}
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-            >
-                <CardContent className="py-12 text-center">
-                    <input
-                        ref={folderInputRef}
-                        type="file"
-                        // @ts-ignore - webkitdirectory is not in types
-                        webkitdirectory="true"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => handleFilesSelected(e.target.files)}
-                    />
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => handleFilesSelected(e.target.files)}
-                    />
-
-                    <Folder className={cn(
-                        "h-12 w-12 mx-auto mb-4 transition-colors",
-                        isDragging ? "text-primary" : "text-muted-foreground"
-                    )} />
-
-                    <p className="text-muted-foreground mb-4">
-                        Drop a folder or click to select
-                    </p>
-
-                    <div className="flex gap-2 justify-center">
-                        <Button
-                            variant="outline"
-                            onClick={() => folderInputRef.current?.click()}
-                            className="rounded-xl gap-2"
-                        >
-                            <Folder className="h-4 w-4" /> Select Folder
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="rounded-xl gap-2"
-                        >
-                            <Upload className="h-4 w-4" /> Add Individual Files
-                        </Button>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground mt-4">
-                        Supports: PDF, DOC, Images, Videos, and more
-                    </p>
-                </CardContent>
-            </Card>
-
-            {/* OCR Info */}
-            {enableOcr && (
-                <Card className="rounded-xl bg-blue-500/5 border-blue-500/20">
-                    <CardContent className="py-4 flex items-start gap-3">
-                        <Search className="h-5 w-5 text-blue-500 mt-0.5" />
-                        <div>
-                            <h4 className="font-semibold text-blue-500">OCR Deep Search</h4>
-                            <p className="text-sm text-muted-foreground">
-                                When enabled, text will be extracted from PDFs and images and stored alongside your files.
-                                This enables deep search across all your uploaded content.
-                            </p>
+                    {/* Drop Zone */}
+                    <div
+                        className={cn(
+                            "border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer",
+                            "hover:border-primary hover:bg-primary/5",
+                            isUploading && "pointer-events-none opacity-50"
+                        )}
+                        onDrop={handleDrop}
+                        onDragOver={(e) => e.preventDefault()}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="p-4 rounded-full bg-primary/10">
+                                <Upload className="h-8 w-8 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-lg font-semibold">Drop files or folders here</p>
+                                <p className="text-sm text-muted-foreground">or click to browse</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        fileInputRef.current?.click();
+                                    }}
+                                >
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Files
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        folderInputRef.current?.click();
+                                    }}
+                                >
+                                    <FolderUp className="h-4 w-4 mr-2" />
+                                    Folder
+                                </Button>
+                            </div>
                         </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Stats & Actions */}
-            {files.length > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex gap-2">
-                        <Badge variant="outline">{stats.total} files</Badge>
-                        <Badge className="bg-yellow-500/20 text-yellow-600">{stats.pending} pending</Badge>
-                        <Badge className="bg-blue-500/20 text-blue-600">{stats.uploading} active</Badge>
-                        <Badge className="bg-emerald-500/20 text-emerald-600">{stats.success} done</Badge>
-                        {stats.error > 0 && (
-                            <Badge className="bg-red-500/20 text-red-600">{stats.error} failed</Badge>
-                        )}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
+                        <input
+                            ref={folderInputRef}
+                            type="file"
+                            multiple
+                            webkitdirectory=""
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={startUpload}
-                            disabled={uploading || stats.pending === 0}
-                            className="rounded-xl gap-2"
-                        >
-                            {uploading ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Zap className="h-4 w-4" />
-                            )}
-                            {uploading ? 'Uploading...' : 'Start Upload'}
-                        </Button>
-                        {stats.error > 0 && (
-                            <Button variant="outline" onClick={retryFailed} className="rounded-xl gap-2">
-                                <RefreshCw className="h-4 w-4" /> Retry Failed
-                            </Button>
-                        )}
-                        {stats.success > 0 && (
-                            <Button variant="outline" onClick={clearCompleted} className="rounded-xl gap-2">
-                                <CheckCircle className="h-4 w-4" /> Clear Completed
-                            </Button>
-                        )}
-                        <Button variant="ghost" onClick={clearAll} className="rounded-xl text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                    {/* Options */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label>Default Category</Label>
+                            <Select value={defaultCategory} onValueChange={setDefaultCategory}>
+                                <SelectTrigger className="rounded-xl">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="general">General</SelectItem>
+                                    <SelectItem value="constitution">Constitution</SelectItem>
+                                    <SelectItem value="legislation">Legislation</SelectItem>
+                                    <SelectItem value="policy">Policy</SelectItem>
+                                    <SelectItem value="educational">Educational</SelectItem>
+                                    <SelectItem value="media">Media</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 border rounded-xl">
+                            <Checkbox
+                                id="ocr"
+                                checked={enableOCR}
+                                onCheckedChange={(checked) => setEnableOCR(checked === true)}
+                            />
+                            <div>
+                                <Label htmlFor="ocr" className="cursor-pointer flex items-center gap-1">
+                                    <Sparkles className="h-3 w-3" /> Enable OCR
+                                </Label>
+                                <p className="text-xs text-muted-foreground">Extract text from PDFs/images</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 border rounded-xl">
+                            <Checkbox
+                                id="resources"
+                                checked={insertToResources}
+                                onCheckedChange={(checked) => setInsertToResources(checked === true)}
+                            />
+                            <div>
+                                <Label htmlFor="resources" className="cursor-pointer flex items-center gap-1">
+                                    <Database className="h-3 w-3" /> Add to Resources
+                                </Label>
+                                <p className="text-xs text-muted-foreground">Insert into resources table</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
 
-            {/* File List */}
-            <div className="space-y-2">
-                <AnimatePresence>
-                    {files.map((file) => (
-                        <motion.div
-                            key={file.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                        >
-                            <Card className={cn(
-                                "rounded-xl transition-all",
-                                file.status === 'success' && "bg-emerald-500/5 border-emerald-500/20",
-                                file.status === 'error' && "bg-red-500/5 border-red-500/20"
-                            )}>
-                                <CardContent className="py-3 flex items-center gap-4">
-                                    <div className="flex-shrink-0">
-                                        {getFileIcon(file.name)}
-                                    </div>
+                    <div className="space-y-2">
+                        <Label>Global Description (optional)</Label>
+                        <Textarea
+                            placeholder="Description applied to all uploaded files..."
+                            value={globalDescription}
+                            onChange={(e) => setGlobalDescription(e.target.value)}
+                            className="rounded-xl min-h-[80px]"
+                        />
+                    </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium truncate">{file.name}</span>
-                                            <span className="text-xs text-muted-foreground">{formatSize(file.size)}</span>
-                                        </div>
-
-                                        {(file.status === 'uploading' || file.status === 'processing') && (
-                                            <Progress value={file.progress} className="h-1 mt-1" />
-                                        )}
-
-                                        {file.error && (
-                                            <p className="text-xs text-red-500 mt-1">{file.error}</p>
-                                        )}
-
-                                        {file.extractedText && (
-                                            <p className="text-xs text-muted-foreground mt-1 truncate">
-                                                OCR: {file.extractedText.slice(0, 100)}...
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        {file.status === 'pending' && (
-                                            <Clock className="h-4 w-4 text-muted-foreground" />
-                                        )}
-                                        {(file.status === 'uploading' || file.status === 'processing') && (
-                                            <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
-                                        )}
-                                        {file.status === 'success' && (
-                                            <CheckCircle className="h-4 w-4 text-emerald-500" />
-                                        )}
-                                        {file.status === 'error' && (
-                                            <XCircle className="h-4 w-4 text-red-500" />
-                                        )}
-
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => removeFile(file.id)}
-                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
+                    {/* File Queue */}
+                    {files.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <span className="font-semibold">
+                                        {files.length} files ({formatSize(totalSize)})
+                                    </span>
+                                    {completedCount > 0 && (
+                                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">
+                                            {completedCount} done
+                                        </Badge>
+                                    )}
+                                    {errorCount > 0 && (
+                                        <Badge variant="secondary" className="bg-red-500/10 text-red-500">
+                                            {errorCount} failed
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    {completedCount > 0 && (
+                                        <Button variant="ghost" size="sm" onClick={clearCompleted}>
+                                            Clear Completed
                                         </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
+                                    )}
+                                    <Button variant="ghost" size="sm" onClick={clearAll}>
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Clear All
+                                    </Button>
+                                </div>
+                            </div>
 
-            {/* Empty State */}
-            {files.length === 0 && (
-                <Card className="rounded-2xl border-dashed">
-                    <CardContent className="py-12 text-center">
-                        <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">No files added yet. Drop files or folders above to get started.</p>
-                    </CardContent>
-                </Card>
-            )}
+                            <ScrollArea className="h-[300px] border rounded-xl">
+                                <div className="p-4 space-y-2">
+                                    {files.map((file) => (
+                                        <div
+                                            key={file.id}
+                                            className={cn(
+                                                "flex items-center gap-3 p-3 rounded-lg border transition-colors",
+                                                file.status === 'complete' && "bg-emerald-500/5 border-emerald-500/20",
+                                                file.status === 'error' && "bg-red-500/5 border-red-500/20",
+                                                file.status === 'uploading' && "bg-primary/5 border-primary/20"
+                                            )}
+                                        >
+                                            <div className="text-muted-foreground">
+                                                {getFileIcon(file.type)}
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm truncate">{file.name}</p>
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <span>{formatSize(file.size)}</span>
+                                                    <span>•</span>
+                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                        {file.category}
+                                                    </Badge>
+                                                </div>
+                                                {(file.status === 'uploading' || file.status === 'extracting') && (
+                                                    <Progress value={file.progress} className="h-1 mt-2" />
+                                                )}
+                                                {file.error && (
+                                                    <p className="text-xs text-red-500 mt-1">{file.error}</p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {file.status === 'pending' && (
+                                                    <Badge variant="outline">Pending</Badge>
+                                                )}
+                                                {file.status === 'uploading' && (
+                                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                                )}
+                                                {file.status === 'extracting' && (
+                                                    <Badge variant="secondary" className="gap-1">
+                                                        <Sparkles className="h-3 w-3" /> OCR
+                                                    </Badge>
+                                                )}
+                                                {file.status === 'complete' && (
+                                                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                                )}
+                                                {file.status === 'error' && (
+                                                    <XCircle className="h-5 w-5 text-red-500" />
+                                                )}
+
+                                                {file.b2Url && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={() => window.open(file.b2Url, '_blank')}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+
+                                                {file.status === 'pending' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-red-500 hover:text-red-600"
+                                                        onClick={() => removeFile(file.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    )}
+
+                    {/* Upload Button */}
+                    <div className="flex justify-end gap-4">
+                        <Button
+                            size="lg"
+                            className="rounded-xl gap-2"
+                            disabled={isUploading || files.filter(f => f.status === 'pending').length === 0 || !isB2Configured}
+                            onClick={handleUploadAll}
+                        >
+                            {isUploading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Uploading...
+                                </>
+                            ) : (
+                                <>
+                                    <CloudUpload className="h-4 w-4" />
+                                    Upload to Backblaze ({files.filter(f => f.status === 'pending').length} files)
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
 
 export default BulkUploadManager;
+
+// Type declaration for folder input
+declare module 'react' {
+    interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+        webkitdirectory?: string;
+    }
+}

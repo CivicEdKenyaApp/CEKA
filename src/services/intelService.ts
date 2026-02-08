@@ -1,5 +1,5 @@
 // Intel Service - Legislative Intelligence Pipeline Management
-// Handles CORS-safe communication with Edge Functions
+// Uses direct Supabase calls with proper error handling
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,7 +25,6 @@ export interface ProcessingJob {
     started_at?: string;
     completed_at?: string;
     created_at: string;
-    // Extra metadata
     logs?: string[];
     metadata?: Record<string, any>;
 }
@@ -37,10 +36,6 @@ export interface PipelineConfig {
 }
 
 class IntelService {
-    private corsHeaders = {
-        'Content-Type': 'application/json'
-    };
-
     // Get all scraper sources
     async getSources(): Promise<ScraperSource[]> {
         try {
@@ -51,18 +46,18 @@ class IntelService {
 
             if (error) {
                 console.error('Error fetching sources:', error);
-                return this.getMockSources();
+                return [];
             }
 
-            return (data as unknown as ScraperSource[]) || this.getMockSources();
+            return (data as unknown as ScraperSource[]) || [];
         } catch (error) {
             console.error('Error fetching sources:', error);
-            return this.getMockSources();
+            return [];
         }
     }
 
     // Get recent jobs
-    async getJobs(limit: number = 10): Promise<ProcessingJob[]> {
+    async getJobs(limit: number = 20): Promise<ProcessingJob[]> {
         try {
             const { data, error } = await supabase
                 .from('processing_jobs' as any)
@@ -72,55 +67,29 @@ class IntelService {
 
             if (error) {
                 console.error('Error fetching jobs:', error);
-                return this.getMockJobs();
+                return [];
             }
 
-            return (data as unknown as ProcessingJob[]) || this.getMockJobs();
+            return (data as unknown as ProcessingJob[]) || [];
         } catch (error) {
             console.error('Error fetching jobs:', error);
-            return this.getMockJobs();
+            return [];
         }
     }
 
-    // Get pipeline scripts list
+    // Get pipeline scripts list (from edge function or default)
     async getPipelineScripts(): Promise<string[]> {
-        try {
-            const { data, error } = await supabase.functions.invoke('manage-intel', {
-                body: { action: 'list-scripts' }
-            });
-
-            if (error) {
-                console.error('Error loading scripts:', error);
-                return ['bills_pipeline.py', 'gazette_pipeline.py', 'healthcare_pipeline.py'];
-            }
-
-            return data?.scripts || ['bills_pipeline.py', 'gazette_pipeline.py', 'healthcare_pipeline.py'];
-        } catch (error) {
-            console.error('Error loading scripts:', error);
-            return ['bills_pipeline.py', 'gazette_pipeline.py', 'healthcare_pipeline.py'];
-        }
+        // Return default scripts - edge function may not be available
+        return ['bills_pipeline.py', 'gazette_pipeline.py', 'healthcare_pipeline.py'];
     }
 
     // Get script content
     async getScriptContent(name: string): Promise<string> {
-        try {
-            const { data, error } = await supabase.functions.invoke('manage-intel', {
-                body: { action: 'get-script', name }
-            });
-
-            if (error) {
-                console.error('Error loading script content:', error);
-                return this.getMockScriptContent(name);
-            }
-
-            return data?.content || this.getMockScriptContent(name);
-        } catch (error) {
-            console.error('Error loading script content:', error);
-            return this.getMockScriptContent(name);
-        }
+        // Return template script content
+        return this.getTemplateScriptContent(name);
     }
 
-    // Save script content
+    // Save script content (via edge function)
     async saveScriptContent(name: string, content: string): Promise<void> {
         try {
             const { error } = await supabase.functions.invoke('manage-intel', {
@@ -130,14 +99,14 @@ class IntelService {
             if (error) throw error;
         } catch (error) {
             console.error('Error saving script:', error);
-            throw new Error('Failed to save script. Check Edge Function deployment.');
+            throw new Error('Failed to save script. Edge Function may not be deployed.');
         }
     }
 
     // Trigger pipeline
     async triggerPipeline(config: PipelineConfig): Promise<{ jobId: string }> {
         try {
-            // Create job record locally first
+            // Create job record in Supabase
             const { data, error: jobError } = await supabase
                 .from('processing_jobs' as any)
                 .insert({
@@ -241,81 +210,93 @@ class IntelService {
         if (error) throw error;
     }
 
-    // Mock data for when tables/functions don't exist
-    private getMockSources(): ScraperSource[] {
-        return [
-            {
-                id: 'src-1',
-                name: 'Kenya Gazette',
-                url: 'http://kenyalaw.org/kenya_gazette/',
-                is_active: true,
-                last_scraped_at: new Date(Date.now() - 86400000).toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            },
-            {
-                id: 'src-2',
-                name: 'National Assembly Bills',
-                url: 'http://www.parliament.go.ke/the-national-assembly/house-business/bills',
-                is_active: true,
-                last_scraped_at: new Date(Date.now() - 172800000).toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            },
-            {
-                id: 'src-3',
-                name: 'The Senate Bills',
-                url: 'http://www.parliament.go.ke/the-senate/house-business/bills',
-                is_active: true,
-                last_scraped_at: new Date(Date.now() - 259200000).toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }
-        ];
+    // Create source
+    async createSource(source: Omit<ScraperSource, 'id' | 'created_at' | 'updated_at'>): Promise<ScraperSource> {
+        const { data, error } = await supabase
+            .from('scraper_sources' as any)
+            .insert(source)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as unknown as ScraperSource;
     }
 
-    private getMockJobs(): ProcessingJob[] {
-        return [
-            {
-                id: 'job-1',
-                job_type: 'bills_crawl',
-                status: 'processing',
-                progress: 5,
-                created_at: new Date().toISOString(),
-                metadata: { data_type: 'bills', target_url: 'INTERNAL://PIPELINE' }
-            },
-            {
-                id: 'job-2',
-                job_type: 'gazette_crawl',
-                status: 'completed',
-                progress: 100,
-                created_at: new Date(Date.now() - 3600000).toISOString(),
-                completed_at: new Date().toISOString(),
-                metadata: { data_type: 'gazette', target_url: 'INTERNAL://PIPELINE' }
-            }
-        ];
+    // Update job status
+    async updateJobStatus(jobId: string, status: ProcessingJob['status'], progress?: number): Promise<void> {
+        const updates: any = { status };
+        if (progress !== undefined) updates.progress = progress;
+        if (status === 'completed') updates.completed_at = new Date().toISOString();
+        if (status === 'processing' && !updates.started_at) updates.started_at = new Date().toISOString();
+
+        const { error } = await supabase
+            .from('processing_jobs' as any)
+            .update(updates)
+            .eq('id', jobId);
+
+        if (error) throw error;
     }
 
-    private getMockScriptContent(name: string): string {
+    // Template script content
+    private getTemplateScriptContent(name: string): string {
         return `# ${name}
-# Pipeline script for CEKA Intelligence System
-# This script handles automated data collection and processing
+# CEKA Legislative Intelligence Pipeline
+# Automated data collection and processing
 
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
+from typing import List, Dict, Any
+import json
 
+# Configuration
+BASE_URLS = {
+    'bills': 'http://www.parliament.go.ke/the-national-assembly/house-business/bills',
+    'gazette': 'http://kenyalaw.org/kenya_gazette/',
+    'healthcare': 'https://www.health.go.ke/policies/'
+}
+
+async def fetch_page(session: aiohttp.ClientSession, url: str) -> str:
+    """Fetch a single page and return HTML content."""
+    async with session.get(url) as response:
+        return await response.text()
+
+async def parse_content(html: str) -> List[Dict[str, Any]]:
+    """Parse HTML and extract relevant data."""
+    soup = BeautifulSoup(html, 'html.parser')
+    items = []
+    
+    # Add parsing logic specific to ${name.replace('.py', '')}
+    # Example: Find all document links
+    for link in soup.find_all('a', href=True):
+        if '.pdf' in link['href'] or 'document' in link.get('class', []):
+            items.append({
+                'title': link.get_text(strip=True),
+                'url': link['href'],
+                'type': '${name.replace('_pipeline.py', '')}'
+            })
+    
+    return items
+
+async def store_results(items: List[Dict[str, Any]]) -> None:
+    """Store extracted data in the database."""
+    # Implement Supabase insertion logic
+    print(f"Storing {len(items)} items...")
+    
 async def main():
-    # Pipeline logic here
-    print("Starting ${name.replace('.py', '')} pipeline...")
+    """Main pipeline execution."""
+    print(f"Starting ${name.replace('.py', '')} pipeline...")
     
-    # TODO: Implement actual scraping logic
-    # 1. Fetch target URLs
-    # 2. Parse HTML content
-    # 3. Extract relevant data
-    # 4. Store in Supabase
-    
-    print("Pipeline complete!")
+    async with aiohttp.ClientSession() as session:
+        # Fetch and parse content
+        url = BASE_URLS.get('${name.replace('_pipeline.py', '')}', '')
+        if url:
+            html = await fetch_page(session, url)
+            items = await parse_content(html)
+            await store_results(items)
+            print(f"Pipeline complete! Processed {len(items)} items.")
+        else:
+            print("No URL configured for this pipeline.")
 
 if __name__ == "__main__":
     asyncio.run(main())
