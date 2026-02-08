@@ -177,7 +177,7 @@ const LegislativeIntelligence: React.FC = () => {
         }
 
         try {
-            const created = await intelService.createSource(newSource);
+            const created = await intelService.createSource({ ...newSource, last_scraped_at: null });
             setSources([...sources, created]);
             setNewSource({ name: '', url: '', is_active: true });
             setShowAddSource(false);

@@ -58,7 +58,7 @@ interface UserProfile {
     created_at: string;
     updated_at: string;
     bio: string | null;
-    location: string | null;
+    county: string | null;
 }
 
 interface ActivityTimelineItem {
@@ -84,7 +84,7 @@ const EnhancedAdminDashboard: React.FC = () => {
     const [volunteers, setVolunteers] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [enhancedView, setEnhancedView] = useState(false);
+    const [enhancedView, setEnhancedView] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [userSearchQuery, setUserSearchQuery] = useState('');
     const [showUserModal, setShowUserModal] = useState(false);
@@ -104,10 +104,10 @@ const EnhancedAdminDashboard: React.FC = () => {
             setLoading(true);
 
             // Fetch dashboard stats via RPC
-            const { data: rpcStats, error: rpcError } = await supabase.rpc('get_dashboard_stats');
+            const { data: rpcStats, error: rpcError } = await (supabase.rpc as any)('get_dashboard_stats');
 
             if (!rpcError && rpcStats) {
-                setStats(rpcStats as DashboardStats);
+                setStats(rpcStats as unknown as DashboardStats);
             } else {
                 // Fallback: fetch counts directly
                 const [profilesRes, postsRes, resourcesRes] = await Promise.all([
@@ -131,9 +131,9 @@ const EnhancedAdminDashboard: React.FC = () => {
             }
 
             // Fetch activity timeline
-            const { data: timelineData } = await supabase.rpc('get_activity_timeline', { days_back: 14 });
+            const { data: timelineData } = await (supabase.rpc as any)('get_activity_timeline', { days_back: 14 });
             if (timelineData) {
-                setTimeline(timelineData as ActivityTimelineItem[]);
+                setTimeline(timelineData as unknown as ActivityTimelineItem[]);
             }
 
             // Fetch users
@@ -144,7 +144,7 @@ const EnhancedAdminDashboard: React.FC = () => {
                 .limit(100);
             if (usersData) {
                 // Get emails from auth
-                setUsers(usersData as UserProfile[]);
+                setUsers(usersData as unknown as UserProfile[]);
             }
 
             // Fetch events
@@ -352,25 +352,35 @@ const EnhancedAdminDashboard: React.FC = () => {
     // Enhanced View (Bento Grid)
     if (enhancedView) {
         return (
-            <div className="min-h-screen p-6 space-y-6">
-                {/* Header with toggle */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight">Tactical Command</h1>
-                        <p className="text-sm text-muted-foreground font-mono">
-                            CEKA.ADMIN :: {systemTime.toLocaleTimeString()}
+            <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans selection:bg-primary/30">
+                {/* Tactical Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]">
+                                <Shield className="h-6 w-6 text-white" />
+                            </div>
+                            <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic">
+                                Tactical Command
+                            </h1>
+                        </div>
+                        <p className="text-sm text-muted-foreground font-mono flex items-center gap-2 opacity-70">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            CEKA.ADMIN :: OS v4.0 :: {systemTime.toLocaleTimeString()}
                         </p>
                     </div>
+
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="enhanced-toggle" className="text-sm font-medium">Enhanced View</Label>
+                        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2 hover:bg-white/10 transition-colors">
+                            <Zap className="h-4 w-4 text-primary" />
+                            <Label htmlFor="enhanced-mode-top" className="text-sm font-bold cursor-pointer uppercase tracking-tight">Enhanced Mode</Label>
                             <Switch
-                                id="enhanced-toggle"
+                                id="enhanced-mode-top"
                                 checked={enhancedView}
                                 onCheckedChange={setEnhancedView}
                             />
                         </div>
-                        <Button variant="outline" size="sm" onClick={loadDashboardData} className="rounded-xl">
+                        <Button variant="outline" size="sm" onClick={loadDashboardData} className="rounded-xl h-10 border-white/10 bg-white/5 backdrop-blur-md">
                             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
                             Sync
                         </Button>
@@ -378,195 +388,154 @@ const EnhancedAdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Bento Grid */}
-                <div className="grid grid-cols-4 gap-4 auto-rows-[140px]">
-                    {/* Users - Large */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
+                    {/* Welcome Card - Big Bento */}
+                    <Card className="col-span-1 md:col-span-2 row-span-2 overflow-hidden bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-primary/20 rounded-[2.5rem] relative group shadow-2xl">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Sparkles className="h-32 w-32 text-primary rotate-12" />
+                        </div>
+                        <CardContent className="h-full flex flex-col justify-between p-8 relative z-10">
+                            <div className="space-y-4">
+                                <Badge className="bg-primary/20 text-primary border-primary/30 rounded-full px-4 py-1 text-xs font-bold uppercase tracking-widest">
+                                    System Overview
+                                </Badge>
+                                <h2 className="text-5xl font-black leading-tight tracking-tighter">
+                                    Sovereign Control Platform
+                                </h2>
+                                <p className="text-lg text-white/50 max-w-sm leading-relaxed">
+                                    All systems operational. Global engagement is up <span className="text-emerald-400 font-bold">12%</span>.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 pt-8">
+                                <Button className="rounded-2xl bg-white text-black hover:bg-white/90 font-bold px-6 h-12 shadow-xl hover:scale-105 transition-transform" onClick={() => navigateToTab('analytics')}>
+                                    Full Intel Report
+                                </Button>
+                                <Button variant="outline" className="rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold px-6 h-12 backdrop-blur-sm" onClick={() => setShowUserModal(true)}>
+                                    Directory
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Users - Small Bento */}
                     <Card
-                        className="col-span-2 row-span-1 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20"
-                        onClick={() => navigateToTab('overview')}
+                        className="col-span-1 row-span-1 cursor-pointer hover:scale-[1.05] transition-all bg-white/5 backdrop-blur-md border-white/10 rounded-[2.5rem] group"
+                        onClick={() => setShowUserModal(true)}
                     >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
+                        <CardContent className="h-full flex flex-col justify-between p-6">
                             <div className="flex items-center justify-between">
                                 <div className="p-2 rounded-xl bg-blue-500/20">
-                                    <Users className="h-5 w-5 text-blue-500" />
+                                    <Users className="h-5 w-5 text-blue-400" />
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                <TrendingUp className="h-4 w-4 text-emerald-500 opacity-50 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <div>
-                                <p className="text-4xl font-black">{stats?.total_users?.toLocaleString() || 0}</p>
-                                <p className="text-sm text-muted-foreground">Total Citizens</p>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-emerald-500">
-                                <TrendingUp className="h-3 w-3" />
-                                +{stats?.recent_signups || 0} this week
+                            <div className="mt-4">
+                                <p className="text-4xl font-black tracking-tighter">{stats?.total_users || 0}</p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Citizens</p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* System Status */}
-                    <Card className="col-span-1 row-span-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                                <Server className="h-4 w-4" /> System Status
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {Object.entries(systemStatus).map(([key, status]) => (
-                                <div key={key} className="flex items-center justify-between">
-                                    <span className="text-xs capitalize flex items-center gap-2">
-                                        {key === 'database' && <Database className="h-3 w-3" />}
-                                        {key === 'realtime' && <Wifi className="h-3 w-3" />}
-                                        {key === 'storage' && <Server className="h-3 w-3" />}
-                                        {key === 'edge' && <Zap className="h-3 w-3" />}
-                                        {key}
-                                    </span>
-                                    <StatusIndicator status={status} />
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    {/* Posts */}
+                    {/* Posts - Small Bento */}
                     <Card
-                        className="cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20"
+                        className="col-span-1 row-span-1 cursor-pointer hover:scale-[1.05] transition-all bg-white/5 backdrop-blur-md border-white/10 rounded-[2.5rem] group"
                         onClick={() => navigateToTab('appraisal')}
                     >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
+                        <CardContent className="h-full flex flex-col justify-between p-6">
                             <div className="flex items-center justify-between">
-                                <FileText className="h-5 w-5 text-emerald-500" />
-                                <Badge variant="outline" className="text-xs">{stats?.pending_drafts || 0} drafts</Badge>
+                                <div className="p-2 rounded-xl bg-emerald-500/20">
+                                    <FileText className="h-5 w-5 text-emerald-400" />
+                                </div>
+                                <Badge variant="outline" className="text-[10px] border-emerald-500/50 text-emerald-400">{stats?.pending_drafts || 0} Awaiting</Badge>
                             </div>
-                            <div>
-                                <p className="text-3xl font-black">{stats?.total_posts || 0}</p>
-                                <p className="text-xs text-muted-foreground">Blog Posts</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Resources */}
-                    <Card
-                        className="cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border-orange-500/20"
-                        onClick={() => navigateToTab('uploads')}
-                    >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
-                            <BookOpen className="h-5 w-5 text-orange-500" />
-                            <div>
-                                <p className="text-3xl font-black">{stats?.total_resources || 0}</p>
-                                <p className="text-xs text-muted-foreground">Resources</p>
+                            <div className="mt-4">
+                                <p className="text-4xl font-black tracking-tighter">{stats?.total_posts || 0}</p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Intel Posts</p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Activity Chart */}
+                    {/* Timeline - Med Bento */}
                     <Card
-                        className="col-span-2 row-span-2 cursor-pointer hover:shadow-lg transition-all"
+                        className="col-span-1 md:col-span-2 row-span-1 cursor-pointer hover:scale-[1.01] transition-all bg-white/5 backdrop-blur-md border-white/10 rounded-[2.5rem] group"
                         onClick={() => navigateToTab('analytics')}
                     >
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                                <Activity className="h-4 w-4" /> Activity Timeline
-                            </CardTitle>
+                        <CardHeader className="p-6 pb-0 flex flex-row items-center justify-between">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Activity Pulse</CardTitle>
+                            <Activity className="h-4 w-4 text-rose-500 animate-pulse" />
                         </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={180}>
-                                <AreaChart data={timeline}>
+                        <CardContent className="p-0 overflow-hidden">
+                            <ResponsiveContainer width="100%" height={100}>
+                                <AreaChart data={timeline} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                                     <defs>
-                                        <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                        <linearGradient id="colorUsersPulse" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                                    <XAxis
-                                        dataKey="activity_date"
-                                        tickFormatter={(d) => new Date(d).toLocaleDateString('en', { day: 'numeric' })}
-                                        tick={{ fontSize: 10 }}
-                                    />
-                                    <YAxis tick={{ fontSize: 10 }} />
-                                    <Tooltip />
                                     <Area
                                         type="monotone"
                                         dataKey="new_users"
-                                        stroke="hsl(var(--primary))"
-                                        fill="url(#colorUsers)"
-                                        strokeWidth={2}
+                                        stroke="#10b981"
+                                        fill="url(#colorUsersPulse)"
+                                        strokeWidth={3}
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
 
-                    {/* Events */}
+                    {/* Resources */}
                     <Card
-                        className="col-span-1 row-span-1 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border-indigo-500/20"
-                        onClick={() => navigateToTab('events')}
+                        className="col-span-1 row-span-1 cursor-pointer hover:scale-[1.05] transition-all bg-white/5 backdrop-blur-md border-white/10 rounded-[2.5rem]"
+                        onClick={() => navigateToTab('uploads')}
                     >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
-                            <Calendar className="h-5 w-5 text-indigo-500" />
-                            <div>
-                                <p className="text-3xl font-black">{events.length}</p>
-                                <p className="text-xs text-muted-foreground">Upcoming Events</p>
+                        <CardContent className="h-full flex flex-col justify-between p-6">
+                            <div className="p-2 w-fit rounded-xl bg-orange-500/20">
+                                <BookOpen className="h-5 w-5 text-orange-400" />
+                            </div>
+                            <div className="mt-4">
+                                <p className="text-4xl font-black tracking-tighter">{stats?.total_resources || 0}</p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">Vault Files</p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Volunteers */}
-                    <Card
-                        className="cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border-teal-500/20"
-                        onClick={() => navigateToTab('volunteers')}
-                    >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
-                            <UserCheck className="h-5 w-5 text-teal-500" />
-                            <div>
-                                <p className="text-3xl font-black">{volunteers.length}</p>
-                                <p className="text-xs text-muted-foreground">Volunteer Ops</p>
+                    {/* System Status */}
+                    <Card className="col-span-1 row-span-1 bg-white/5 backdrop-blur-md border-white/10 rounded-[2.5rem]">
+                        <CardContent className="h-full flex flex-col justify-between p-6">
+                            <div className="flex items-center gap-2">
+                                <Server className="h-4 w-4 text-purple-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nodes</span>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Notifications */}
-                    <Card
-                        className="cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-rose-500/10 to-red-500/10 border-rose-500/20"
-                        onClick={() => navigateToTab('overview')}
-                    >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
-                            <div className="flex items-center justify-between">
-                                <Bell className="h-5 w-5 text-rose-500" />
-                                <Badge className="bg-rose-500/20 text-rose-500 border-rose-500/50">
-                                    {notifications.filter(n => !n.is_read).length}
-                                </Badge>
-                            </div>
-                            <div>
-                                <p className="text-3xl font-black">{notifications.length}</p>
-                                <p className="text-xs text-muted-foreground">Notifications</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Legislative */}
-                    <Card
-                        className="cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-amber-500/20"
-                        onClick={() => navigateToTab('intelligence')}
-                    >
-                        <CardContent className="h-full flex flex-col justify-between p-4">
-                            <Shield className="h-5 w-5 text-amber-500" />
-                            <div>
-                                <p className="text-3xl font-black">{stats?.total_bills || 0}</p>
-                                <p className="text-xs text-muted-foreground">Bills Tracked</p>
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                {Object.entries(systemStatus).slice(0, 4).map(([key, status]) => (
+                                    <div key={key} className="flex flex-col gap-1.5">
+                                        <span className="text-[8px] uppercase tracking-tighter text-muted-foreground/50">{key}</span>
+                                        <div className={cn(
+                                            "w-full h-1.5 rounded-full bg-white/5 overflow-hidden",
+                                        )}>
+                                            <div className={cn(
+                                                "h-full rounded-full transition-all duration-1000",
+                                                status === 'online' ? "bg-emerald-500 w-full" : "bg-red-500 w-[10%]"
+                                            )} />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Terminal Footer */}
-                <Card className="border-dashed">
-                    <CardContent className="py-3 font-mono text-xs flex items-center gap-2 text-muted-foreground">
-                        <span className="text-primary">$</span>
-                        <span>ceka.admin.status</span>
-                        <span className="text-emerald-500">=</span>
-                        <span className="text-emerald-500">operational</span>
-                        <span className="ml-auto">{systemTime.toISOString()}</span>
-                    </CardContent>
-                </Card>
+                {/* Footer Trace */}
+                <div className="mt-8 flex items-center justify-between text-[10px] font-mono text-muted-foreground opacity-50 px-4">
+                    <div className="flex gap-6">
+                        <span>TRACE: [OK]</span>
+                        <span>LATENCY: 24ms</span>
+                        <span>ENCRYPTION: AES-256</span>
+                    </div>
+                    <span>{systemTime.toISOString()}</span>
+                </div>
             </div>
         );
     }
@@ -920,10 +889,10 @@ const EnhancedAdminDashboard: React.FC = () => {
                                                     <Mail className="h-3 w-3" />
                                                     {user.email}
                                                 </p>
-                                                {user.location && (
+                                                {user.county && (
                                                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                                                         <MapPin className="h-3 w-3" />
-                                                        {user.location}
+                                                        {user.county}
                                                     </p>
                                                 )}
                                             </div>

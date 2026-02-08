@@ -54,7 +54,7 @@ const AnalyticsDashboard: React.FC = () => {
             const daysBack = parseInt(dateRange);
 
             // Get activity timeline from RPC
-            const { data: timelineData } = await supabase.rpc('get_activity_timeline', { days_back: daysBack });
+            const { data: timelineData } = await (supabase.rpc as any)('get_activity_timeline', { days_back: daysBack });
 
             // Get user growth data
             const { data: profilesData } = await supabase
@@ -152,7 +152,7 @@ const AnalyticsDashboard: React.FC = () => {
             }));
 
             // Timeline
-            const timeline = (timelineData || []).map((item: any) => ({
+            const timeline = ((timelineData as any) || []).map((item: any) => ({
                 date: new Date(item.activity_date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
                 new_users: item.new_users,
                 posts: item.blog_posts,

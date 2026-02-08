@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS public.admin_sessions (
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins full access sessions" ON public.admin_sessions;
 CREATE POLICY "Admins full access sessions" ON public.admin_sessions FOR ALL USING (public.is_admin());
+DROP POLICY IF EXISTS "Users can update own sessions" ON public.admin_sessions;
+CREATE POLICY "Users can update own sessions" ON public.admin_sessions FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- =========================================================================
 -- SECTION 3: ADMIN NOTIFICATIONS TABLE

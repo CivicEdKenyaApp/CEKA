@@ -110,7 +110,8 @@ class IntelService {
             const { data, error: jobError } = await supabase
                 .from('processing_jobs' as any)
                 .insert({
-                    job_type: `${config.type}_crawl`,
+                    job_name: `Intel Pipeline: ${config.type.toUpperCase()}`,
+                    job_type: config.type === 'custom' ? 'crawl' : `${config.type}_crawl`,
                     status: 'pending',
                     progress: 0,
                     metadata: {
