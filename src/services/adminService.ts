@@ -202,15 +202,17 @@ class AdminService {
         totalSessions,
         pendingDrafts,
         totalDiscussions,
-        totalViewsRes
+        totalViewsRes,
+        blogViewsRes
       ] = await Promise.all([
-        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published'),
-        supabase.from('resources').select('*', { count: 'exact', head: true }),
-        supabase.from('bills').select('*', { count: 'exact', head: true }),
-        supabase.from('admin_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
-        supabase.from('discussions').select('*', { count: 'exact', head: true }),
-        (supabase.from('bills' as any) as any).select('views_count')
+        supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('resources').select('id', { count: 'exact', head: true }),
+        supabase.from('bills').select('id', { count: 'exact', head: true }),
+        supabase.from('admin_sessions').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
+        supabase.from('discussions' as any).select('id', { count: 'exact', head: true }),
+        supabase.from('bills').select('views_count'),
+        supabase.from('blog_posts').select('views').maybeSingle() // Just check if column exists
       ]);
 
       const totalViews = (totalViewsRes.data || []).reduce((acc, b) => acc + (b.views_count || 0), 0);
@@ -221,7 +223,7 @@ class AdminService {
         total_resources: totalResources.count || 0,
         total_bills: totalBills.count || 0,
         active_sessions: totalSessions.count || 0,
-        recent_signups: statsData?.total_users ? Math.ceil(statsData.total_users * 0.05) : 0, // Still heuristic as we don't have a daily signups view yet
+        recent_signups: statsData?.total_users ? Math.ceil(statsData.total_users * 0.05) : 0,
         pending_drafts: pendingDrafts.count || 0,
         total_discussions: totalDiscussions.count || 0,
         total_views: totalViews || 0,

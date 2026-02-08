@@ -41,20 +41,21 @@ class AnalyticsService {
     async getDashboardMetrics(): Promise<DashboardMetrics> {
         try {
             // Try using the RPC function first
-            const { data: rpcData, error: rpcError } = await supabase.rpc('get_dashboard_stats');
+            const { data: rpcData, error: rpcError } = await (supabase.rpc as any)('get_dashboard_stats');
 
             if (!rpcError && rpcData) {
+                const data = rpcData as any;
                 return {
-                    totalUsers: rpcData.total_users || 0,
-                    totalPosts: rpcData.total_posts || 0,
-                    totalResources: rpcData.total_resources || 0,
-                    totalBills: rpcData.total_bills || 0,
-                    activeSessions: rpcData.active_sessions || 0,
-                    recentSignups: rpcData.recent_signups || 0,
-                    pendingDrafts: rpcData.pending_drafts || 0,
-                    totalDiscussions: rpcData.total_discussions || 0,
-                    totalPageViews: rpcData.total_page_views || 0,
-                    totalChatInteractions: rpcData.total_chat_interactions || 0
+                    totalUsers: data.total_users || 0,
+                    totalPosts: data.total_posts || 0,
+                    totalResources: data.total_resources || 0,
+                    totalBills: data.total_bills || 0,
+                    activeSessions: data.active_sessions || 0,
+                    recentSignups: data.recent_signups || 0,
+                    pendingDrafts: data.pending_drafts || 0,
+                    totalDiscussions: data.total_discussions || 0,
+                    totalPageViews: data.total_page_views || 0,
+                    totalChatInteractions: data.total_chat_interactions || 0
                 };
             }
 
@@ -67,7 +68,7 @@ class AnalyticsService {
                 supabase.from('admin_sessions' as any).select('id', { count: 'exact', head: true }).eq('is_active', true),
                 supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
                 supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
-                supabase.from('forum_posts' as any).select('id', { count: 'exact', head: true })
+                supabase.from('discussions' as any).select('id', { count: 'exact', head: true }) // Fallback for discussions
             ]);
 
             return {
@@ -95,10 +96,10 @@ class AnalyticsService {
     async getActivityTimeline(daysBack: number = 30): Promise<ActivityDataPoint[]> {
         try {
             // Use RPC function
-            const { data, error } = await supabase.rpc('get_activity_timeline', { days_back: daysBack });
+            const { data, error } = await (supabase.rpc as any)('get_activity_timeline', { days_back: daysBack });
 
             if (!error && data) {
-                return data.map((row: any) => ({
+                return (data as any[]).map((row: any) => ({
                     date: row.activity_date,
                     newUsers: row.new_users,
                     blogPosts: row.blog_posts,
@@ -155,19 +156,19 @@ class AnalyticsService {
         try {
             const { data: bills } = await supabase
                 .from('bills')
-                .select('id, title, views_count')
-                .order('views_count', { ascending: false })
+                .select('id, title, views_count' as any)
+                .order('views_count' as any, { ascending: false })
                 .limit(limit);
 
             const { data: posts } = await supabase
                 .from('blog_posts')
-                .select('id, title, views')
-                .order('views', { ascending: false })
+                .select('id, title, views' as any)
+                .order('views' as any, { ascending: false })
                 .limit(limit);
 
             const content: TopContent[] = [
-                ...(bills || []).map(b => ({ id: b.id, title: b.title, views: b.views_count || 0, type: 'bill' })),
-                ...(posts || []).map(p => ({ id: p.id, title: p.title, views: p.views || 0, type: 'post' }))
+                ...(bills || []).map((b: any) => ({ id: b.id, title: b.title, views: b.views_count || 0, type: 'bill' })),
+                ...(posts || []).map((p: any) => ({ id: p.id, title: p.title, views: p.views || 0, type: 'post' }))
             ];
 
             return content.sort((a, b) => b.views - a.views).slice(0, limit);

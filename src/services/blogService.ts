@@ -25,6 +25,7 @@ export interface BlogPost {
   word_count?: number;
   seo_keywords?: string[];
   revision_number?: number;
+  views?: number;
 }
 
 export interface BlogMedia {
@@ -235,7 +236,7 @@ class BlogService {
         .from('blog_posts')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return (data || []).map(post => ({
         ...post,
@@ -293,7 +294,7 @@ class BlogService {
         .order('name');
 
       if (error) throw error;
-      
+
       // Map the data to include slug since it's missing from the database
       return (data || []).map(category => ({
         id: category.id,

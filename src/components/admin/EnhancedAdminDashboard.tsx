@@ -110,9 +110,11 @@ const EnhancedAdminDashboard = () => {
             if (!mountedRef.current) return;
 
             try {
+                const uniqueId = Math.random().toString(36).substring(7);
+
                 // Subscribe to profile changes (new users)
                 channelsRef.current.profiles = supabase
-                    .channel('admin-profiles-realtime-' + Date.now())
+                    .channel(`admin-profiles-${uniqueId}`)
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
                         if (mountedRef.current) {
                             console.log('[Dashboard] Profile change detected');
@@ -122,14 +124,12 @@ const EnhancedAdminDashboard = () => {
                     .subscribe((status) => {
                         if (status === 'SUBSCRIBED') {
                             console.log('[Dashboard] Profiles channel connected');
-                        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                            console.log('[Dashboard] Profiles channel:', status);
                         }
                     });
 
                 // Subscribe to notification changes
                 channelsRef.current.notifications = supabase
-                    .channel('admin-notifications-realtime-' + Date.now())
+                    .channel(`admin-notifications-${uniqueId}`)
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications' }, () => {
                         if (mountedRef.current) {
                             console.log('[Dashboard] New notification');
@@ -148,7 +148,7 @@ const EnhancedAdminDashboard = () => {
             } catch (error) {
                 console.warn('[Dashboard] Failed to setup realtime:', error);
             }
-        }, 100);
+        }, 500);
 
         return cleanup;
     }, [loadDashboardData]);
