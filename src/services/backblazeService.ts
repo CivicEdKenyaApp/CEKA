@@ -10,8 +10,13 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Helper to get B2 config dynamically from environment
 const getB2Config = () => {
+    // DIAGNOSTIC LOG (Keys only)
+    const envKeys = Object.keys(import.meta.env).filter(k => k.startsWith('VITE_B2_'));
+    console.log('[B2] Available Env Keys:', envKeys);
+
     const keyId = import.meta.env.VITE_B2_KEY_ID || '';
     const appKey = import.meta.env.VITE_B2_APP_KEY || '';
+
     const bucketName = import.meta.env.VITE_B2_BUCKET_NAME || 'ceka-resources-vault';
     const endpoint = import.meta.env.VITE_B2_ENDPOINT || 's3.eu-central-003.backblazeb2.com';
     const region = import.meta.env.VITE_B2_REGION || (endpoint.includes('s3.') ? endpoint.split('.')[1] : 'eu-central-003');
