@@ -430,14 +430,26 @@
     /* Enables smooth scrolling on iOS */
   }
 
+  /* Legacy/Standard Global Headings - More readable */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
+    @apply tracking-tight;
+    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  }
+
+  /* Aggressive "Neural" Design - Apply via class for Admin Dashboards & Newer sections */
+  .neural-system h1,
+  .neural-system h2,
+  .neural-system h3,
+  .neural-system h4,
+  .neural-system h5,
+  .neural-system h6,
+  .neural-heading {
     @apply font-black tracking-tighter uppercase;
-    font-family: inherit;
   }
 
   h1 {
@@ -450,6 +462,14 @@
 
   h3 {
     @apply text-xl md:text-2xl lg:text-3xl;
+  }
+
+  /* Restore Original Homepage Look specifically if needed */
+  .homepage-restored h1,
+  .homepage-restored h2,
+  .homepage-restored h3 {
+    @apply capitalize font-extrabold tracking-tight italic-none normal-case;
+    font-family: 'Inter', -apple-system, sans-serif;
   }
 
   .section-padding {

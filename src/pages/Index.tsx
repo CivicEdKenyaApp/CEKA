@@ -150,65 +150,67 @@ const Index = () => {
 
   return (
     <Layout>
-      <Hero />
+      <div className="homepage-restored">
+        <Hero />
 
-      {/* Campaign Spotlight / Ad Space (Dynamic) */}
-      <section className="container mx-auto py-8">
-        <CampaignSpotlight section="home_hero" />
-      </section>
+        {/* Campaign Spotlight / Ad Space (Dynamic) */}
+        <section className="container mx-auto py-8">
+          <CampaignSpotlight section="home_hero" />
+        </section>
 
-      <div className="py-8">
-        <MegaProjectCarousel
-          slides={formattedSlides}
-          autoPlayMs={4500}
-          className="container mx-auto"
-        />
-      </div>
-      <FeaturedLegislation />
+        <div className="py-8">
+          <MegaProjectCarousel
+            slides={formattedSlides}
+            autoPlayMs={4500}
+            className="container mx-auto"
+          />
+        </div>
+        <FeaturedLegislation />
 
-      {/* Featured Instagram-style Carousel Section */}
-      {featuredMedia && (
-        <section className="bg-background py-16 scroll-mt-20 overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
-              {/* Text Side */}
-              <div className="flex-1 space-y-6 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kenya-red/10 text-kenya-red text-xs font-bold uppercase tracking-widest">
-                  <span className="animate-pulse">●</span> Education Series
+        {/* Featured Instagram-style Carousel Section */}
+        {featuredMedia && (
+          <section className="bg-background py-16 scroll-mt-20 overflow-hidden">
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
+                {/* Text Side */}
+                <div className="flex-1 space-y-6 text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kenya-red/10 text-kenya-red text-xs font-bold uppercase tracking-widest">
+                    <span className="animate-pulse">●</span> Education Series
+                  </div>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-kenya-black dark:text-white uppercase leading-tight">
+                    Pieces: <br />
+                    <span className="text-kenya-green">Breaking Down Topics</span>
+                  </h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed max-w-md mx-auto lg:mx-0">
+                    Simplifying complex civic, social and legal issues through visual education series. Swipe through to learn, download to share and act.
+                  </p>
+                  <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
+                    <Link to="/pieces">
+                      <Button className="rounded-full bg-kenya-green hover:bg-kenya-green/90 text-white font-bold px-8 h-12 shadow-lg shadow-kenya-green/20">
+                        EXPLORE ALL PIECES
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-kenya-black dark:text-white uppercase leading-tight">
-                  Pieces: <br />
-                  <span className="text-kenya-green">Breaking Down Topics</span>
-                </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed max-w-md mx-auto lg:mx-0">
-                  Simplifying complex civic, social and legal issues through visual education series. Swipe through to learn, download to share and act.
-                </p>
-                <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
-                  <Link to="/pieces">
-                    <Button className="rounded-full bg-kenya-green hover:bg-kenya-green/90 text-white font-bold px-8 h-12 shadow-lg shadow-kenya-green/20">
-                      EXPLORE ALL PIECES
-                    </Button>
-                  </Link>
-                </div>
-              </div>
 
-              {/* Carousel Side */}
-              <div className="flex-1 w-full max-w-lg relative">
-                <InstagramCarousel content={featuredMedia} className="relative z-10" />
+                {/* Carousel Side */}
+                <div className="flex-1 w-full max-w-lg relative">
+                  <InstagramCarousel content={featuredMedia} className="relative z-10" />
+                </div>
               </div>
             </div>
-          </div>
+          </section>
+        )}
+
+        {/* Secondary Ad Space: Between Legislation and Resources */}
+        <section className="container mx-auto py-8">
+          <CampaignSpotlight section="home_mid" />
         </section>
-      )}
 
-      {/* Secondary Ad Space: Between Legislation and Resources */}
-      <section className="container mx-auto py-8">
-        <CampaignSpotlight section="home_mid" />
-      </section>
-
-      <ResourceHighlights />
-      <CommunitySection />
-      <VolunteerOpportunities />
+        <ResourceHighlights />
+        <CommunitySection />
+        <VolunteerOpportunities />
+      </div>
     </Layout>
   );
 };

@@ -108,7 +108,7 @@ const LegislativeIntelligence = () => {
     };
 
     // Save script
-    const saveScript = async () => {
+    const handleSaveScript = async () => {
         if (!selectedScript) return;
         try {
             setSaving(true);

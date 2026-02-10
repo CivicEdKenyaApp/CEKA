@@ -38,7 +38,7 @@ const Hero = () => {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
             <div className="space-y-2">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-[1000] tracking-tighter uppercase leading-[0.9] text-kenya-black dark:text-white mb-6">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.9] text-kenya-black dark:text-white mb-6">
                 {translate('Empowering Citizens through', language)}{' '}
                 <span className="text-kenya-green">{translate('Civic Education', language)}</span>
               </h1>
