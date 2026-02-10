@@ -21,6 +21,7 @@ import {
     PieChartIcon, TrendingDown, Flame, Award, Layers, UserPlus
 } from 'lucide-react';
 import { analyticsService, DashboardMetrics, ActivityDataPoint, TopContent } from '@/services/analyticsService';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 // Premium color palette
 const CHART_COLORS = {
@@ -330,13 +331,8 @@ const BentoAnalyticsDashboard = ({ onTabChange }: BentoAnalyticsDashboardProps) 
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                    <Sparkles className="h-8 w-8 text-primary" />
-                </motion.div>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <CEKALoader variant="scanning" size="lg" text="Processing Platform Intelligence..." />
             </div>
         );
     }
@@ -362,7 +358,7 @@ const BentoAnalyticsDashboard = ({ onTabChange }: BentoAnalyticsDashboardProps) 
                         className="gap-2 rounded-xl"
                         disabled={refreshing}
                     >
-                        <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        {refreshing ? <CEKALoader variant="ios" size="sm" /> : <RefreshCw className="h-4 w-4" />}
                         Refresh
                     </Button>
                     <Button onClick={exportReport} size="sm" className="gap-2 rounded-xl">

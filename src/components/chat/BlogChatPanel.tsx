@@ -9,7 +9,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Users, ArrowRight, Loader2, ExternalLink, ChevronRight } from 'lucide-react';
+import { MessageSquare, Users, ArrowRight, ExternalLink, ChevronRight } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -182,7 +183,7 @@ export const BlogChatPanel: React.FC<BlogChatPanelProps> = ({ blogPost, classNam
         return (
             <Card className={cn("p-4 rounded-3xl border-0 bg-white/80 dark:bg-white/5 backdrop-blur-xl", className)}>
                 <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <CEKALoader variant="ios" size="sm" />
                 </div>
             </Card>
         );
@@ -250,7 +251,7 @@ export const BlogChatPanel: React.FC<BlogChatPanelProps> = ({ blogPost, classNam
                         className="w-full rounded-2xl h-12 font-bold bg-primary hover:bg-primary/90"
                     >
                         {isJoining ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <CEKALoader variant="ios" size="sm" />
                         ) : (
                             <>
                                 {chatRoom ? 'Join Discussion' : 'Start Discussion'}

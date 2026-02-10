@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,14 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useAppChanges } from '@/hooks/useAppChanges';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Send } from 'lucide-react';
+import { Plus, Send } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const AppChangeLogger = () => {
   const { changes, loading, processNotifications, logFeatureUpdate, logBugFix, logSecurityUpdate, logNewFeature } = useAppChanges();
   const { toast } = useToast();
   const [isLogging, setIsLogging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     type: '',
     title: '',
@@ -164,8 +164,8 @@ const AppChangeLogger = () => {
           <Button onClick={handleLogChange} disabled={isLogging} className="w-full">
             {isLogging ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Logging Change...
+                <CEKALoader variant="ios" size="sm" />
+                <span className="ml-2">Logging Change...</span>
               </>
             ) : (
               <>
@@ -181,15 +181,15 @@ const AppChangeLogger = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Pending Changes ({changes.length})</span>
-            <Button 
-              onClick={handleProcessNotifications} 
+            <Button
+              onClick={handleProcessNotifications}
               disabled={isProcessing || changes.length === 0}
               variant="outline"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  <CEKALoader variant="ios" size="sm" />
+                  <span className="ml-2">Processing...</span>
                 </>
               ) : (
                 <>
@@ -206,7 +206,7 @@ const AppChangeLogger = () => {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
+              <CEKALoader variant="ios" size="md" />
             </div>
           ) : changes.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">

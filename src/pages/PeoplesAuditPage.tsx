@@ -153,7 +153,7 @@ const PeoplesAuditPage: React.FC = () => {
               {/* Loading State */}
               {!iframeLoaded && !iframeError && (
                 <div className="h-96 flex flex-col items-center justify-center bg-muted/30">
-                  <CEKALoader variant="orbit" size="lg" text="Auditing Economic Reality..." />
+                  <CEKALoader variant="scanning" size="lg" text="Auditing Economic Reality..." />
                 </div>
               )}
 

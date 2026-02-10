@@ -19,10 +19,10 @@ import {
     AlertTriangle,
     CheckCircle,
     X,
-    Loader2,
     History,
     User
 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -430,7 +430,7 @@ export const ChatModerationPanel: React.FC<ChatModerationPanelProps> = ({
                                 )}
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <CEKALoader variant="ios" size="sm" />
                                 ) : (
                                     <>
                                         {actionType === 'ban' && <Ban className="h-4 w-4 mr-2" />}

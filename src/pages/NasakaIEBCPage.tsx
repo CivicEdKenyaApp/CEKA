@@ -257,7 +257,7 @@ const NasakaPage: React.FC = () => {
               {/* Loading State */}
               {!iframeLoaded && !iframeError && (
                 <div className="h-96 flex flex-col items-center justify-center bg-gradient-to-br from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent">
-                  <CEKALoader variant="ios" size="lg" text="Loading Nasaka IEBC Finder..." />
+                  <CEKALoader variant="scanning" size="lg" text="Scanning Nasaka IEBC Finder..." />
                 </div>
               )}
 

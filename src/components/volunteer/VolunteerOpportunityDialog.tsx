@@ -10,7 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
-import { Loader2, PlusCircle, MapPin, Clock, Users, Calendar, Mail, Link as LinkIcon } from 'lucide-react';
+import { PlusCircle, MapPin, Clock, Users, Calendar, Mail, Link as LinkIcon } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Link } from 'react-router-dom';
 
 export default function VolunteerOpportunityDialog() {
@@ -422,8 +423,8 @@ export default function VolunteerOpportunityDialog() {
           <Button onClick={submit} disabled={isLoading} className="min-w-[120px]">
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {translate('Submitting...', language)}
+                <CEKALoader variant="ios" size="sm" />
+                <span className="ml-2">{translate("Submitting...", language)}</span>
               </>
             ) : (
               translate('Submit', language)

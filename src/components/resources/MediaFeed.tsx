@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import InstagramCarousel from '../carousel/InstagramCarousel';
 import { placeholderService } from '@/services/placeholderService';
-import { Grid2X2, List, Loader2 } from 'lucide-react';
+import { Grid2X2, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -102,17 +103,9 @@ const MediaFeed: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="space-y-8 max-w-xl mx-auto py-8 px-4">
-                {[1, 2].map((i) => (
-                    <div key={i} className="space-y-4">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="aspect-square w-full rounded-xl" />
-                        <div className="flex justify-between items-center">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-8 w-32 rounded-full" />
-                        </div>
-                    </div>
-                ))}
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <CEKALoader variant="ios" size="lg" />
+                <p className="text-muted-foreground animate-pulse font-medium">Curating Media Feed...</p>
             </div>
         );
     }
@@ -171,7 +164,7 @@ const MediaFeed: React.FC = () => {
                     <div ref={loadMoreRef} className="py-8 flex justify-center">
                         {loadingMore && (
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <CEKALoader variant="ios" size="sm" />
                                 <span className="text-sm">Loading more...</span>
                             </div>
                         )}

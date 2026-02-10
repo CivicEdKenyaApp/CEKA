@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, MessageCircle, Users, Loader2, Hash, Shield, Search, MoreVertical, Paperclip, ChevronLeft } from 'lucide-react';
+import { Send, MessageCircle, Users, Hash, Shield, Search, MoreVertical, Paperclip, ChevronLeft } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -25,6 +25,7 @@ import {
     EmptyDescription,
     EmptyContent
 } from '@/components/ui/empty';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 // Types
 interface ChatMessage {
@@ -454,7 +455,7 @@ const CommunityChat = () => {
                         <div ref={topSentinelRef} className="h-1 w-full" />
 
                         {loadingOlder && (
-                            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                            <div className="flex justify-center py-4"><CEKALoader variant="ios" size="sm" /></div>
                         )}
 
                         {messages.length === 0 && !loading && (
@@ -584,7 +585,7 @@ const CommunityChat = () => {
                                         newMessage.trim() ? "bg-primary text-white scale-100" : "bg-slate-200 dark:bg-white/10 text-slate-400 scale-95"
                                     )}
                                 >
-                                    {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 ml-0.5" />}
+                                    {sending ? <CEKALoader variant="ios" size="sm" /> : <Send className="h-5 w-5 ml-0.5" />}
                                 </Button>
                             </div>
                         </div>

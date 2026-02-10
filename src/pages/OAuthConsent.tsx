@@ -3,7 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, ShieldAlert, Check, X, Loader2, Info } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Check, X, Info } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -83,7 +84,7 @@ const OAuthConsent = () => {
     if (loading) return (
         <Layout>
             <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <CEKALoader variant="ios" size="lg" />
                 <p className="text-sm font-bold tracking-widest uppercase text-muted-foreground animate-pulse">Establishing Secure Handshake...</p>
             </div>
         </Layout>
@@ -166,7 +167,7 @@ const OAuthConsent = () => {
                                 disabled={authorizing}
                                 className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 active:scale-[0.98] transition-all"
                             >
-                                {authorizing ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Authorize Application'}
+                                {authorizing ? <CEKALoader variant="ios" size="sm" /> : 'Authorize Application'}
                             </Button>
                             <Button
                                 variant="ghost"

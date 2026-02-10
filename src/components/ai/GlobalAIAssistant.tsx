@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Send, X, Bot, Loader2, HelpCircle } from 'lucide-react';
+import { Sparkles, Send, X, Bot, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 // Rate limiting per user session
 const MAX_MESSAGES_PER_DAY = 20;
@@ -266,7 +267,7 @@ const GlobalAIAssistant = () => {
                             {loading && (
                                 <div className="flex justify-start">
                                     <div className="bg-white/10 dark:bg-gray-800/20 border border-white/20 dark:border-white/10 p-3 rounded-2xl rounded-tl-none shadow-lg backdrop-blur-md">
-                                        <Loader2 className="h-4 w-4 animate-spin text-kenya-green" />
+                                        <CEKALoader variant="ios" size="sm" />
                                     </div>
                                 </div>
                             )}

@@ -18,6 +18,7 @@ import {
     Settings, ExternalLink, RotateCcw
 } from 'lucide-react';
 import { intelService, ScraperSource, ProcessingJob, PipelineConfig } from '@/services/intelService';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const LegislativeIntelligence = () => {
     const [sources, setSources] = useState<ScraperSource[]>([]);
@@ -169,8 +170,8 @@ const LegislativeIntelligence = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <CEKALoader variant="scanning" size="lg" text="Syncing Neural Pipeline..." />
             </div>
         );
     }

@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Bookmark, Smile, Loader2, Zap, Flame, Lightbulb } from 'lucide-react';
+import { Heart, Bookmark, Smile, Zap, Flame, Lightbulb } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 

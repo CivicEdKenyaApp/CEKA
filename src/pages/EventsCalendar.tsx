@@ -15,7 +15,7 @@ import {
   addDays,
   eachDayOfInterval
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -225,7 +225,7 @@ const EventsCalendar = () => {
             <div className="space-y-4 min-h-[300px]">
               {loading ? (
                 <div className="flex items-center justify-center h-48">
-                  <CEKALoader variant="ios" size="md" text="Syncing Events..." />
+                  <CEKALoader variant="scanning" size="md" text="Scanning Events..." />
                 </div>
               ) : selectedDateEvents.length > 0 ? (
                 selectedDateEvents.map((event, idx) => (

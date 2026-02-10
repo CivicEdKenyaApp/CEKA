@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const SignupWithVerification = () => {
   const [email, setEmail] = useState('');
@@ -46,8 +46,8 @@ const SignupWithVerification = () => {
     setMessage('');
 
     try {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`
@@ -177,8 +177,8 @@ const SignupWithVerification = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing Up...
+              <CEKALoader variant="ios" size="sm" />
+              <span className="ml-2">Signing Up...</span>
             </>
           ) : (
             'Sign Up'
@@ -193,8 +193,8 @@ const SignupWithVerification = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending...
+              <CEKALoader variant="ios" size="sm" />
+              <span className="ml-2">Sending...</span>
             </>
           ) : (
             `Resend Verification Email ${resendCooldown > 0 ? `(${resendCooldown})` : ''}`

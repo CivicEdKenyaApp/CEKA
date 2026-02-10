@@ -95,7 +95,7 @@ const Blog = () => {
     return (
       <Layout>
         <div className="container py-24 flex flex-col items-center justify-center min-h-[60vh]">
-          <CEKALoader variant="ios" size="lg" text="Syncing Blog Feed..." />
+          <CEKALoader variant="scanning" size="lg" text="Scanning Blog Feed..." />
         </div>
       </Layout>
     );

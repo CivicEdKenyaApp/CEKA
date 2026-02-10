@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, Clock, ArrowRight, Heart, Users, Loader2 } from 'lucide-react';
+import { MapPin, Calendar, Clock, ArrowRight, Heart, Users } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -203,7 +203,7 @@ const VolunteerOpportunities = () => {
           <div className="text-center py-12">
             <p className="text-red-500">{error}</p>
             <Button onClick={fetchOpportunities} variant="outline" className="mt-4 rounded-2xl">
-              <Loader2 className="mr-2 h-4 w-4" />
+              <CEKALoader variant="ios" size="sm" className="mr-2 h-4 w-4" />
               Try Again
             </Button>
           </div>

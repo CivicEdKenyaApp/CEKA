@@ -11,15 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Search,
-    Book,
-    ChevronRight,
-    ChevronDown,
-    Languages,
-    Trophy,
-    Loader2,
     Sparkles
 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import AIContextButton from '@/components/ai/AIContextButton';
@@ -165,8 +159,7 @@ const InteractiveConstitution = () => {
                 <div className="lg:col-span-9">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <p className="animate-pulse">Loading Constitution content...</p>
+                            <CEKALoader variant="scanning" size="lg" text="Analyzing Articles of Power..." />
                         </div>
                     ) : (
                         <div className="space-y-4">

@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowRight, MessageSquare, Heart, HandHelping, Search, Users, Activity, Plus, MessageCircle, Loader2, Zap } from 'lucide-react';
+import { ArrowRight, MessageSquare, Heart, HandHelping, Search, Users, Activity, Plus, MessageCircle, Zap } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Link, useNavigate } from 'react-router-dom';
 import CommunityChat from '@/components/chat/CommunityChat';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,6 @@ import {
   EmptyDescription,
   EmptyContent
 } from '@/components/ui/empty';
-import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const CommunityPortal = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,7 +98,7 @@ const CommunityPortal = () => {
   if (loading) return (
     <Layout>
       <div className="container py-24 flex flex-col items-center justify-center min-h-[60vh]">
-        <CEKALoader variant="ios" size="lg" text="Synchronizing Community Pulse..." />
+        <CEKALoader variant="scanning" size="lg" text="Synchronizing Community Pulse..." />
       </div>
     </Layout>
   );

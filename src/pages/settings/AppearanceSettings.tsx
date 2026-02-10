@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Sun, Moon, Laptop, Eye, Check, Loader2 } from 'lucide-react';
+import { Sun, Moon, Laptop, Eye, Check } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
@@ -141,7 +141,7 @@ const AppearanceSettings = () => {
             {/* Saving indicator */}
             {saving && (
                 <div className="fixed top-24 right-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-lg border border-slate-200 dark:border-slate-700">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <CEKALoader variant="ios" size="sm" />
                     <span className="text-xs font-medium">{translate("Saving...", language)}</span>
                 </div>
             )}

@@ -4,7 +4,8 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, MessageCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -55,12 +56,12 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                     .in('id', userIds);
 
                 const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-                
+
                 const repliesWithProfiles: ChatReply[] = data.map(r => ({
                     ...r,
                     profile: profileMap.get(r.user_id) || null
                 }));
-                
+
                 setReplies(repliesWithProfiles);
             }
         } catch (err) {
@@ -83,7 +84,7 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                 filter: `parent_id=eq.${messageId}`
             }, async (payload) => {
                 const newReply = payload.new as any;
-                
+
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('id, full_name, avatar_url, username')
@@ -163,7 +164,7 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                         className="overflow-hidden border-l-2 border-slate-100 dark:border-white/5 ml-4 pl-4 pt-4 space-y-5"
                     >
                         {loading && replies.length === 0 ? (
-                            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary/30" /></div>
+                            <div className="flex justify-center py-4"><CEKALoader variant="ios" size="sm" /></div>
                         ) : (
                             replies.map((reply) => (
                                 <div key={reply.id} className="flex gap-3 group animate-in fade-in slide-in-from-left-2 duration-400">
@@ -212,7 +213,7 @@ export const ChatReplies = ({ messageId, room_id }: ChatRepliesProps) => {
                                             replyContent.trim() ? "bg-primary text-white scale-100" : "bg-slate-200 dark:bg-white/10 text-slate-400 scale-90"
                                         )}
                                     >
-                                        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                        {sending ? <CEKALoader variant="ios" size="sm" /> : <Send className="h-4 w-4" />}
                                     </Button>
                                 </div>
                             </div>

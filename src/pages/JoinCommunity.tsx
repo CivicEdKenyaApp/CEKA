@@ -13,7 +13,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, Loader2, HandHelping } from 'lucide-react';
+import { Users, ArrowRight, CheckCircle2, Share2, MessageSquare, BookOpen, HandHelping } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import TermsModal from '@/components/TermsModal';
 import PrivacyModal from '@/components/PrivacyModal';
 import VolunteerOpportunitiesSection from '@/components/community/VolunteerOpportunitiesSection';
@@ -78,7 +79,7 @@ const JoinCommunity = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
       toast({
         title: translate("Validation Error", language),
@@ -131,9 +132,9 @@ const JoinCommunity = () => {
         title: translate("Application Submitted!", language),
         description: translate("Welcome to the CEKA community! We'll review your application shortly.", language),
       });
-      
+
       setFormSubmitted(true);
-      
+
       setTimeout(() => {
         navigate('/');
       }, 3000);
@@ -149,7 +150,7 @@ const JoinCommunity = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   const testimonials = [
     {
       name: "Wanjiku Kamau",
@@ -170,7 +171,7 @@ const JoinCommunity = () => {
       text: translate("CEKA provides a platform for me to contribute to civic education initiatives in my local community. The network of support is incredible.", language)
     }
   ];
-  
+
   const benefits = [
     {
       icon: <MessageSquare className="h-8 w-8 text-kenya-green" />,
@@ -188,7 +189,7 @@ const JoinCommunity = () => {
       description: translate("Share your perspectives and contribute to community initiatives that promote civic awareness.", language)
     }
   ];
-  
+
   // Check if user is coming from a volunteer application link
   const activeTab = searchParams.get('apply') ? 'volunteer' : 'join';
 
@@ -203,7 +204,7 @@ const JoinCommunity = () => {
             {translate("Be part of Kenya's growing network of active citizens committed to civic education and engagement.", language)}
           </p>
         </div>
-        
+
         <Tabs defaultValue={activeTab} className="w-full">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
             <TabsTrigger value="join" className="gap-2">
@@ -218,282 +219,282 @@ const JoinCommunity = () => {
 
           <TabsContent value="join">
             <div className="grid md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">{translate("Why Join CEKA?", language)}</h2>
-              <div className="grid gap-6">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{benefit.title}</h3>
-                      <p className="text-muted-foreground">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">{translate("Community Voices", language)}</h2>
-              <div className="grid gap-6">
-                {testimonials.map((testimonial, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12 border-2 border-primary/10">
-                          <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                          <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">{translate("Why Join CEKA?", language)}</h2>
+                  <div className="grid gap-6">
+                    {benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-start gap-4">
+                        <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
                         <div>
-                          <p className="text-sm italic">"{testimonial.text}"</p>
-                          <div className="mt-2">
-                            <p className="font-medium">{testimonial.name}</p>
-                            <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                          </div>
+                          <h3 className="font-semibold text-lg">{benefit.title}</h3>
+                          <p className="text-muted-foreground">{benefit.description}</p>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">{translate("Community Voices", language)}</h2>
+                  <div className="grid gap-6">
+                    {testimonials.map((testimonial, index) => (
+                      <Card key={index}>
+                        <CardContent className="pt-6">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12 border-2 border-primary/10">
+                              <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                              <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm italic">"{testimonial.text}"</p>
+                              <div className="mt-2">
+                                <p className="font-medium">{testimonial.name}</p>
+                                <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Card className="border-t-4 border-kenya-green">
+                  <CardHeader>
+                    <CardTitle>{translate("Ready to Join?", language)}</CardTitle>
+                    <CardDescription>
+                      {translate("Complete this simple form to become part of our community.", language)}
+                    </CardDescription>
+                  </CardHeader>
+
+                  {formSubmitted ? (
+                    <CardContent className="pt-6">
+                      <div className="text-center space-y-4">
+                        <CheckCircle2 className="h-16 w-16 text-kenya-green mx-auto" />
+                        <h3 className="text-xl font-bold">{translate("Welcome Aboard!", language)}</h3>
+                        <p>{translate("Your application has been received. You are now part of the CEKA community!", language)}</p>
+                        <p className="text-sm text-muted-foreground">{translate("Redirecting you to the home page...", language)}</p>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <Card className="border-t-4 border-kenya-green">
-              <CardHeader>
-                <CardTitle>{translate("Ready to Join?", language)}</CardTitle>
-                <CardDescription>
-                  {translate("Complete this simple form to become part of our community.", language)}
-                </CardDescription>
-              </CardHeader>
-              
-              {formSubmitted ? (
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <CheckCircle2 className="h-16 w-16 text-kenya-green mx-auto" />
-                    <h3 className="text-xl font-bold">{translate("Welcome Aboard!", language)}</h3>
-                    <p>{translate("Your application has been received. You are now part of the CEKA community!", language)}</p>
-                    <p className="text-sm text-muted-foreground">{translate("Redirecting you to the home page...", language)}</p>
-                  </div>
-                </CardContent>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">{translate("First Name", language)} *</Label>
-                        <Input 
-                          id="firstName" 
-                          name="firstName"
-                          required 
-                          value={formData.firstName}
-                          onChange={handleInputChange}
-                          maxLength={100}
-                          autoComplete="given-name"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">{translate("Last Name", language)} *</Label>
-                        <Input 
-                          id="lastName" 
-                          name="lastName"
-                          required 
-                          value={formData.lastName}
-                          onChange={handleInputChange}
-                          maxLength={100}
-                          autoComplete="family-name"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">{translate("Email", language)} *</Label>
-                      <Input 
-                        id="email" 
-                        name="email"
-                        type="email" 
-                        required 
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        maxLength={255}
-                        autoComplete="email"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="county">{translate("County", language)}</Label>
-                      <Input 
-                        id="county" 
-                        name="county"
-                        placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)}
-                        value={formData.county}
-                        onChange={handleInputChange}
-                        maxLength={100}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="interests">{translate("What interests you most about civic education?", language)}</Label>
-                      <Textarea 
-                        id="interests" 
-                        name="interests"
-                        placeholder={translate("Share your interests or what you hope to gain from this community...", language)}
-                        className="min-h-[100px]"
-                        value={formData.interests}
-                        onChange={handleInputChange}
-                        maxLength={2000}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-base">{translate("Areas of Interest", language)}</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="constitution" 
-                            name="constitution"
-                            checked={formData.constitution}
-                            onCheckedChange={(checked) => handleCheckboxChange('constitution', checked as boolean)}
+                  ) : (
+                    <form onSubmit={handleSubmit}>
+                      <CardContent className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">{translate("First Name", language)} *</Label>
+                            <Input
+                              id="firstName"
+                              name="firstName"
+                              required
+                              value={formData.firstName}
+                              onChange={handleInputChange}
+                              maxLength={100}
+                              autoComplete="given-name"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">{translate("Last Name", language)} *</Label>
+                            <Input
+                              id="lastName"
+                              name="lastName"
+                              required
+                              value={formData.lastName}
+                              onChange={handleInputChange}
+                              maxLength={100}
+                              autoComplete="family-name"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="email">{translate("Email", language)} *</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            maxLength={255}
+                            autoComplete="email"
                             disabled={isSubmitting}
                           />
-                          <label htmlFor="constitution" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Constitution", language)}
-                          </label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="legislation" 
-                            name="legislation"
-                            checked={formData.legislation}
-                            onCheckedChange={(checked) => handleCheckboxChange('legislation', checked as boolean)}
+
+                        <div className="space-y-2">
+                          <Label htmlFor="county">{translate("County", language)}</Label>
+                          <Input
+                            id="county"
+                            name="county"
+                            placeholder={translate("e.g. Nairobi, Mombasa, etc.", language)}
+                            value={formData.county}
+                            onChange={handleInputChange}
+                            maxLength={100}
                             disabled={isSubmitting}
                           />
-                          <label htmlFor="legislation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Legislation", language)}
-                          </label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="humanRights" 
-                            name="humanRights"
-                            checked={formData.humanRights}
-                            onCheckedChange={(checked) => handleCheckboxChange('humanRights', checked as boolean)}
+
+                        <div className="space-y-2">
+                          <Label htmlFor="interests">{translate("What interests you most about civic education?", language)}</Label>
+                          <Textarea
+                            id="interests"
+                            name="interests"
+                            placeholder={translate("Share your interests or what you hope to gain from this community...", language)}
+                            className="min-h-[100px]"
+                            value={formData.interests}
+                            onChange={handleInputChange}
+                            maxLength={2000}
                             disabled={isSubmitting}
                           />
-                          <label htmlFor="humanRights" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Human Rights", language)}
-                          </label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="governance" 
-                            name="governance"
-                            checked={formData.governance}
-                            onCheckedChange={(checked) => handleCheckboxChange('governance', checked as boolean)}
+
+                        <div className="space-y-2">
+                          <Label className="text-base">{translate("Areas of Interest", language)}</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="constitution"
+                                name="constitution"
+                                checked={formData.constitution}
+                                onCheckedChange={(checked) => handleCheckboxChange('constitution', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="constitution" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Constitution", language)}
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="legislation"
+                                name="legislation"
+                                checked={formData.legislation}
+                                onCheckedChange={(checked) => handleCheckboxChange('legislation', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="legislation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Legislation", language)}
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="humanRights"
+                                name="humanRights"
+                                checked={formData.humanRights}
+                                onCheckedChange={(checked) => handleCheckboxChange('humanRights', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="humanRights" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Human Rights", language)}
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="governance"
+                                name="governance"
+                                checked={formData.governance}
+                                onCheckedChange={(checked) => handleCheckboxChange('governance', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="governance" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Governance", language)}
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="voterEducation"
+                                name="voterEducation"
+                                checked={formData.voterEducation}
+                                onCheckedChange={(checked) => handleCheckboxChange('voterEducation', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="voterEducation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Voter Education", language)}
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="communityProjects"
+                                name="communityProjects"
+                                checked={formData.communityProjects}
+                                onCheckedChange={(checked) => handleCheckboxChange('communityProjects', checked as boolean)}
+                                disabled={isSubmitting}
+                              />
+                              <label htmlFor="communityProjects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {translate("Community Projects", language)}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-2 pt-2">
+                          <Checkbox
+                            id="terms"
+                            name="terms"
+                            required
+                            checked={termsAccepted}
+                            onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                             disabled={isSubmitting}
                           />
-                          <label htmlFor="governance" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Governance", language)}
-                          </label>
+                          <div className="grid gap-1.5 leading-none">
+                            <label
+                              htmlFor="terms"
+                              className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {translate("I agree to the", language)}{" "}
+                              <button
+                                type="button"
+                                className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
+                                onClick={() => setShowTermsModal(true)}
+                              >
+                                {translate("terms and conditions", language)}
+                              </button>
+                              {" "}{translate("and", language)}{" "}
+                              <button
+                                type="button"
+                                className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
+                                onClick={() => setShowPrivacyModal(true)}
+                              >
+                                {translate("privacy policy", language)}
+                              </button>
+                            </label>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="voterEducation" 
-                            name="voterEducation"
-                            checked={formData.voterEducation}
-                            onCheckedChange={(checked) => handleCheckboxChange('voterEducation', checked as boolean)}
-                            disabled={isSubmitting}
-                          />
-                          <label htmlFor="voterEducation" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Voter Education", language)}
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="communityProjects" 
-                            name="communityProjects"
-                            checked={formData.communityProjects}
-                            onCheckedChange={(checked) => handleCheckboxChange('communityProjects', checked as boolean)}
-                            disabled={isSubmitting}
-                          />
-                          <label htmlFor="communityProjects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {translate("Community Projects", language)}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2 pt-2">
-                      <Checkbox 
-                        id="terms" 
-                        name="terms"
-                        required 
-                        checked={termsAccepted}
-                        onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                        disabled={isSubmitting}
-                      />
-                      <div className="grid gap-1.5 leading-none">
-                        <label
-                          htmlFor="terms"
-                          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      </CardContent>
+                      <CardFooter>
+                        <Button
+                          type="submit"
+                          className="w-full bg-kenya-green hover:bg-kenya-green/90"
+                          disabled={isSubmitting || !termsAccepted}
                         >
-                          {translate("I agree to the", language)}{" "}
-                          <button
-                            type="button"
-                            className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
-                            onClick={() => setShowTermsModal(true)}
-                          >
-                            {translate("terms and conditions", language)}
-                          </button>
-                          {" "}{translate("and", language)}{" "}
-                          <button
-                            type="button"
-                            className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-kenya-green focus:ring-offset-2 rounded-sm"
-                            onClick={() => setShowPrivacyModal(true)}
-                          >
-                            {translate("privacy policy", language)}
-                          </button>
-                        </label>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-kenya-green hover:bg-kenya-green/90"
-                      disabled={isSubmitting || !termsAccepted}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {translate("Submitting...", language)}
-                        </>
-                      ) : (
-                        <>
-                          {translate("Join Now", language)}
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </form>
-              )}
-            </Card>
-            
-            <div className="mt-8 flex items-center justify-center p-4 bg-muted rounded-lg">
-              <Users className="h-5 w-5 text-muted-foreground mr-2" />
-              <p className="text-sm text-muted-foreground">
-                {translate("Join over 5,000 active citizens already in our community!", language)}
-              </p>
-            </div>
-          </div>
+                          {isSubmitting ? (
+                            <>
+                              <CEKALoader variant="ios" size="sm" />
+                              <span className="ml-2">{translate("Submitting...", language)}</span>
+                            </>
+                          ) : (
+                            <>
+                              {translate("Join Now", language)}
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </CardFooter>
+                    </form>
+                  )}
+                </Card>
+
+                <div className="mt-8 flex items-center justify-center p-4 bg-muted rounded-lg">
+                  <Users className="h-5 w-5 text-muted-foreground mr-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {translate("Join over 5,000 active citizens already in our community!", language)}
+                  </p>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -512,7 +513,7 @@ const JoinCommunity = () => {
       <PrivacyModal
         isOpen={showPrivacyModal}
         onClose={() => setShowPrivacyModal(false)}
-        onAccept={() => {}}
+        onAccept={() => { }}
       />
     </Layout>
   );

@@ -9,6 +9,7 @@ import { Bell, FileText, Calendar, CheckCircle, XCircle, Clock, Settings } from 
 import EnhancedAdminDashboard from './EnhancedAdminDashboard';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import FuzzyText from '../ui/FuzzyText';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const AdminDashboard = () => {
   const { isAdmin, isLoading, sessionLimited } = useAdminAccess();
@@ -18,12 +19,8 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <div className="text-lg font-medium">Loading admin dashboard...</div>
-              <div className="text-muted-foreground">Verifying admin access...</div>
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+            <CEKALoader variant="scanning" size="xl" text="Verifying Sovereign Credentials..." />
           </div>
         </div>
       </div>
@@ -133,8 +130,8 @@ const BasicAdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Loading admin dashboard...</div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <CEKALoader variant="scanning" size="lg" text="Syncing Admin Core..." />
       </div>
     );
   }

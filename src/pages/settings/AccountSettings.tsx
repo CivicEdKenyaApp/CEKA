@@ -13,7 +13,8 @@ import { translate } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Save, LogOut, HandHelping, AlertTriangle, Loader2, Check, KeyRound, Trash2 } from 'lucide-react';
+import { Camera, Save, LogOut, HandHelping, AlertTriangle, Check, KeyRound, Trash2 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const AccountSettings = () => {
   const { session, user } = useAuth();
@@ -75,7 +76,7 @@ const AccountSettings = () => {
     }
   };
 
-  // Auto-save on blur with debounce
+  // Auto-save on blur with decimal/percentage based premium delay 
   const triggerAutoSave = useCallback(() => {
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
@@ -146,12 +147,10 @@ const AccountSettings = () => {
     }
   };
 
-  // Avatar Upload Handler
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !session?.user?.id) return;
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       toast({
         variant: "destructive",
@@ -161,7 +160,7 @@ const AccountSettings = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: translate("File too large", language),
@@ -176,7 +175,6 @@ const AccountSettings = () => {
       const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
@@ -186,12 +184,10 @@ const AccountSettings = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
@@ -220,7 +216,6 @@ const AccountSettings = () => {
     }
   };
 
-  // Password Change Handler
   const handlePasswordChange = async () => {
     if (passwords.new !== passwords.confirm) {
       toast({
@@ -266,15 +261,10 @@ const AccountSettings = () => {
     }
   };
 
-  // Account Deletion Handler
   const handleDeleteAccount = async () => {
     try {
-      // Delete user data
       await supabase.from('profiles').delete().eq('id', session?.user?.id);
-
-      // Sign out (actual account deletion would require admin API)
       await supabase.auth.signOut();
-
       toast({
         title: translate("Account deactivated", language),
         description: translate("Your account has been deactivated.", language),
@@ -298,12 +288,11 @@ const AccountSettings = () => {
 
   return (
     <div className="space-y-6">
-      {/* Auto-save indicator */}
       {autoSaveStatus !== 'idle' && (
         <div className="fixed top-24 right-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-lg border border-slate-200 dark:border-slate-700">
           {autoSaveStatus === 'saving' && (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <CEKALoader variant="ios" size="sm" />
               <span className="text-xs font-medium">{translate("Saving...", language)}</span>
             </>
           )}
@@ -317,7 +306,6 @@ const AccountSettings = () => {
       )}
 
       <div className="grid gap-6">
-        {/* Profile Card */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
@@ -333,7 +321,7 @@ const AccountSettings = () => {
               </Avatar>
               {uploadingAvatar && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                  <CEKALoader variant="ios" size="md" />
                 </div>
               )}
             </div>
@@ -355,7 +343,7 @@ const AccountSettings = () => {
                 disabled={uploadingAvatar}
               >
                 {uploadingAvatar ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <CEKALoader variant="ios" size="sm" />
                 ) : (
                   <Camera className="h-4 w-4" />
                 )}
@@ -402,7 +390,6 @@ const AccountSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Account Security */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="text-xl font-black">{translate("Account Security", language)}</CardTitle>
@@ -412,7 +399,7 @@ const AccountSettings = () => {
               <Label htmlFor="email" className="font-bold ml-1 uppercase text-[10px] tracking-widest text-muted-foreground">{translate("Email Address", language)}</Label>
               <Input id="email" value={profile.email} disabled className="rounded-2xl bg-slate-100 dark:bg-white/10 border-none h-12 opacity-70" />
               {session?.user?.email_confirmed_at && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs ml-1">
+                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs ml-1 mt-2">
                   <Check className="h-3 w-3 mr-1" />
                   {translate("Verified", language)}
                 </Badge>
@@ -460,7 +447,7 @@ const AccountSettings = () => {
                     {translate("Cancel", language)}
                   </Button>
                   <Button onClick={handlePasswordChange} disabled={passwordLoading}>
-                    {passwordLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {passwordLoading && <CEKALoader variant="ios" size="sm" />}
                     {translate("Update Password", language)}
                   </Button>
                 </DialogFooter>
@@ -469,7 +456,6 @@ const AccountSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Civic Activation Section */}
         <Card className="rounded-[2.5rem] border-none shadow-ios-high overflow-hidden bg-white dark:bg-slate-900 p-6 border-l-4 border-kenya-red">
           <div className="flex items-start gap-4">
             <div className="h-12 w-12 bg-kenya-red/10 rounded-3xl flex items-center justify-center shrink-0">
@@ -486,15 +472,20 @@ const AccountSettings = () => {
           </div>
         </Card>
 
-        {/* Action Bar */}
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Button
             onClick={handleUpdateProfile}
             className="rounded-3xl h-14 px-8 font-black text-lg bg-kenya-red hover:bg-kenya-red/90 shadow-lg shadow-kenya-red/20 transition-all flex-1"
             disabled={loading}
           >
-            <Save className="mr-2 h-5 w-5" />
-            {loading ? translate("Saving...", language) : translate("Save Changes", language)}
+            {loading ? (
+              <CEKALoader variant="ios" size="sm" />
+            ) : (
+              <>
+                <Save className="mr-2 h-5 w-5" />
+                {translate("Save Changes", language)}
+              </>
+            )}
           </Button>
           <Button
             onClick={handleSignOut}
@@ -506,7 +497,6 @@ const AccountSettings = () => {
           </Button>
         </div>
 
-        {/* Danger Zone */}
         <div className="pt-12">
           <h4 className="flex items-center gap-2 text-destructive font-bold uppercase tracking-widest text-[10px] mb-4 ml-6">
             <AlertTriangle className="h-3 w-3" />

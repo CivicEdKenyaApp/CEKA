@@ -24,6 +24,7 @@ import {
     X as CloseIcon,
     RefreshCw
 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface VolunteerOpportunity {
@@ -213,9 +214,8 @@ const VolunteerManager = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-3 text-muted-foreground">Loading opportunities...</span>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <CEKALoader variant="scanning" size="lg" text="Syncing Volunteer Database..." />
             </div>
         );
     }
@@ -364,7 +364,7 @@ const VolunteerManager = () => {
                                             Cancel
                                         </Button>
                                         <Button type="submit" disabled={saving} className="gap-2">
-                                            {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                            {saving ? <CEKALoader variant="ios" size="sm" /> : <Save className="h-4 w-4" />}
                                             {editingId ? 'Update' : 'Create'} Opportunity
                                         </Button>
                                     </div>

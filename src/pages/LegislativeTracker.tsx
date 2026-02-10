@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import {
-  FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, Loader2, ArrowUpDown,
+  FileText, Search, Filter, Calendar, ArrowRight, PlusCircle, ArrowUpDown,
   TrendingUp, RefreshCw, Layers, CheckCircle, Clock, Users, BookOpen, Globe, Shield, Scale
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

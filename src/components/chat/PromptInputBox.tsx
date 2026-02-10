@@ -8,9 +8,9 @@ import {
   Globe,
   MessageSquare,
   StopCircle,
-  Loader2,
   Image as ImageIcon
 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -395,7 +395,7 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
                   disabled={!hasContent || isLoading || disabled || isRecording}
                 >
                   {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <CEKALoader variant="ios" size="sm" />
                   ) : (
                     <ArrowUp className="h-4 w-4" />
                   )}

@@ -20,6 +20,7 @@ import {
 import backblazeStorage from '@/services/backblazeStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { mediaService, MediaContent } from '@/services/mediaService';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 interface UploadFile {
     id: string;
@@ -272,7 +273,7 @@ const BulkUploadManager = () => {
     const getStatusBadge = (file: UploadFile) => {
         switch (file.status) {
             case 'staged': return <Badge variant="outline" className="text-amber-500 border-amber-500/20">Staged</Badge>;
-            case 'uploading': return <Badge variant="outline" className="text-blue-500 border-blue-500/20"><RefreshCw className="h-3 w-3 mr-1 animate-spin" />{file.progress}%</Badge>;
+            case 'uploading': return <Badge variant="outline" className="text-blue-500 border-blue-500/20"><CEKALoader variant="ios" size="sm" />{file.progress}%</Badge>;
             case 'success': return <Badge variant="outline" className="text-green-500 border-green-500/20 font-black">ACTIVE</Badge>;
             case 'error': return <Badge variant="destructive" className="text-[8px]">{file.error || 'FAILED'}</Badge>;
             default: return <Badge variant="outline">Pending</Badge>;
@@ -414,7 +415,7 @@ const BulkUploadManager = () => {
                                 disabled={uploading || !backblazeReady}
                                 className="rounded-xl h-10 px-6 font-black bg-primary shadow-lg shadow-primary/20"
                             >
-                                {uploading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+                                {uploading ? <CEKALoader variant="ios" size="sm" /> : <Zap className="h-4 w-4 mr-2" />}
                                 Sync to B2 & SQL
                             </Button>
                         </div>

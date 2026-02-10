@@ -8,7 +8,8 @@ import { translate } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Cookie, Download, Loader2, Check, Eye, Users, Search, BarChart3, Sparkles } from 'lucide-react';
+import { Shield, Cookie, Download, Check, Eye, Users, Search, BarChart3, Sparkles } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 // Local storage key for privacy settings
 const PRIVACY_STORAGE_KEY = 'ceka_privacy_settings';
@@ -170,7 +171,7 @@ const PrivacySettings: React.FC = () => {
       {/* Saving indicator */}
       {saving && (
         <div className="fixed top-24 right-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-lg border">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <CEKALoader variant="ios" size="sm" />
           <span className="text-xs font-medium">{translate("Saving...", language)}</span>
         </div>
       )}
@@ -351,8 +352,8 @@ const PrivacySettings: React.FC = () => {
           >
             {exporting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {translate("Preparing...", language)}
+                <CEKALoader variant="ios" size="sm" />
+                <span className="ml-2">{translate("Preparing...", language)}</span>
               </>
             ) : (
               <>

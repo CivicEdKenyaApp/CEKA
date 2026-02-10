@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, MessageCircle, Users, Loader2 } from 'lucide-react';
+import { Send, MessageCircle, Users } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
@@ -246,7 +247,7 @@ const CommunityChat = () => {
           <ScrollArea className="h-full p-4" ref={scrollRef}>
             {loading ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <CEKALoader variant="ios" size="md" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -279,8 +280,8 @@ const CommunityChat = () => {
                         </div>
                         <div
                           className={`rounded-lg px-3 py-2 max-w-md ${isOwn
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
                             }`}
                         >
                           <p className="text-sm whitespace-pre-wrap break-words">
@@ -311,7 +312,7 @@ const CommunityChat = () => {
               />
               <Button type="submit" disabled={sending || !newMessage.trim()}>
                 {sending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <CEKALoader variant="ios" size="sm" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}

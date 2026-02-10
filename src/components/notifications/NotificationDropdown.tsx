@@ -1,10 +1,3 @@
-/**
- * NotificationDropdown - iOS-inspired notification center
- * 
- * Premium glassmorphism design with real-time updates,
- * swipe-to-dismiss, and grouped notifications
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,10 +13,10 @@ import {
     TrendingUp,
     MessageCircle,
     Shield,
-    Loader2,
     Archive,
-    ChevronRight
+    ChevronRight,
 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -203,7 +196,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
                 <ScrollArea className="h-[400px]">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            <CEKALoader variant="ios" size="md" />
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -315,22 +308,24 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
                 </ScrollArea>
 
                 {/* Footer */}
-                {notifications.length > 0 && (
-                    <div className="p-2 border-t border-border/50">
-                        <Button
-                            variant="ghost"
-                            className="w-full rounded-2xl text-sm text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                                navigate('/settings?tab=notifications');
-                                setIsOpen(false);
-                            }}
-                        >
-                            View all notifications
-                        </Button>
-                    </div>
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
+                {
+                    notifications.length > 0 && (
+                        <div className="p-2 border-t border-border/50">
+                            <Button
+                                variant="ghost"
+                                className="w-full rounded-2xl text-sm text-muted-foreground hover:text-foreground"
+                                onClick={() => {
+                                    navigate('/settings?tab=notifications');
+                                    setIsOpen(false);
+                                }}
+                            >
+                                View all notifications
+                            </Button>
+                        </div>
+                    )
+                }
+            </DropdownMenuContent >
+        </DropdownMenu >
     );
 };
 

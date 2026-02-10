@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Clock, Shield, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 export const AdminSessionManager: React.FC = () => {
   const [sessions, setSessions] = useState<AdminSession[]>([]);
@@ -88,8 +89,9 @@ export const AdminSessionManager: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-8 gap-4">
+            <CEKALoader variant="ios" size="md" />
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Authenticating Sessions</span>
           </div>
         </CardContent>
       </Card>
@@ -139,7 +141,7 @@ export const AdminSessionManager: React.FC = () => {
               className="w-full rounded-xl gap-2"
               disabled={refreshing}
             >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <CEKALoader variant="ios" size="sm" />
               Retry Connection
             </Button>
           </div>
@@ -170,7 +172,7 @@ export const AdminSessionManager: React.FC = () => {
             className="rounded-xl gap-2"
             disabled={refreshing}
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? <CEKALoader variant="ios" size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Refresh
           </Button>
         </div>

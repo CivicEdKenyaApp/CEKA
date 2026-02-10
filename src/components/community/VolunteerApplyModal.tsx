@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { translate } from '@/lib/utils';
@@ -146,7 +147,7 @@ export const VolunteerApplyModal = ({ opportunity, isOpen, onClose }: VolunteerA
                                     disabled={submitting || !motivation.trim()}
                                     className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase tracking-[0.15em] text-xs shadow-xl shadow-primary/20 active:scale-[0.98] transition-all"
                                 >
-                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Transmit Application'}
+                                    {submitting ? <CEKALoader variant="ios" size="sm" /> : 'Transmit Application'}
                                 </Button>
                             </DialogFooter>
                         </motion.div>
