@@ -19,9 +19,10 @@ export class BillFollowingService {
       .insert({
         user_id: user.id,
         bill_id: billId
-      });
+      })
+      .abortSignal(signal as any);
 
-    if (error) throw error;
+    if (error && !signal?.aborted) throw error;
   }
 
   async unfollowBill(billId: string, signal?: AbortSignal): Promise<void> {
@@ -33,9 +34,10 @@ export class BillFollowingService {
       .from('bill_follows')
       .delete()
       .eq('user_id', user.id)
-      .eq('bill_id', billId);
+      .eq('bill_id', billId)
+      .abortSignal(signal as any);
 
-    if (error) throw error;
+    if (error && !signal?.aborted) throw error;
   }
 
   async isFollowingBill(billId: string, signal?: AbortSignal): Promise<boolean> {
@@ -48,9 +50,10 @@ export class BillFollowingService {
       .select('id')
       .eq('user_id', user.id)
       .eq('bill_id', billId)
-      .maybeSingle();
+      .maybeSingle()
+      .abortSignal(signal as any);
 
-    if (error) throw error;
+    if (error && !signal?.aborted) throw error;
     return !!data;
   }
 
@@ -74,9 +77,10 @@ export class BillFollowingService {
           updated_at
         )
       `)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .abortSignal(signal as any);
 
-    if (error) throw error;
+    if (error && !signal?.aborted) throw error;
     return data?.map(follow => follow.bills) || [];
   }
 
@@ -84,9 +88,10 @@ export class BillFollowingService {
     const { count, error } = await supabase
       .from('bill_follows')
       .select('*', { count: 'exact', head: true })
-      .eq('bill_id', billId);
+      .eq('bill_id', billId)
+      .abortSignal(signal as any);
 
-    if (error) throw error;
+    if (error && !signal?.aborted) throw error;
     return count || 0;
   }
 }

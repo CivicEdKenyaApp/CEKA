@@ -155,7 +155,7 @@ const FeaturedLegislation = () => {
           viewport={{ once: true, margin: "-100px" }}
           className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mt-6 px-4"
         >
-          {bills.map((bill) => (
+          {Array.isArray(bills) && bills.map((bill) => (
             <motion.div key={bill.id} variants={cardVariants}>
               <Card className={cn(
                 "group relative h-full flex flex-col overflow-hidden border-black/5 dark:border-white/10",

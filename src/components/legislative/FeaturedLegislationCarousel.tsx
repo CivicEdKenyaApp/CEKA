@@ -88,7 +88,7 @@ const FeaturedLegislationCarousel: React.FC<FeaturedLegislationCarouselProps> = 
             {/* Carousel */}
             <div className="overflow-hidden" ref={emblaRef}>
                 <div className="flex gap-4">
-                    {bills.map((bill, index) => (
+                    {Array.isArray(bills) && bills.map((bill, index) => (
                         <motion.div
                             key={bill.id}
                             initial={{ opacity: 0, y: 20 }}

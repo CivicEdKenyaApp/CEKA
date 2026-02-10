@@ -318,9 +318,18 @@ class NotificationService {
               }
             }
           )
-          .subscribe((status) => {
+          .subscribe(async (status) => {
             if (status === 'CHANNEL_ERROR' && active) {
               console.warn('Notification subscription failed');
+            }
+            if (status === 'SUBSCRIBED' && !active) {
+              // If we unmounted while subscribing, clean up immediately
+              if (this.channel) {
+                const chan = this.channel;
+                this.channel = null;
+                await chan.unsubscribe();
+                await supabase.removeChannel(chan);
+              }
             }
           });
       } catch (err) {
@@ -335,19 +344,22 @@ class NotificationService {
     // Return cleanup function
     return () => {
       active = false;
-      if (this.channel) {
-        const chan = this.channel;
-        this.channel = null;
 
-        // Safer cleanup pattern: 200ms delay to avoid "closed before established" race conditions
-        setTimeout(() => {
+      // Immediate state cleanup
+      const currentChannel = this.channel;
+      this.channel = null;
+
+      if (currentChannel) {
+        // Asynchronous cleanup to prevent blocking the unmount
+        (async () => {
           try {
-            chan.unsubscribe().catch(() => { });
-            supabase.removeChannel(chan).catch(() => { });
+            // Supabase handles establishment state internally, but we add a small guard
+            await currentChannel.unsubscribe();
+            await supabase.removeChannel(currentChannel);
           } catch (e) {
-            // Silent catch
+            // Persistent cleanup even on transient errors
           }
-        }, 200);
+        })();
       }
     };
   }

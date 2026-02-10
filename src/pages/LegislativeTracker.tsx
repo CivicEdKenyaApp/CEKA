@@ -86,23 +86,29 @@ const LegislativeTracker = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch trending bills with graceful fallback
+        // Fetch trending bills with robust fallback
         try {
+          // Check if trending bills already exist in storage/cache if we had one
           const { data: trendingData, error: trendingError } = await (supabase.rpc as any)('get_trending_bills', {
             limit_count: 5
           });
-          if (!trendingError && trendingData) {
-            setTrendingBills(trendingData as any);
+
+          if (!trendingError && Array.isArray(trendingData)) {
+            setTrendingBills(trendingData);
+          } else {
+            throw new Error('RPC returned invalid or empty data');
           }
         } catch (rpcError) {
-          console.warn('get_trending_bills RPC not available, using fallback');
-          // Fallback: Get bills ordered by created_at
+          // Fallback: Get most followed or latest bills
           const { data: fallbackTrending } = await supabase
             .from('bills')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(5);
-          if (fallbackTrending) setTrendingBills(fallbackTrending as any);
+
+          if (Array.isArray(fallbackTrending)) {
+            setTrendingBills(fallbackTrending);
+          }
         }
 
         // 2. Fetch All Bills (Standard Query)

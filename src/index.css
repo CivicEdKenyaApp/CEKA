@@ -2,8 +2,11 @@
 /* Import Leaflet CSS for OpenStreetMap */
 @import 'leaflet/dist/leaflet.css';
 
+/** @tailwind base */
 @tailwind base;
+/** @tailwind components */
 @tailwind components;
+/** @tailwind utilities */
 @tailwind utilities;
 
 /* ===== ENHANCED Z-INDEX HIERARCHY SYSTEM ===== */
