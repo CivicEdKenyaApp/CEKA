@@ -353,11 +353,17 @@ class NotificationService {
         // Asynchronous cleanup to prevent blocking the unmount
         (async () => {
           try {
-            // Supabase handles establishment state internally, but we add a small guard
-            await currentChannel.unsubscribe();
+            // Check established state indirectly via presence or standard check
+            // If the channel is joining or joined, we unsubscribe
+            const state = currentChannel.state;
+            if (state === 'joined' || state === 'joining') {
+              await currentChannel.unsubscribe();
+            }
+            // Always attempt removal to clean up the Supabase client's internal references
             await supabase.removeChannel(currentChannel);
           } catch (e) {
-            // Persistent cleanup even on transient errors
+            // Persistent cleanup even on transient errors - log as info not warn
+            console.debug('Channel cleanup handled:', e);
           }
         })();
       }

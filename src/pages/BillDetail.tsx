@@ -34,6 +34,12 @@ const getStatusColor = (status: string) => {
 };
 
 const LegislativeTimeline = ({ stages, language }: { stages: any[], language: any }) => {
+  if (!Array.isArray(stages)) return (
+    <div className="p-8 text-center bg-slate-50 dark:bg-white/5 rounded-[32px] border border-dashed border-slate-200 dark:border-white/10">
+      <p className="text-sm text-slate-400">Timeline data is currently being populated...</p>
+    </div>
+  );
+
   return (
     <div className="relative mt-8 space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-kenya-green before:via-slate-200 dark:before:via-white/5 before:to-slate-100 dark:before:to-transparent">
       {stages.map((stage, index) => (
@@ -176,8 +182,8 @@ const BillDetail = () => {
     );
   }
 
-  const stages = bill.stages || [
-    { name: "Publication", date: bill.date, completed: true },
+  const stages = Array.isArray(bill.stages) ? bill.stages : [
+    { name: "Publication", date: bill.date || bill.created_at, completed: true },
     { name: "First Reading", date: null, completed: false },
     { name: "Second Reading", date: null, completed: false },
     { name: "Third Reading", date: null, completed: false }
