@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import Layout from '@/components/layout/Layout';
 import MediaFeed from '@/components/resources/MediaFeed';
-import { motion } from 'framer-motion';
-import { ExternalLink, Instagram, Facebook, Twitter, Users, Eye } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ExternalLink, Instagram, Facebook, Twitter, Users, Eye, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Upscrolled Logo SVG Component
@@ -143,9 +146,16 @@ const CEKA_ABOUT = {
 };
 
 const Pieces = () => {
+    const navigate = useNavigate();
+    const { theme } = useTheme();
+
+    const handleTagClick = (area: string) => {
+        navigate(`/search?q=${encodeURIComponent(area)}`);
+    };
+
     return (
         <Layout>
-            <div className="container mx-auto py-12 px-4">
+            <div className="container mx-auto py-12 px-4 shadow-pattern bg-pattern-grid/30 dark:bg-pattern-grid-dark/20">
                 {/* Header */}
                 <header className="mb-12 text-center max-w-3xl mx-auto space-y-4">
                     <motion.div
@@ -189,21 +199,52 @@ const Pieces = () => {
                             transition={{ delay: 0.3 }}
                         >
                             <Card className="overflow-hidden border-kenya-green/20">
-                                <CardContent className="p-6">
-                                    <h3 className="text-lg font-bold mb-3 text-kenya-black dark:text-white">About CEKA</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                                <CardContent className="p-8 relative">
+                                    {/* Subtle decorative background element */}
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-kenya-green/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+
+                                    <h3 className="text-xl font-black mb-4 text-kenya-black dark:text-white tracking-tight">About CEKA</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed mb-8 font-medium">
                                         {CEKA_ABOUT.mission}
                                     </p>
-                                    <div className="space-y-2">
-                                        <p className="text-xs font-bold uppercase tracking-wider text-kenya-green">Focus Areas</p>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {CEKA_ABOUT.focus_areas.map((area) => (
-                                                <span
+                                    <div className="space-y-4">
+                                        <p className="text-xs font-black uppercase tracking-[0.2em] text-kenya-green/80 dark:text-kenya-green">
+                                            Focus Areas
+                                        </p>
+                                        <div className="flex flex-wrap gap-2.5">
+                                            {CEKA_ABOUT.focus_areas.map((area, index) => (
+                                                <motion.button
                                                     key={area}
-                                                    className="text-xs px-2 py-1 bg-kenya-green/10 text-kenya-green rounded-full"
+                                                    onClick={() => handleTagClick(area)}
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={{
+                                                        delay: 0.1 + (index * 0.05),
+                                                        type: "spring",
+                                                        stiffness: 260,
+                                                        damping: 20
+                                                    }}
+                                                    whileHover={{
+                                                        y: -5,
+                                                        scale: 1.05,
+                                                        transition: { type: "spring", stiffness: 400, damping: 10 }
+                                                    }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className={cn(
+                                                        "group relative overflow-hidden px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+                                                        "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)]",
+                                                        "border border-black/5 dark:border-white/10",
+                                                        theme === 'light'
+                                                            ? "bg-white/80 hover:bg-kenya-green hover:text-white text-kenya-black backdrop-blur-md"
+                                                            : "bg-white/5 hover:bg-kenya-green/20 hover:text-kenya-green text-white/90 backdrop-blur-xl"
+                                                    )}
                                                 >
-                                                    {area}
-                                                </span>
+                                                    <span className="relative z-10">{area}</span>
+                                                    <Search className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0" />
+
+                                                    {/* Premium Glass Shine Effect */}
+                                                    <div className="absolute inset-x-0 -top-full bottom-full bg-gradient-to-b from-white/20 to-transparent group-hover:top-0 group-hover:bottom-0 transition-all duration-500 pointer-events-none" />
+                                                </motion.button>
                                             ))}
                                         </div>
                                     </div>
@@ -232,15 +273,31 @@ const Pieces = () => {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.5 }}
                         >
-                            <Card className="border-kenya-red/20">
-                                <CardContent className="p-6">
-                                    <h3 className="text-lg font-bold mb-3 text-kenya-black dark:text-white">Content We Create</h3>
-                                    <ul className="space-y-2">
-                                        {CEKA_ABOUT.content_types.map((type) => (
-                                            <li key={type} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-kenya-red" />
+                            <Card className="border-kenya-red/10 bg-gradient-to-br from-white to-kenya-red/[0.02] dark:from-kenya-black dark:to-kenya-red/[0.05] overflow-hidden">
+                                <CardContent className="p-8 relative">
+                                    {/* Animated background shape */}
+                                    <motion.div
+                                        className="absolute -bottom-10 -right-10 w-40 h-40 bg-kenya-red/5 rounded-full blur-3xl"
+                                        animate={{
+                                            scale: [1, 1.2, 1],
+                                            opacity: [0.3, 0.5, 0.3]
+                                        }}
+                                        transition={{ duration: 8, repeat: Infinity }}
+                                    />
+
+                                    <h3 className="text-xl font-black mb-5 text-kenya-black dark:text-white tracking-tight">Content We Create</h3>
+                                    <ul className="space-y-3 relative z-10">
+                                        {CEKA_ABOUT.content_types.map((type, idx) => (
+                                            <motion.li
+                                                key={type}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.6 + (idx * 0.1) }}
+                                                className="flex items-center gap-3 text-sm font-semibold text-muted-foreground hover:text-kenya-red transition-colors duration-300"
+                                            >
+                                                <div className="w-2 h-2 rounded-full bg-kenya-red shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
                                                 {type}
-                                            </li>
+                                            </motion.li>
                                         ))}
                                     </ul>
                                 </CardContent>

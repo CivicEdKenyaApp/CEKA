@@ -76,9 +76,9 @@ class SearchService {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, title, excerpt, created_at, published_at')
+        .select('id, title, excerpt, created_at, published_at, tags')
         .eq('status', 'published')
-        .or(`title.ilike.%${query}%,content.ilike.%${query}%,excerpt.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%,content.ilike.%${query}%,excerpt.ilike.%${query}%,tags.cs.{${query}}`)
         .order('published_at', { ascending: false })
         .limit(limit);
 
@@ -150,7 +150,7 @@ class SearchService {
     if (!query.trim()) return [];
 
     const results = await this.searchAll(query, 2);
-    
+
     return results.map(result => ({
       id: result.id,
       title: result.title,
