@@ -9,6 +9,7 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const NasakaPage: React.FC = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
@@ -121,7 +122,7 @@ const NasakaPage: React.FC = () => {
                     <ChevronLeft className="w-5 h-5 text-foreground dark:text-foreground group-hover:text-ios-blue dark:group-hover:text-ios-blue-light transition-colors" />
                   </Button>
                 </Link>
-                
+
                 <div className="flex items-center space-x-3">
                   {/* Clickable Nasaka Logo with Glassmorphism */}
                   <a
@@ -130,7 +131,7 @@ const NasakaPage: React.FC = () => {
                     rel="noopener noreferrer"
                     className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-lg transition-all duration-300"
                   >
-                    <div 
+                    <div
                       className="
                         w-8 h-8 rounded-lg 
                         bg-white/40 dark:bg-ios-surface-dark/40 
@@ -156,11 +157,11 @@ const NasakaPage: React.FC = () => {
                         e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
                       }}
                     >
-                      <img 
-                        src="/nasaka.svg" 
+                      <img
+                        src="/nasaka.svg"
                         alt="Nasaka IEBC Logo"
                         className="w-5 h-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
-                        style={{ 
+                        style={{
                           filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)'
                         }}
                       />
@@ -175,14 +176,14 @@ const NasakaPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right Section - All buttons grouped together */}
               <div className="flex items-center space-x-2">
                 {/* Theme Toggle */}
                 <div className="rounded-lg w-10 h-10 bg-white/40 dark:bg-ios-surface-dark/40 hover:bg-white/60 dark:hover:bg-ios-surface-dark/60 backdrop-blur-sm transition-all duration-300 border border-white/40 dark:border-ios-border/50">
                   <ThemeToggle />
                 </div>
-                
+
                 {/* iOS Style Loaded Indicator */}
                 {iframeLoaded && (
                   <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border border-green-500/30 dark:border-green-500/50 shadow-sm">
@@ -190,7 +191,7 @@ const NasakaPage: React.FC = () => {
                     <span className="text-xs font-medium text-green-700 dark:text-green-400">Loaded</span>
                   </div>
                 )}
-                
+
                 {/* Menu Button */}
                 <Button
                   variant="ghost"
@@ -224,9 +225,8 @@ const NasakaPage: React.FC = () => {
 
               <div className="mt-4 md:mt-0 flex items-center gap-3 md:hidden">
                 <div className="flex items-center text-sm text-muted-foreground dark:text-muted-foreground">
-                  <div className={`w-3 h-3 rounded-full mr-2 ${
-                    iframeLoaded ? 'bg-green-500 animate-pulse' : iframeError ? 'bg-ios-red' : 'bg-ios-yellow animate-pulse'
-                  }`}></div>
+                  <div className={`w-3 h-3 rounded-full mr-2 ${iframeLoaded ? 'bg-green-500 animate-pulse' : iframeError ? 'bg-ios-red' : 'bg-ios-yellow animate-pulse'
+                    }`}></div>
                   {iframeLoaded ? (
                     <div className="flex items-center">
                       <Check className="w-3 h-3 mr-1 text-green-500" />
@@ -239,10 +239,10 @@ const NasakaPage: React.FC = () => {
                   )}
                 </div>
                 {iframeError && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleRetry} 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetry}
                     className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-border dark:border-border"
                   >
                     <RefreshCw className="w-4 h-4 mr-2 text-foreground dark:text-foreground" />
@@ -257,9 +257,7 @@ const NasakaPage: React.FC = () => {
               {/* Loading State */}
               {!iframeLoaded && !iframeError && (
                 <div className="h-96 flex flex-col items-center justify-center bg-gradient-to-br from-ios-blue/5 to-transparent dark:from-ios-blue/10 dark:to-transparent">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-ios-blue/20 border-t-ios-blue border-r-ios-blue dark:border-ios-blue-light/20 dark:border-t-ios-blue-light dark:border-r-ios-blue-light mb-4"></div>
-                  <p className="text-foreground dark:text-foreground">Loading Nasaka IEBC registration center finder...</p>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">This may take a few moments</p>
+                  <CEKALoader variant="ios" size="lg" text="Loading Nasaka IEBC Finder..." />
                 </div>
               )}
 
@@ -274,9 +272,9 @@ const NasakaPage: React.FC = () => {
                     The Nasaka IEBC registration center finder is temporarily unavailable. This could be due to network issues or the external service being down.
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center">
-                    <Button 
-                      onClick={handleRetry} 
-                      variant="outline" 
+                    <Button
+                      onClick={handleRetry}
+                      variant="outline"
                       className="rounded-full bg-white/80 dark:bg-ios-surface-dark/80 backdrop-blur-sm border-border dark:border-border"
                     >
                       <RefreshCw className="w-4 h-4 mr-2 text-foreground dark:text-foreground" />
@@ -328,7 +326,7 @@ const NasakaPage: React.FC = () => {
                 <p className="text-2xl font-bold text-foreground dark:text-foreground">500k+</p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Organic Reach</p>
               </div>
-              
+
               {/* Interactive Android App Card */}
               <a
                 href={ANDROID_APP_URL}
@@ -336,7 +334,7 @@ const NasakaPage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="group block cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-2xl transition-all duration-300 transform-gpu"
               >
-                <div 
+                <div
                   className="
                     bg-gradient-to-br from-white/40 via-white/20 to-transparent 
                     dark:bg-gradient-to-br dark:from-ios-blue/20 dark:via-ios-blue/10 dark:to-transparent 
@@ -413,9 +411,8 @@ const NasakaPage: React.FC = () => {
 
         {/* Full-Screen Sidebar / Overlay */}
         <div
-          className={`fixed inset-0 z-50 transition-all duration-300 ${
-            isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
+          className={`fixed inset-0 z-50 transition-all duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            }`}
         >
           {/* Backdrop with Enhanced Blur */}
           <div
@@ -425,9 +422,8 @@ const NasakaPage: React.FC = () => {
 
           {/* Sidebar Content with Enhanced Frosted Glass - Full Dark Mode Support */}
           <div
-            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-ios-blue-light/20 border-l border-border/30 dark:border-border/50 transition-transform duration-300 ${
-              isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+            className={`absolute top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white via-white/95 to-white/90 dark:from-ios-surface-dark dark:via-ios-surface-dark/95 dark:to-ios-surface-dark/90 backdrop-blur-xl shadow-xl shadow-ios-blue/20 dark:shadow-ios-blue-light/20 border-l border-border/30 dark:border-border/50 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+              }`}
           >
             {/* Sidebar Header with Enhanced Frosted Glass - Dark Mode Ready */}
             <div className="bg-gradient-to-r from-ios-blue/15 via-ios-blue/10 to-ios-blue/5 dark:from-ios-blue/20 dark:via-ios-blue/15 dark:to-ios-blue/10 backdrop-blur-lg border-b border-border/30 dark:border-border/50 p-6">
@@ -440,7 +436,7 @@ const NasakaPage: React.FC = () => {
                     rel="noopener noreferrer"
                     className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-ios-blue dark:focus-visible:ring-ios-blue-light focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ios-surface-dark rounded-lg transition-all duration-300"
                   >
-                    <div 
+                    <div
                       className="
                         w-10 h-10 rounded-lg 
                         bg-white/40 dark:bg-ios-surface-dark/40 
@@ -466,11 +462,11 @@ const NasakaPage: React.FC = () => {
                         e.currentTarget.classList.remove('scale-[0.95]', 'bg-white/70', 'dark:bg-ios-surface-dark/70');
                       }}
                     >
-                      <img 
-                        src="/nasaka.svg" 
+                      <img
+                        src="/nasaka.svg"
                         alt="Nasaka IEBC Logo"
                         className="w-6 h-6 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
-                        style={{ 
+                        style={{
                           filter: 'invert(39%) sepia(57%) saturate(2476%) hue-rotate(202deg) brightness(98%) contrast(101%)'
                         }}
                       />
@@ -576,7 +572,7 @@ const NasakaPage: React.FC = () => {
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-muted-foreground transition-all duration-300 group-hover:text-kenya-green dark:group-hover:text-kenya-green-light group-hover:translate-x-1" />
                   </a>
-                  
+
                   {/* Android App Download Link in Sidebar */}
                   <a
                     href={ANDROID_APP_URL}

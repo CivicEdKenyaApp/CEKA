@@ -5,6 +5,7 @@ import { BarChart3, FileText, Database, ExternalLink, AlertTriangle, RefreshCw, 
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import Layout from '@/components/layout/Layout';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const PeoplesAuditPage: React.FC = () => {
   const [activeView, setActiveView] = useState<'sankey' | 'dashboard'>('sankey');
@@ -71,8 +72,8 @@ const PeoplesAuditPage: React.FC = () => {
     <Layout>
       <Helmet>
         <title>People's Audit - Economic Analysis | CEKA</title>
-        <meta 
-          name="description" 
+        <meta
+          name="description"
           content="Comprehensive breakdown of Kenya's economic state, public debt analysis, and governance audit."
         />
       </Helmet>
@@ -125,18 +126,17 @@ const PeoplesAuditPage: React.FC = () => {
                   {activeView === 'sankey' ? 'Public Fund Flow Analysis' : 'Comprehensive Audit Dashboard'}
                 </h2>
                 <p className="text-muted-foreground mt-1">
-                  {activeView === 'sankey' 
+                  {activeView === 'sankey'
                     ? 'Visual representation of how public funds move through different sectors and agencies.'
                     : 'Complete overview of economic indicators, debt analysis, and governance metrics.'
                   }
                 </p>
               </div>
-              
+
               <div className="mt-4 md:mt-0 flex items-center gap-3">
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <div className={`w-3 h-3 rounded-full mr-2 ${
-                    iframeLoaded ? 'bg-green-500' : iframeError ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
-                  }`}></div>
+                  <div className={`w-3 h-3 rounded-full mr-2 ${iframeLoaded ? 'bg-green-500' : iframeError ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
+                    }`}></div>
                   {iframeLoaded ? 'Loaded' : iframeError ? 'Connection Error' : 'Loading...'}
                 </div>
                 {iframeError && (
@@ -153,9 +153,7 @@ const PeoplesAuditPage: React.FC = () => {
               {/* Loading State */}
               {!iframeLoaded && !iframeError && (
                 <div className="h-96 flex flex-col items-center justify-center bg-muted/30">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-                  <p className="text-foreground">Loading visualization from People's Audit...</p>
-                  <p className="text-sm text-muted-foreground mt-2">This may take a few moments</p>
+                  <CEKALoader variant="orbit" size="lg" text="Auditing Economic Reality..." />
                 </div>
               )}
 
@@ -174,7 +172,7 @@ const PeoplesAuditPage: React.FC = () => {
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Try Again
                     </Button>
-                    <a 
+                    <a
                       href={getIframeUrl()}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -194,7 +192,7 @@ const PeoplesAuditPage: React.FC = () => {
                   ref={iframeRef}
                   src={getIframeUrl()}
                   className={`w-full transition-opacity duration-300 ${iframeLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
-                  style={{ 
+                  style={{
                     height: iframeLoaded ? 'calc(100vh - 350px)' : '1px',
                     minHeight: iframeLoaded ? '600px' : '1px'
                   }}
@@ -240,7 +238,7 @@ const PeoplesAuditPage: React.FC = () => {
                   Additional Resources
                 </h3>
                 <div className="space-y-3">
-                  <a 
+                  <a
                     href={`${RENDER_BASE_URL}/list`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -255,7 +253,7 @@ const PeoplesAuditPage: React.FC = () => {
                     </div>
                   </a>
 
-                  <a 
+                  <a
                     href={`${RENDER_BASE_URL}/docs`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -282,8 +280,8 @@ const PeoplesAuditPage: React.FC = () => {
                 <div className="ml-4">
                   <h4 className="text-lg font-semibold text-foreground">Technical Information</h4>
                   <p className="text-muted-foreground mt-2">
-                    This visualization is hosted on Render and embedded here. All data processing and 
-                    visualization generation happens on the Render backend. Updates to the analysis 
+                    This visualization is hosted on Render and embedded here. All data processing and
+                    visualization generation happens on the Render backend. Updates to the analysis
                     automatically reflect here without requiring changes to this page.
                   </p>
                   <div className="mt-4 inline-flex items-center px-3 py-1 bg-muted rounded-full text-sm font-medium text-muted-foreground border border-border">

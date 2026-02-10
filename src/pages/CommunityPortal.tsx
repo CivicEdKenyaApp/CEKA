@@ -21,6 +21,7 @@ import {
   EmptyDescription,
   EmptyContent
 } from '@/components/ui/empty';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const CommunityPortal = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,9 +97,8 @@ const CommunityPortal = () => {
 
   if (loading) return (
     <Layout>
-      <div className="container py-20 flex flex-col items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground animate-pulse font-bold tracking-widest uppercase text-xs">Synchronizing Community Pulse...</p>
+      <div className="container py-24 flex flex-col items-center justify-center min-h-[60vh]">
+        <CEKALoader variant="ios" size="lg" text="Synchronizing Community Pulse..." />
       </div>
     </Layout>
   );

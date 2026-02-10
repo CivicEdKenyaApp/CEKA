@@ -4,6 +4,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 
 interface CEKALoaderProps {
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -39,6 +41,9 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
     showProgressMessages = false
 }) => {
     const [messageIndex, setMessageIndex] = useState(0);
+    const { theme } = useTheme();
+
+    const logoSrc = theme === 'dark' ? '/logo-white.png' : '/logo-colored.png';
 
     useEffect(() => {
         if (!showProgressMessages) return;
@@ -169,11 +174,15 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         transition={{ duration: 2, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
                         style={{ willChange: 'transform, opacity' }}
                     />
-                    <div className="relative z-10 font-black text-2xl tracking-tighter filter drop-shadow-sm">
-                        <span className="text-kenya-green">C</span>
-                        <span className="text-kenya-red">E</span>
-                        <span className="text-black dark:text-white">K</span>
-                        <span className="text-kenya-green">A</span>
+                    <div className="relative z-10 flex items-center justify-center">
+                        <img
+                            src={logoSrc}
+                            alt="CEKA"
+                            className={cn(
+                                "object-contain transition-all duration-500",
+                                size === 'xs' ? 'h-4' : size === 'sm' ? 'h-6' : size === 'md' ? 'h-10' : size === 'lg' ? 'h-14' : 'h-20'
+                            )}
+                        />
                     </div>
                 </div>
             </Wrapper>
@@ -210,8 +219,15 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                             </div>
                         ))}
                     </motion.div>
-                    <div className="relative z-10 text-3xl filter saturate-150 drop-shadow-md">
-                        ⚖
+                    <div className="relative z-10 flex items-center justify-center scale-75">
+                        <img
+                            src={logoSrc}
+                            alt="CEKA"
+                            className={cn(
+                                "object-contain",
+                                size === 'xs' ? 'h-3' : size === 'sm' ? 'h-5' : size === 'md' ? 'h-8' : size === 'lg' ? 'h-12' : 'h-16'
+                            )}
+                        />
                     </div>
                 </div>
             </Wrapper>
@@ -242,10 +258,17 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                 />
                 <motion.div
                     className="absolute inset-0 flex items-center justify-center"
-                    animate={{ opacity: [0.4, 1, 0.4], scale: [0.95, 1.05, 0.95] }}
+                    animate={{ opacity: [0.6, 1, 0.6], scale: [0.98, 1.02, 0.98] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                    <span className="text-[10px] font-black tracking-widest text-primary/80">MOD</span>
+                    <img
+                        src={logoSrc}
+                        alt="CEKA"
+                        className={cn(
+                            "object-contain",
+                            size === 'xs' ? 'h-3' : size === 'sm' ? 'h-4' : size === 'md' ? 'h-6' : size === 'lg' ? 'h-10' : 'h-14'
+                        )}
+                    />
                 </motion.div>
             </div>
         </Wrapper>
@@ -278,17 +301,25 @@ export const CEKAImagePlaceholder: React.FC<{ className?: string }> = ({ classNa
 );
 
 export const CEKAFullLoader: React.FC<{ message?: string }> = ({ message }) => (
-    <motion.div
-        className="fixed inset-0 z-[100] bg-background/60 backdrop-blur-xl flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-    >
-        <div className="p-12 rounded-[32px] bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10 shadow-2xl">
-            <CEKALoader size="lg" variant="default" text={message} showProgressMessages={!message} />
-        </div>
-    </motion.div>
+    <AnimatePresence>
+        <motion.div
+            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-2xl flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        >
+            <motion.div
+                className="p-12 rounded-[40px] bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10 shadow-2xl"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "circOut" }}
+            >
+                <CEKALoader size="lg" variant="default" text={message} showProgressMessages={!message} />
+            </motion.div>
+        </motion.div>
+    </AnimatePresence>
 );
 
 export default CEKALoader;

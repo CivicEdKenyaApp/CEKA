@@ -22,6 +22,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BillFollowButton } from '@/components/legislative/BillFollowButton';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import FeaturedLegislationCarousel from '@/components/legislative/FeaturedLegislationCarousel';
 import AIContextButton from '@/components/ai/AIContextButton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -337,9 +338,9 @@ const LegislativeTracker = () => {
 
                 <TabsContent value={activeTab} className="space-y-6 mt-0">
                   {loading ? (
-                    Array(3).fill(0).map((_, i) => (
-                      <div key={i} className="h-64 rounded-[40px] bg-slate-50 dark:bg-white/5 animate-pulse" />
-                    ))
+                    <div className="flex flex-col gap-6">
+                      <CEKALoader variant="ios" size="lg" text="Scanning Vault for Bills..." />
+                    </div>
                   ) : filteredBills.length === 0 ? (
                     <div className="py-32 text-center space-y-4">
                       <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center mx-auto">

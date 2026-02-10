@@ -15,6 +15,7 @@ import { BlogPost, blogService } from '@/services/blogService';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 const Blog = () => {
   const { posts, loading, createPost, updatePost } = useBlog();
@@ -93,8 +94,8 @@ const Blog = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="container py-8">
-          <div className="text-center">Loading posts...</div>
+        <div className="container py-24 flex flex-col items-center justify-center min-h-[60vh]">
+          <CEKALoader variant="ios" size="lg" text="Syncing Blog Feed..." />
         </div>
       </Layout>
     );

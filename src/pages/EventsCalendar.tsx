@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import gsap from 'gsap';
 import { createEvent as createIcs } from 'ics';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 interface CivicEvent {
   id: string;
@@ -224,7 +225,7 @@ const EventsCalendar = () => {
             <div className="space-y-4 min-h-[300px]">
               {loading ? (
                 <div className="flex items-center justify-center h-48">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+                  <CEKALoader variant="ios" size="md" text="Syncing Events..." />
                 </div>
               ) : selectedDateEvents.length > 0 ? (
                 selectedDateEvents.map((event, idx) => (
