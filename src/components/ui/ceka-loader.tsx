@@ -68,14 +68,9 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
     // High-end spring for iOS feel
     const iosSpring = { type: "spring", stiffness: 300, damping: 30, mass: 1 };
 
-    // Accessibility Wrapper
-    const Wrapper = ({ children }: { children: React.ReactNode }) => (
-        <div
-            className="flex flex-col items-center justify-center gap-4"
-            role="status"
-            aria-busy="true"
-        >
-            {children}
+    // Progressive message component to be used inside the layout
+    const renderMessage = () => (
+        <>
             {displayMessage && (
                 <AnimatePresence mode="wait">
                     <motion.p
@@ -83,7 +78,7 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className={`${s.text} font-medium text-muted-foreground tracking-tight text-center max-w-[200px]`}
+                        className={`${s.text} font-medium text-muted-foreground tracking-tight text-center max-w-[200px] mt-4`}
                         style={{ willChange: 'opacity, transform' }}
                     >
                         {displayMessage}
@@ -91,13 +86,13 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                 </AnimatePresence>
             )}
             <span className="sr-only">Loading...</span>
-        </div>
+        </>
     );
 
-    if (variant === 'ios') {
-        const segments = 12;
-        return (
-            <Wrapper>
+    const renderContent = () => {
+        if (variant === 'ios') {
+            const segments = 12;
+            return (
                 <div className={`${s.wrapper} relative flex items-center justify-center`}>
                     {[...Array(segments)].map((_, i) => (
                         <motion.div
@@ -126,13 +121,11 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         />
                     ))}
                 </div>
-            </Wrapper>
-        );
-    }
+            );
+        }
 
-    if (variant === 'bars') {
-        return (
-            <Wrapper>
+        if (variant === 'bars') {
+            return (
                 <div className="flex items-end gap-1.5 h-10">
                     {[0, 1, 2, 3, 4].map((i) => (
                         <motion.div
@@ -154,13 +147,11 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         />
                     ))}
                 </div>
-            </Wrapper>
-        );
-    }
+            );
+        }
 
-    if (variant === 'pulse') {
-        return (
-            <Wrapper>
+        if (variant === 'pulse') {
+            return (
                 <div className={`${s.wrapper} relative flex items-center justify-center`}>
                     <motion.div
                         className="absolute inset-0 rounded-full bg-kenya-green/10"
@@ -185,13 +176,11 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         />
                     </div>
                 </div>
-            </Wrapper>
-        );
-    }
+            );
+        }
 
-    if (variant === 'orbit') {
-        return (
-            <Wrapper>
+        if (variant === 'orbit') {
+            return (
                 <div className={`${s.wrapper} relative flex items-center justify-center`}>
                     <motion.div
                         className="absolute inset-0 flex items-center justify-center"
@@ -230,13 +219,11 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         />
                     </div>
                 </div>
-            </Wrapper>
-        );
-    }
+            );
+        }
 
-    // Default Triple Ring - Highly Refined
-    return (
-        <Wrapper>
+        // Default Triple Ring
+        return (
             <div className={`${s.wrapper} relative flex items-center justify-center`}>
                 <motion.div
                     className="absolute inset-0 rounded-full border-[3px] border-kenya-green/10"
@@ -271,7 +258,18 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                     />
                 </motion.div>
             </div>
-        </Wrapper>
+        );
+    };
+
+    return (
+        <div
+            className="flex flex-col items-center justify-center"
+            role="status"
+            aria-busy="true"
+        >
+            {renderContent()}
+            {renderMessage()}
+        </div>
     );
 };
 
