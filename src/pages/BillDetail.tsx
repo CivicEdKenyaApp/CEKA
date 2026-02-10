@@ -10,7 +10,7 @@ import Layout from '@/components/layout/Layout';
 import { billService, Bill } from '@/services/billService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, translate } from '@/lib/utils';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage, Language } from '@/contexts/LanguageContext';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -33,7 +33,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const LegislativeTimeline = ({ stages, language }: { stages: any[], language: string }) => {
+const LegislativeTimeline = ({ stages, language }: { stages: any[], language: any }) => {
   return (
     <div className="relative mt-8 space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-kenya-green before:via-slate-200 dark:before:via-white/5 before:to-slate-100 dark:before:to-transparent">
       {stages.map((stage, index) => (

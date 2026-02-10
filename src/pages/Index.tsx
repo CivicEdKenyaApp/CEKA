@@ -206,7 +206,7 @@ const Index = () => {
         <CampaignSpotlight section="home_mid" />
       </section>
 
-      <ResourceHighlights resources={sampleResources} />
+      <ResourceHighlights />
       <CommunitySection />
       <VolunteerOpportunities />
     </Layout>

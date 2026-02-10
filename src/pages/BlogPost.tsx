@@ -8,6 +8,7 @@ import { BlogSidebar } from '@/components/blog/BlogSidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Calendar, User, ArrowLeft, Heart, Share2, MessageCircle, Bookmark, Send, Eye, Clock, MessageSquare } from 'lucide-react';
