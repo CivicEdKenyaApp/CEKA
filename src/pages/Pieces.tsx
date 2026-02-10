@@ -203,7 +203,7 @@ const Pieces = () => {
                                     {/* Subtle decorative background element */}
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-kenya-green/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
 
-                                    <h3 className="text-xl font-black mb-4 text-kenya-black dark:text-white tracking-tight">About CEKA</h3>
+                                    <h3 className="text-xl font-black mb-4 text-kenya-black dark:text-white tracking-tighter uppercase">About CEKA</h3>
                                     <p className="text-sm text-muted-foreground leading-relaxed mb-8 font-medium">
                                         {CEKA_ABOUT.mission}
                                     </p>
@@ -259,7 +259,7 @@ const Pieces = () => {
                             transition={{ delay: 0.4 }}
                             className="space-y-4"
                         >
-                            <h3 className="text-lg font-bold text-kenya-black dark:text-white">Follow CEKA</h3>
+                            <h3 className="text-lg font-black text-kenya-black dark:text-white tracking-tighter uppercase">Follow CEKA</h3>
                             <div className="space-y-3">
                                 {CEKA_SOCIALS.map((social) => (
                                     <SocialCard key={social.platform} social={social} />
@@ -285,7 +285,7 @@ const Pieces = () => {
                                         transition={{ duration: 8, repeat: Infinity }}
                                     />
 
-                                    <h3 className="text-xl font-black mb-5 text-kenya-black dark:text-white tracking-tight">Content We Create</h3>
+                                    <h3 className="text-xl font-black mb-5 text-kenya-black dark:text-white tracking-tighter uppercase">Content We Create</h3>
                                     <ul className="space-y-3 relative z-10">
                                         {CEKA_ABOUT.content_types.map((type, idx) => (
                                             <motion.li

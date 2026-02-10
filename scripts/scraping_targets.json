@@ -3,14 +3,14 @@
         {
             "name": "National Assembly Bills",
             "url": "http://www.parliament.go.ke/the-national-assembly/house-business/bills",
-            "selector": "table tbody tr",
+            "selector": "a[href$='.pdf']",
             "type": "bills",
             "freq": "daily_0900_eat"
         },
         {
             "name": "Senate Bills",
             "url": "http://www.parliament.go.ke/the-senate/house-business/bills",
-            "selector": "table tbody tr",
+            "selector": "a[href$='.pdf']",
             "type": "bills",
             "freq": "daily_0900_eat"
         },
@@ -19,13 +19,6 @@
             "url": "http://www.parliament.go.ke/the-national-assembly/house-business/order-paper",
             "selector": ".view-content .views-row",
             "type": "order_papers",
-            "freq": "daily_0900_eat"
-        },
-        {
-            "name": "Kenya Gazette (Gazetti)",
-            "url": "https://www.gazetti.co.ke/",
-            "selector": ".gazette-item",
-            "type": "gazette",
             "freq": "daily_0900_eat"
         }
     ]

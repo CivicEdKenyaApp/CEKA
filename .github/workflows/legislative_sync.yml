@@ -26,11 +26,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install playwright pandas beautifulsoup4 requests supabase rapidfuzz
           playwright install chromium
+          playwright install-deps
 
       - name: Run Scraper
         run: python scripts/legislative_scraper.py
+        env:
+          PYTHONIOENCODING: utf-8
 
-      - name: Sync to Supabase with Fuzzy Matching
+      - name: Verify Scrape Output
+        run: |
+          echo "### Scrape Results" >> $GITHUB_STEP_SUMMARY
+          LATEST=$(ls -t processed_data/legislative/bills_*.json 2>/dev/null | head -1)
+          if [ -z "$LATEST" ]; then
+            echo "❌ No output file found" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          COUNT=$(python3 -c "import json; print(len(json.load(open('$LATEST'))))")
+          echo "- File: $LATEST" >> $GITHUB_STEP_SUMMARY
+          echo "- Bills scraped: $COUNT" >> $GITHUB_STEP_SUMMARY
+          if [ "$COUNT" -eq 0 ]; then
+            echo "⚠️ Warning: Scraper produced 0 bills. Website may have changed." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Sync to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

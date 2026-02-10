@@ -14,7 +14,12 @@ export interface Bill {
   constitutional_section?: string;
   url?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  neural_summary?: string | null;
+  text_content?: string | null;
+  pdf_url?: string | null;
+  views_count?: number;
+  follow_count?: number;
 }
 
 class BillService {
@@ -27,7 +32,7 @@ class BillService {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as Bill[];
     } catch (error) {
       console.error('Error fetching featured bills:', error);
       return [];
@@ -43,7 +48,7 @@ class BillService {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as Bill;
     } catch (error) {
       console.error('Error fetching bill by id:', error);
       return null;
@@ -58,7 +63,7 @@ class BillService {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as Bill[];
     } catch (error) {
       console.error('Error fetching all bills:', error);
       return [];
@@ -74,10 +79,38 @@ class BillService {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as Bill[];
     } catch (error) {
       console.error('Error searching bills:', error);
       return [];
+    }
+  }
+
+  async getBillStats(): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('bills')
+        .select('status, category');
+
+      if (error) throw error;
+
+      const stats = {
+        total: data?.length || 0,
+        byStatus: {} as Record<string, number>,
+        byCategory: {} as Record<string, number>
+      };
+
+      data?.forEach(bill => {
+        const status = bill.status || 'Unknown';
+        const category = bill.category || 'Uncategorized';
+        stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+      });
+
+      return stats;
+    } catch (error) {
+      console.error('Error fetching bill stats:', error);
+      return { total: 0, byStatus: {}, byCategory: {} };
     }
   }
 }

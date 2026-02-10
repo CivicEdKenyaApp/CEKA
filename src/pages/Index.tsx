@@ -176,7 +176,7 @@ const Index = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kenya-red/10 text-kenya-red text-xs font-bold uppercase tracking-widest">
                   <span className="animate-pulse">●</span> Education Series
                 </div>
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-kenya-black dark:text-white uppercase leading-tight">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-kenya-black dark:text-white uppercase leading-tight">
                   Pieces: <br />
                   <span className="text-kenya-green">Breaking Down Topics</span>
                 </h2>

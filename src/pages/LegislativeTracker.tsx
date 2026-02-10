@@ -70,6 +70,7 @@ const LegislativeTracker = () => {
   const [deepSearch, setDeepSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+  const [stats, setStats] = useState<{ total: number; byStatus: any }>({ total: 0, byStatus: {} });
 
   // Debounce search input - only trigger after 300ms of no typing and 3+ chars
   useEffect(() => {
@@ -139,6 +140,14 @@ const LegislativeTracker = () => {
         });
 
         setBillsData(processedData as Bill[]);
+
+        // 3. Fetch Stats
+        const { data: statsData } = await (supabase as any).from('bills').select('status');
+        const st = { total: (data || []).length, byStatus: {} as any };
+        (statsData || []).forEach((b: any) => {
+          st.byStatus[b.status] = (st.byStatus[b.status] || 0) + 1;
+        });
+        setStats(st);
       } catch (e: any) {
         console.error('Fetch error:', e);
       } finally {
@@ -294,10 +303,23 @@ const LegislativeTracker = () => {
 
                 <Card className="rounded-[32px] border-none bg-kenya-green/5 overflow-hidden">
                   <CardContent className="p-6 space-y-4">
-                    <Scale className="h-8 w-8 text-kenya-green opacity-40" />
-                    <h5 className="font-bold">Public Mandate</h5>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Mandatory public participation is currently active for 4 bills in the Committee Stage.
+                    <div className="flex items-center justify-between">
+                      <Scale className="h-8 w-8 text-kenya-green opacity-40" />
+                      <Badge className="bg-kenya-green text-white border-none font-black text-xs">
+                        {stats.total} BILLS
+                      </Badge>
+                    </div>
+                    <h5 className="font-black uppercase tracking-tighter text-lg">Vault Intelligence</h5>
+                    <div className="space-y-2">
+                      {Object.entries(stats.byStatus).slice(0, 4).map(([status, count]: any) => (
+                        <div key={status} className="flex justify-between items-center text-xs">
+                          <span className="opacity-60">{status}</span>
+                          <span className="font-black text-kenya-green">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed pt-2 border-t border-kenya-green/10">
+                      Our "Track & Trace" engine synchronises with the Kenya Gazette and Parliament daily.
                     </p>
                   </CardContent>
                 </Card>

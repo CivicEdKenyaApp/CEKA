@@ -38,15 +38,15 @@ const Hero = () => {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
             <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                {translate('Empowering Citizens through', language)} 
-                <span className="block text-kenya-green">{translate('Civic Education', language)}</span>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-[1000] tracking-tighter uppercase leading-[0.9] text-kenya-black dark:text-white mb-6">
+                {translate('Empowering Citizens through', language)}{' '}
+                <span className="text-kenya-green">{translate('Civic Education', language)}</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-[600px] mx-auto md:mx-0">
                 {translate('Access civic knowledge, track legislation, and participate in building a better Kenya.', language)}
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Button asChild size="lg" className="bg-kenya-green hover:bg-kenya-green/90">
                 <Link to="/resources">
@@ -61,33 +61,33 @@ const Hero = () => {
               </Button>
             </div>
           </div>
-          
+
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <Link to="/resources" onClick={() => handleCardInteraction('resources')}>
-                  <motion.div 
-                    className="kenyan-card p-5 space-y-3 animate-fade-in cursor-pointer" 
-                    style={{animationDelay: '0s'}}
-                    whileHover={{ 
-                      scale: getAnimationScale('resources'), 
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)' 
+                  <motion.div
+                    className="kenyan-card p-5 space-y-3 animate-fade-in cursor-pointer"
+                    style={{ animationDelay: '0s' }}
+                    whileHover={{
+                      scale: getAnimationScale('resources'),
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                     }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <BookOpen className="h-6 w-6 text-kenya-green" />
-                    <h3 className="font-medium text-lg">{translate('Educational Resources', language)}</h3>
+                    <h3 className="font-black text-lg uppercase tracking-tighter">{translate('Educational Resources', language)}</h3>
                     <p className="text-sm text-muted-foreground">{translate('Learn about governance, rights, and civic processes.', language)}</p>
                   </motion.div>
                 </Link>
-                
+
                 <Link to="/blog" onClick={() => handleCardInteraction('blog')}>
-                  <motion.div 
-                    className="kenyan-card-accent p-5 space-y-3 animate-fade-in cursor-pointer" 
-                    style={{animationDelay: '0.2s'}}
-                    whileHover={{ 
-                      scale: getAnimationScale('blog'), 
+                  <motion.div
+                    className="kenyan-card-accent p-5 space-y-3 animate-fade-in cursor-pointer"
+                    style={{ animationDelay: '0.2s' }}
+                    whileHover={{
+                      scale: getAnimationScale('blog'),
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                       rotate: 1
                     }}
@@ -95,37 +95,37 @@ const Hero = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <Users className="h-6 w-6 text-kenya-red" />
-                    <h3 className="font-medium text-lg">{translate('Blog & Discussions', language)}</h3>
+                    <h3 className="font-black text-lg uppercase tracking-tighter">{translate('Blog & Discussions', language)}</h3>
                     <p className="text-sm text-muted-foreground">{translate('Read insights and engage in civic discussions with citizens.', language)}</p>
                   </motion.div>
                 </Link>
               </div>
-              
+
               <div className="space-y-4 mt-8">
                 <Link to="/legislative-tracker" onClick={() => handleCardInteraction('legislative')}>
-                  <motion.div 
-                    className="kenyan-card p-5 space-y-3 animate-fade-in cursor-pointer" 
-                    style={{animationDelay: '0.1s'}}
-                    whileHover={{ 
-                      scale: getAnimationScale('legislative'), 
+                  <motion.div
+                    className="kenyan-card p-5 space-y-3 animate-fade-in cursor-pointer"
+                    style={{ animationDelay: '0.1s' }}
+                    whileHover={{
+                      scale: getAnimationScale('legislative'),
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                      y: -5 
+                      y: -5
                     }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <FileText className="h-6 w-6 text-kenya-green" />
-                    <h3 className="font-medium text-lg">{translate('Legislative Updates', language)}</h3>
+                    <h3 className="font-black text-lg uppercase tracking-tighter">{translate('Legislative Updates', language)}</h3>
                     <p className="text-sm text-muted-foreground">{translate('Stay informed about bills and legal changes.', language)}</p>
                   </motion.div>
                 </Link>
-                
+
                 <Link to="/join-community" onClick={() => handleCardInteraction('volunteer')}>
-                  <motion.div 
-                    className="kenyan-card-accent p-5 space-y-3 animate-fade-in cursor-pointer" 
-                    style={{animationDelay: '0.3s'}}
-                    whileHover={{ 
-                      scale: getAnimationScale('volunteer'), 
+                  <motion.div
+                    className="kenyan-card-accent p-5 space-y-3 animate-fade-in cursor-pointer"
+                    style={{ animationDelay: '0.3s' }}
+                    whileHover={{
+                      scale: getAnimationScale('volunteer'),
                       boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                       x: 2
                     }}
@@ -133,13 +133,13 @@ const Hero = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <HandHelping className="h-6 w-6 text-kenya-red" />
-                    <h3 className="font-medium text-lg">{translate('Volunteer', language)}</h3>
+                    <h3 className="font-black text-lg uppercase tracking-tighter">{translate('Volunteer', language)}</h3>
                     <p className="text-sm text-muted-foreground">{translate('Find opportunities to make a difference.', language)}</p>
                   </motion.div>
                 </Link>
               </div>
             </div>
-            
+
             {/* Background decoration */}
             <div className="absolute -z-10 rounded-full bg-kenya-green/10 w-64 h-64 -bottom-20 -right-20 blur-3xl" />
             <div className="absolute -z-10 rounded-full bg-kenya-red/10 w-72 h-72 -top-10 -left-20 blur-3xl" />

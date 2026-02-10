@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Download, Maximize2 } from 'lucide-react';
 import { CEKALoader } from '@/components/ui/ceka-loader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { type MediaContent, type MediaItem } from '@/services/mediaService';
+import { mediaService, type MediaContent, type MediaItem } from '@/services/mediaService';
 import { processingService, type ResolutionQuality } from '@/services/processingService';
+import storageService from '@/services/storageService';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,15 +32,38 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const [imageLoading, setImageLoading] = useState(true);
     const [availableQualities, setAvailableQualities] = useState<ResolutionQuality[]>(['320p', '720p', '1080p', '4k']);
     const [masterRatio, setMasterRatio] = useState<string | null>(null);
-    const items = content.items || [];
+    const [hydratedItems, setHydratedItems] = useState<MediaItem[]>([]);
+    const [isHydrating, setIsHydrating] = useState(true);
 
-    // Reset index when content changes
+    const items = hydratedItems;
+
+    // Hydrate media URLs for B2 proxy
     useEffect(() => {
-        setCurrentIndex(0);
-        setDirection(0);
-        setImageLoading(true);
-        // Clear master ratio to re-detect for new content
-        setMasterRatio(null);
+        const hydrateMedia = async () => {
+            setIsHydrating(true);
+            const rawItems = content.items || [];
+            try {
+                const hydrated = await Promise.all(rawItems.map(async (item) => {
+                    if (item.file_url) {
+                        const authorizedUrl = await storageService.getAuthorizedUrl(item.file_url);
+                        return { ...item, file_url: authorizedUrl || item.file_url };
+                    }
+                    return item;
+                }));
+                setHydratedItems(hydrated);
+            } catch (err) {
+                console.error('[Carousel] Hydration failed:', err);
+                setHydratedItems(rawItems);
+            } finally {
+                setIsHydrating(false);
+                setImageLoading(true);
+                setCurrentIndex(0);
+                setDirection(0);
+                setMasterRatio(null);
+            }
+        };
+
+        hydrateMedia();
     }, [content.id, content.slug]);
 
     // Motion values for swipe feedback (drag offset)
@@ -49,7 +74,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
     const getAspectRatioPadding = (ratio?: string | null): string => {
         if (!ratio || ratio.includes('Square')) return '100%';
 
-        // Handle named ratios
         const ratioMap: Record<string, string> = {
             '4:3': '75%',
             '3:4': '133.33%',
@@ -68,13 +92,11 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
 
         if (ratioMap[ratio]) return ratioMap[ratio];
 
-        // Handle numeric/computed ratios (decimal value of height/width)
         if (!ratio.includes(':')) {
             const num = parseFloat(ratio);
             if (!isNaN(num) && num > 0) return `${num * 100}%`;
         }
 
-        // Parse "width:height" format
         const parts = ratio.split(':');
         if (parts.length === 2) {
             const [w, h] = parts.map(Number);
@@ -86,14 +108,11 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
 
     const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         setImageLoading(false);
-
-        // If we haven't locked in a master ratio for this carousel, do it now based on the first slide
         if (!masterRatio && currentIndex === 0) {
             const img = e.currentTarget;
             if (img.naturalWidth > 0) {
                 const ratio = img.naturalHeight / img.naturalWidth;
                 setMasterRatio(ratio.toString());
-                console.log(`[Carousel] Dynamic ratio locked: ${ratio.toFixed(4)} for ${content.slug}`);
             }
         }
     };
@@ -119,10 +138,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     };
 
-    // Handle swipe end
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const { offset, velocity } = info;
-
         if (offset.x < -SWIPE_THRESHOLD || velocity.x < -SWIPE_VELOCITY_THRESHOLD) {
             nextSlide();
         } else if (offset.x > SWIPE_THRESHOLD || velocity.x > SWIPE_VELOCITY_THRESHOLD) {
@@ -139,15 +156,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         try {
             const response = await fetch(pdfUrl);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const contentType = response.headers.get('content-type');
-            if (contentType && !contentType.includes('application/pdf')) {
-                throw new Error(`Invalid content type: expected application/pdf but got ${contentType}`);
-            }
-
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
-
             const link = document.createElement('a');
             link.href = blobUrl;
             link.download = `${content.slug || 'document'}.pdf`;
@@ -188,7 +198,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     };
 
-    // Detect available qualities from image metadata
     useEffect(() => {
         const currentItem = items[currentIndex];
         if (currentItem?.metadata?.max_resolution) {
@@ -203,7 +212,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         }
     }, [currentIndex, items]);
 
-    // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft') prevSlide();
@@ -213,10 +221,18 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentIndex, items]);
 
+    if (isHydrating) {
+        return (
+            <div className={cn("flex flex-col items-center justify-center p-12 bg-muted/5 rounded-2xl min-h-[400px]", className)}>
+                <CEKALoader variant="ios" size="md" />
+                <p className="mt-4 text-xs font-bold text-muted-foreground uppercase animate-pulse">Hydrating Media...</p>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     const currentItem = items[currentIndex];
-    // Prioritize dynamically detected masterRatio, then fall back to per-item metadata
     const activeRatio = masterRatio || (currentItem.metadata?.aspect_ratio as string);
 
     return (
@@ -229,16 +245,15 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                 >
                     <AnimatePresence initial={false} custom={direction}>
                         <motion.div
-                            key={`${content.id}-${currentIndex}`} // Unique key per item and content
+                            key={`${content.id}-${currentIndex}`}
                             custom={direction}
                             drag="x"
                             dragConstraints={{ left: 0, right: 0 }}
                             dragElastic={0.1}
                             onDragEnd={handleDragEnd}
-                            // Using standard variants for transition, not shared motion values in style
                             variants={{
                                 enter: (direction: number) => ({
-                                    x: direction > 0 ? '100.5%' : '-100.5%', // Added small buffer to prevent gap
+                                    x: direction > 0 ? '100.5%' : '-100.5%',
                                     opacity: 0,
                                     scale: 0.95
                                 }),
@@ -300,7 +315,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Navigation Arrows - Glassmorphism */}
                     {currentIndex > 0 && (
                         <div className="absolute inset-y-0 left-0 pl-2 flex items-center z-20">
                             <Button
@@ -328,12 +342,10 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                 </motion.div>
             </div>
 
-            {/* Bottom Controls - Below the image, not on top */}
             <div className="pt-4 flex flex-col gap-4">
-                {/* Indicators & Counter */}
                 <div className="flex justify-between items-center px-1">
                     <div className="flex gap-1.5 flex-wrap max-w-[70%]">
-                        {Array.isArray(items) && items.length > 1 && items.map((_, i) => (
+                        {Array.from({ length: items.length }).map((_, i) => (
                             <button
                                 key={i}
                                 onClick={() => {
@@ -355,7 +367,6 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                     </span>
                 </div>
 
-                {/* Download Actions */}
                 <div className="flex gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
