@@ -65,10 +65,7 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
 
     const s = sizes[size];
 
-    // High-end spring for iOS feel
-    const iosSpring = { type: "spring", stiffness: 300, damping: 30, mass: 1 };
-
-    // Progressive message component to be used inside the layout
+    // Progressive message component
     const renderMessage = () => (
         <>
             {displayMessage && (
