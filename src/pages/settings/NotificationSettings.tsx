@@ -54,8 +54,8 @@ const NotificationSettings: React.FC = () => {
       if (!session?.user?.id) return;
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase
+          .from('profiles' as any) as any)
           .select('notification_preferences')
           .eq('id', session.user.id)
           .single();
@@ -99,8 +99,8 @@ const NotificationSettings: React.FC = () => {
     if (session?.user?.id) {
       setSaving(true);
       try {
-        const { error } = await supabase
-          .from('profiles')
+        const { error } = await (supabase
+          .from('profiles' as any) as any)
           .upsert({
             id: session.user.id,
             notification_preferences: newPrefs,
@@ -126,8 +126,8 @@ const NotificationSettings: React.FC = () => {
     // Sync to database
     if (session?.user?.id) {
       try {
-        await supabase
-          .from('profiles')
+        await (supabase
+          .from('profiles' as any) as any)
           .upsert({
             id: session.user.id,
             notification_preferences: newPrefs,

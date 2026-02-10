@@ -11,7 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Sparkles
+    Sparkles,
+    Search,
+    Languages,
+    Book,
+    Trophy,
+    ChevronDown,
+    ChevronRight,
+    MessageSquare,
+    Link as LinkIcon
 } from 'lucide-react';
 import { CEKALoader } from '@/components/ui/ceka-loader';
 import { motion, AnimatePresence } from 'framer-motion';

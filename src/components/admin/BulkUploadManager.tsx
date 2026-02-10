@@ -171,8 +171,8 @@ const BulkUploadManager = () => {
             }
             else if (regMode === 'carousel_item' && selectedCarousel) {
                 // Get the current max order_index for this carousel
-                const { data: currentItems } = await supabase
-                    .from('media_items')
+                const { data: currentItems } = await (supabase
+                    .from('media_items' as any) as any)
                     .select('order_index')
                     .eq('content_id', selectedCarousel)
                     .order('order_index', { ascending: false })
@@ -180,7 +180,7 @@ const BulkUploadManager = () => {
 
                 const nextOrder = (currentItems && currentItems[0] ? currentItems[0].order_index + 1 : 0);
 
-                const { error: sqlError } = await supabase.from('media_items').insert({
+                const { error: sqlError } = await (supabase.from('media_items' as any) as any).insert({
                     content_id: selectedCarousel,
                     type: uploadFile.type.startsWith('image') ? 'image' :
                         uploadFile.type === 'application/pdf' ? 'pdf' : 'video',

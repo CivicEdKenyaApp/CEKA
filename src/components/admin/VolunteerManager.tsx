@@ -179,7 +179,7 @@ const VolunteerManager = () => {
         }
     };
 
-    const handleStatusChange = async (id: string, status: string) => {
+    const handleStatusChange = async (id: string, status: VolunteerOpportunity['status']) => {
         try {
             const { error } = await supabase
                 .from('volunteer_opportunities' as any)
@@ -201,7 +201,7 @@ const VolunteerManager = () => {
         setShowEditor(false);
     };
 
-    const getStatusBadge = (status: string) => {
+    const getStatusBadge = (status: VolunteerOpportunity['status']) => {
         const styles: Record<string, string> = {
             open: 'bg-blue-100 text-blue-800',
             approved: 'bg-kenya-green text-white',

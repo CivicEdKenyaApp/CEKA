@@ -11,6 +11,7 @@ import { translate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -73,8 +74,8 @@ const AppearanceSettings = () => {
 
         setSaving(true);
         try {
-            const { error } = await supabase
-                .from('profiles')
+            const { error } = await (supabase
+                .from('profiles' as any) as any)
                 .upsert({
                     id: session.user.id,
                     preferences: {
@@ -105,8 +106,8 @@ const AppearanceSettings = () => {
             if (!session?.user?.id) return;
 
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
+                const { data, error } = await (supabase
+                    .from('profiles' as any) as any)
                     .select('preferences')
                     .eq('id', session.user.id)
                     .single();

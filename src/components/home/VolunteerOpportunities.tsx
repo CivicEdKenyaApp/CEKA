@@ -203,7 +203,9 @@ const VolunteerOpportunities = () => {
           <div className="text-center py-12">
             <p className="text-red-500">{error}</p>
             <Button onClick={fetchOpportunities} variant="outline" className="mt-4 rounded-2xl">
-              <CEKALoader variant="ios" size="sm" className="mr-2 h-4 w-4" />
+              <span className="mr-2 h-4 w-4 flex items-center justify-center">
+                <CEKALoader variant="ios" size="sm" />
+              </span>
               Try Again
             </Button>
           </div>

@@ -53,8 +53,8 @@ const PrivacySettings: React.FC = () => {
       if (!session?.user?.id) return;
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase
+          .from('profiles' as any) as any)
           .select('privacy_settings')
           .eq('id', session.user.id)
           .single();
@@ -83,8 +83,8 @@ const PrivacySettings: React.FC = () => {
     if (session?.user?.id) {
       setSaving(true);
       try {
-        const { error } = await supabase
-          .from('profiles')
+        const { error } = await (supabase
+          .from('profiles' as any) as any)
           .upsert({
             id: session.user.id,
             privacy_settings: newSettings,
@@ -115,10 +115,10 @@ const PrivacySettings: React.FC = () => {
     try {
       // Fetch all user data
       const [profileRes, commentsRes, discussionsRes, feedbackRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-        supabase.from('resource_comments').select('*').eq('user_id', session.user.id),
-        supabase.from('discussions').select('*').eq('user_id', session.user.id),
-        supabase.from('bill_feedback').select('*').eq('user_id', session.user.id)
+        (supabase.from('profiles' as any) as any).select('*').eq('id', session.user.id).single(),
+        (supabase.from('resource_comments' as any) as any).select('*').eq('user_id', session.user.id),
+        (supabase.from('discussions' as any) as any).select('*').eq('user_id', session.user.id),
+        (supabase.from('bill_feedback' as any) as any).select('*').eq('user_id', session.user.id)
       ]);
 
       // Compile user data

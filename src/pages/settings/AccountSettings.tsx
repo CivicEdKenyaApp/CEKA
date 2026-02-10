@@ -28,7 +28,7 @@ const AccountSettings = () => {
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [profile, setProfile] = useState({
     username: '',

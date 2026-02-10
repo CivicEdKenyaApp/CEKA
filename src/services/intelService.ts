@@ -10,6 +10,7 @@ export interface ScraperSource {
     selector_config?: any;
     last_scraped_at: string | null;
     status: string;
+    is_active?: boolean;
     frequency_hours?: number;
     created_at: string;
     created_by?: string;
