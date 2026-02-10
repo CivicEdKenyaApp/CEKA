@@ -16,6 +16,7 @@ import InstagramCarousel from '@/components/carousel/InstagramCarousel';
 import { mediaService, type MediaContent } from '@/services/mediaService';
 import { Button } from '@/components/ui/button';
 import storageService from '@/services/storageService';
+import { CEKAFullLoader } from '@/components/ui/ceka-loader';
 
 // Types for our carousel slides
 interface CarouselSlide {
@@ -131,9 +132,7 @@ const Index = () => {
     return (
       <Layout>
         <Hero />
-        <div className="container mx-auto py-8 text-center">
-          <div className="text-lg">Loading...</div>
-        </div>
+        <CEKAFullLoader />
       </Layout>
     );
   }

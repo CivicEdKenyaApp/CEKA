@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translate } from '@/lib/utils';
 import { billService, Bill } from '@/services/billService';
+import { CEKACardSkeleton } from '@/components/ui/ceka-loader';
 
 // Status color mapping
 const getStatusColor = (status: string) => {
@@ -33,7 +34,7 @@ const getTimeRemaining = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (diff > 0) {
     return `${diff} days`;
   } else if (diff === 0) {
@@ -79,15 +80,7 @@ const FeaturedLegislation = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader className="pb-3">
-                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                </CardContent>
-              </Card>
+              <CEKACardSkeleton key={i} />
             ))}
           </div>
         </div>

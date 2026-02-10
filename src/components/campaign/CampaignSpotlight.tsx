@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import storageService from '@/services/storageService';
+import { CEKACardSkeleton } from '@/components/ui/ceka-loader';
 
 interface Campaign {
     id: string;
@@ -56,7 +57,7 @@ const CampaignSpotlight: React.FC<CampaignSpotlightProps> = ({ section }) => {
         fetchCampaigns();
     }, [section]);
 
-    if (loading) return <div className="animate-pulse h-24 bg-muted rounded-lg" />;
+    if (loading) return <CEKACardSkeleton className="h-48" />;
 
     if (campaigns.length === 0) {
         // Hidden if no active campaigns for this section

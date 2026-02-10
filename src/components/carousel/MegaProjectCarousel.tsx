@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChevronRight, Image as ImageIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import storageService from '@/services/storageService';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 
 type Slide = {
   id: string;
@@ -307,11 +308,8 @@ export default function MegaProjectCarousel({
 
   if (loading) {
     return (
-      <div className={cn("flex items-center justify-center h-64", className)}>
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 border-4 border-kenya-green border-t-transparent rounded-full animate-spin mb-3"></div>
-          <div className="text-lg">Loading projects...</div>
-        </div>
+      <div className={cn("flex items-center justify-center p-12 min-h-[400px]", className)}>
+        <CEKALoader variant="pulse" size="lg" text="Loading Projects..." />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Download, Maximize2, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Maximize2 } from 'lucide-react';
+import { CEKALoader } from '@/components/ui/ceka-loader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { type MediaContent, type MediaItem } from '@/services/mediaService';
@@ -267,8 +268,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                             {currentItem.type === 'image' ? (
                                 <>
                                     {imageLoading && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-muted/10">
-                                            <Loader2 className="w-8 h-8 animate-spin text-primary/30" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 blur-xl">
+                                            <CEKALoader variant="pulse" size="md" />
                                         </div>
                                     )}
                                     <img
@@ -365,8 +366,8 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                             >
                                 {downloading ? (
                                     <>
-                                        <Loader2 size={14} className="mr-2 animate-spin" />
-                                        Downloading {downloading}...
+                                        <CEKALoader variant="ios" size="xs" />
+                                        {" "} Downloading {downloading}...
                                     </>
                                 ) : (
                                     <>
@@ -403,11 +404,11 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                             className="bg-kenya-red hover:bg-kenya-red/90 text-white rounded-full px-5 text-xs font-medium"
                         >
                             {isCheckingPdf ? (
-                                <Loader2 size={14} className="mr-2 animate-spin" />
+                                <CEKALoader variant="ios" size="xs" />
                             ) : (
                                 <Download size={14} className="mr-2" />
                             )}
-                            {isCheckingPdf ? "Checking..." : "PDF"}
+                            {" "} {isCheckingPdf ? "Checking..." : "PDF"}
                         </Button>
                     )}
                 </div>
