@@ -468,7 +468,7 @@
   .homepage-restored h1,
   .homepage-restored h2,
   .homepage-restored h3 {
-    @apply capitalize font-extrabold tracking-tight italic-none normal-case;
+    @apply capitalize font-extrabold tracking-tight not-italic normal-case;
     font-family: 'Inter', -apple-system, sans-serif;
   }
 
