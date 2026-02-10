@@ -2,29 +2,34 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, DELETE',
     'Access-Control-Max-Age': '86400',
 }
 
 interface ManageRequest {
-    action: 'list-scripts' | 'get-script' | 'save-script' | 'rerun-job';
+    action: 'list-scripts' | 'get-script' | 'save-script' | 'rerun-job' | 'run-pipeline';
     filename?: string;
+    name?: string; // Fallback for filename
     content?: string;
     jobId?: string;
+    pipelineType?: string;
 }
 
 Deno.serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
-        return new Response(null, { headers: corsHeaders });
+        return new Response('ok', {
+            status: 200,
+            headers: corsHeaders
+        });
     }
 
     try {
-        const supabaseClient = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role for admin tasks
-        );
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
         // Verify Admin Role (Security Barrier)
         const authHeader = req.headers.get('Authorization');
@@ -33,59 +38,86 @@ Deno.serve(async (req) => {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
         if (userError || !user) throw new Error('Unauthorized');
 
+        // Allow our main admin email or anyone with admin role
         if (user.email !== 'civiceducationkenya@gmail.com') {
-            const { data: roleData } = await supabaseClient
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', user.id)
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
                 .maybeSingle();
 
-            if (roleData?.role !== 'admin') {
-                return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
-                    status: 403,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
+            if (!profile?.is_admin) {
+                // Secondary check for user_roles table
+                const { data: roleData } = await supabaseClient
+                    .from('user_roles')
+                    .select('role')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (roleData?.role !== 'admin') {
+                    return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
+                        status: 403,
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                    });
+                }
             }
         }
 
         const body: ManageRequest = await req.json();
+        const filename = body.filename || body.name;
 
         switch (body.action) {
             case 'list-scripts':
-                // For local dev, we might use a predefined list or filesystem if permissions allow
-                // In a hosted environment, these could be stored in a 'pipeline_code' table
-                // For now, let's return the standard CEKA pipeline files
                 return new Response(JSON.stringify({
-                    scripts: ['legislative_scraper.py', 'crawler.py', 'scraping_targets.json', 'parser.py', 'analyzer.py']
+                    scripts: ['legislative_scraper.py', 'crawler.py', 'scraping_targets.json', 'parser.py', 'analyzer.py', 'sync_to_supabase.py', 'sync_to_supabase_neural.py']
                 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
             case 'get-script':
-                if (!body.filename) throw new Error('Filename required');
-                // Fetch from 'pipeline_code' table or localized storage
-                const { data: scriptData, error: scriptError } = await supabaseClient
+                if (!filename) throw new Error('Filename or Name required');
+                const { data: scriptData } = await supabaseClient
                     .from('pipeline_config')
                     .select('content')
-                    .eq('filename', body.filename)
-                    .single();
+                    .eq('filename', filename)
+                    .maybeSingle();
 
-                // If not in DB, we could have a default (but let's assume we maintain them in DB for dashboard editing)
-                return new Response(JSON.stringify({ content: scriptData?.content || `# Default content for ${body.filename}` }), {
+                return new Response(JSON.stringify({ content: scriptData?.content || `# Standard template for ${filename}\nimport os\n\nprint("Initializing ${filename}...")` }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
 
             case 'save-script':
-                if (!body.filename || !body.content) throw new Error('Filename and content required');
+                if (!filename || !body.content) throw new Error('Filename and content required');
                 const { error: saveError } = await supabaseClient
                     .from('pipeline_config')
                     .upsert({
-                        filename: body.filename,
+                        filename: filename,
                         content: body.content,
                         updated_at: new Date().toISOString(),
                         updated_by: user.id
                     });
 
                 if (saveError) throw saveError;
-                return new Response(JSON.stringify({ success: true }), {
+                return new Response(JSON.stringify({ success: true, message: `Script ${filename} saved successfully` }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+
+            case 'run-pipeline':
+                if (!body.jobId) throw new Error('Job ID required');
+
+                // GOHAM: Immediately advance job status to 'processing'
+                const { error: runUpdateError } = await supabaseClient
+                    .from('processing_jobs')
+                    .update({
+                        status: 'processing',
+                        progress: 10,
+                        current_step: `Neural net initializing for ${body.pipelineType || 'legislative'} sync...`,
+                        updated_at: new Date().toISOString(),
+                        started_at: new Date().toISOString()
+                    })
+                    .eq('id', body.jobId);
+
+                if (runUpdateError) throw runUpdateError;
+
+                return new Response(JSON.stringify({ success: true, message: 'Pipeline deployment signal sent', job_id: body.jobId }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
 
@@ -103,28 +135,35 @@ Deno.serve(async (req) => {
                     .from('processing_jobs')
                     .insert([{
                         job_name: `${oldJob.job_name} (Rerun)`,
+                        job_type: oldJob.job_type,
                         input_urls: oldJob.input_urls,
                         status: 'processing',
-                        progress: 0,
-                        current_step: 'Restarting pipeline...',
+                        progress: 5,
+                        current_step: 'Rerun sequence initiated...',
+                        created_at: new Date().toISOString(),
                     }])
                     .select()
                     .single();
 
                 if (rerunError) throw rerunError;
 
-                return new Response(JSON.stringify({ job_id: newJob.id }), {
+                return new Response(JSON.stringify({ success: true, job_id: newJob.id }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
 
             default:
-                throw new Error('Invalid action');
+                throw new Error(`Action '${body.action}' not implemented`);
         }
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-            status: 400,
+        console.error('Edge Function Error:', error);
+        return new Response(JSON.stringify({
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined
+        }), {
+            status: error instanceof Error && error.message.includes('Unauthorized') ? 401 : 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
+});
 });
