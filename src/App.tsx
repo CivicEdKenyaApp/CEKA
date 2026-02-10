@@ -12,6 +12,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import WelcomeTour from '@/components/tour/WelcomeTour';
 import SplashScreen from '@/components/SplashScreen';
 import { useAuth } from '@/providers/AuthProvider';
+import storageService from '@/services/storageService';
 
 // Pages
 import Index from '@/pages/Index';
@@ -92,6 +93,11 @@ const AppContent = () => {
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
+
+    // GO HAM: Pre-initialize storage system early to avoid race conditions on first media load
+    storageService.initialize().then(() => {
+      console.log('[App] Storage system ready for media hydration');
+    });
 
     return () => clearTimeout(splashTimer);
   }, []);

@@ -104,8 +104,8 @@ const MediaFeed: React.FC = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-                <CEKALoader variant="ios" size="lg" />
-                <p className="text-muted-foreground animate-pulse font-medium">Curating Media Feed...</p>
+                <CEKALoader variant="scanning" size="lg" />
+                <p className="text-muted-foreground animate-pulse font-bold tracking-tight">Curating Media Feed...</p>
             </div>
         );
     }
@@ -114,10 +114,10 @@ const MediaFeed: React.FC = () => {
         <div className="max-w-4xl mx-auto py-8 px-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-kenya-black dark:text-white">
+                    <h2 className="text-2xl font-black tracking-tighter text-kenya-black dark:text-white uppercase">
                         Our <span className="text-kenya-red">Posts</span>
                     </h2>
-                    <p className="text-muted-foreground text-sm">Visual education series and carousels</p>
+                    <p className="text-muted-foreground text-sm font-medium">Visual education series and carousels</p>
                 </div>
 
                 <div className="flex items-center gap-2 self-end md:self-auto">
@@ -125,7 +125,7 @@ const MediaFeed: React.FC = () => {
                         variant={viewMode === 'feed' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('feed')}
-                        className="gap-1.5 rounded-full"
+                        className="gap-1.5 rounded-full font-bold"
                     >
                         <List size={16} />
                         Feed
@@ -134,7 +134,7 @@ const MediaFeed: React.FC = () => {
                         variant={viewMode === 'grid' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('grid')}
-                        className="gap-1.5 rounded-full"
+                        className="gap-1.5 rounded-full font-bold"
                     >
                         <Grid2X2 size={16} />
                         Grid
@@ -147,29 +147,29 @@ const MediaFeed: React.FC = () => {
                     {content.length > 0 ? content.map((item) => (
                         <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="mb-4">
-                                <h3 className="text-xl font-bold">{item.title}</h3>
+                                <h3 className="text-xl font-black tracking-tight uppercase">{item.title}</h3>
                                 {item.description && (
-                                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
+                                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1 font-medium">{item.description}</p>
                                 )}
                             </div>
                             <InstagramCarousel content={item} />
                         </div>
                     )) : (
-                        <div className="text-center py-20 border-2 border-dashed rounded-3xl opacity-50">
-                            <p>No visual media published yet.</p>
+                        <div className="text-center py-20 border-2 border-dashed rounded-3xl opacity-50 bg-muted/20">
+                            <p className="font-bold">No visual media published yet.</p>
                         </div>
                     )}
 
                     {/* Infinite Scroll Trigger */}
-                    <div ref={loadMoreRef} className="py-8 flex justify-center">
+                    <div ref={loadMoreRef} className="py-8 flex flex-col items-center justify-center gap-2">
                         {loadingMore && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <CEKALoader variant="ios" size="sm" />
-                                <span className="text-sm">Loading more...</span>
-                            </div>
+                            <>
+                                <CEKALoader variant="scanning" size="sm" />
+                                <span className="text-xs font-bold text-muted-foreground animate-pulse">Scanning for more...</span>
+                            </>
                         )}
                         {!hasMore && content.length > 0 && (
-                            <p className="text-sm text-muted-foreground">You've reached the end</p>
+                            <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">End of Feed</p>
                         )}
                     </div>
                 </div>

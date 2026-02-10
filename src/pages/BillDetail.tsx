@@ -144,6 +144,26 @@ const BillDetail = () => {
     }
   };
 
+  // Helper to safely parse and check stages
+  const getSafeStages = () => {
+    if (!bill?.stages) return [];
+    if (Array.isArray(bill.stages)) return bill.stages;
+
+    // Handle potential stringified JSON from Supabase
+    if (typeof bill.stages === 'string') {
+      try {
+        const parsed = JSON.parse(bill.stages);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error('[BillDetail] Failed to parse stages string:', e);
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const safeStages = getSafeStages();
+
   if (loading) {
     return (
       <Layout>
@@ -330,23 +350,37 @@ const BillDetail = () => {
                 </Card>
 
                 {/* ENGAGEMENT TOOLS */}
-                <Card className="rounded-[40px] border-none bg-kenya-green/5 dark:bg-kenya-green/10 overflow-hidden">
-                  <CardContent className="p-8 space-y-6">
-                    <div className="space-y-4">
-                      <div className="h-12 w-12 rounded-2xl bg-white dark:bg-slate-900 shadow-ios-soft flex items-center justify-center">
-                        <Share2 className="h-5 w-5 text-kenya-green" />
+                <div className="space-y-6">
+                  {safeStages.length > 0 ? (
+                    safeStages.map((stage: any, index: number) => (
+                      <div key={index} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                            stage.completed ? "bg-kenya-green text-white" : "bg-muted text-muted-foreground border-2 border-dashed"
+                          )}>
+                            {stage.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                          </div>
+                          {index < safeStages.length - 1 && (
+                            <div className="w-0.5 h-full bg-border my-1" />
+                          )}
+                        </div>
+                        <div className="pb-6">
+                          <h4 className="font-bold text-lg">{stage.title}</h4>
+                          <p className="text-sm text-muted-foreground">{stage.date}</p>
+                          {stage.description && (
+                            <p className="mt-2 text-sm leading-relaxed">{stage.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <h4 className="text-xl font-black tracking-tight">Public Discourse</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Discuss this bill with 1,200 other citizens in the Assembly forum.
-                      </p>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 bg-muted/30 rounded-xl border-2 border-dashed border-border/50">
+                      <Clock className="mx-auto h-8 w-8 text-muted-foreground mb-3 opacity-20" />
+                      <p className="text-sm text-muted-foreground font-medium">Legislative timeline information being updated...</p>
                     </div>
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-kenya-green/20 text-kenya-green font-bold hover:bg-kenya-green/5" asChild>
-                      <Link to="/blog">Join Discussion</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-
+                  )}
+                </div>
                 {/* UPDATES TRACE */}
                 <div className="px-6 space-y-4">
                   <div className="flex items-center gap-3 text-slate-400">

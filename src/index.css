@@ -272,7 +272,7 @@
   ::-webkit-scrollbar-thumb {
     background: linear-gradient(to bottom, #059669, #047857);
     border-radius: 4px;
-    border: 1px solid #f1f5f9;
+    border: 2px solid #f1f5f9;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -436,19 +436,20 @@
   h4,
   h5,
   h6 {
-    @apply font-bold tracking-tight;
+    @apply font-black tracking-tighter uppercase;
+    font-family: inherit;
   }
 
   h1 {
-    @apply text-3xl md:text-4xl;
+    @apply text-3xl md:text-4xl lg:text-5xl;
   }
 
   h2 {
-    @apply text-2xl md:text-3xl;
+    @apply text-2xl md:text-3xl lg:text-4xl;
   }
 
   h3 {
-    @apply text-xl md:text-2xl;
+    @apply text-xl md:text-2xl lg:text-3xl;
   }
 
   .section-padding {
