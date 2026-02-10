@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 interface CEKALoaderProps {
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
     text?: string;
-    variant?: 'default' | 'pulse' | 'orbit' | 'bars' | 'ios';
+    variant?: 'default' | 'pulse' | 'orbit' | 'bars' | 'ios' | 'scanning';
     showProgressMessages?: boolean;
 }
 
@@ -20,6 +20,8 @@ const COLORS = {
     red: '#dc2626',
     black: '#000000',
     white: '#ffffff',
+    kenyaGreen: 'rgb(5, 150, 105)',
+    kenyaRed: 'rgb(220, 38, 38)',
 };
 
 const PROGRESS_MESSAGES = [
@@ -75,7 +77,7 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className={`${s.text} font-medium text-muted-foreground tracking-tight text-center max-w-[200px] mt-4`}
+                        className={`${s.text} font-bold text-slate-600 dark:text-slate-300 tracking-tight text-center max-w-[240px] mt-6 px-4`}
                         style={{ willChange: 'opacity, transform' }}
                     >
                         {displayMessage}
@@ -87,6 +89,62 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
     );
 
     const renderContent = () => {
+        if (variant === 'scanning') {
+            return (
+                <div className={`${s.wrapper} relative flex items-center justify-center`}>
+                    {/* Concentric rings like in the image */}
+                    {[0.6, 0.8, 1.0].map((scale, i) => (
+                        <div
+                            key={i}
+                            className="absolute border border-black/5 dark:border-white/10 rounded-full"
+                            style={{
+                                width: `${scale * 100}%`,
+                                height: `${scale * 100}%`
+                            }}
+                        />
+                    ))}
+
+                    {/* Rotating segments */}
+                    {[0, 1, 2].map((i) => (
+                        <motion.div
+                            key={`seg-${i}`}
+                            className="absolute rounded-full"
+                            style={{
+                                width: `${70 + i * 15}%`,
+                                height: `${70 + i * 15}%`,
+                                border: '3px solid transparent',
+                                borderTopColor: [COLORS.kenyaGreen, COLORS.black, COLORS.kenyaRed][i],
+                                borderLeftColor: i === 1 ? COLORS.white : 'transparent',
+                                opacity: i === 1 && theme === 'light' ? 0.8 : 1,
+                                filter: 'blur(0.5px)'
+                            }}
+                            animate={{ rotate: 360 }}
+                            transition={{
+                                duration: 1.5 + i * 0.5,
+                                repeat: Infinity,
+                                ease: "linear"
+                            }}
+                        />
+                    ))}
+
+                    <motion.div
+                        className="relative z-10 p-2 rounded-full bg-white/10 backdrop-blur-sm"
+                        animate={{ opacity: [0.7, 1, 0.7], scale: [0.95, 1.05, 0.95] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    >
+                        <img
+                            src={logoSrc}
+                            alt="CEKA"
+                            className={cn(
+                                "object-contain",
+                                size === 'xs' ? 'h-3' : size === 'sm' ? 'h-4' : size === 'md' ? 'h-6' : size === 'lg' ? 'h-10' : 'h-14'
+                            )}
+                        />
+                    </motion.div>
+                </div>
+            );
+        }
+
         if (variant === 'ios') {
             const segments = 12;
             return (
@@ -224,19 +282,19 @@ export const CEKALoader: React.FC<CEKALoaderProps> = ({
             <div className={`${s.wrapper} relative flex items-center justify-center`}>
                 <motion.div
                     className="absolute inset-0 rounded-full border-[3px] border-kenya-green/10"
-                    style={{ borderTopColor: COLORS.green, willChange: 'transform' }}
+                    style={{ borderTopColor: COLORS.green, borderLeftColor: COLORS.green, willChange: 'transform' }}
                     animate={{ rotateZ: 360 }}
                     transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute inset-3 rounded-full border-[3px] border-black/5 dark:border-white/5"
-                    style={{ borderTopColor: COLORS.black, willChange: 'transform' }}
+                    className="absolute inset-3 rounded-full border-[3px] border-black/10 dark:border-white/20"
+                    style={{ borderTopColor: theme === 'dark' ? '#ffffff' : COLORS.black, willChange: 'transform' }}
                     animate={{ rotateZ: -360 }}
                     transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
                     className="absolute inset-6 rounded-full border-[3px] border-kenya-red/10"
-                    style={{ borderTopColor: COLORS.red, willChange: 'transform' }}
+                    style={{ borderTopColor: COLORS.red, borderRightColor: COLORS.red, willChange: 'transform' }}
                     animate={{ rotateZ: 360 }}
                     transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                 />

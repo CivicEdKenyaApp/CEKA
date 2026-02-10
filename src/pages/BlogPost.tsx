@@ -9,16 +9,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, User, ArrowLeft, Heart, Share2, MessageCircle, Bookmark, Send, Eye } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Calendar, User, ArrowLeft, Heart, Share2, MessageCircle, Bookmark, Send, Eye, Clock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useViewTracking } from '@/hooks/useViewTracking';
 import { useViewCount } from '@/hooks/useViewCount';
 import { supabase } from '@/integrations/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn, translate } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { language } = useLanguage();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
@@ -109,44 +113,24 @@ const BlogPostPage = () => {
       url: currentUrl
     };
 
-    // Try native sharing first (mobile devices)
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        toast({
-          title: "Shared Successfully",
-          description: "Post shared successfully!"
-        });
+        toast({ title: "Shared Successfully", description: "Post shared successfully!" });
         return;
       } catch (error) {
-        console.log('Native share cancelled or failed:', error);
+        console.log('Native share failed:', error);
       }
     }
 
-    // Fallback to copying link
     try {
       await navigator.clipboard.writeText(currentUrl);
-      toast({
-        title: "Link Copied",
-        description: "Post link copied to clipboard"
-      });
+      toast({ title: "Link Copied", description: "Post link copied to clipboard" });
     } catch (error) {
-      // Final fallback - show share options
       const shareText = `Check out this post: ${post.title} - ${currentUrl}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-
-      // Open WhatsApp as primary fallback
       window.open(whatsappUrl, '_blank', 'width=600,height=400');
-
-      toast({
-        title: "Share Options",
-        description: "Opening WhatsApp to share. Link also copied to clipboard."
-      });
     }
-  };
-
-  const handleReply = () => {
-    setShowReplyForm(!showReplyForm);
   };
 
   const submitReply = async () => {
@@ -161,39 +145,37 @@ const BlogPostPage = () => {
 
     try {
       setSending(true);
-
-      // Social Logic Sync: Post directly to Chat Messages (Bunge Square)
       const { error } = await supabase.from('chat_messages').insert({
         user_id: session.user.id,
         room_id: 'general',
         content: `[Article Discourse: ${post?.title}] ${replyText.trim()}`
       });
-
       if (error) throw error;
-
-      toast({
-        title: "Discourse Synced",
-        description: "Your contribution is now live in Bunge Square!"
-      });
+      toast({ title: "Discourse Synced", description: "Your contribution is now live in Bunge Square!" });
       setReplyText('');
       setShowReplyForm(false);
     } catch (error) {
       console.error('Sync Error:', error);
-      toast({
-        title: "Sync Failed",
-        description: "We couldn't reach the assembly. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Sync Failed", description: "Submission failed. Please try again.", variant: "destructive" });
     } finally {
       setSending(false);
     }
   };
 
+  const getAuthorInitials = (author?: string) => {
+    if (!author) return '?';
+    return author.split(' ').map(name => name.charAt(0)).join('').toUpperCase();
+  };
+
   if (loading) {
     return (
       <Layout>
-        <div className="container py-8">
-          <div className="text-center">Loading post...</div>
+        <div className="min-h-screen bg-white dark:bg-black pt-24">
+          <div className="container px-4 space-y-8 animate-pulse">
+            <div className="h-8 w-32 bg-slate-100 dark:bg-white/5 rounded-full" />
+            <div className="h-20 w-3/4 bg-slate-100 dark:bg-white/5 rounded-3xl" />
+            <div className="h-[400px] w-full bg-slate-100 dark:bg-white/5 rounded-[40px]" />
+          </div>
         </div>
       </Layout>
     );
@@ -202,12 +184,18 @@ const BlogPostPage = () => {
   if (!post) {
     return (
       <Layout>
-        <div className="container py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Post Not Found</h1>
-            <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist or may have been removed.</p>
-            <Button asChild>
-              <Link to="/blog">Back to Blog</Link>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="h-20 w-20 rounded-full bg-kenya-red/5 flex items-center justify-center mx-auto">
+              <MessageCircle className="h-10 w-10 text-kenya-red opacity-40" />
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight">Article Missing</h1>
+            <p className="text-slate-500">The requested blog post could not be found in our records.</p>
+            <Button asChild className="rounded-2xl h-12 px-8 bg-kenya-green font-bold">
+              <Link to="/blog">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Blog
+              </Link>
             </Button>
           </div>
         </div>
@@ -217,159 +205,194 @@ const BlogPostPage = () => {
 
   return (
     <Layout>
-      <div className="container px-4 md:px-6 py-8 pb-16 overflow-x-hidden max-w-full">
-        <Button variant="ghost" className="mb-6" asChild>
-          <Link to="/blog" className="flex items-center">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Link>
-        </Button>
+      <div className="min-h-screen bg-slate-50/30 dark:bg-black">
+        {/* HERO SECTION */}
+        <section className="relative pt-24 pb-16 overflow-hidden">
+          <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/20 backdrop-blur-3xl -z-10" />
+          <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-kenya-red/5 to-transparent -z-10" />
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 min-w-0">
-            <article className="max-w-4xl break-words overflow-hidden">
-              <header className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-                    {post.status}
+          <div className="container relative px-4 text-center max-w-5xl">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <Link to="/blog" className="inline-flex items-center gap-2 text-slate-400 hover:text-kenya-red font-bold text-xs uppercase tracking-widest transition-colors mb-8 group">
+                <div className="h-8 w-8 rounded-full bg-white dark:bg-white/5 flex items-center justify-center shadow-sm group-hover:-translate-x-1 transition-transform">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+                The Assembly Blog
+              </Link>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+                <Badge className="bg-kenya-red/10 text-kenya-red border-kenya-red/20 font-bold px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest">
+                  {post.status}
+                </Badge>
+                {post.tags?.map(tag => (
+                  <Badge key={tag} variant="outline" className="bg-white dark:bg-white/5 text-slate-500 font-bold border-black/5 dark:border-white/10 px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest">
+                    {tag}
                   </Badge>
-                  {post.tags && post.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 leading-tight break-words">
-                  {post.title}
-                </h1>
-
-                {post.excerpt && (
-                  <p className="text-lg text-muted-foreground mb-6">{post.excerpt}</p>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {post.author}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(post.published_at || post.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Eye className="h-4 w-4" />
-                    {viewCount} views
-                  </div>
-                </div>
-              </header>
-
-              <div className="prose prose-lg dark:prose-invert max-w-none mb-8 break-words overflow-x-hidden">
-                <div className="whitespace-pre-wrap break-words">{post.content}</div>
+                ))}
               </div>
 
-              <footer className="border-t pt-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={isLiked ? "default" : "ghost"}
-                      size="sm"
-                      onClick={handleLike}
-                      className={isLiked ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
-                    >
-                      <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
-                      Like
-                    </Button>
+              <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-[1.05] text-slate-900 dark:text-white mb-8">
+                {post.title}
+              </h1>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleShare}
-                      className="hover:text-kenya-green"
-                    >
-                      <Share2 className="h-4 w-4 mr-1" />
-                      Share
-                    </Button>
+              <div className="flex flex-wrap items-center justify-center gap-6 text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 ring-2 ring-white dark:ring-slate-900 shadow-sm">
+                    <AvatarFallback className="bg-kenya-green text-white text-[10px]">
+                      {getAuthorInitials(post.author)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{post.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-kenya-red" />
+                  <span>{new Date(post.published_at || post.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-blue-500" />
+                  <span>{viewCount} views</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="hover:text-primary font-bold gap-2 bg-primary/5 rounded-xl px-4"
-                    >
-                      <Link to={`/community?tab=chat&room=general&source=${post.id}&title=${encodeURIComponent(post.title)}`}>
-                        <MessageCircle className="h-4 w-4" />
-                        Discuss in Assembly
-                      </Link>
-                    </Button>
+        <div className="container relative px-4 pb-24 max-w-7xl">
+          <div className="grid lg:grid-cols-12 gap-12">
 
-                    <Button
-                      variant={isSaved ? "default" : "ghost"}
-                      size="sm"
-                      onClick={handleSave}
-                      className={isSaved ? "bg-kenya-green hover:bg-kenya-green/90" : "hover:text-kenya-green"}
-                    >
-                      <Bookmark className={`h-4 w-4 mr-1 ${isSaved ? 'fill-current' : ''}`} />
-                      {isSaved ? 'Saved' : 'Save'}
-                    </Button>
-                  </div>
+            {/* ARTICLE CONTENT */}
+            <article className="lg:col-span-8 bg-white dark:bg-slate-900/40 rounded-[48px] p-8 md:p-16 shadow-ios-soft dark:shadow-none border border-black/5 dark:border-white/10">
+              {post.excerpt && (
+                <p className="text-2xl md:text-3xl font-medium text-slate-900 dark:text-white mb-12 leading-relaxed tracking-tight italic border-l-4 border-kenya-red pl-8">
+                  {post.excerpt}
+                </p>
+              )}
+
+              <div className="prose prose-xl prose-slate dark:prose-invert max-w-none">
+                <div className="whitespace-pre-wrap leading-relaxed">
+                  {post.content}
+                </div>
+              </div>
+
+              <Separator className="my-12 opacity-50" />
+
+              <div className="flex flex-wrap items-center justify-between gap-6">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant={isLiked ? "default" : "outline"}
+                    size="lg"
+                    onClick={handleLike}
+                    className={cn(
+                      "rounded-2xl font-bold h-12 px-6 transition-all",
+                      isLiked ? "bg-kenya-red text-white border-kenya-red shadow-lg shadow-kenya-red/20" : "border-black/5 dark:border-white/10"
+                    )}
+                  >
+                    <Heart className={cn("h-5 w-5 mr-2", isLiked && "fill-current")} />
+                    {isLiked ? 'Loved' : 'Love'}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleShare}
+                    className="rounded-2xl font-bold h-12 px-6 border-black/5 dark:border-white/10"
+                  >
+                    <Share2 className="h-5 w-5 mr-2" />
+                    Share
+                  </Button>
+
+                  <Button
+                    variant={isSaved ? "default" : "outline"}
+                    size="lg"
+                    onClick={handleSave}
+                    className={cn(
+                      "rounded-2xl font-bold h-12 px-6 transition-all",
+                      isSaved ? "bg-kenya-green text-white border-kenya-green shadow-lg shadow-kenya-green/20" : "border-black/5 dark:border-white/10"
+                    )}
+                  >
+                    <Bookmark className={cn("h-5 w-5 mr-2", isSaved && "fill-current")} />
+                    {isSaved ? 'Saved' : 'Save'}
+                  </Button>
                 </div>
 
+                <Button
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="rounded-2xl h-12 px-8 bg-[#111] dark:bg-white text-white dark:text-black font-black text-xs uppercase tracking-widest shadow-xl"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Discuss
+                </Button>
+              </div>
+
+              <AnimatePresence>
                 {showReplyForm && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src="" alt="You" />
-                            <AvatarFallback>
-                              {session?.user?.email?.charAt(0).toUpperCase() || 'A'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-3">
-                            <Textarea
-                              id="reply-text"
-                              name="reply"
-                              placeholder={session ? "Write your reply..." : "Sign in to reply (anonymous replies coming soon)"}
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              className="min-h-[100px]"
-                            />
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs text-muted-foreground">
-                                {session ? `Replying as ${session.user.email}` : 'Anonymous replies coming soon'}
-                              </p>
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setShowReplyForm(false)}>
-                                  Cancel
-                                </Button>
-                                <Button size="sm" onClick={submitReply} disabled={!session || !replyText.trim()}>
-                                  <Send className="h-4 w-4 mr-1" />
-                                  Post Reply
-                                </Button>
-                              </div>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-8 overflow-hidden"
+                  >
+                    <Card className="rounded-3xl border-dashed border-2 border-kenya-green/20 bg-kenya-green/[0.02]">
+                      <CardContent className="pt-8">
+                        <div className="space-y-6">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="h-10 w-10 ring-2 ring-white shadow-md">
+                              <AvatarFallback className="bg-slate-100 text-[10px] font-black">
+                                {session?.user?.email?.charAt(0).toUpperCase() || 'A'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Contributing as</p>
+                              <p className="text-sm font-bold">{session?.user?.email || 'Anonymous Guest'}</p>
+                            </div>
+                          </div>
+
+                          <Textarea
+                            placeholder={session ? "Contribute to the collective wisdom..." : "Authentication required for assembly discourse."}
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            className="min-h-[150px] rounded-2xl bg-white border-black/5 focus:ring-kenya-green/20 resize-none text-lg"
+                          />
+
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs text-slate-400">Submission will be indexed in Bunge Square.</p>
+                            <div className="flex gap-3">
+                              <Button variant="ghost" onClick={() => setShowReplyForm(false)} className="rounded-xl font-bold">Cancel</Button>
+                              <Button
+                                onClick={submitReply}
+                                disabled={!session || !replyText.trim() || sending}
+                                className="rounded-xl bg-kenya-green text-white font-bold h-11 px-6 shadow-lg shadow-kenya-green/20"
+                              >
+                                {sending ? 'Syncing...' : 'Sync Discourse'}
+                                <Send className="h-4 w-4 ml-2" />
+                              </Button>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 )}
-              </footer>
+              </AnimatePresence>
+
+              {/* Related Posts */}
+              <div className="mt-20 pt-12 border-t border-black/5 dark:border-white/10">
+                <ReadOtherPosts currentPostId={post.id} limit={4} />
+              </div>
             </article>
 
-            {/* Read Other Posts Section */}
-            <div className="mt-12 pt-8 border-t">
-              <ReadOtherPosts currentPostId={post.id} limit={4} />
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <BlogSidebar />
+            {/* SIDEBAR */}
+            <aside className="lg:col-span-4 min-w-0">
+              <div className="sticky top-24 space-y-8">
+                <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-xl rounded-[40px] p-8 border border-black/5 dark:border-white/10 shadow-ios-soft">
+                  <BlogSidebar />
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </div>

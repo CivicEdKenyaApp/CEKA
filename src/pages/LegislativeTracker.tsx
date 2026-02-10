@@ -338,8 +338,8 @@ const LegislativeTracker = () => {
 
                 <TabsContent value={activeTab} className="space-y-6 mt-0">
                   {loading ? (
-                    <div className="flex flex-col gap-6">
-                      <CEKALoader variant="ios" size="lg" text="Scanning Vault for Bills..." />
+                    <div className="flex flex-col gap-6 py-12">
+                      <CEKALoader variant="scanning" size="xl" text="Scanning Vault for Bills..." />
                     </div>
                   ) : filteredBills.length === 0 ? (
                     <div className="py-32 text-center space-y-4">
