@@ -256,26 +256,27 @@ export type Database = {
       }
       bills: {
         Row: {
+          analysis_status: string | null
           category: string
           comments: Json | null
           constitutional_section: string | null
           created_at: string
           date: string
           description: string | null
+          follow_count: number | null
           id: string
+          neural_summary: string | null
+          pdf_url: string | null
           sources: string | null
           sponsor: string | null
           stages: Json | null
           status: string
           summary: string
-          title: string
-          url: string | null
           text_content: string | null
-          neural_summary: string | null
-          analysis_status: string | null
-          pdf_url: string | null
+          title: string
+          updated_at: string
+          url: string | null
           views_count: number | null
-          follow_count: number | null
         }
         Insert: {
           category: string
@@ -324,7 +325,7 @@ export type Database = {
           follow_count?: number | null
         }
         Relationships: []
-      }
+      },
       blog_categories: {
         Row: {
           created_at: string
@@ -1522,6 +1523,8 @@ export type Database = {
           input_files: Json | null
           input_urls: Json | null
           job_name: string
+          job_type: string | null
+          metadata: Json | null
           output_files: Json | null
           processing_logs: Json | null
           progress: number | null
@@ -1539,6 +1542,8 @@ export type Database = {
           input_files?: Json | null
           input_urls?: Json | null
           job_name: string
+          job_type?: string | null
+          metadata?: Json | null
           output_files?: Json | null
           processing_logs?: Json | null
           progress?: number | null
@@ -1556,6 +1561,8 @@ export type Database = {
           input_files?: Json | null
           input_urls?: Json | null
           job_name?: string
+          job_type?: string | null
+          metadata?: Json | null
           output_files?: Json | null
           processing_logs?: Json | null
           progress?: number | null
@@ -1564,7 +1571,7 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
+      },
       profiles: {
         Row: {
           areas_of_interest: Json | null
@@ -1811,7 +1818,46 @@ export type Database = {
           url?: string
         }
         Relationships: []
-      }
+      },
+      scrape_runs: {
+        Row: {
+          bills_found: number | null
+          bills_inserted: number | null
+          bills_updated: number | null
+          completed_at: string | null
+          duration_ms: number | null
+          error_log: string | null
+          id: string
+          source: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          bills_found?: number | null
+          bills_inserted?: number | null
+          bills_updated?: number | null
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_log?: string | null
+          id?: string
+          source: string
+          started_at?: string | null
+          status: string
+        }
+        Update: {
+          bills_found?: number | null
+          bills_inserted?: number | null
+          bills_updated?: number | null
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_log?: string | null
+          id?: string
+          source?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      },
       system_metrics: {
         Row: {
           created_at: string

@@ -59,7 +59,7 @@ const ResourceHighlights = () => {
         damping: 15
       }
     }
-  };
+  } as const;
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden bg-white dark:bg-black shadow-pattern">
