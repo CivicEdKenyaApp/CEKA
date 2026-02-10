@@ -134,9 +134,9 @@ const FeaturedLegislationCarousel: React.FC<FeaturedLegislationCarouselProps> = 
                                     {/* CTA */}
                                     <Button
                                         asChild
-                                        className="w-full rounded-2xl h-12 bg-kenya-black hover:bg-kenya-black/90 text-white font-bold group/btn"
+                                        className="w-full rounded-2xl h-12 bg-kenya-green hover:bg-kenya-green/90 text-white font-bold group/btn shadow-md hover:shadow-lg transition-all"
                                     >
-                                        <Link to={`/legislative-tracker/bills/${bill.id}`}>
+                                        <Link to={`/bill/${bill.id}`}>
                                             Track This Bill
                                             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                                         </Link>

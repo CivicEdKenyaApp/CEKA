@@ -28,12 +28,13 @@ export const InteractionLogger = ({ targetId, targetType, metadata = {} }: Inter
 
             await supabase.from('chat_interactions' as any).insert({
                 user_id: activeUserId,
-                target_id: targetId,
-                target_type: targetType,
-                action_type: action,
+                message_id: targetType === 'message' ? targetId : null,
+                action: action,
                 metadata: {
                     ...metadata,
                     ...extra,
+                    target_id: targetId,
+                    target_type: targetType,
                     ua: navigator.userAgent
                 }
             });
@@ -62,10 +63,9 @@ export const InteractionLogger = ({ targetId, targetType, metadata = {} }: Inter
             if (duration > 1) {
                 supabase.from('chat_interactions' as any).insert({
                     user_id: user?.id || null,
-                    target_id: targetId,
-                    target_type: targetType,
-                    action_type: 'dwell',
-                    metadata: { ...metadata, seconds: duration }
+                    message_id: targetType === 'message' ? targetId : null,
+                    action: 'dwell',
+                    metadata: { ...metadata, seconds: duration, target_id: targetId, target_type: targetType }
                 });
             }
         };

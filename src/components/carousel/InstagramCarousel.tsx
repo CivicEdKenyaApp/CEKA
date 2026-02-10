@@ -333,7 +333,7 @@ const InstagramCarousel: React.FC<InstagramCarouselProps> = ({ content, classNam
                 {/* Indicators & Counter */}
                 <div className="flex justify-between items-center px-1">
                     <div className="flex gap-1.5 flex-wrap max-w-[70%]">
-                        {items.length > 1 && items.map((_, i) => (
+                        {Array.isArray(items) && items.length > 1 && items.map((_, i) => (
                             <button
                                 key={i}
                                 onClick={() => {

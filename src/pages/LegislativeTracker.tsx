@@ -93,9 +93,10 @@ const LegislativeTracker = () => {
             limit_count: 5
           });
 
-          if (!trendingError && Array.isArray(trendingData)) {
+          if (Array.isArray(trendingData) && trendingData.length > 0) {
             setTrendingBills(trendingData);
           } else {
+            console.warn('RPC returned invalid or empty data, using fallback');
             throw new Error('RPC returned invalid or empty data');
           }
         } catch (rpcError) {
@@ -461,7 +462,7 @@ const LegislativeTracker = () => {
                                   )}
                                   <AIContextButton label="Summarize" context={bill.title + ": " + bill.summary} className="h-12 px-6" />
                                   <BillFollowButton billId={bill.id} variant="ghost" className="h-12 px-6 rounded-2xl" />
-                                  <Button asChild className="h-12 px-10 rounded-2xl bg-[#111] dark:bg-white text-white dark:text-black font-black hover:opacity-90 shadow-xl">
+                                  <Button asChild className="h-12 px-10 rounded-2xl bg-kenya-green text-white font-black hover:bg-kenya-green/90 shadow-xl">
                                     <Link to={`/bill/${bill.id}`}>
                                       Trace Progress
                                       <ArrowRight className="ml-2 h-4 w-4" />

@@ -56,7 +56,7 @@ export const ChatReactions = ({ messageId }: ChatReactionsProps) => {
         if (!user || loading) return;
         setLoading(true);
 
-        const existing = reactions.find(r => r.user_id === user.id && r.emoji === emoji);
+        const existing = reactions.find(r => r.user_id === user.id && r.reaction === emoji);
 
         if (existing) {
             // Optimistic Update
@@ -72,14 +72,14 @@ export const ChatReactions = ({ messageId }: ChatReactionsProps) => {
         } else {
             // Optimistic Update
             const tempId = Math.random().toString();
-            setReactions(prev => [...prev, { id: tempId, message_id: messageId, user_id: user.id, emoji }]);
+            setReactions(prev => [...prev, { id: tempId, message_id: messageId, user_id: user.id, reaction: emoji }]);
 
             const { error } = await supabase
                 .from('chat_reactions' as any)
                 .insert({
                     message_id: messageId,
                     user_id: user.id,
-                    emoji: emoji
+                    reaction: emoji
                 });
             if (error) {
                 fetchReactions(); // Rollback
@@ -90,11 +90,11 @@ export const ChatReactions = ({ messageId }: ChatReactionsProps) => {
     };
 
     const reactionCounts = reactions.reduce((acc: any, curr) => {
-        acc[curr.emoji] = (acc[curr.emoji] || 0) + 1;
+        acc[curr.reaction] = (acc[curr.reaction] || 0) + 1;
         return acc;
     }, {});
 
-    const userReactions = reactions.filter(r => r.user_id === user?.id).map(r => r.emoji);
+    const userReactions = reactions.filter(r => r.user_id === user?.id).map(r => r.reaction);
 
     const presets = [
         { type: '❤️', icon: Heart, activeClass: 'text-red-500 fill-red-500', bg: 'hover:bg-red-50 dark:hover:bg-red-950/20' },

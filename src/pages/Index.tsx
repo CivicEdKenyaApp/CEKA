@@ -118,7 +118,7 @@ const Index = () => {
   }, [language]);
 
   // Format the slides for the MegaProjectCarousel component
-  const formattedSlides = carouselSlides.map(slide => ({
+  const formattedSlides = Array.isArray(carouselSlides) ? carouselSlides.map(slide => ({
     id: slide.id,
     title: translate(slide.title, language),
     description: slide.description ? translate(slide.description, language) : undefined,
@@ -126,7 +126,7 @@ const Index = () => {
     color: slide.color,
     imageUrl: slide.image_url,
     onClick: () => slide.link_url && window.open(slide.link_url, '_blank')
-  }));
+  })) : [];
 
   if (loading) {
     return (
