@@ -33,12 +33,19 @@ def find_existing_bill(supabase: Client, item: Dict, v2_supported: bool) -> Opti
 
     # 1. Exact match by Bill No (Highest confidence, only if v2 schema exists)
     if v2_supported and bill_no:
-        res = supabase.table("bills").select("*").eq("bill_no", bill_no).maybe_single().execute()
-        if res.data: return res.data
+        try:
+            res = supabase.table("bills").select("*").eq("bill_no", bill_no).maybe_single().execute()
+            if res and hasattr(res, 'data') and res.data: return res.data
+        except Exception as e:
+            logging.warning(f"⚠️ Bill No lookup failed for '{bill_no}': {e}")
+            # Fallback to title
 
     # 2. Exact match by Title
-    res = supabase.table("bills").select("*").eq("title", title).maybe_single().execute()
-    if res.data: return res.data
+    try:
+        res = supabase.table("bills").select("*").eq("title", title).maybe_single().execute()
+        if res and hasattr(res, 'data') and res.data: return res.data
+    except Exception:
+        pass
 
     # 3. Similarity check
     first_word = title.split()[0] if title.split() else ""
@@ -69,7 +76,6 @@ def record_scrape_run(supabase: Client, stats: Dict[str, int], source: str):
             "bills_found": stats['bills'] + stats['updates'] + stats['order_papers'],
             "bills_inserted": stats['bills'],
             "bills_updated": stats['updates'],
-            "error_log": f"Failures: {stats['failed']}" if stats['failed'] > 0 else None,
             "completed_at": datetime.now().isoformat(),
             "started_at": datetime.now().isoformat() # Placeholder for start
         }
@@ -144,6 +150,7 @@ def sync_data(output_dir="processed_data/legislative"):
                 "date": item.get("date"),
                 "url": item.get("url"),
                 "pdf_url": item.get("pdf_url"),
+                "summary": item.get("summary") or f"Legislative tracker: {item.get('title')}",
                 "updated_at": datetime.now().isoformat()
             }
             

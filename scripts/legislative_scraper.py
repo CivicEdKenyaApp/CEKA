@@ -332,7 +332,7 @@ class LegislativeScraper:
             "url": url,
             "pdf_url": url,
             "source": target['name'],
-            "category": "Legislative",
+            "category": self._infer_category(title),
             "summary": f"Legislative bill tracked from {target['name']}. Title: {title}.",
             "text_content": f"Automated neural crawl pending for content at: {url}",
             "analysis_status": "pending",
@@ -393,14 +393,40 @@ class LegislativeScraper:
         return "Government"
 
     def _infer_status(self, title: str) -> str:
-        """Map content keywords to legislative status stages."""
+        """Map content keywords to strictly allowed legislative stages."""
         t = title.lower()
-        if 'assented' in t: return "Assented"
-        if 'amendment' in t: return "Amendment Stage"
-        if 'committee' in t: return "Committee Stage"
-        if 'reading' in t: return "Reading"
-        if 'order' in t: return "Order of Business"
-        return "Published"
+        if 'assent' in t: return "assent"
+        if 'committee' in t: return "committee"
+        if 'second reading' in t: return "second reading"
+        if 'first reading' in t: return "first reading"
+        # Default to publication as the starting point
+        return "publication"
+
+    def _infer_category(self, title: str) -> str:
+        """Categorize bills based on keywords or AI context."""
+        t = title.lower()
+        
+        # Finance
+        if any(kw in t for kw in ['finance', 'tax', 'appropriation', 'fund', 'revenue', 'budget', 'treasury', 'bank', 'insurance', 'pension', 'economic']):
+            return "Finance"
+        
+        # Education
+        if any(kw in t for kw in ['education', 'learning', 'university', 'school', 'vocational', 'teacher', 'academy']):
+            return "Education"
+        
+        # Healthcare
+        if any(kw in t for kw in ['health', 'medical', 'hospital', 'patient', 'pharmacy', 'medicine', 'drug', 'care', 'doctor']):
+            return "Healthcare"
+        
+        # Environment
+        if any(kw in t for kw in ['environment', 'forest', 'nature', 'climat', 'wildlife', 'conservation', 'land', 'water', 'resource']):
+            return "Environment"
+        
+        # Governance Sector
+        if any(kw in t for kw in ['governance', 'parliament', 'judiciary', 'police', 'security', 'election', 'administrative', 'county', 'public service', 'legal', 'law']):
+            return "Governance Sector"
+            
+        return "All Portfolios"
 
     def _extract_order_papers_playwright(self, page, target):
         """Dedicated treatment for Order Papers per user request."""

@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Activity, Code, Database, FileText, Globe, Play, RefreshCw, Save, Scale, ChevronRight,
     Terminal, Trash2, Plus, X, CheckCircle, Clock, AlertCircle, Zap, Power,
-    Settings, ExternalLink, RotateCcw, ChevronDown, MoveRight
+    Settings, ExternalLink, RotateCcw, ChevronDown, MoveRight, Copy, History
 } from 'lucide-react';
 import { intelService, ScraperSource, ProcessingJob, PipelineConfig } from '@/services/intelService';
 import { CEKALoader } from '@/components/ui/ceka-loader';
@@ -181,7 +181,7 @@ const LegislativeIntelligence = () => {
         await loadData();
     };
 
-    // Get status badge
+    // Get status badge for jobs
     const getStatusBadge = (status: string) => {
         const styles: Record<string, string> = {
             pending: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
@@ -203,6 +203,32 @@ const LegislativeIntelligence = () => {
                 {status}
             </Badge>
         );
+    };
+
+    // Standardized Parliamentary Stage Badges
+    const getBillStageBadge = (stage: string) => {
+        const s = (stage || 'publication').toLowerCase();
+        const config: Record<string, { label: string, color: string }> = {
+            'publication': { label: 'Publication', color: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
+            'first reading': { label: 'First Reading', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+            'committee': { label: 'Committee', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+            'second reading': { label: 'Second Reading', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
+            'assent': { label: 'Assent', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' }
+        };
+
+        const style = config[s] || { label: stage, color: 'bg-muted/10 text-muted-foreground border-muted/20' };
+
+        return (
+            <Badge variant="outline" className={cn(style.color, "uppercase text-[10px] font-black tracking-widest px-2")}>
+                {style.label}
+            </Badge>
+        );
+    };
+
+    const copyToClipboard = (text: string, label: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Copied', description: `${label} copied to clipboard` });
     };
 
     if (loading) {
@@ -437,14 +463,14 @@ const LegislativeIntelligence = () => {
                                                             <h4 className="font-bold text-sm leading-tight mt-1 line-clamp-1">{bill.title}</h4>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-2 flex-wrap justify-end max-w-[40%]">
                                                         <div className="text-right hidden sm:block">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-black tabular-nums">SESSION {bill.session_year || '2024'}</p>
-                                                            <p className="text-[10px] font-bold text-muted-foreground">{bill.sponsor}</p>
+                                                            <p className="text-[10px] text-muted-foreground uppercase font-black tabular-nums">SESS {bill.session_year || '2024'}</p>
+                                                            {bill.category && (
+                                                                <p className="text-[9px] font-black text-primary/60 uppercase tracking-tighter">{bill.category}</p>
+                                                            )}
                                                         </div>
-                                                        <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/10 text-[10px] uppercase font-black">
-                                                            {bill.status}
-                                                        </Badge>
+                                                        {getBillStageBadge(bill.status)}
                                                     </div>
                                                 </div>
 

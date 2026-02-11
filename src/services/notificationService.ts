@@ -97,21 +97,21 @@ class NotificationService {
       }
 
       const { data, error } = await query;
-
-      // Handle table not existing (404) or other errors
       if (error) {
-        // Silent fail for missing table - migration not run yet
         if (error.code === '42P01' || error.message?.includes('does not exist') ||
           error.code === 'PGRST116' || error.code === 'PGRST200') {
-          console.warn('Notifications table not ready:', error.message);
+          return [];
+        }
+        // Handle AbortError specifically
+        if (error.message?.includes('AbortError') || error.code === 'ABORT') {
           return [];
         }
         console.error('Error fetching notifications:', error);
         return [];
       }
-
       return (data || []) as unknown as Notification[];
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return [];
       console.warn('Notification service error:', err);
       return [];
     }
@@ -132,17 +132,15 @@ class NotificationService {
         .eq('is_archived', false);
 
       if (error) {
-        // Silent fail for missing table
         if (error.code === '42P01' || error.message?.includes('does not exist') ||
           error.code === 'PGRST116') {
           return 0;
         }
-        console.warn('Error getting unread count:', error);
+        if (error.message?.includes('AbortError')) return 0;
         return 0;
       }
-
       return count || 0;
-    } catch {
+    } catch (err: any) {
       return 0;
     }
   }
