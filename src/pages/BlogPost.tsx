@@ -222,7 +222,7 @@ const BlogPostPage = () => {
                 <div className="h-8 w-8 rounded-full bg-white dark:bg-white/5 flex items-center justify-center shadow-sm group-hover:-translate-x-1 transition-transform">
                   <ArrowLeft className="h-4 w-4" />
                 </div>
-                The Assembly Blog
+                Go Back to The Blog
               </Link>
 
               <div className="flex flex-wrap items-center justify-center gap-2 mb-6">

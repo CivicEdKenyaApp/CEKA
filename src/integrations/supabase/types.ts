@@ -113,6 +113,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_intelligence_configs: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          profile_name: string
+          rigor_threshold: number
+          system_prompt: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          profile_name: string
+          rigor_threshold?: number
+          system_prompt: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          profile_name?: string
+          rigor_threshold?: number
+          system_prompt?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      constitution_embeddings: {
+        Row: {
+          category: string | null
+          chapter: string | null
+          clause_ref: string
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          category?: string | null
+          chapter?: string | null
+          clause_ref: string
+          content: string
+          created_at?: string
+          embedding: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          category?: string | null
+          chapter?: string | null
+          clause_ref?: string
+          content?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       advocacy_toolkit: {
         Row: {
           category: string
