@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAIReview } from '@/hooks/useAIReview';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { SovereignSettings } from '@/components/admin/SovereignSettings';
+import { BrainCircuit as LogicIcon } from 'lucide-react';
 
 export function BlogManagement() {
   const [isEditing, setIsEditing] = useState(false);
@@ -144,11 +146,15 @@ export function BlogManagement() {
       </div>
 
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-100 p-1 rounded-2xl">
-          <TabsTrigger value="posts" className="rounded-xl font-bold">Manual Factory ({posts.length})</TabsTrigger>
-          <TabsTrigger value="ai" className="rounded-xl font-bold flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3 mb-8 bg-slate-100 p-1.5 rounded-[24px] border border-slate-200/50 shadow-sm backdrop-blur-sm">
+          <TabsTrigger value="posts" className="rounded-xl font-bold py-3 transition-all">Manual Factory ({posts.length})</TabsTrigger>
+          <TabsTrigger value="ai" className="rounded-xl font-bold flex items-center gap-2 py-3 transition-all text-xs md:text-sm">
             <Sparkles className="h-4 w-4 text-kenya-red" />
-            The AI Griot Queue ({drafts.length})
+            AI Drafts ({drafts.length})
+          </TabsTrigger>
+          <TabsTrigger value="logic" className="rounded-xl font-bold flex items-center gap-2 py-3 transition-all">
+            <LogicIcon className="h-4 w-4 text-slate-900" />
+            Logic Throne
           </TabsTrigger>
         </TabsList>
 
@@ -303,6 +309,10 @@ export function BlogManagement() {
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="logic">
+          <SovereignSettings />
         </TabsContent>
       </Tabs>
     </div>
