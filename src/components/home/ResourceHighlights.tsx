@@ -43,8 +43,8 @@ const ResourceHighlights = () => {
     rights: {
       icon: <FileText className="h-6 w-6" />,
       color: 'bg-black', // Rights container black
-      borderColor: 'border-white/10',
-      lightBg: 'bg-white/5',
+      borderColor: 'border-black/20',
+      lightBg: 'bg-black/5',
       id: 'c2d3e4f5-g6h7-i8j9-k0l1-m2n3o4p5q6r7', // Bill of Rights Infographic
       type: 'Visual Guide'
     }
@@ -111,7 +111,7 @@ const ResourceHighlights = () => {
             <motion.div key={key} variants={itemVariants} className="h-full">
               <Card className={cn(
                 "group h-full flex flex-col overflow-hidden border-black/5 dark:border-white/10",
-                key === 'rights' ? "bg-black text-white" : "bg-white dark:bg-slate-900/40",
+                "bg-white dark:bg-slate-900/40",
                 "backdrop-blur-xl shadow-ios-high dark:shadow-ios-high-dark",
                 "transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-[32px]"
               )}>
@@ -120,7 +120,7 @@ const ResourceHighlights = () => {
                   <div className={cn(
                     "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3",
                     data.lightBg,
-                    key === 'rights' ? "text-white" : data.color.replace('bg-', 'text-')
+                    key === 'rights' ? "text-black dark:text-white font-bold" : data.color.replace('bg-', 'text-')
                   )}>
                     {data.icon}
                   </div>
@@ -128,7 +128,7 @@ const ResourceHighlights = () => {
                     <div className="flex items-center gap-2">
                       <span className={cn(
                         "text-[10px] font-black uppercase tracking-widest opacity-60",
-                        key === 'rights' ? "text-slate-400" : data.color.replace('bg-', 'text-')
+                        key === 'rights' ? "text-slate-600 dark:text-slate-400" : data.color.replace('bg-', 'text-')
                       )}>
                         {data.type}
                       </span>
@@ -136,15 +136,12 @@ const ResourceHighlights = () => {
                     </div>
                     <CardTitle className={cn(
                       "text-2xl font-bold tracking-tight transition-colors",
-                      key === 'rights' ? "text-white group-hover:text-kenya-red" : "text-slate-900 dark:text-white group-hover:text-kenya-green"
+                      key === 'rights' ? "text-slate-900 dark:text-white group-hover:text-black" : "text-slate-900 dark:text-white group-hover:text-kenya-green"
                     )}>
                       {translate(key, language)}
                     </CardTitle>
                   </div>
-                  <CardDescription className={cn(
-                    "text-sm leading-relaxed pt-2",
-                    key === 'rights' ? "text-slate-400" : "text-slate-500 dark:text-slate-400"
-                  )}>
+                  <CardDescription className="text-sm leading-relaxed pt-2 text-slate-500 dark:text-slate-400">
                     {key === 'constitution'
                       ? translate("A comprehensive guide to the Kenyan Constitution, breaking down your fundamental rights and the structure of government.", language)
                       : key === 'lawmaking'
@@ -157,9 +154,8 @@ const ResourceHighlights = () => {
                     asChild
                     className={cn(
                       "w-full h-12 rounded-2xl font-bold transition-all duration-300 shadow-lg",
-                      data.color === 'bg-black' ? "bg-white text-black hover:bg-slate-200" : data.color,
-                      "hover:opacity-90 shadow-low",
-                      key !== 'rights' && "text-white"
+                      data.color,
+                      "hover:opacity-90 shadow-low text-white"
                     )}
                   >
                     <a
@@ -185,10 +181,7 @@ const ResourceHighlights = () => {
                         </div>
                       ))}
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-bold uppercase tracking-tighter",
-                      key === 'rights' ? "text-slate-500" : "text-slate-400"
-                    )}>
+                    <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">
                       Community Insight Active
                     </span>
                   </div>
