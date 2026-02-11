@@ -16,16 +16,15 @@ export interface ResourceCardProps {
     description: string;
     type: string;
     uploadDate?: string;
-    uploadedBy?: string;
-    downloadUrl?: string;
-    videoUrl?: string;
-    thumbnail_url?: string;
+    provider?: string;
+    summary?: string;
     status?: 'pending' | 'approved' | 'rejected';
     category?: string;
     billObjective?: string;
     county?: string;
     isSelected?: boolean;
     is_downloadable?: boolean;
+    tags?: string[];
   };
   downloadable?: boolean;
   id?: string;
@@ -135,9 +134,12 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
         </div>
         <div className="mt-3">
           <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
-            <h3 className="font-semibold text-lg line-clamp-2">{resource.title}</h3>
+            <h3 className="font-semibold text-lg line-clamp-1">{resource.title}</h3>
           </Link>
-          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{resource.description}</p>
+          <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-wider mt-0.5 opacity-60">
+            {resource.provider || "Civic Education Kenya"}
+          </p>
+          <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{resource.description || resource.summary}</p>
         </div>
       </CardHeader>
       <CardContent className="grow pt-2">
@@ -172,7 +174,7 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           <div className="text-xs text-muted-foreground">
             <div className="space-y-0.5">
               <p>Uploaded: {formatDate(resource.uploadDate)}</p>
-              {resource.uploadedBy && <p>By: {resource.uploadedBy}</p>}
+              {resource.provider && <p>By: {resource.provider}</p>}
             </div>
           </div>
         )}
@@ -188,16 +190,16 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
 
         {isConstitutionResource && (
           <Button variant="outline" size="sm" asChild>
-            <Link to="/constitution"> {/* This route might need to be created or verified */}
+            <Link to="/constitution">
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
               Constitution Guide
             </Link>
           </Button>
         )}
 
-        {!isConstitutionResource && resource.downloadUrl && (actualDownloadable !== false) && (
+        {!isConstitutionResource && (actualDownloadable !== false) && (
           <Button variant="outline" size="sm" asChild>
-            <a href={resource.downloadUrl} target="_blank" rel="noopener noreferrer">
+            <a href={(resource as any).downloadUrl || (resource as any).url} target="_blank" rel="noopener noreferrer">
               <Download className="mr-1.5 h-3.5 w-3.5" />
               Download
             </a>

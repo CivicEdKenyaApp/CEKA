@@ -13,20 +13,24 @@ logging.basicConfig(
 )
 
 def load_env():
-    """Load environment variables from .env file."""
-    # Look for .env in the current directory or parent
-    env_path = '.env'
+    """Load environment variables from .env file with absolute priority."""
+    env_path = 'd:/CEKA/ceka v010/CEKA/.env'
     if os.path.exists(env_path):
-        load_dotenv(env_path)
+        from dotenv import dotenv_values
+        config = dotenv_values(env_path)
+        # Directly inject to os.environ to bypass shell overrides
+        for k, v in config.items():
+            os.environ[k] = v
+        print(f"DEBUG: Manually injected {len(config)} keys from {env_path}", flush=True)
     else:
-        # Try finding it in ceka v010/CEKA/.env
-        load_dotenv('d:/CEKA/ceka v010/CEKA/.env')
+        print(f"DEBUG: .env not found at {env_path}", flush=True)
 
 def get_supabase_client() -> Client:
-    url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    url = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("VITE_SUPABASE_SERVICE_ROLE_KEY")
+    print(f"DEBUG: Using Supabase URL: {url}", flush=True)
     if not url or not key:
-        raise ValueError("❌ Missing Supabase credentials in environment.")
+        raise ValueError(f"❌ Missing Supabase credentials. Checked URL and Key variations. Found URL: {bool(url)}, Key: {bool(key)}")
     return create_client(url, key)
 
 def normalize_title(title: str) -> str:
@@ -35,7 +39,7 @@ def normalize_title(title: str) -> str:
     return re.sub(r'[^a-zA-Z0-9]', '', title.lower())
 
 def find_existing_resource(supabase: Client, item: Dict) -> Optional[Dict[str, Any]]:
-    """Lookup existing resource by title or URL."""
+    """Lookup existing resource by title or URL with semantic fallback."""
     title = item.get("title", "")
     url = item.get("url", "")
     
@@ -46,10 +50,16 @@ def find_existing_resource(supabase: Client, item: Dict) -> Optional[Dict[str, A
     except Exception:
         pass
 
-    # 2. Exact match by Title
+    # 2. Match by normalized title (Semantic fallback)
+    norm_title = re.sub(r'[^a-zA-Z0-9]', '', title.lower())
     try:
-        res = supabase.table("resources").select("*").eq("title", title).maybe_single().execute()
-        if res and hasattr(res, 'data') and res.data: return res.data
+        # We fetch potential candidates to check locally for title similarity
+        res = supabase.table("resources").select("*").ilike("title", f"%{title[:20]}%").execute()
+        if res and hasattr(res, 'data') and res.data:
+            for existing in res.data:
+                exist_norm = re.sub(r'[^a-zA-Z0-9]', '', existing['title'].lower())
+                if exist_norm == norm_title:
+                    return existing
     except Exception:
         pass
 
@@ -59,18 +69,18 @@ def sync_resources(input_dir="processed_data/resources"):
     load_env()
     supabase = get_supabase_client()
     
-    if not os.path.exists(input_dir):
-        logging.error(f"❌ Input directory missing: {input_dir}")
-        return
-
-    files = [f for f in os.listdir(input_dir) if f.startswith('resources_sync_') and f.endswith('.json')]
+    # Prioritize HAM sync files
+    files = [f for f in os.listdir(input_dir) if f.startswith('resources_sync_HAM_') and f.endswith('.json')]
+    if not files:
+        files = [f for f in os.listdir(input_dir) if f.startswith('resources_sync_') and f.endswith('.json')]
+    
     if not files:
         logging.warning("⚠️ No fresh resource data files found.")
         return
 
     files.sort()
     latest_file = os.path.join(input_dir, files[-1])
-    logging.info(f"🚀 Synchronizing Resources: {latest_file}")
+    logging.info(f"🚀 Synchronizing Resources (GO HAM): {latest_file}")
 
     with open(latest_file, 'r', encoding='utf-8') as f:
         items = json.load(f)
@@ -78,14 +88,19 @@ def sync_resources(input_dir="processed_data/resources"):
     stats = {"total": len(items), "inserted": 0, "updated": 0, "failed": 0}
     start_time = datetime.now()
 
-    # Log the run initiation
-    run_res = supabase.table("scrape_runs").insert({
-        "source": "Resource Scraper",
-        "status": "running",
-        "started_at": start_time.isoformat(),
-        "resources_found": stats["total"]
-    }).execute()
-    run_id = run_res.data[0]['id'] if run_res.data else None
+    # Log the run initiation (Self-healing: skip if table missing)
+    run_id = None
+    try:
+        run_res = supabase.table("scrape_runs").insert({
+            "source": "Ultimate Resource Scraper",
+            "status": "running",
+            "started_at": start_time.isoformat(),
+            "resources_found": stats["total"]
+        }).execute()
+        if run_res and hasattr(run_res, 'data') and run_res.data:
+            run_id = run_res.data[0]['id']
+    except Exception as e:
+        logging.warning(f"⚠️ Could not log to scrape_runs (continuing ingestion): {e}")
 
     for item in items:
         try:
@@ -94,11 +109,11 @@ def sync_resources(input_dir="processed_data/resources"):
             data = {
                 "title": item.get("title"),
                 "url": item.get("url"),
-                "provider": item.get("provider"),
-                "category": item.get("category"),
-                "type": item.get("type"),
+                "provider": item.get("provider", "Civic Education Kenya"),
+                "category": item.get("category", "Governance"),
+                "type": item.get("type", "PDF").upper(),
                 "summary": item.get("summary"),
-                "description": item.get("summary"), # Default to summary
+                "description": item.get("summary") or item.get("title"),
                 "tags": item.get("tags", []),
                 "metadata": item.get("metadata", {}),
                 "updated_at": datetime.now().isoformat()
@@ -112,22 +127,24 @@ def sync_resources(input_dir="processed_data/resources"):
                 stats["inserted"] += 1
                 
         except Exception as e:
-            logging.error(f"❌ Failed to sync resource '{item.get('title')}': {e}")
+            logging.error(f"❌ Failed to sync: {e}")
             stats["failed"] += 1
 
-    end_time = datetime.now()
-    duration = (end_time - start_time).total_seconds() * 1000
-
-    # Finalize run log
+    duration = (datetime.now() - start_time).total_seconds() * 1000
     if run_id:
-        supabase.table("scrape_runs").update({
-            "status": "completed",
-            "completed_at": end_time.isoformat(),
-            "duration_ms": duration,
-            "resources_inserted": stats["inserted"],
-            "resources_updated": stats["updated"],
-            "error_log": f"Failed items: {stats['failed']}" if stats["failed"] > 0 else None
-        }).eq("id", run_id).execute()
+        try:
+            supabase.table("scrape_runs").update({
+                "status": "completed",
+                "completed_at": datetime.now().isoformat(),
+                "duration_ms": duration,
+                "resources_inserted": stats["inserted"],
+                "resources_updated": stats["updated"],
+                "error_log": f"Failures: {stats['failed']}" if stats["failed"] > 0 else None
+            }).eq("id", run_id).execute()
+        except Exception:
+            pass
+
+    logging.info(f"✅ Sync Complete: {stats['inserted']} new, {stats['updated']} updated.")
 
     logging.info(f"✅ Sync Complete: {stats['inserted']} new, {stats['updated']} updated, {stats['failed']} failed.")
 

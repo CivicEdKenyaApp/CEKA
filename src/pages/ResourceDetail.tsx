@@ -18,44 +18,14 @@ import { placeholderService } from '@/services/placeholderService';
 
 type Resource = Tables<'resources'>;
 
-const mockResources = [
-  {
-    id: "1",
-    title: "Understanding the Constitution of Kenya",
-    type: "pdf",
-    category: "Constitution",
-    description: "A comprehensive guide to the Kenyan Constitution and its key provisions.",
-    url: "https://cajrvemigxghnfmyopiy.supabase.co/storage/v1/object/sign/resource-files/The_Constitution_of_Kenya_2010.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5Xzk4YmVjMzM2LWY3ZDAtNDZmNy1hN2IzLWUxMjUxN2QyMDEwNiJ9.eyJ1cmwiOiJyZXNvdXJjZS1maWxlcy9UaGVfQ29uc3RpdHV0aW9uX29mX0tlbnlhXzIwMTAucGRmIiwiaWF0IjoxNzQ2Njc4MTQxLCJleHAiOjE4NDEyODYxNDF9.EMfkTDvLCGwv03aWMcqo5AfHc0KZeZrXLTt-VI2Hh-8",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Blood Parliament: BBC Africa Eye Documentary (Pt 1)",
-    type: "video",
-    category: "Governance",
-    description: "How the Kenyan Government handled the Kenyan youth rising up against economic injustice",
-    url: "https://youtu.be/qz0f1yyf_eA",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    title: "Your Rights as a Kenyan Citizen",
-    type: "image",
-    category: "Rights",
-    description: "Visual representation of fundamental rights guaranteed by the Constitution.",
-    url: "https://ohchr.org/sites/default/files/Documents/Publications/Compilation1.1en.pdf",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
+// No mock resources needed in GO HAM mode
 
 const ResourceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [resource, setResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedResources, setRelatedResources] = useState<Resource[]>([]);
   const { toast } = useToast();
 
   // Use Supabase-backed realtime view count
@@ -66,18 +36,7 @@ const ResourceDetail = () => {
       try {
         if (!id) return;
 
-        // First check mock resources
-        const mockResource = mockResources.find(r => r.id === id);
-
-        if (mockResource) {
-          // Normalize URL for in-app viewing
-          const normalized = { ...mockResource, url: normalizeDownloadUrl(mockResource.url) };
-          setResource(normalized as unknown as Resource);
-          setLoading(false);
-          return;
-        }
-
-        // If not found in mock, try Supabase
+        // Fetch from Supabase directly
         const { data, error } = await supabase
           .from('resources')
           .select('*')
@@ -85,14 +44,29 @@ const ResourceDetail = () => {
           .single();
 
         if (error) throw error;
+        if (!data) throw new Error("Resource not found");
 
-        const normalizedDb = data ? { ...data, url: normalizeDownloadUrl((data as any).url) } : null;
-        setResource(normalizedDb as Resource);
+        const normalizedDb = {
+          ...data,
+          url: normalizeDownloadUrl((data as any).url),
+          description: data.description || (data as any).summary || ''
+        };
+        setResource(normalizedDb as any);
+
+        // Fetch related resources (same category, excluding current)
+        const { data: relatedData } = await supabase
+          .from('resources')
+          .select('*')
+          .eq('category', data.category)
+          .neq('id', id)
+          .limit(5);
+
+        if (relatedData) setRelatedResources(relatedData as any);
       } catch (error) {
         console.error('Error fetching resource:', error);
         toast({
           title: "Error",
-          description: "Could not load the resource. Please try again.",
+          description: "Could not load the resource from the vault.",
           variant: "destructive",
         });
         navigate('/resources');
@@ -165,8 +139,7 @@ const ResourceDetail = () => {
     }
   };
 
-  // Related resources (excluding current one) - non-destructive mock
-  const relatedResources = mockResources.filter(r => r.id !== id);
+  // Related resources handled via state and fetch above
 
   if (loading) {
     return (
@@ -266,11 +239,17 @@ const ResourceDetail = () => {
             </Card>
 
             <h2 className="text-xl font-semibold mb-4">About this Resource</h2>
-            <p className="text-muted-foreground">
-              This {(resource as any).type?.toLowerCase()} provides information about {(resource as any).category} in Kenya.
-              It is part of our civic education materials designed to help citizens understand
-              their rights and responsibilities.
-            </p>
+            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+              <p>
+                {(resource as any).summary || (resource as any).description}
+              </p>
+              {(resource as any).provider && (
+                <div className="mt-4 p-4 bg-muted/50 rounded-xl border border-border/50">
+                  <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Source / Provider</p>
+                  <p className="text-sm font-bold">{(resource as any).provider}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

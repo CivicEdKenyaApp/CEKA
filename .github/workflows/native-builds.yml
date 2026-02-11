@@ -88,13 +88,18 @@ jobs:
       - name: Build Release APK
         if: github.event.inputs.build_type == 'release'
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > app/keystore.jks
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=keystore.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+            -Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD
 
       - name: Upload Debug APK
         if: github.event.inputs.build_type != 'release'

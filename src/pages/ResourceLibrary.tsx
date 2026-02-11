@@ -2,8 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  Search, Filter, Download, Book, FileText, Video, Image as ImageIcon,
-  ChevronDown, CheckCircle2, X, SortAsc, SortDesc, List, Grid3X3, BookOpen, Plus, RefreshCw
+  Search, Filter,
+  ChevronDown, X, SortAsc, SortDesc, List, Grid3X3, Plus, RefreshCw, BookOpen
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -34,13 +34,15 @@ import { useAuth } from '@/providers/AuthProvider';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { placeholderService } from '@/services/placeholderService';
+import ResourceCard from '@/components/resources/ResourceCard';
 
-// Resource type definition
 interface Resource {
   id: string;
   title: string;
   description: string;
-  type: 'pdf' | 'video' | 'image' | 'audio' | 'link';
+  summary?: string;
+  provider?: string;
+  type: 'pdf' | 'video' | 'image' | 'audio' | 'link' | 'document' | 'legal';
   category: string;
   url: string;
   thumbnail?: string;
@@ -97,27 +99,27 @@ const ResourceLibrary = () => {
         const mappedResources: Resource[] = (data || []).map((item: any) => ({
           id: item.id,
           title: item.title,
-          description: item.description,
-          type: item.type,
-          category: item.category,
+          description: item.description || item.summary || '',
+          type: (item.type || 'link').toLowerCase() as any,
+          category: item.category || 'General',
           url: item.url,
           thumbnail: item.thumbnail_url,
           dateAdded: new Date(item.created_at).toISOString().split('T')[0],
-          author: item.uploadedBy || 'Civic Education Kenya',
+          author: item.provider || 'Civic Education Kenya',
           views: item.views || 0,
           downloads: item.downloads || 0,
           tags: item.tags || [],
           featured: item.is_featured || false,
-          canDownload: item.is_downloadable !== false
+          canDownload: item.is_downloadable !== false,
+          summary: item.summary,
+          provider: item.provider
         }));
 
         setResources(mappedResources);
 
-        // Derive categories if not already fetched separately
+        // Derive categories and providers
         const uniqueCats = Array.from(new Set(mappedResources.map(r => r.category)));
-        if (categories.length === 0 || !categories.includes(uniqueCats[0])) {
-          setCategories(prev => Array.from(new Set([...prev, ...uniqueCats])));
-        }
+        setCategories(uniqueCats);
       } catch (error) {
         console.error('Error loading resources:', error);
         toast({
@@ -261,23 +263,6 @@ const ResourceLibrary = () => {
     console.log("Downloading resources:", selectedResources);
   };
 
-  // Get type icon based on resource type
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'pdf':
-        return <FileText className="w-5 h-5" />;
-      case 'video':
-        return <Video className="w-5 h-5" />;
-      case 'image':
-      case 'infographic':
-        return <ImageIcon className="w-5 h-5" />;
-      case 'audio':
-        return <BookOpen className="w-5 h-5" />;
-      default:
-        return <Book className="w-5 h-5" />;
-    }
-  };
-
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm('');
@@ -287,148 +272,18 @@ const ResourceLibrary = () => {
     setSortDirection('desc');
   };
 
-  // Render resource card based on view mode
-  const renderResourceCard = (resource: Resource) => {
-    const isSelected = selectedResources.includes(resource.id);
-    const thumbnail = resource.thumbnail || dynamicThumbnails[resource.id] || placeholderService.getPlaceholderByTags(resource.tags, resource.type);
-
-    if (viewMode === 'grid') {
-      return (
-        <motion.div
-          key={resource.id}
-          whileHover={{ y: -4, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full cursor-pointer group"
-          layout
-          onClick={() => navigate(`/resources/${resource.id}`)}
-        >
-          <Card className={`h-full border-none glass-card shadow-ios-high dark:shadow-ios-high-dark overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}>
-            <div className="relative">
-              <div className="absolute top-2 right-2 z-10">
-                {resource.canDownload !== false ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`rounded-full ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground opacity-70 hover:opacity-100'}`}
-                    onClick={() => toggleResourceSelection(resource.id)}
-                  >
-                    {isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
-                  </Button>
-                ) : (
-                  <Badge variant="destructive" className="opacity-90">
-                    Proprietary
-                  </Badge>
-                )}
-              </div>
-              <div className="bg-muted aspect-video relative flex items-center justify-center">
-                {thumbnail ? (
-                  <img
-                    src={thumbnail}
-                    alt={resource.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full w-full">
-                    {getTypeIcon(resource.type)}
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
-                  <Badge variant="outline" className="bg-background/80">
-                    <div className="flex items-center gap-1">
-                      {getTypeIcon(resource.type)}
-                      {resource.type.toUpperCase()}
-                    </div>
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            <CardHeader className="p-4 pb-2">
-              <Link to={`/resources/${resource.id}`}>
-                <CardTitle className="text-lg leading-tight hover:underline line-clamp-2">{resource.title}</CardTitle>
-              </Link>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <p className="text-muted-foreground text-sm line-clamp-2">{resource.description}</p>
-            </CardContent>
-            <CardFooter className="px-4 py-3 border-t flex justify-between">
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
-                <span className="text-xs text-muted-foreground">{resource.views} views</span>
-              </div>
-              <Button size="sm" variant="secondary" asChild>
-                <Link to={`/resources/${resource.id}`}>
-                  {translate("View Details", language)}
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        </motion.div>
-      );
-    } else {
-      // List view
-      return (
-        <motion.div
-          key={resource.id}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          layout
-        >
-          <Card className={`transition-shadow hover:shadow-md ${isSelected ? 'border-primary' : ''}`}>
-            <div className="flex items-start p-4">
-              <div className="hidden sm:block mr-4 bg-muted h-24 w-24 flex-shrink-0 flex items-center justify-center rounded-md overflow-hidden">
-                <img
-                  src={thumbnail}
-                  alt={resource.title}
-                  className="w-full h-full object-cover rounded-md"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <div className="flex-grow min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="bg-background/80">
-                    <div className="flex items-center gap-1">
-                      {getTypeIcon(resource.type)}
-                      {resource.type.toUpperCase()}
-                    </div>
-                  </Badge>
-                  <Badge variant="secondary">{resource.category}</Badge>
-                </div>
-                <Link to={`/resources/${resource.id}`}>
-                  <h3 className="font-semibold hover:underline line-clamp-1">{resource.title}</h3>
-                </Link>
-                <p className="text-muted-foreground text-sm line-clamp-1">{resource.description}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">{new Date(resource.dateAdded).toLocaleDateString()}</span>
-                    <span className="text-xs text-muted-foreground">{resource.views} views</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {resource.canDownload !== false ? (
-                      <Button size="sm" variant="ghost" onClick={() => toggleResourceSelection(resource.id)}>
-                        {isSelected ? <CheckCircle2 className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-                        {isSelected ? "Selected" : "Select"}
-                      </Button>
-                    ) : (
-                      <Badge variant="destructive" className="opacity-90">
-                        Proprietary
-                      </Badge>
-                    )}
-                    <Button size="sm" variant="secondary" asChild>
-                      <Link to={`/resources/${resource.id}`}>
-                        {translate("View Details", language)}
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      );
-    }
+  // Render resource card using the shared ResourceCard component
+  const renderResourceCard = (resource: any) => {
+    return (
+      <ResourceCard
+        key={resource.id}
+        resource={{
+          ...resource,
+          isSelected: selectedResources.includes(resource.id)
+        }}
+        onToggleSelect={() => toggleResourceSelection(resource.id)}
+      />
+    );
   };
 
   return (
