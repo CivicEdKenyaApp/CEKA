@@ -205,7 +205,7 @@ const FeaturedLegislation = () => {
                     </div>
                     <div className="col-span-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
                       <div className="flex items-center gap-2 mb-1">
-                        <Users className="h-3.5 w-3.5 text-blue-500" />
+                        <Users className="h-3.5 w-3.5 text-kenya-green" />
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sponsorship</span>
                       </div>
                       <p className="text-xs font-bold truncate text-slate-700 dark:text-slate-300">
