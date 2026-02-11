@@ -109,7 +109,17 @@ class ResourceScraper:
                     is_download_path = any(re.search(pat, norm_url) for pat in self.resource_patterns)
                     is_wiki_article = "kemuwiki" in norm_url and any(kw in text.lower() for kw in ['civic', 'governance', 'constitution', 'rights'])
                     
-                    if is_file or is_download_path or is_wiki_article:
+                    # Exhaustive Noise Filter (Institutional Precision)
+                    is_noise = any(noise in text.lower() for noise in [
+                        'twitter', 'facebook', 'linkedin', 'instagram', 'next post', 'prev post',
+                        'no comments', 'tender', 'procurement', 'zimbra', 'pension', 'insurance',
+                        'vacancy', 'career', 'job description', 'medical cover', 'advertisement',
+                        'click here', 'login', 'signup', 'forgot password', 'mortgage', 'car loan',
+                        'rfp', 'bid', 'proposal', 'expression of interest', 'terms of reference',
+                        'gpa', 'wiba', 'anti-spam', 'collaboration suite', 'license', 'mortgage'
+                    ])
+                    
+                    if (is_file or is_download_path or is_wiki_article) and not is_noise:
                         title = text or (page_meta["h1"][0] if page_meta["h1"] else "Untitled Resource")
                         
                         if not any(r['url'] == full_url for r in self.data):

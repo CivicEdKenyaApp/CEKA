@@ -270,7 +270,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #059669, #047857);
+    background: linear-gradient(to bottom, #006600, #004d00);
     border-radius: 4px;
     border: 2px solid #f1f5f9;
   }
@@ -281,8 +281,8 @@
 
   /* Firefox */
   * {
-    scrollbar-width: thin;
-    scrollbar-color: #059669 #f1f5f9;
+    scrollbar-width: auto;
+    scrollbar-color: #006600 #f1f5f9;
   }
 
   /* Dark mode scrollbars */
@@ -291,7 +291,7 @@
   }
 
   .dark ::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #10b981, #059669);
+    background: linear-gradient(to bottom, #008800, #006600);
     border-color: #374151;
   }
 
@@ -300,7 +300,7 @@
   }
 
   .dark * {
-    scrollbar-color: #10b981 #374151;
+    scrollbar-color: #008800 #374151;
   }
 }
 

@@ -109,46 +109,46 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect, variant = 'grid'
 
   if (variant === 'list') {
     return (
-      <div className={`transition-all duration-300 ${resource.isSelected ? 'scale-[1.01]' : ''}`}>
+      <div className="w-full transition-all duration-300 overflow-hidden">
         <Card className={`h-auto border-none glass-card shadow-ios dark:shadow-ios-dark overflow-hidden transition-all ${resource.isSelected ? 'ring-2 ring-primary' : ''}`}>
-          <div className="flex flex-col sm:flex-row p-4 gap-4">
+          <div className="flex flex-col sm:flex-row p-4 gap-4 overflow-hidden">
             <div className="relative w-full sm:w-32 aspect-video bg-muted rounded-xl overflow-hidden shadow-inner flex-shrink-0">
               <Link to={`/resources/${resource.id}`}>
                 {getResourceThumbnail(resource)}
               </Link>
             </div>
 
-            <div className="flex-grow min-w-0 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
+            <div className="flex-grow min-w-0 flex flex-col justify-between overflow-hidden">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
                   <Badge variant="outline" className={`${getBadgeColor(resource.type)} font-normal text-[10px]`}>
                     {resource.type}
                   </Badge>
                   {resource.category && (
-                    <Badge variant="secondary" className="text-[10px] opacity-80">{resource.category}</Badge>
+                    <Badge variant="secondary" className="text-[10px] opacity-80 truncate max-w-[150px]">{resource.category}</Badge>
                   )}
                 </div>
 
-                <Link to={`/resources/${resource.id}`} className="hover:text-primary transition-colors">
-                  <h3 className="font-bold text-base line-clamp-1 leading-tight">{resource.title}</h3>
+                <Link to={`/resources/${resource.id}`} className="hover:text-primary transition-colors block min-w-0">
+                  <h3 className="font-bold text-base truncate leading-tight mb-1">{resource.title}</h3>
                 </Link>
 
-                <p className="text-muted-foreground text-xs mt-1 line-clamp-1 group-hover:line-clamp-none transition-all">
+                <p className="text-muted-foreground text-xs line-clamp-2 sm:line-clamp-1">
                   {resource.description || resource.summary}
                 </p>
               </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+              <div className="flex flex-wrap items-center justify-between mt-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                  <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
                     {resource.provider || "Civic Education Kenya"}
                   </span>
                   {resource.uploadDate && (
-                    <span className="text-[10px] text-muted-foreground/60">{formatDate(resource.uploadDate)}</span>
+                    <span className="text-[10px] text-muted-foreground/60 hidden sm:inline shrink-0">{formatDate(resource.uploadDate)}</span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto shrink-0">
                   {onToggleSelect && (
                     <Button
                       variant="ghost"
