@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Edit, Trash2, Eye, Check, X, Rocket, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Check, X, Rocket, Sparkles, ShieldCheck, BrainCircuit } from 'lucide-react';
 import { BlogEditor } from '@/components/blog/BlogEditor';
 import { useBlog } from '@/hooks/useBlog';
 import { BlogPost } from '@/services/blogService';
