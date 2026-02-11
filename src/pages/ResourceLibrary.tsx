@@ -134,7 +134,8 @@ const ResourceLibrary = () => {
 
     const debounceTimer = setTimeout(fetchResources, 400);
     return () => clearTimeout(debounceTimer);
-  }, [sortBy, sortDirection, toast]); // Removed searchTerm from trigger to handle it locally for smoothness
+  }, [sortBy, sortDirection, toast, activeCategory]); // Added activeCategory to trigger refresh if needed, although local filtering is active. 
+  // Actually, keeping it local is better for performance. But we need to ensure uniqueCats are set correctly.
 
   // Handle auto-thumbnail generation for videos/media
   useEffect(() => {
@@ -151,7 +152,8 @@ const ResourceLibrary = () => {
     if (resources.length > 0) generateNeededThumbnails();
   }, [resources]);
 
-  // Optionally fetch categories from a dedicated table
+  // No longer fetching from dedicated table to ensure consistency with scraped data categories
+  /* 
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from('resource_categories' as any).select('name');
@@ -159,6 +161,7 @@ const ResourceLibrary = () => {
     };
     fetchCategories();
   }, []);
+  */
 
   const allResources = resources;
 
@@ -180,8 +183,8 @@ const ResourceLibrary = () => {
         const category = (resource.category || '').toLowerCase();
         const tags = (resource.tags || []).map(t => t.toLowerCase());
 
-        // Match if ALL search words are found in ANY field
-        return terms.every(word =>
+        // Match if ANY search word is found in ANY field (Less restrictive, better UX)
+        return terms.some(word =>
           title.includes(word) ||
           desc.includes(word) ||
           category.includes(word) ||
@@ -277,6 +280,7 @@ const ResourceLibrary = () => {
     return (
       <ResourceCard
         key={resource.id}
+        variant={viewMode as any}
         resource={{
           ...resource,
           isSelected: selectedResources.includes(resource.id)
@@ -387,6 +391,16 @@ const ResourceLibrary = () => {
               className="pl-12 h-14 rounded-[28px] glass-card border-none shadow-ios-high dark:shadow-ios-high-dark text-lg focus-visible:ring-primary/20"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  // No specific action needed as useMemo handles filtering, 
+                  // but we can add a toast or a small animation to signify "Search Triggered"
+                  toast({
+                    title: "Searching...",
+                    description: `Refining vault for "${searchTerm}"`,
+                  });
+                }
+              }}
             />
           </div>
 

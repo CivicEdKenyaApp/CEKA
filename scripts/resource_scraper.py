@@ -155,20 +155,24 @@ class ResourceScraper:
             await page.close()
 
     def infer_category(self, title, context):
-        text = (title + " " + " ".join(context["h1"])).lower()
-        if any(x in text for x in ['constitution', 'bill', 'gazette', 'law']): return "Legal"
-        if any(x in text for x in ['budget', 'audit', 'finance', 'revenue']): return "Budget & Economy"
-        if any(x in text for x in ['rights', 'citizen', 'human']): return "Rights & Citizenship"
-        return "Governance"
+        text = (title + " " + " ".join(context["h1"]) + " " + (context.get("meta_desc") or "")).lower()
+        if any(x in text for x in ['constitution', 'bill', 'gazette', 'law', 'act', 'statute', 'parliament']): return "Legal Documents"
+        if any(x in text for x in ['budget', 'audit', 'finance', 'revenue', 'spending', 'economic', 'report', 'cob']): return "Government Publications"
+        if any(x in text for x in ['course', 'lesson', 'curriculum', 'school', 'student', 'education', 'learning', 'guide', 'module']): return "Educational Materials"
+        if any(x in text for x in ['training', 'manual', 'workshop', 'toolkit', 'handbook', 'how-to', 'protocol']): return "Training Materials"
+        if any(x in text for x in ['community', 'citizen', 'participation', 'engagement', 'grassroots', 'forum', 'action']): return "Community Resources"
+        return "National Protocols"
 
     def infer_tags(self, title, context):
         tags = set()
-        text = (title + " " + " ".join(context["h1"]) + " " + context["meta_desc"]).lower()
-        if 'kenya' in text: tags.add('kenya')
-        if 'county' in text: tags.add('county')
-        if 'youth' in text: tags.add('youth')
-        if 'education' in text: tags.add('education')
-        return list(tags)
+        text = (title + " " + " ".join(context["h1"]) + " " + (context.get("meta_desc") or "")).lower()
+        if 'kenya' in text: tags.add('Kenya')
+        if 'county' in text: tags.add('County Governance')
+        if 'youth' in text: tags.add('Youth Empowerment')
+        if 'education' in text: tags.add('Education')
+        if 'participation' in text: tags.add('Public Participation')
+        if 'rights' in text: tags.add('Human Rights')
+        return list(tags) if tags else ["Civic Education"]
 
     def detect_type(self, url: str) -> str:
         url_lower = url.lower()

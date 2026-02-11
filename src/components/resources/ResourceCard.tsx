@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Download, BookOpen, MapPin, Video, FileText, ImageIcon, Gavel } from 'lucide-react';
+import { ExternalLink, Download, BookOpen, MapPin, Video, FileText, ImageIcon, Gavel, Plus } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,10 +28,11 @@ export interface ResourceCardProps {
   };
   downloadable?: boolean;
   id?: string;
+  variant?: 'grid' | 'list';
   onToggleSelect?: () => void;
 }
 
-const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardProps) => {
+const ResourceCard = ({ resource, downloadable, onToggleSelect, variant = 'grid' }: ResourceCardProps) => {
   const getBadgeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'constitution':
@@ -98,10 +99,6 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
           className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
-        <div className="relative z-10 flex flex-col items-center text-white drop-shadow-lg">
-          <Icon className="h-10 w-10 mb-2 opacity-90" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">{type}</p>
-        </div>
       </div>
     );
   };
@@ -110,101 +107,126 @@ const ResourceCard = ({ resource, downloadable, onToggleSelect }: ResourceCardPr
   // Use resource.is_downloadable if available, otherwise fallback to the top-level downloadable prop
   const actualDownloadable = resource.is_downloadable !== undefined ? resource.is_downloadable : downloadable;
 
-  return (
-    <Card className="h-full flex flex-col group">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <Badge variant="outline" className={`${getBadgeColor(resource.type)} font-normal`}>
-            {resource.type}
-          </Badge>
-          {resource.status === 'pending' && (
-            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-              Pending Approval
-            </Badge>
-          )}
-          {onToggleSelect && (
-            <div className="ml-auto">
-              <Checkbox
-                checked={resource.isSelected}
-                onCheckedChange={onToggleSelect}
-                className="data-[state=checked]:bg-kenya-green"
-              />
+  if (variant === 'list') {
+    return (
+      <div className={`transition-all duration-300 ${resource.isSelected ? 'scale-[1.01]' : ''}`}>
+        <Card className={`h-auto border-none glass-card shadow-ios dark:shadow-ios-dark overflow-hidden transition-all ${resource.isSelected ? 'ring-2 ring-primary' : ''}`}>
+          <div className="flex flex-col sm:flex-row p-4 gap-4">
+            <div className="relative w-full sm:w-32 aspect-video bg-muted rounded-xl overflow-hidden shadow-inner flex-shrink-0">
+              <Link to={`/resources/${resource.id}`}>
+                {getResourceThumbnail(resource)}
+              </Link>
             </div>
-          )}
-        </div>
-        <div className="mt-3">
-          <Link to={`/resources/${resource.id}`} className="hover:text-kenya-green transition-colors">
-            <h3 className="font-semibold text-lg line-clamp-1">{resource.title}</h3>
-          </Link>
-          <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-wider mt-0.5 opacity-60">
-            {resource.provider || "Civic Education Kenya"}
-          </p>
-          <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{resource.description || resource.summary}</p>
-        </div>
-      </CardHeader>
-      <CardContent className="grow pt-2">
-        <div className="relative aspect-video bg-muted rounded-md overflow-hidden mb-3 group-hover:shadow-md transition-shadow">
-          <Link to={`/resources/${resource.id}`}>
-            {getResourceThumbnail(resource)}
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="bg-background/80 rounded-full p-2">
-                <ExternalLink className="h-5 w-5" />
+
+            <div className="flex-grow min-w-0 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className={`${getBadgeColor(resource.type)} font-normal text-[10px]`}>
+                    {resource.type}
+                  </Badge>
+                  {resource.category && (
+                    <Badge variant="secondary" className="text-[10px] opacity-80">{resource.category}</Badge>
+                  )}
+                </div>
+
+                <Link to={`/resources/${resource.id}`} className="hover:text-primary transition-colors">
+                  <h3 className="font-bold text-base line-clamp-1 leading-tight">{resource.title}</h3>
+                </Link>
+
+                <p className="text-muted-foreground text-xs mt-1 line-clamp-1 group-hover:line-clamp-none transition-all">
+                  {resource.description || resource.summary}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                    {resource.provider || "Civic Education Kenya"}
+                  </span>
+                  {resource.uploadDate && (
+                    <span className="text-[10px] text-muted-foreground/60">{formatDate(resource.uploadDate)}</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {onToggleSelect && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={(e) => { e.preventDefault(); onToggleSelect(); }}
+                    >
+                      {resource.isSelected ? <Download className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4" />}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="secondary" className="h-8 rounded-lg text-xs" asChild>
+                    <Link to={`/resources/${resource.id}`}>
+                      View
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {resource.billObjective && (
-            <Badge variant="secondary" className="text-xs">
-              {resource.billObjective}
-            </Badge>
-          )}
-          {resource.county && (
-            <Badge variant="outline" className="text-xs flex items-center">
-              <MapPin className="h-3 w-3 mr-1" />
-              {resource.county.split(', ').length > 1
-                ? `${resource.county.split(', ')[0]} +${resource.county.split(', ').length - 1}`
-                : resource.county}
-            </Badge>
-          )}
-        </div>
-
-        {resource.uploadDate && (
-          <div className="text-xs text-muted-foreground">
-            <div className="space-y-0.5">
-              <p>Uploaded: {formatDate(resource.uploadDate)}</p>
-              {resource.provider && <p>By: {resource.provider}</p>}
-            </div>
           </div>
-        )}
-      </CardContent>
-      <Separator />
-      <CardFooter className="pt-4 pb-4 flex flex-col sm:flex-row gap-2 justify-between">
-        <Button variant="outline" size="sm" asChild>
+        </Card>
+      </div>
+    );
+  }
+
+  // Grid layout (Default)
+  return (
+    <Card className={`h-full border-none glass-card shadow-ios-high dark:shadow-ios-high-dark overflow-hidden transition-all flex flex-col group ${resource.isSelected ? 'ring-2 ring-primary scale-[1.01]' : ''}`}>
+      <div className="relative">
+        <div className="absolute top-2 right-2 z-10 flex gap-2">
+          {actualDownloadable !== false && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 rounded-full backdrop-blur-md ${resource.isSelected ? 'bg-primary text-primary-foreground' : 'bg-background/50 hover:bg-background/80'}`}
+              onClick={(e) => { e.preventDefault(); onToggleSelect?.(); }}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        <div className="bg-muted aspect-video relative overflow-hidden">
           <Link to={`/resources/${resource.id}`}>
-            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+            {getResourceThumbnail(resource)}
+          </Link>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 pt-8">
+            <Badge variant="outline" className={`${getBadgeColor(resource.type)} bg-background/20 backdrop-blur-sm border-none text-[10px]`}>
+              {resource.type.toUpperCase()}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      <CardHeader className="p-4 pb-2">
+        <Link to={`/resources/${resource.id}`}>
+          <CardTitle className="text-lg leading-tight hover:text-primary transition-colors line-clamp-2">{resource.title}</CardTitle>
+        </Link>
+        <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider mt-1 opacity-70">
+          {resource.provider || "Civic Education Kenya"}
+        </p>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-0 grow">
+        <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">{resource.description || resource.summary}</p>
+      </CardContent>
+
+      <CardFooter className="px-4 py-3 border-t border-border/40 flex justify-between items-center bg-muted/20">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground font-medium">
+            {resource.uploadDate ? formatDate(resource.uploadDate) : (resource as any).dateAdded}
+          </span>
+          <span className="text-[10px] text-primary/80 font-bold">{(resource as any).views || 0} views</span>
+        </div>
+        <Button size="sm" variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/10 hover:text-primary h-8" asChild>
+          <Link to={`/resources/${resource.id}`}>
             View Details
           </Link>
         </Button>
-
-        {isConstitutionResource && (
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/constitution">
-              <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-              Constitution Guide
-            </Link>
-          </Button>
-        )}
-
-        {!isConstitutionResource && (actualDownloadable !== false) && (
-          <Button variant="outline" size="sm" asChild>
-            <a href={(resource as any).downloadUrl || (resource as any).url} target="_blank" rel="noopener noreferrer">
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              Download
-            </a>
-          </Button>
-        )}
       </CardFooter>
     </Card>
   );
