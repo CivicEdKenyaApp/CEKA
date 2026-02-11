@@ -14,6 +14,8 @@ export interface GeneratedArticle {
     review_notes?: string;
     created_at: string;
     tone_id?: string;
+    analysis_score?: number;
+    verification_metrics?: any;
 }
 
 export function useAIReview() {
@@ -140,6 +142,39 @@ export function useAIReview() {
         }
     };
 
+    const bulkPublishApproved = async () => {
+        try {
+            setLoading(true);
+            const approvedDrafts = drafts.filter(d => d.status === 'draft' || d.status === 'submitted');
+
+            if (approvedDrafts.length === 0) {
+                toast({ title: "Operation Aborted", description: "No approved drafts available for bulk publishing." });
+                return;
+            }
+
+            toast({ title: "Bulk Sync Initiated", description: `Processing ${approvedDrafts.length} articles...` });
+
+            for (const article of approvedDrafts) {
+                await promoteToBlogPost(article);
+            }
+
+            toast({
+                title: "Invasion Successful",
+                description: `Successfully pushed ${approvedDrafts.length} articles to live production.`
+            });
+
+            fetchDrafts();
+        } catch (err: any) {
+            toast({
+                title: "Bulk Sync Failed",
+                description: err.message,
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchDrafts();
     }, []);
@@ -150,6 +185,7 @@ export function useAIReview() {
         fetchDrafts,
         approveArticle,
         rejectArticle,
-        promoteToBlogPost
+        promoteToBlogPost,
+        bulkPublishApproved
     };
 }
