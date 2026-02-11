@@ -27,6 +27,8 @@ const LegislativeIntelligence = () => {
     const [jobs, setJobs] = useState<ProcessingJob[]>([]);
     const [scrapeRuns, setScrapeRuns] = useState<any[]>([]);
     const [scripts, setScripts] = useState<{ name: string; category: string }[]>([]);
+    const [orderPapers, setOrderPapers] = useState<any[]>([]);
+    const [billsWithHistory, setBillsWithHistory] = useState<any[]>([]);
     const [selectedScript, setSelectedScript] = useState<string | null>(null);
     const [scriptContent, setScriptContent] = useState<string>('');
     const [loading, setLoading] = useState(true);
@@ -41,18 +43,22 @@ const LegislativeIntelligence = () => {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const [sourcesData, jobsData, scriptsData, runsData, healthData] = await Promise.all([
+            const [sourcesData, jobsData, scriptsData, runsData, healthData, opData, billsHistory] = await Promise.all([
                 intelService.getSources(),
                 intelService.getJobs(),
                 intelService.getPipelineScripts(),
                 intelService.getScrapeRuns(),
-                intelService.getVaultHealth()
+                intelService.getVaultHealth(),
+                intelService.getOrderPapers(),
+                intelService.getBillsWithHistory()
             ]);
             setSources(sourcesData);
             setJobs(jobsData);
             setScripts(scriptsData);
             setScrapeRuns(runsData);
             setVaultHealth(healthData);
+            setOrderPapers(opData);
+            setBillsWithHistory(billsHistory);
         } catch (error) {
             console.error('Error loading intel data:', error);
             toast({ title: 'Error', description: 'Failed to load intelligence data', variant: 'destructive' });
@@ -215,30 +221,30 @@ const LegislativeIntelligence = () => {
                     <CardContent className="p-6">
                         <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Vault Capacity</p>
                         <h3 className="text-3xl font-black tracking-tighter text-kenya-green">{vaultHealth?.totalBills || 0}</h3>
-                        <p className="text-[10px] opacity-60">TRACKED BILLS</p>
+                        <p className="text-[10px] opacity-60 text-kenya-green/80 font-bold">BILLS IN SYSTEM</p>
                     </CardContent>
                 </Card>
                 <Card className="rounded-[32px] border-none bg-blue-500/5 overflow-hidden">
                     <CardContent className="p-6">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Neural Flow</p>
-                        <h3 className="text-3xl font-black tracking-tighter text-blue-600">{vaultHealth?.syncedBills || 0}</h3>
-                        <p className="text-[10px] opacity-60">LAST BATCH SYNCED</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Order Papers</p>
+                        <h3 className="text-3xl font-black tracking-tighter text-blue-600">{vaultHealth?.totalOrderPapers || 0}</h3>
+                        <p className="text-[10px] opacity-60 text-blue-600/80 font-bold">PAPERS STANDING</p>
                     </CardContent>
                 </Card>
                 <Card className="rounded-[32px] border-none bg-amber-500/5 overflow-hidden">
                     <CardContent className="p-6">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Pipeline Speed</p>
-                        <h3 className="text-3xl font-black tracking-tighter text-amber-600">{vaultHealth?.avgProcessingTime}</h3>
-                        <p className="text-[10px] opacity-60">AVG CRAWL RATE</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Pipeline Health</p>
+                        <h3 className="text-3xl font-black tracking-tighter text-amber-600">{vaultHealth?.syncedBills || 0}</h3>
+                        <p className="text-[10px] opacity-60 text-amber-600/80 font-bold">TOTAL SUCCESS SYNCED</p>
                     </CardContent>
                 </Card>
                 <Card className="rounded-[32px] border-none bg-rose-500/5 overflow-hidden">
                     <CardContent className="p-6">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Sync Health</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Last Update</p>
                         <h3 className="text-3xl font-black tracking-tighter text-rose-600">
                             {vaultHealth?.lastSync ? new Date(vaultHealth.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NONE'}
                         </h3>
-                        <p className="text-[10px] opacity-60">LATEST COMPLETED RUN</p>
+                        <p className="text-[10px] opacity-60 text-rose-600/80 font-bold">RECENT COMPLETION</p>
                     </CardContent>
                 </Card>
             </div>
@@ -246,6 +252,7 @@ const LegislativeIntelligence = () => {
             <Tabs defaultValue="queue" className="space-y-4">
                 <TabsList className="bg-muted/50 p-1 rounded-2xl">
                     <TabsTrigger value="queue" className="rounded-xl px-6">Live Queue</TabsTrigger>
+                    <TabsTrigger value="vault" className="rounded-xl px-6">System Vault</TabsTrigger>
                     <TabsTrigger value="sources" className="rounded-xl px-6">Sources</TabsTrigger>
                     <TabsTrigger value="history" className="rounded-xl px-4 py-2 font-bold data-[state=active]:bg-kenya-black data-[state=active]:text-white">Run History</TabsTrigger>
                     <TabsTrigger value="code" className="rounded-xl px-4 py-2 font-bold data-[state=active]:bg-kenya-black data-[state=active]:text-white">Operations & Code</TabsTrigger>
@@ -267,7 +274,7 @@ const LegislativeIntelligence = () => {
                                     <CardDescription className="text-white/60">Manual override & forced synchronization</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    {['bills', 'gazette', 'healthcare'].map((type) => (
+                                    {['bills', 'order-papers', 'gazette', 'healthcare'].map((type) => (
                                         <Button
                                             key={type}
                                             variant="ghost"
@@ -277,9 +284,9 @@ const LegislativeIntelligence = () => {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                    {type === 'bills' ? <Scale className="h-4 w-4" /> : type === 'gazette' ? <FileText className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
+                                                    {type === 'bills' ? <Scale className="h-4 w-4" /> : type === 'order-papers' ? <FileText className="h-4 w-4" /> : type === 'gazette' ? <Globe className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
                                                 </div>
-                                                <span className="capitalize font-bold tracking-tight">Sync {type}</span>
+                                                <span className="capitalize font-bold tracking-tight">Sync {type.replace('-', ' ')}</span>
                                             </div>
                                             {runningPipeline === type ? <CEKALoader variant="ios" size="xs" /> : <ChevronRight className="h-4 w-4 opacity-40" />}
                                         </Button>
@@ -386,6 +393,128 @@ const LegislativeIntelligence = () => {
                             </Card>
                         </div>
                     </div>
+                </TabsContent>
+
+                {/* Vault Tab */}
+                <TabsContent value="vault" className="space-y-4">
+                    <Tabs defaultValue="bills_list" className="space-y-4">
+                        <TabsList className="bg-muted/30 p-1 rounded-xl">
+                            <TabsTrigger value="bills_list" className="text-xs font-bold px-4">Active Bills & History</TabsTrigger>
+                            <TabsTrigger value="op_list" className="text-xs font-bold px-4">Order Papers Repository</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="bills_list">
+                            <Card className="border-none shadow-sm bg-muted/20 rounded-[32px]">
+                                <CardHeader className="pb-3 border-b border-muted/20">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-lg font-black uppercase tracking-tighter">Parliamentary Bills Vault</CardTitle>
+                                            <CardDescription>Live tracking & version history of all legislative items</CardDescription>
+                                        </div>
+                                        <Button variant="ghost" onClick={loadData} className="rounded-full h-10 w-10 p-0"><RefreshCw className="h-4 w-4" /></Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="divide-y divide-muted/10">
+                                        {billsWithHistory.map((bill) => (
+                                            <div key={bill.id} className="p-5 hover:bg-muted/20 transition-all flex flex-col gap-3 group">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center">
+                                                            <Scale className="h-5 w-5 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-black bg-kenya-black text-white px-2 py-0.5 rounded-full uppercase tabular-nums">
+                                                                    {bill.bill_no || 'NO. PENDING'}
+                                                                </span>
+                                                                {bill.history && bill.history.length > 0 && (
+                                                                    <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[9px] font-black">
+                                                                        {bill.history.length} ADVANCEMENTS
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <h4 className="font-bold text-sm leading-tight mt-1 line-clamp-1">{bill.title}</h4>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-right hidden sm:block">
+                                                            <p className="text-[10px] text-muted-foreground uppercase font-black tabular-nums">SESSION {bill.session_year || '2024'}</p>
+                                                            <p className="text-[10px] font-bold text-muted-foreground">{bill.sponsor}</p>
+                                                        </div>
+                                                        <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/10 text-[10px] uppercase font-black">
+                                                            {bill.status}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between pl-12 pt-1 border-t border-muted/5 mt-1">
+                                                    <div className="flex gap-4">
+                                                        <a href={bill.pdf_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 hover:underline">
+                                                            <ExternalLink className="h-3 w-3" /> CURRENT VERSION
+                                                        </a>
+                                                        {bill.history?.length > 0 && (
+                                                            <button className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground hover:text-kenya-black transition-colors">
+                                                                <Clock className="h-3 w-3" /> VIEW HISTORY
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[10px] opacity-40 tabular-nums">UPDATED {new Date(bill.updated_at || bill.created_at).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="op_list">
+                            <Card className="border-none shadow-sm bg-muted/20 rounded-[32px]">
+                                <CardHeader className="pb-3 border-b border-muted/20">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-lg font-black uppercase tracking-tighter">Order Papers Repository</CardTitle>
+                                            <CardDescription>Official business of the National Assembly and Senate</CardDescription>
+                                        </div>
+                                        <Button variant="ghost" onClick={loadData} className="rounded-full h-10 w-10 p-0"><RefreshCw className="h-4 w-4" /></Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="divide-y divide-muted/10">
+                                        {orderPapers.map((paper) => (
+                                            <div key={paper.id} className="p-5 hover:bg-muted/20 transition-all flex flex-col gap-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-full bg-blue-500/5 flex items-center justify-center">
+                                                            <FileText className="h-5 w-5 text-blue-500" />
+                                                        </div>
+                                                        <div>
+                                                            <Badge variant="outline" className="text-[8px] font-black uppercase mb-1">
+                                                                {paper.house}
+                                                            </Badge>
+                                                            <h4 className="font-bold text-sm line-clamp-1">{paper.title}</h4>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] font-black uppercase tabular-nums">{paper.date}</p>
+                                                        <a href={paper.pdf_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-end gap-1.5 text-[10px] font-black text-blue-600 hover:underline mt-1">
+                                                            <ExternalLink className="h-3 w-3" /> PDF
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {orderPapers.length === 0 && (
+                                            <div className="p-20 text-center opacity-40">
+                                                <FileText className="h-10 w-10 mx-auto mb-3" />
+                                                <p className="font-black uppercase tracking-widest text-xs">No order papers in vault</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
                 </TabsContent>
 
                 {/* Sources Tab */}

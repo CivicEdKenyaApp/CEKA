@@ -2,6 +2,7 @@
 // Uses direct Supabase calls with proper error handling
 
 import { supabase } from '@/integrations/supabase/client';
+import { Bill } from './billService';
 
 export interface ScraperSource {
     id: string;
@@ -34,6 +35,23 @@ export interface ProcessingJob {
     created_at: string;
     updated_at?: string;
     metadata?: Record<string, any>;
+}
+
+export interface OrderPaper {
+    id: string;
+    title: string;
+    house: string;
+    date: string;
+    pdf_url: string;
+    source: string;
+    metadata?: any;
+    created_at: string;
+}
+
+export interface BillWithHistory extends Bill {
+    bill_no?: string;
+    session_year?: number;
+    history?: any[];
 }
 
 export interface PipelineConfig {
@@ -383,7 +401,7 @@ if __name__ == "__main__":
             const { data, error } = await supabase
                 .from('scrape_runs')
                 .select('*')
-                .order('started_at', { ascending: false })
+                .order('completed_at', { ascending: false })
                 .limit(limit);
 
             if (error) return [];
@@ -393,39 +411,70 @@ if __name__ == "__main__":
         }
     }
 
+    // Get Order Papers
+    async getOrderPapers(limit: number = 50): Promise<OrderPaper[]> {
+        try {
+            const { data, error } = await supabase
+                .from('order_papers')
+                .select('*')
+                .order('date', { ascending: false })
+                .limit(limit);
+            if (error) throw error;
+            return data as unknown as OrderPaper[];
+        } catch (e) {
+            console.error('Error fetching order papers:', e);
+            return [];
+        }
+    }
+
+    // Get Bills with their history
+    async getBillsWithHistory(limit: number = 50): Promise<BillWithHistory[]> {
+        try {
+            const { data, error } = await supabase
+                .from('bills')
+                .select('*')
+                .order('updated_at', { ascending: false })
+                .limit(limit);
+            if (error) throw error;
+            return data as unknown as BillWithHistory[];
+        } catch (e) {
+            console.error('Error fetching bills with history:', e);
+            return [];
+        }
+    }
+
     // Get "Vault Health" statistics
     async getVaultHealth(): Promise<{
         totalBills: number;
+        totalOrderPapers: number;
         syncedBills: number;
         failedBills: number;
         avgProcessingTime: string;
         lastSync: string | null;
     }> {
         try {
-            const { count: totalCount } = await supabase
-                .from('bills')
-                .select('*', { count: 'exact', head: true });
+            const [billsRes, opRes, runsRes] = await Promise.all([
+                supabase.from('bills').select('*', { count: 'exact', head: true }),
+                supabase.from('order_papers').select('*', { count: 'exact', head: true }),
+                supabase.from('scrape_runs').select('*').order('completed_at', { ascending: false }).limit(10)
+            ]);
 
-            const { data: recentRuns } = await supabase
-                .from('scrape_runs')
-                .select('*')
-                .order('completed_at', { ascending: false })
-                .limit(10);
-
-            const lastRun = recentRuns?.[0];
-            const totalSynced = recentRuns?.reduce((acc: number, run: any) => acc + (run.bills_inserted || 0), 0) || 0;
-            const totalUpdated = recentRuns?.reduce((acc: number, run: any) => acc + (run.bills_updated || 0), 0) || 0;
+            const lastRun = runsRes.data?.[0];
+            const totalSynced = runsRes.data?.reduce((acc: number, run: any) => acc + (run.bills_inserted || 0), 0) || 0;
+            const totalUpdated = runsRes.data?.reduce((acc: number, run: any) => acc + (run.bills_updated || 0), 0) || 0;
 
             return {
-                totalBills: totalCount || 0,
+                totalBills: billsRes.count || 0,
+                totalOrderPapers: opRes.count || 0,
                 syncedBills: totalSynced + totalUpdated,
-                failedBills: recentRuns?.filter(r => r.status === 'Failed' || r.status === 'Partial').length || 0,
+                failedBills: runsRes.data?.filter(r => r.status === 'Failed' || r.status === 'Partial').length || 0,
                 avgProcessingTime: '~5.4s per bill',
                 lastSync: lastRun?.completed_at || null
             };
         } catch (e) {
             return {
                 totalBills: 0,
+                totalOrderPapers: 0,
                 syncedBills: 0,
                 failedBills: 0,
                 avgProcessingTime: 'N/A',
@@ -434,11 +483,11 @@ if __name__ == "__main__":
         }
     }
 
-
     // Update job progress
     async updateJobProgress(jobId: string, progress: number, step: string): Promise<void> {
         try {
-            await (supabase.from('processing_jobs' as any) as any)
+            await supabase
+                .from('processing_jobs')
                 .update({
                     progress,
                     current_step: step,
@@ -453,7 +502,8 @@ if __name__ == "__main__":
     // Complete a job
     async completeJob(jobId: string, success: boolean, error?: string): Promise<void> {
         try {
-            await (supabase.from('processing_jobs' as any) as any)
+            await supabase
+                .from('processing_jobs')
                 .update({
                     status: success ? 'completed' : 'failed',
                     progress: success ? 100 : undefined,
