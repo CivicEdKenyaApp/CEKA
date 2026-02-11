@@ -61,7 +61,7 @@ INSERT INTO public.blog_posts (
 
 <p><strong>Stay educated. Stay loud. Be the Citizen Kenya needs.</strong>',
   'A painfully honest, slightly witty, and deeply Kenyan guide to why knowing your rights is the only way to save your country (and your pocket).',
-  'CEKA Intelligence',
+  'CEKA',
   ARRAY['Civic Education', 'Kenya Constitution', 'National Values', 'Public Participation'],
   'published',
   (SELECT id FROM public.blog_categories WHERE name = 'Civic Education 101' LIMIT 1),

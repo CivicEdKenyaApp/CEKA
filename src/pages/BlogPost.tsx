@@ -273,10 +273,11 @@ const BlogPostPage = () => {
                 </p>
               )}
 
-              <div className="prose prose-xl prose-slate dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {post.content}
-                </div>
+              <div className="prose prose-xl prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-relaxed prose-a:text-kenya-red prose-a:no-underline hover:prose-a:underline">
+                <div
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                  className="leading-relaxed"
+                />
               </div>
 
               <Separator className="my-12 opacity-50" />

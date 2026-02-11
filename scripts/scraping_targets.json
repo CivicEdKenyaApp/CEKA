@@ -20,6 +20,13 @@
             "selector": ".view-content .views-row",
             "type": "order_papers",
             "freq": "daily_0900_eat"
+        },
+        {
+            "name": "Kenya Gazette (Official)",
+            "url": "http://kenyalaw.org/kenya_gazette/",
+            "selector": ".view-content .views-row, .gazette-item",
+            "type": "gazette",
+            "freq": "weekly_friday_0900_eat"
         }
     ]
 }

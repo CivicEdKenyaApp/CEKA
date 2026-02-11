@@ -114,7 +114,7 @@ export function useAIReview() {
                     published_at: new Date().toISOString(),
                     meta_description: article.meta_description,
                     seo_keywords: article.seo_keywords,
-                    author: 'CEKA AI'
+                    author: 'CEKA'
                 }]);
 
             if (blogError) throw blogError;
