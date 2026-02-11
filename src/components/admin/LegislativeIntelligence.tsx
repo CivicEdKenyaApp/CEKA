@@ -128,7 +128,7 @@ const LegislativeIntelligence = () => {
     };
 
     // Trigger pipeline
-    const triggerPipeline = async (type: 'bills' | 'gazette' | 'healthcare') => {
+    const triggerPipeline = async (type: 'bills' | 'order-papers' | 'gazette' | 'healthcare' | 'resources') => {
         try {
             setRunningPipeline(type);
             const result = await intelService.triggerPipeline({ type });
@@ -300,7 +300,7 @@ const LegislativeIntelligence = () => {
                                     <CardDescription className="text-white/60">Manual override & forced synchronization</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    {['bills', 'order-papers', 'gazette', 'healthcare'].map((type) => (
+                                    {['bills', 'order-papers', 'resources', 'gazette', 'healthcare'].map((type) => (
                                         <Button
                                             key={type}
                                             variant="ghost"
@@ -310,7 +310,7 @@ const LegislativeIntelligence = () => {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                    {type === 'bills' ? <Scale className="h-4 w-4" /> : type === 'order-papers' ? <FileText className="h-4 w-4" /> : type === 'gazette' ? <Globe className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
+                                                    {type === 'bills' ? <Scale className="h-4 w-4" /> : type === 'order-papers' ? <FileText className="h-4 w-4" /> : type === 'resources' ? <Database className="h-4 w-4" /> : type === 'gazette' ? <Globe className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
                                                 </div>
                                                 <span className="capitalize font-bold tracking-tight">Sync {type.replace('-', ' ')}</span>
                                             </div>
@@ -660,15 +660,21 @@ const LegislativeIntelligence = () => {
                                     <div className="grid grid-cols-3 gap-2 text-center">
                                         <div className="bg-muted/30 p-2 rounded-xl">
                                             <p className="text-[10px] font-black uppercase text-muted-foreground">Found</p>
-                                            <p className="text-sm font-black text-kenya-black dark:text-white">{run.bills_found}</p>
+                                            <p className="text-sm font-black text-kenya-black dark:text-white">
+                                                {run.source.toLowerCase().includes('resource') ? run.resources_found : run.bills_found}
+                                            </p>
                                         </div>
                                         <div className="bg-green-500/5 p-2 rounded-xl">
                                             <p className="text-[10px] font-black uppercase text-kenya-green">New</p>
-                                            <p className="text-sm font-black text-kenya-green">{run.bills_inserted}</p>
+                                            <p className="text-sm font-black text-kenya-green">
+                                                {run.source.toLowerCase().includes('resource') ? run.resources_inserted : run.bills_inserted}
+                                            </p>
                                         </div>
                                         <div className="bg-blue-500/5 p-2 rounded-xl">
                                             <p className="text-[10px] font-black uppercase text-blue-600">Updated</p>
-                                            <p className="text-sm font-black text-blue-600">{run.bills_updated}</p>
+                                            <p className="text-sm font-black text-blue-600">
+                                                {run.source.toLowerCase().includes('resource') ? run.resources_updated : run.bills_updated}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="mt-3 text-[10px] text-muted-foreground flex justify-between items-center tabular-nums">

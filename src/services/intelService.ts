@@ -55,7 +55,7 @@ export interface BillWithHistory extends Bill {
 }
 
 export interface PipelineConfig {
-    type: 'bills' | 'gazette' | 'healthcare' | 'custom';
+    type: 'bills' | 'order-papers' | 'gazette' | 'healthcare' | 'resources' | 'custom';
     targetUrl?: string;
     options?: Record<string, any>;
 }
@@ -107,7 +107,9 @@ class IntelService {
     async getPipelineScripts(): Promise<{ name: string; category: string }[]> {
         return [
             { name: 'legislative_scraper.py', category: 'Scraping' },
+            { name: 'resource_scraper.py', category: 'Scraping' },
             { name: 'sync_to_supabase.py', category: 'Sync' },
+            { name: 'sync_resources.py', category: 'Sync' },
             { name: 'sync_to_supabase_neural.py', category: 'Neural/AI' },
             { name: 'crawler.py', category: 'Research' },
             { name: 'audit_db.py', category: 'Audit' },

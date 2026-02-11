@@ -6,18 +6,29 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { translate, cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import Avatar from "boring-avatars";
 
 const ResourceHighlights = () => {
   const { language } = useLanguage();
   const { theme } = useTheme();
 
-  const resources = {
+  interface ResourceData {
+    icon: React.ReactNode;
+    color: string;
+    borderColor: string;
+    lightBg: string;
+    id: string;
+    videoUrl?: string;
+    type: string;
+  }
+
+  const resources: Record<string, ResourceData> = {
     constitution: {
       icon: <BookOpen className="h-6 w-6" />,
       color: 'bg-kenya-green',
       borderColor: 'border-kenya-green/20',
       lightBg: 'bg-kenya-green/5',
-      id: 'fa8d9e0b-1c2d-4e5f-6g7h-8i9j0k1l2m3n', // Kenya Constitution 2010 PDF
+      id: '647caa0e-6ffd-44b1-8962-4bb96ae7dfb3', // Kenya Constitution 2010 Updated ID
       type: 'Interactive PDF'
     },
     lawmaking: {
@@ -25,14 +36,15 @@ const ResourceHighlights = () => {
       color: 'bg-kenya-red',
       borderColor: 'border-kenya-red/20',
       lightBg: 'bg-kenya-red/5',
-      id: 'b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6', // The Lawmaking Process Video
+      id: 'b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6',
+      videoUrl: 'https://www.youtube.com/watch?v=kYI9g2T7Q6k', // Relevant Lawmaking Video
       type: 'Video Insight'
     },
     rights: {
       icon: <FileText className="h-6 w-6" />,
-      color: 'bg-blue-600',
-      borderColor: 'border-blue-200/50',
-      lightBg: 'bg-blue-50/50',
+      color: 'bg-black', // Rights container black
+      borderColor: 'border-white/10',
+      lightBg: 'bg-white/5',
       id: 'c2d3e4f5-g6h7-i8j9-k0l1-m2n3o4p5q6r7', // Bill of Rights Infographic
       type: 'Visual Guide'
     }
@@ -99,7 +111,8 @@ const ResourceHighlights = () => {
             <motion.div key={key} variants={itemVariants} className="h-full">
               <Card className={cn(
                 "group h-full flex flex-col overflow-hidden border-black/5 dark:border-white/10",
-                "bg-white dark:bg-slate-900/40 backdrop-blur-xl shadow-ios-high dark:shadow-ios-high-dark",
+                key === 'rights' ? "bg-black text-white" : "bg-white dark:bg-slate-900/40",
+                "backdrop-blur-xl shadow-ios-high dark:shadow-ios-high-dark",
                 "transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-[32px]"
               )}>
                 <div className={cn("h-3 w-full", data.color)} />
@@ -107,22 +120,31 @@ const ResourceHighlights = () => {
                   <div className={cn(
                     "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3",
                     data.lightBg,
-                    data.color.replace('bg-', 'text-')
+                    key === 'rights' ? "text-white" : data.color.replace('bg-', 'text-')
                   )}>
                     {data.icon}
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", data.color.replace('bg-', 'text-'))}>
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-widest opacity-60",
+                        key === 'rights' ? "text-slate-400" : data.color.replace('bg-', 'text-')
+                      )}>
                         {data.type}
                       </span>
-                      <div className="h-[1px] flex-grow bg-slate-100 dark:bg-white/5" />
+                      <div className="h-[1px] flex-grow bg-slate-100 dark:bg-white/5 opacity-20" />
                     </div>
-                    <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-kenya-green transition-colors">
+                    <CardTitle className={cn(
+                      "text-2xl font-bold tracking-tight transition-colors",
+                      key === 'rights' ? "text-white group-hover:text-kenya-red" : "text-slate-900 dark:text-white group-hover:text-kenya-green"
+                    )}>
                       {translate(key, language)}
                     </CardTitle>
                   </div>
-                  <CardDescription className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed pt-2">
+                  <CardDescription className={cn(
+                    "text-sm leading-relaxed pt-2",
+                    key === 'rights' ? "text-slate-400" : "text-slate-500 dark:text-slate-400"
+                  )}>
                     {key === 'constitution'
                       ? translate("A comprehensive guide to the Kenyan Constitution, breaking down your fundamental rights and the structure of government.", language)
                       : key === 'lawmaking'
@@ -135,10 +157,16 @@ const ResourceHighlights = () => {
                     asChild
                     className={cn(
                       "w-full h-12 rounded-2xl font-bold transition-all duration-300 shadow-lg",
-                      data.color, "hover:opacity-90 text-white shadow-low"
+                      data.color === 'bg-black' ? "bg-white text-black hover:bg-slate-200" : data.color,
+                      "hover:opacity-90 shadow-low",
+                      key !== 'rights' && "text-white"
                     )}
                   >
-                    <a href={`/resources/${data.id}`} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={data.videoUrl || `/resources/${data.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       {key === 'lawmaking' ? <Play className="h-4 w-4 mr-2 fill-current" /> : <Download className="h-4 w-4 mr-2" />}
                       {translate('View Resource', language)}
                     </a>
@@ -147,10 +175,20 @@ const ResourceHighlights = () => {
                   <div className="flex items-center justify-center gap-4 px-2">
                     <div className="flex -space-x-2">
                       {[1, 2, 3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800" />
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 overflow-hidden bg-slate-100">
+                          <Avatar
+                            size={32}
+                            name={`user-${i}-${key}`}
+                            variant="beam"
+                            colors={["#006600", "#CC0000", "#000000", "#FFFFFF", "#FFCC00"]}
+                          />
+                        </div>
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                    <span className={cn(
+                      "text-[10px] font-bold uppercase tracking-tighter",
+                      key === 'rights' ? "text-slate-500" : "text-slate-400"
+                    )}>
                       Community Insight Active
                     </span>
                   </div>
