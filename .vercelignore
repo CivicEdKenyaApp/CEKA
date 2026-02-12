@@ -1,0 +1,14 @@
+# Vercel Ignore File
+# Exclude backend files to prevent Python build triggering
+# The backend is deployed on Railway (see railway.json)
+
+requirements.txt
+app.py
+app/
+venv/
+venv3.11/
+*.py
+Dockerfile
+railway.json
+nixpacks.toml
+.python-version
