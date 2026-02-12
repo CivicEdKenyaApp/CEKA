@@ -336,15 +336,15 @@ function IntelligenceSimulator() {
         setResult(null);
 
         try {
-            // 1. Submit Request to Queue
+            // 1. Submit Request to Queue (Casting to any because table is newly created via SQL)
             const { data, error } = await supabase
-                .from('sovereign_simulation_queue')
-                .insert([{ query }])
+                .from('sovereign_simulation_queue' as any)
+                .insert([{ query }] as any)
                 .select()
                 .single();
 
             if (error) throw error;
-            const requestId = data.id;
+            const requestId = (data as any).id;
 
             // 2. Subscribe to Realtime Updates for this request
             const channel = supabase

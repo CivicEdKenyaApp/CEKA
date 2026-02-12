@@ -126,7 +126,7 @@ const Notifications = () => {
                   <CardContent className="p-4">
                     <div className="flex">
                       <div className="mr-4 mt-1">
-                        {getNotificationIcon(notification.type)}
+                        {getNotificationIcon((notification as any).type)}
                       </div>
                       <div className="flex-1">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
