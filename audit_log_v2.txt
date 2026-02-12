@@ -1,0 +1,49 @@
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 59, in <module>
+    print("EXISTS \u2705", end=" ")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 59, in <module>
+    print("EXISTS \u2705", end=" ")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 59, in <module>
+    print("EXISTS \u2705", end=" ")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 59, in <module>
+    print("EXISTS \u2705", end=" ")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 58, in <module>
+    res = supabase.table(table).select("*").limit(1).execute()
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\site-packages\postgrest\_sync\request_builder.py", line 70, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.review_assignments" does not exist'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\CEKA\ceka v010\CEKA\scripts\audit_live_db_v2.py", line 77, in <module>
+    print("DOES NOT EXIST \u274c")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 15: character maps to <undefined>
+Loading .env from d:/CEKA/ceka v010/CEKA/.env
+Environment loaded.
+Connecting to Supabase at https://cajrvemigxghnfmyopiy.supabase.co...
+
+--- DB Audit Results ---
+Checking 'content_topics'... ERROR: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Checking 'ai_models'... ERROR: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Checking 'content_queue'... ERROR: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Checking 'generated_articles'... ERROR: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+Checking 'review_assignments'... CRITICAL FAILURE:

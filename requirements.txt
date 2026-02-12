@@ -1,0 +1,5 @@
+pytrends==4.9.2
+pandas==2.1.4
+beautifulsoup4==4.12.2
+tenacity==8.2.3
+pytest==7.4.3

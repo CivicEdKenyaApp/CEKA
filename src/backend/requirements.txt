@@ -1,0 +1,7 @@
+asyncio
+aiohttp
+asyncpg
+backoff
+google-generativeai
+python-dotenv
+pydantic

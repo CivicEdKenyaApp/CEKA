@@ -1,0 +1,99 @@
+name: 🇰🇪 Kenya Trends SEO Updater (20 keywords, append)
+
+on:
+  schedule:
+    # 00:00 and 12:00 UTC daily = 03:00 and 15:00 Kenya time
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run – fetch trends but do not commit'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # allow pushing changes
+  issues: write     # allow creating issue on failure (optional)
+
+jobs:
+  update-trends:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest  # already in requirements, but ensure
+
+      - name: Run tests
+        run: |
+          pytest test_update_keywords.py -v
+
+      - name: Run update script
+        id: update
+        env:
+          INDEX_PATH: index.html
+          TOP_K: '20'
+          TZ_MINUTES: '180'
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          python update_keywords.py
+        continue-on-error: false
+
+      - name: Commit and push changes
+        if: ${{ !inputs.dry_run }}
+        env:
+          SNIPPET: ${{ env.NEW_KEYWORDS_SNIPPET }}
+        run: |
+          # Configure git
+          git config user.name "CEKA-Trend-Bot"
+          git config user.email "bot@civiceducationkenya.com"
+
+          git add index.html
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          # Build commit message
+          if [ -n "$SNIPPET" ]; then
+            COMMIT_MSG="SEO: Appended trending keywords → $SNIPPET"
+          else
+            COMMIT_MSG="SEO: Weekly keywords refresh"
+          fi
+
+          git commit -m "$COMMIT_MSG"
+          git push
+          echo "✅ Pushed update: $COMMIT_MSG"
+
+      - name: Create issue on failure
+        if: failure()
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: '⚠️ Trends update failed'
+          content-filepath: .github/ISSUE_TEMPLATE/failure_report.md
+          labels: bug, automation
+        continue-on-error: true
+
+      - name: Slack notification (optional)
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: 'Kenya Trends update failed'
+          SLACK_MESSAGE: 'Workflow ${{ github.workflow }} failed for ${{ github.repository }}'
+          SLACK_COLOR: danger
