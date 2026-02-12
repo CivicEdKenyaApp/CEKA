@@ -1,0 +1,1576 @@
+```markdown
+================================================================================
+PROJECT: CEKA (Civic Education Kenya App)
+FILE: LLM.txt — COMPREHENSIVE LLM GOVERNANCE & DEPLOYMENT SPECIFICATION
+VERSION: 1.0.0
+LAST UPDATED: 2026-02-12
+================================================================================
+
+PURPOSE
+================================================================================
+Provide the complete, exhaustive policy, technical specification, operational 
+procedures, configuration templates, safety controls, audit rules, RAG 
+(retrieval-augmented generation) integration plans, CI/CD and monitoring 
+requirements, data handling rules, human-in-the-loop (HITL) workflows, test 
+suites, and step-by-step operational checklists necessary to deploy, run, and 
+govern ALL LLM-enabled features for CEKA in production.
+
+This document is normative and legally binding for all LLM integrations.
+
+SCOPE
+================================================================================
+This file applies to ALL LLM usage across CEKA:
+- Backend services (Supabase Functions, API routes)
+- Frontend features (chat, summarization, tagging, content generation)
+- Admin tooling (content moderation, metadata extraction)
+- CI/CD pipelines (automated testing, content validation)
+- Data ingestion and indexing (bill scraping, document parsing)
+- Third-party model providers (Anthropic Claude, OpenAI, etc.)
+- Analytics and monitoring
+- Developer/maintenance scripts
+- Bill tracking AI summaries
+- Constitutional Q&A systems
+- IEBC office recommendation engines
+- Civic education chatbots
+- Public participation comment analysis
+- Voter education content generation
+- Accessibility features (text-to-speech, simplification, translation)
+
+PLATFORM CONTEXT: CEKA FEATURES & ARCHITECTURE
+================================================================================
+
+CEKA CORE FEATURES:
+1. Bill Tracker: Real-time monitoring of Parliamentary bills with AI summaries
+2. Recall254/Nasaka IEBC: IEBC office finder with location-based recommendations
+3. Voter Education: Registration guides, polling station info, FAQ generation
+4. Constitutional Education: Kenya Constitution 2010 Q&A, rights explanations
+5. Public Participation: Bill comment analysis, sentiment tracking, summarization
+6. Civic Resources: County government info, devolution explainers, accountability tools
+7. Community Forums: Moderated discussions with AI content filtering
+8. Governance Tracking: Controller of Budget reports, audit summaries
+9. Educational Content: Curriculum modules, quizzes, interactive learning
+10. Accessibility Tools: Plain language summaries, translations (English/Swahili)
+
+TECHNICAL STACK (AS DEPLOYED):
+- Frontend: Next.js/React (deployed on Vercel)
+- Backend: Supabase (PostgreSQL + Edge Functions)
+- Authentication: Supabase Auth
+- Storage: Supabase Storage + CDN
+- Search/Vector: Supabase pgvector extension
+- APIs: Parliament.go.ke, Kenya Law, IEBC data sources
+- Hosting: Vercel (frontend), Supabase (backend)
+- Version Control: Git
+
+AUTHORITATIVE DATA SOURCES:
+- Parliament of Kenya (parliament.go.ke)
+- Kenya Law Reports (kenyalaw.org)
+- Independent Electoral and Boundaries Commission (IEBC)
+- Constitution of Kenya 2010 (official gazette)
+- County Government Act 2012
+- Controller of Budget reports
+- National Civic Education Framework (devolution.go.ke)
+- Kenya Gazette (official government notices)
+- County government portals (all 47 counties)
+
+GLOSSARY & DEFINITIONS
+================================================================================
+
+model: Any machine-learned text generation system (hosted by CEKA or third parties)
+retrieval source / corpus: Indexed sources used for RAG (websites, PDFs, databases)
+RAG: Retrieval-augmented generation pipeline combining indexed retrieval with model generation
+HITL: Human-in-the-loop manual review workflow requiring expert approval
+PII: Personally identifiable information (ID numbers, addresses, phone, email)
+provenance: (source_url, retrieval_timestamp_utc, snippet, checksum, index_version)
+request_id: Globally unique UUID attached to each LLM invocation and all related logs
+safety threshold: Numeric value(s) determining whether output needs HITL or blocking
+confidence_score: Model certainty metric (0.0-1.0) for generated claims
+index_version: Semantic version of retrieval corpus (e.g., "bills-2026.02.1")
+authoritative source: Government-verified, legally binding information source
+CoK 2010: Constitution of Kenya 2010
+CGA 2012: County Government Act 2012
+NCEF: National Civic Education Framework
+embedding: Vector representation of text for semantic search
+chunk: Segmented portion of document for indexing (800-1600 tokens)
+hallucination: Model-generated claim without supporting evidence in retrieval corpus
+toxicity_score: Content safety metric for hate speech/harassment (0.0-1.0)
+persuasion_flag: Binary indicator for detected political bias/targeting
+electioneering: Political persuasion or campaigning for/against candidates
+demographic targeting: Content tailored to specific ethnic/regional/age groups for political influence
+
+HIGH-LEVEL PRINCIPLES
+================================================================================
+
+1. NO HALLUCINATION OF LEGAL OR PROCEDURAL FACTS
+   Any fact that could affect civic action (voting, filing, deadlines, legal process) 
+   MUST have provenance. If provenance is absent or conflicting, the system MUST 
+   refuse generation and escalate to HITL. No exceptions.
+
+2. TRANSPARENCY
+   All public model-generated outputs visible to end-users MUST be labeled 
+   "AI-generated content" and display provenance when applicable. Users must 
+   understand when they are reading AI vs. human-curated content.
+
+3. MINIMAL DATA EXPOSURE
+   Do not store raw PII in logs. Redact before storage or store only hashed 
+   identifiers with salts under governance. PII includes: National ID numbers, 
+   passport numbers, precise home addresses, phone numbers, personal email, 
+   bank account numbers, biometric data, location coordinates (below ward level).
+
+4. HUMAN OVERSIGHT ON SENSITIVE OUTPUTS
+   Content that interprets laws, offers recommended civic actions, references 
+   current political actors, or involves elections REQUIRES HITL approval 
+   before publication. No automated publication of sensitive content.
+
+5. AUDITABLE & VERSIONED
+   Every model invocation, retrieval index update, configuration change, and 
+   reviewer decision MUST be auditable and versioned with immutable logs.
+
+6. POLITICAL NEUTRALITY
+   CEKA is a non-partisan civic education platform. All AI-generated content 
+   must be politically neutral, balanced, and fact-based. No support for or 
+   opposition to specific candidates, parties, or political positions.
+
+7. KENYAN CONTEXT AWARENESS
+   All models must be calibrated for Kenyan legal terminology, devolution 
+   structures, cultural contexts, and local languages (English, Swahili, 
+   regional languages where applicable).
+
+8. ACCESSIBILITY FIRST
+   AI features must enhance accessibility for all Kenyans including: persons 
+   with disabilities, rural citizens with limited internet, citizens with 
+   lower literacy levels, Swahili-first speakers.
+
+ROLES AND RESPONSIBILITIES
+================================================================================
+
+1. TECHNICAL LEAD (App Development)
+   - Owns model connectors, retrieval pipeline, index freshness
+   - Production rollout and incident response
+   - API integration with Parliament.go.ke, Kenya Law, IEBC
+   - Performance monitoring and optimization
+   - Contact: [FILL: name@civiceducationkenya.org]
+
+2. GOVERNANCE OFFICER
+   - Owns policy decisions, reviewer roles, thresholds, periodic audits
+   - Legal review coordination
+   - Compliance with County Government Act 2012 Section 100
+   - Civic education curriculum alignment with NCEF
+   - Contact: [FILL: governance@civiceducationkenya.org]
+
+3. SECURITY LEAD
+   - Owns secrets, keys, IAM, access control for LLM endpoints
+   - Supabase RLS (Row Level Security) policies
+   - API key rotation and vault management
+   - Incident response for data breaches
+   - Contact: [FILL: security@civiceducationkenya.org]
+
+4. REVIEWERS (Human-in-the-Loop Queue)
+   - Qualified legal/civic experts who operate HITL queue
+   - Approve/reject/edit sensitive AI outputs before publication
+   - REQUIRED QUALIFICATIONS:
+     * Law degree OR 5+ years civic education experience
+     * Knowledge of Constitution of Kenya 2010
+     * Understanding of devolution and County Government Act
+     * Completion of CEKA reviewer certification program
+   - ROSTER: [FILL: Maintain in /docs/REVIEWER_ROSTER.md]
+
+5. DATA PROTECTION OFFICER (If applicable per Data Protection Act 2019)
+   - Owns retention rules and redaction policies
+   - GDPR-equivalent compliance for Kenyan Data Protection Act
+   - User consent management
+   - Right to be forgotten implementation
+   - Contact: [FILL: dpo@civiceducationkenya.org]
+
+6. CONTENT MODERATORS
+   - Community forum moderation
+   - User-reported content review
+   - Automated moderation queue management
+   - Contact: [FILL: moderation@civiceducationkenya.org]
+
+PERMITTED & PROHIBITED USES (EXHAUSTIVE)
+================================================================================
+
+PERMITTED USES (with conditions specified):
+
+1. BILL & LAW SUMMARIZATION (with provenance)
+   - Summarize bills, acts, constitutional articles with explicit citations
+   - Extract structured metadata (title, status, dates, sponsors, URLs)
+   - Highlight key changes in amendments with diff comparisons
+   - Generate plain-language explainers for complex legal text
+   - CONDITION: Must link to original source, include retrieval timestamp, 
+     flag for HITL if bill is politically contentious
+
+2. ACCESSIBILITY TRANSFORMS
+   - Plain-language summaries of legal documents (8th grade reading level)
+   - English ↔ Swahili translation for civic content
+   - Text-to-speech transcripts for audio accessibility
+   - Alt text generation for infographics/charts
+   - CONDITION: Accessibility outputs must preserve factual accuracy
+
+3. CIVIC EDUCATION CONTENT GENERATION
+   - Definitions of civic terms (devolution, public participation, etc.)
+   - Historical context explanations (non-partisan)
+   - Process guides (how to register to vote, how bills become law)
+   - CONDITION: Must be neutral, educational, non-directive
+
+4. IEBC OFFICE RECOMMENDATIONS
+   - Suggest nearest IEBC office based on user location
+   - Provide directions and contact information
+   - Answer voter registration questions
+   - CONDITION: Use only verified IEBC data from Recall254 database
+
+5. METADATA EXTRACTION FROM GOVERNMENT SOURCES
+   - Parse Parliament Hansard for bill updates
+   - Extract dates, statuses, committee assignments
+   - Categorize bills by topic/ministry
+   - CONDITION: Automated extraction must be validated against source
+
+6. CONTENT MODERATION ASSISTANCE
+   - Toxicity scoring for forum posts
+   - Hate speech detection
+   - Spam/bot detection
+   - CONDITION: Human moderator makes final decision, AI only flags
+
+7. SEARCH & DISCOVERY
+   - Semantic search over CEKA resource library
+   - "Related content" recommendations
+   - FAQ auto-generation from user queries
+   - CONDITION: Search results must link to authoritative sources
+
+8. ANALYTICS & INSIGHTS (internal only)
+   - Sentiment analysis on public participation comments (aggregated)
+   - Topic modeling for bill categorization
+   - User behavior analytics for UX improvement
+   - CONDITION: No individual user tracking, aggregated data only
+
+9. AUTOMATED TRANSCRIPTION
+   - Parliament session audio → text transcripts
+   - County assembly meeting recordings → searchable text
+   - CONDITION: Transcripts must be reviewed for accuracy
+
+10. UI/UX MICROCOPY & HELP TEXT
+    - Error messages, tooltips, onboarding flows
+    - Contextual help suggestions
+    - Form validation guidance
+    - CONDITION: Must be non-binding, friendly, clear
+
+PROHIBITED USES (absolute):
+
+1. TARGETED POLITICAL PERSUASION
+   - Generating content designed to influence voting behavior toward specific 
+     candidates, parties, or referendum positions
+   - Demographic-targeted messaging for political campaigns
+   - Automated generation of political ads or campaign materials
+   - RATIONALE: CEKA is non-partisan civic education platform
+
+2. AUTOMATED GOVERNMENT INTERACTIONS
+   - Filing applications, petitions, or legal documents on behalf of users
+   - Submitting comments to Parliament without explicit user action
+   - Automated registration or voting (even with consent)
+   - RATIONALE: Requires legal standing and authentication
+
+3. MISINFORMATION ABOUT ELECTIONS
+   - Claims about election results before official IEBC announcement
+   - False polling station information
+   - Misleading voter eligibility requirements
+   - Fabricated candidate statements or positions
+   - RATIONALE: Undermines electoral integrity
+
+4. DEFINITIVE LEGAL ADVICE
+   - "You should file this lawsuit" (vs. "people in this situation often consult a lawyer")
+   - Tax advice, inheritance law, contract interpretation presented as legal counsel
+   - RATIONALE: Requires licensed legal professional
+
+5. PRIVATE DATA EXPOSURE
+   - Publishing user PII without explicit consent
+   - Scraping private social media profiles
+   - Revealing identities of anonymous forum participants
+   - RATIONALE: Data Protection Act 2019 compliance
+
+6. TRAINING ON PRIVATE USER DATA
+   - Fine-tuning models on user messages, forum posts without consent
+   - Using uploaded documents for model improvement
+   - RATIONALE: Privacy and consent requirements
+
+7. MALICIOUS OR HARMFUL CONTENT
+   - Hate speech, incitement to violence, ethnic targeting
+   - Doxxing, harassment, stalking facilitation
+   - Child safety violations (CSAM, grooming)
+   - RATIONALE: Basic safety and Kenyan law
+
+8. DEEPFAKES OR IMPERSONATION
+   - Generating fake quotes attributed to real politicians
+   - Creating synthetic images/videos of public figures
+   - Impersonating government officials in chat
+   - RATIONALE: Misinformation and defamation concerns
+
+9. BYPASSING AUTHENTICATION
+   - Circumventing Supabase RLS policies with prompts
+   - Accessing data outside user's authorization scope
+   - RATIONALE: Security fundamental
+
+10. UNVERIFIED MEDICAL/HEALTH CLAIMS
+    - COVID-19 treatment advice, vaccine misinformation
+    - Mental health diagnoses or treatment plans
+    - RATIONALE: Public health safety
+
+DATA SOURCING & PROVENANCE (DETAILED)
+================================================================================
+
+AUTHORITATIVE SOURCE PRIORITY HIERARCHY:
+1. Official Government Gazettes (Kenya Gazette, County Gazettes)
+2. Parliament of Kenya (parliament.go.ke) - Bills, Hansard, Committee Reports
+3. Kenya Law Reports (kenyalaw.org) - Acts, Case Law, Constitution
+4. IEBC Official Communications (iebc.or.ke)
+5. County Government Portals (official .go.ke domains)
+6. Controller of Budget Reports (cob.go.ke)
+7. Judiciary (judiciary.go.ke) - Court judgments
+8. National Treasury (treasury.go.ke) - Budget documents
+9. Reputable Kenyan Media (Nation, Standard, Citizen - for context only, not facts)
+10. Civil Society Reports (vetted organizations like Uraia Trust, KHRC)
+
+PROHIBITED SOURCES:
+- Unverified blogs, social media posts
+- Wikipedia (can be referenced for context, not authoritative)
+- Satirical news sites
+- Foreign government sources (unless explicitly about Kenya-foreign relations)
+- Expired/archived content presented as current
+
+PROVENANCE METADATA STRUCTURE:
+For each retrieved snippet, store the following in structured JSON:
+
+```json
+{
+  "source_url": "https://parliament.go.ke/the-national-assembly/house-business/bills/...",
+  "source_title": "Finance Bill 2024 - Second Reading",
+  "retrieval_timestamp_utc": "2026-02-12T14:35:22Z",
+  "snippet_text": "The proposed amendment to Section 12(a) increases VAT...",
+  "snippet_start_char": 1523,
+  "snippet_end_char": 1687,
+  "document_checksum_sha256": "a3f5d9e8c2b1...",
+  "index_version": "bills-2026.02.1",
+  "retrieval_score": 0.94,
+  "document_type": "parliamentary_bill",
+  "parliamentary_session": "13th Parliament (2022-2027)",
+  "bill_number": "National Assembly Bill No. 15 of 2024",
+  "license": "Public Domain - Government of Kenya",
+  "language": "en"
+}
+```
+
+INDEXING POLICY:
+- Every indexed document MUST list license or terms-of-use metadata
+- Do NOT index copyright-restricted content without explicit permission or valid fair-use assessment
+- For third-party content (NGO reports, academic papers), obtain written permission and record in `/docs/CONTENT_LICENSES/`
+- Respect robots.txt and crawl delays when scraping government sites
+- Rate limit: Maximum 1 request per 2 seconds to any single domain
+- User-Agent: "CEKABot/1.0 (+https://civicedkenya.vercel.app/about/crawler)"
+
+FRESHNESS REQUIREMENTS:
+- Parliamentary Bills: Check for updates hourly during parliamentary sessions
+- IEBC Data: Weekly updates (or daily during voter registration drives)
+- Constitution: Manual update only (requires governance approval)
+- County Data: Monthly crawl of county government portals
+- Stale data threshold: Mark content >90 days old as "may be outdated" for fast-changing topics
+
+RAG PIPELINE — ARCHITECTURE & DETAILED FLOW
+================================================================================
+
+COMPONENT BREAKDOWN:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        INGESTION SERVICES                            │
+├─────────────────────────────────────────────────────────────────────┤
+│ 1. Parliament.go.ke Scraper (bills, Hansard, committee reports)     │
+│ 2. KenyaLaw.org API Connector (Acts, regulations, case law)         │
+│ 3. IEBC Data Fetcher (office locations, voter stats)                │
+│ 4. Manual Upload Interface (admin dashboard for PDFs/docs)          │
+│ 5. County Government Crawlers (47 county portals)                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      PARSING & EXTRACTION                            │
+├─────────────────────────────────────────────────────────────────────┤
+│ - PDF text extraction (pypdf2, pdfplumber for tables)               │
+│ - HTML parsing (BeautifulSoup, playwright for dynamic content)      │
+│ - Metadata extraction (title, date, author, bill number, etc.)      │
+│ - Deduplication (checksum comparison, fuzzy matching)               │
+│ - License validation (check terms of use, copyright status)         │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TEXT CHUNKING                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│ Chunk Size: 800-1600 tokens (target: 1200 tokens)                   │
+│ Strategy: Sentence-boundary aware, preserve paragraph integrity     │
+│ Overlap: 20-30% between chunks to maintain context                  │
+│ Metadata per chunk:                                                  │
+│   - chunk_id (UUID)                                                  │
+│   - document_id (parent document UUID)                               │
+│   - chunk_index (0, 1, 2...)                                         │
+│   - chunk_start_char, chunk_end_char                                 │
+│   - heading_context (nearest H1/H2/H3 heading)                       │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    VECTOR EMBEDDING & INDEXING                       │
+├─────────────────────────────────────────────────────────────────────┤
+│ Embedding Model: text-embedding-3-small (OpenAI) OR                 │
+│                  voyage-law-2 (Voyage AI - legal-tuned)              │
+│ Dimensions: 1536 (OpenAI) or 1024 (Voyage)                          │
+│ Storage: Supabase pgvector extension                                │
+│ Index Type: HNSW (Hierarchical Navigable Small World) for speed     │
+│ Distance Metric: Cosine similarity                                   │
+│                                                                       │
+│ Schema (Supabase `documents` table):                                 │
+│   - id (uuid, primary key)                                           │
+│   - source_url (text, indexed)                                       │
+│   - title (text)                                                     │
+│   - text_chunk (text)                                                │
+│   - chunk_start (int)                                                │
+│   - chunk_end (int)                                                  │
+│   - checksum (text, sha256)                                          │
+│   - license (text)                                                   │
+│   - retrieved_at (timestamptz)                                       │
+│   - index_version (text)                                             │
+│   - embedding (vector(1536))  -- pgvector column                     │
+│   - metadata (jsonb)  -- structured provenance                       │
+│   - created_at (timestamptz)                                         │
+│   - updated_at (timestamptz)                                         │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                       RETRIEVAL QUERY                                │
+├─────────────────────────────────────────────────────────────────────┤
+│ Input: User query (e.g., "What is devolution in Kenya?")            │
+│                                                                       │
+│ Step 1: Query Embedding                                              │
+│   - Embed user query using same model as indexing                    │
+│                                                                       │
+│ Step 2: Hybrid Search                                                │
+│   - Semantic Search (vector cosine similarity, top-K=20)             │
+│   - BM25 Keyword Search (fallback for exact terms, top-K=10)         │
+│   - Merge results with weighted ranking (80% semantic, 20% BM25)     │
+│                                                                       │
+│ Step 3: Re-ranking                                                   │
+│   - Recency boost: newer content gets +0.1 to score                  │
+│   - Authority boost: parliament.go.ke, kenyalaw.org get +0.15        │
+│   - Diversity filter: deduplicate by checksum, keep highest score    │
+│                                                                       │
+│ Step 4: Top-K Selection                                              │
+│   - Return top 5-10 chunks (configurable per task)                   │
+│   - Include full provenance metadata for each chunk                  │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MODEL PROMPT CONSTRUCTION                         │
+├─────────────────────────────────────────────────────────────────────┤
+│ System Prompt Template:                                              │
+│                                                                       │
+│ You are a civic education assistant for CEKA, a non-partisan civic   │
+│ education platform in Kenya. Your role is to provide accurate,       │
+│ balanced, factual information based ONLY on the evidence provided.   │
+│                                                                       │
+│ CRITICAL RULES:                                                      │
+│ 1. Only make claims supported by the provided evidence.              │
+│ 2. Cite sources using [Source N] notation inline.                    │
+│ 3. If evidence is insufficient, say "I don't have enough information │
+│    from authoritative sources to answer that. This requires human    │
+│    review."                                                          │
+│ 4. Never speculate about elections, candidates, or political events. │
+│ 5. Maintain political neutrality at all times.                       │
+│ 6. Use clear, accessible language (8th grade reading level).         │
+│ 7. Include Swahili translations for key terms when relevant.         │
+│                                                                       │
+│ User Query: {user_query}                                             │
+│                                                                       │
+│ Evidence (cite these as [Source 1], [Source 2], etc.):               │
+│                                                                       │
+│ [Source 1]                                                           │
+│ Title: {source_1_title}                                              │
+│ URL: {source_1_url}                                                  │
+│ Retrieved: {source_1_timestamp}                                      │
+│ Text: {source_1_snippet}                                             │
+│                                                                       │
+│ [Source 2]                                                           │
+│ Title: {source_2_title}                                              │
+│ URL: {source_2_url}                                                  │
+│ Retrieved: {source_2_timestamp}                                      │
+│ Text: {source_2_snippet}                                             │
+│                                                                       │
+│ ... (repeat for all top-K sources)                                   │
+│                                                                       │
+│ Now provide a clear, accurate answer with inline citations.          │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MODEL GENERATION                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│ Model: claude-sonnet-4-20250514 (primary)                           │
+│ Fallback: gpt-4o-2024-08-06 (if Claude unavailable)                 │
+│                                                                       │
+│ Configuration:                                                       │
+│   temperature: 0.0 (deterministic)                                   │
+│   max_tokens: 1000 (summaries), 2000 (detailed answers)             │
+│   top_p: 1.0                                                         │
+│   stop_sequences: ["</answer>", "<|end|>"]                           │
+│                                                                       │
+│ Output format: JSON                                                  │
+│ {                                                                    │
+│   "answer": "The model's response with [Source N] citations...",    │
+│   "confidence": 0.85,                                                │
+│   "sources_used": [1, 2, 4],                                         │
+│   "requires_hitl": false,                                            │
+│   "reasoning": "High confidence, well-supported by sources"          │
+│ }                                                                    │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                  POST-GENERATION VERIFICATION                        │
+├─────────────────────────────────────────────────────────────────────┤
+│ Automated Checks:                                                    │
+│                                                                       │
+│ 1. Citation Verification                                             │
+│    - Regex: Extract all [Source N] citations                         │
+│    - Verify N exists in provided evidence array                      │
+│    - Flag if uncited claims detected (heuristic: claims with dates,  │
+│      numbers, proper nouns not linked to sources)                    │
+│                                                                       │
+│ 2. Fact Pattern Matching                                             │
+│    - Extract entities (dates, numbers, bill numbers, names)          │
+│    - Cross-reference against evidence snippets                       │
+│    - Flag if extracted fact doesn't appear in ANY source             │
+│                                                                       │
+│ 3. Confidence Threshold Check                                        │
+│    - If confidence < 0.7: Flag for HITL                              │
+│    - If confidence < 0.5: Reject, return "insufficient evidence"     │
+│                                                                       │
+│ 4. Conflicting Evidence Detection                                    │
+│    - If sources contradict each other (e.g., different dates):       │
+│      Flag with "Conflicting sources detected - human review required"│
+│                                                                       │
+│ 5. Safety Filters (see SAFETY FILTERS section below)                 │
+│    - Toxicity: < 0.2 threshold                                       │
+│    - Political bias: < 0.3 threshold                                 │
+│    - PII detection: Must be 0 (any PII triggers redaction)           │
+│                                                                       │
+│ 6. Staleness Check                                                   │
+│    - If any source is >90 days old AND topic is fast-changing        │
+│      (elections, current bills): Add disclaimer "This information    │
+│      may be outdated. Last verified: {oldest_source_date}"           │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    HITL DECISION ROUTING                             │
+├─────────────────────────────────────────────────────────────────────┤
+│ IF any of the following conditions are TRUE:                         │
+│   - Confidence < 0.7                                                 │
+│   - Uncited claims detected                                          │
+│   - Conflicting sources                                              │
+│   - PII detected in input or output                                  │
+│   - Political content (mentions candidates, parties, elections)      │
+│   - Legal interpretation (contains phrases like "you should",        │
+│     "you must", "your rights are")                                   │
+│   - Safety filter triggered (toxicity, bias)                         │
+│   - User explicitly requests human review                            │
+│                                                                       │
+│ THEN:                                                                │
+│   - Push to HITL queue (Supabase `hitl_queue` table)                 │
+│   - Return to user: "Your request is being reviewed by our civic     │
+│     education experts. Check back in 24-48 hours."                   │
+│   - Email reviewer on-call                                           │
+│                                                                       │
+│ ELSE:                                                                │
+│   - Return response to user immediately                              │
+│   - Log for audit (Supabase `llm_logs` table)                        │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      USER DISPLAY                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│ UI Components (Next.js/React):                                       │
+│                                                                       │
+│ <AIGeneratedBadge>                                                   │
+│   ⚙️ AI-generated content                                            │
+│   <InfoIcon tooltip="This answer was generated by AI and reviewed    │
+│                      for accuracy" />                                │
+│ </AIGeneratedBadge>                                                  │
+│                                                                       │
+│ <ResponseText>                                                       │
+│   {parsed_answer_with_inline_citations}                              │
+│ </ResponseText>                                                      │
+│                                                                       │
+│ <SourcesList>                                                        │
+│   Sources:                                                           │
+│   [1] Finance Bill 2024 - parliament.go.ke (Retrieved: 2026-02-12)   │
+│   [2] Constitution of Kenya Art. 201 - kenyalaw.org (2026-02-10)     │
+│   ...                                                                │
+│ </SourcesList>                                                       │
+│                                                                       │
+│ <FeedbackButtons>                                                    │
+│   👍 Helpful  👎 Not Helpful  🚩 Report Issue                        │
+│ </FeedbackButtons>                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+RAG OPERATIONS: DETAILED RULES
+================================================================================
+
+1. RETRIEVAL MUST ALWAYS RETURN PROVENANCE
+   - Every chunk returned MUST include: source_url, retrieval_timestamp_utc, snippet_text
+   - Minimum provenance: URL + timestamp
+   - Full provenance: All fields in PROVENANCE METADATA STRUCTURE
+
+2. SUMMARY FORMATTING
+   - When summarizing, include "Sources" section at bottom with:
+     * Top 3-5 supporting URLs
+     * Retrieval timestamps
+     * Brief source descriptions (e.g., "Parliament Bill Tracker", "Constitution Article")
+
+3. CONFLICTING SOURCES
+   - If sources contradict (e.g., Source A says "VAT is 16%", Source B says "VAT is 18%"):
+     * List both claims explicitly
+     * Note the contradiction: "Conflicting information found - human review required"
+     * Do NOT choose one arbitrarily
+     * Escalate to HITL
+
+4. CACHING POLICY
+   - Cache embedding lookups for 7 days (per-query hash)
+   - Cache retrieval results for 24 hours (faster response, lower cost)
+   - Invalidate cache when:
+     * Index version increments
+     * Source checksum changes
+     * Manual cache clear triggered by admin
+
+5. STALE CONTENT HANDLING
+   - Define TTL (time-to-live) per content type:
+     * Parliamentary bills during session: 24 hours
+     * Parliamentary bills out of session: 7 days
+     * Constitution: Never (manual updates only)
+     * IEBC data: 7 days (daily during registration drives)
+     * County data: 30 days
+   - When serving cached content beyond TTL:
+     * Add disclaimer: "This information was last updated {timestamp}. 
+       Verify with official sources for latest changes."
+     * Background job: trigger re-fetch and re-index
+
+6. MULTILINGUAL SUPPORT
+   - Primary: English
+   - Secondary: Swahili
+   - Strategy for Swahili:
+     * Index bilingual documents (if available from source)
+     * Use translation API (Google Translate API or DeepL) for UI microcopy only
+     * Do NOT auto-translate legal documents (requires human translator)
+     * Store language code in metadata: "en", "sw"
+
+7. RETRIEVAL FAILURE HANDLING
+   - If retrieval returns 0 results:
+     * Fallback 1: Broaden query (remove stop words, try synonyms)
+     * Fallback 2: Return "I couldn't find information on that topic in our database. 
+       Try rephrasing your question or contact our team."
+     * Log failure for analysis (may indicate indexing gap)
+
+8. RATE LIMITING (Per-User)
+   - Free tier: 10 queries/hour, 50 queries/day
+   - Authenticated users: 50 queries/hour, 200 queries/day
+   - Premium (if applicable): 200 queries/hour, 1000 queries/day
+   - Enforcement: Supabase Edge Functions with rate limit middleware
+
+MODEL SELECTION & CONFIGURATION (OPERATIONAL TEMPLATES)
+================================================================================
+
+MODEL CATEGORIZATION:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ TIER A: LOW-SENSITIVITY TASKS                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│ Use Cases:                                                           │
+│ - UI microcopy (button labels, tooltips)                            │
+│ - Paraphrasing user input for search clarity                        │
+│ - Generating example questions for FAQ                              │
+│ - Alt text for non-legal images                                     │
+│                                                                       │
+│ Model: gpt-4o-mini OR claude-haiku-4-20250514                       │
+│ Config:                                                              │
+│   temperature: 0.3                                                   │
+│   max_tokens: 200                                                    │
+│   cost_priority: high (cheapest models)                             │
+│   latency_requirement: <500ms                                        │
+│                                                                       │
+│ HITL: Not required                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ TIER B: MEDIUM-SENSITIVITY TASKS                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│ Use Cases:                                                           │
+│ - Bill summaries (non-contentious bills)                            │
+│ - Metadata extraction (title, date, status from documents)          │
+│ - Topic categorization (tag bills by ministry, subject)             │
+│ - FAQ answering (general civic questions)                           │
+│                                                                       │
+│ Model: gpt-4o-2024-08-06 OR claude-sonnet-4-20250514                │
+│ Config:                                                              │
+│   temperature: 0.0 (deterministic)                                   │
+│   max_tokens: 1000                                                   │
+│   top_p: 1.0                                                         │
+│   presence_penalty: 0.0                                              │
+│   frequency_penalty: 0.0                                             │
+│                                                                       │
+│ HITL: Required if confidence < 0.7 OR politically sensitive          │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ TIER C: HIGH-SENSITIVITY TASKS                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│ Use Cases:                                                           │
+│ - Legal interpretation of Constitution or Acts                      │
+│ - Public-facing policy statements                                   │
+│ - Election-related content (candidate info, voting procedures)      │
+│ - Contentious bill summaries (e.g., Finance Bill, BBI)              │
+│                                                                       │
+│ Model: claude-sonnet-4-20250514 (ONLY - most capable, safest)       │
+│ Config:                                                              │
+│   temperature: 0.0 (deterministic)                                   │
+│   max_tokens: 2000                                                   │
+│   top_p: 1.0                                                         │
+│   system_prompt: [STRICT version with multiple safety reminders]    │
+│                                                                       │
+│ HITL: MANDATORY before publication (no exceptions)                   │
+│ Reviewer SLA: 24 hours for public-facing, 48 hours for admin use    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+MODEL CONNECTOR CONFIGURATION TEMPLATE (Supabase Secrets):
+
+Environment Variables (stored in Supabase Dashboard → Project Settings → Secrets):
+
+```
+# Anthropic Claude
+ANTHROPIC_API_KEY=[REDACTED - stored in Supabase Vault]
+ANTHROPIC_MODEL_PRIMARY=claude-sonnet-4-20250514
+ANTHROPIC_MODEL_FALLBACK=claude-haiku-4-20250514
+ANTHROPIC_MAX_RETRIES=3
+ANTHROPIC_TIMEOUT_SECONDS=30
+
+# OpenAI (fallback)
+OPENAI_API_KEY=[REDACTED - stored in Supabase Vault]
+OPENAI_MODEL_PRIMARY=gpt-4o-2024-08-06
+OPENAI_MODEL_FALLBACK=gpt-4o-mini
+OPENAI_MAX_RETRIES=3
+OPENAI_TIMEOUT_SECONDS=30
+
+# Embedding Model
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_DIMENSIONS=1536
+```
+
+Code Example (Supabase Edge Function):
+
+```typescript
+// /supabase/functions/generate-summary/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Anthropic from "npm:@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+});
+
+serve(async (req) => {
+  const { query, evidence, task_tier } = await req.json();
+  
+  // Select model based on task tier
+  const modelConfig = {
+    tier_a: { model: "claude-haiku-4-20250514", max_tokens: 200, temp: 0.3 },
+    tier_b: { model: "claude-sonnet-4-20250514", max_tokens: 1000, temp: 0.0 },
+    tier_c: { model: "claude-sonnet-4-20250514", max_tokens: 2000, temp: 0.0 },
+  }[task_tier];
+  
+  const response = await anthropic.messages.create({
+    model: modelConfig.model,
+    max_tokens: modelConfig.max_tokens,
+    temperature: modelConfig.temp,
+    system: CEKA_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: constructPromptWithEvidence(query, evidence),
+      },
+    ],
+  });
+  
+  return new Response(JSON.stringify(response), {
+    headers: { "Content-Type": "application/json" },
+  });
+});
+```
+
+CALIBRATION REQUIREMENTS:
+- Before production, run calibration tests with 100 sample queries per tier
+- Measure: accuracy, hallucination rate, citation correctness, latency, cost
+- Document results in `/docs/MODEL_CALIBRATION_REPORT.md`
+- Re-calibrate every 6 months or when switching model versions
+
+SAFETY FILTERS & MODERATION (TECHNICAL)
+================================================================================
+
+PRE-GENERATION INPUT FILTERS:
+
+1. PII DETECTION & REDACTION
+   Pattern Matching (Regex + NER):
+   - Kenya National ID: /^\d{8}$/ (8 digits)
+   - Passport: /^[A-Z]\d{7}$/ (1 letter + 7 digits)
+   - Phone: /^(\+254|0)[17]\d{8}$/ (Kenyan format)
+   - Email: Standard email regex
+   - Location coordinates: /-?\d+\.\d+,\s*-?\d+\.\d+/ (lat,long pairs)
+   
+   Action: Replace with placeholder [[REDACTED_{TYPE}]]
+   Example: "My ID is 12345678" → "My ID is [[REDACTED_NATIONAL_ID]]"
+   
+   Store mapping (if user consents):
+   - Hash: SHA256(salt + original_value)
+   - Salt: Per-user unique salt stored encrypted
+   - DO NOT store raw PII
+
+2. ILLICIT ACTIVITY BLOCKING
+   Keywords (case-insensitive):
+   - Bribery, corruption (when asking "how to")
+   - Electoral fraud, vote buying
+   - Hate speech slurs (ethnic/religious slurs - maintain blocklist)
+   - Violence incitement
+   
+   Action: Block request, return error
+   Message: "I can't help with that. If you're reporting illegal activity, 
+            please contact: [Ethics & Anti-Corruption Commission: 0800 221 222]"
+
+3. POLITICAL PERSUASION DETECTION
+   Heuristic Checks:
+   - Mentions specific candidate names + action verbs ("vote for", "support", "oppose")
+   - Demographic targeting language ("all Kikuyu should", "Luo voters must")
+   - Fundraising appeals for political campaigns
+   
+   Action: Flag for manual review, do NOT generate
+   Message: "CEKA is non-partisan. For campaign information, contact parties directly."
+
+POST-GENERATION OUTPUT FILTERS:
+
+1. TOXICITY SCORING
+   Model: OpenAI Moderation API OR Perspective API (Google)
+   
+   Thresholds:
+   - toxicity_score < 0.2: Pass
+   - toxicity_score 0.2-0.5: Flag for HITL
+   - toxicity_score > 0.5: Block, return error
+   
+   Example API Call:
+   ```typescript
+   const moderationResult = await openai.moderations.create({
+     input: generated_text,
+   });
+   const toxicity = moderationResult.results[0].category_scores.hate;
+   ```
+
+2. HATE SPEECH CLASSIFIER
+   Custom Model (fine-tuned on Kenyan context):
+   - Training data: Labeled examples of ethnic hate speech, political incitement
+   - Hosted on: Hugging Face Inference API
+   - Endpoint: https://api-inference.huggingface.co/models/CEKA/hate-speech-ke
+   
+   Categories:
+   - ethnic_targeting (score 0-1)
+   - religious_hate (score 0-1)
+   - political_violence (score 0-1)
+   - gender_harassment (score 0-1)
+   
+   Threshold: ANY category > 0.3 → Block
+
+3. POLITICAL BIAS DETECTOR
+   Approach: Check for:
+   - Unbalanced coverage (mentions one party/candidate without counterpoint)
+   - Loaded language ("corrupt regime" vs. "government")
+   - Opinion statements presented as facts
+   
+   Tools:
+   - Sentiment analysis per entity (VADER or TextBlob)
+   - Compare sentiment scores for political actors
+   - If difference > 0.4: Flag as potentially biased
+
+4. PII LEAKAGE IN OUTPUT
+   Re-run PII detection on generated text
+   If ANY PII detected:
+   - Redact automatically
+   - Log incident (SECURITY ALERT)
+   - Trigger review of prompt construction logic
+
+5. CITATION VALIDATION
+   Extract [Source N] references
+   Verify ALL N values exist in provided evidence
+   If uncited factual claim detected (heuristic: contains date/number/name without citation):
+   - Flag for HITL
+   - Score: citation_completeness = (cited_claims / total_claims)
+   - Threshold: citation_completeness < 0.8 → HITL
+
+REFUSAL TEMPLATES (User-Friendly):
+
+```
+SHORT REFUSAL (For blocked content):
+"I can't help with that request. CEKA provides non-partisan civic education. 
+If you have questions about civic processes, I'm happy to help with factual information."
+
+ESCALATION MESSAGE (For HITL):
+"Your question requires expert review to ensure accuracy. Our civic education 
+team will respond within 24-48 hours. Check your notifications or email 
+{user_email} for updates."
+
+INSUFFICIENT DATA:
+"I don't have enough information from authoritative sources to answer that 
+confidently. Try rephrasing your question, or contact our team at 
+civiceducationkenya@gmail.com for personalized assistance."
+
+CONFLICTING SOURCES:
+"I found conflicting information on this topic:
+- Source A states: {claim_A}
+- Source B states: {claim_B}
+
+This requires human verification. Would you like to request a detailed 
+research report from our team?"
+```
+
+PII & REDACTION RULES (DETAILED)
+================================================================================
+
+PII CATEGORIES (Kenya-Specific):
+
+1. DIRECT IDENTIFIERS (Always redact):
+   - National ID Number (8 digits)
+   - Passport Number (format: A1234567)
+   - Birth Certificate Number
+   - Huduma Namba (unique government service number)
+   - Tax PIN (Kenya Revenue Authority)
+   - Bank Account Numbers
+   - Mobile Money Numbers (M-Pesa, Airtel Money)
+   - Biometric Data (fingerprints, iris scans, facial recognition data)
+
+2. QUASI-IDENTIFIERS (Redact if combined):
+   - Full name + exact home address
+   - Phone number + location coordinates
+   - Email + workplace
+   - Ethnicity + political affiliation + location (can enable targeting)
+
+3. SENSITIVE DATA (Data Protection Act 2019):
+   - Health information (HIV status, medical records)
+   - Genetic data
+   - Sexual orientation
+   - Religious beliefs (when combined with identity)
+   - Trade union membership
+   - Political opinions (attributed to individuals)
+
+4. LOCATION DATA:
+   - Exact coordinates (lat/long): Redact below ward level
+   - OK: "Nairobi County, Westlands Constituency, Parklands Ward"
+   - NOT OK: "-1.2630556, 36.8088889" (specific house location)
+
+REDACTION IMPLEMENTATION:
+
+```typescript
+// PII Detection Function (Supabase Edge Function Helper)
+
+interface PIIMatch {
+  type: 'national_id' | 'passport' | 'phone' | 'email' | 'coordinates';
+  value: string;
+  start_index: number;
+  end_index: number;
+}
+
+function detectPII(text: string): PIIMatch[] {
+  const patterns = {
+    national_id: /\b\d{8}\b/g,
+    passport: /\b[A-Z]\d{7}\b/g,
+    phone: /\b(\+254|0)[17]\d{8}\b/g,
+    email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+    coordinates: /-?\d+\.\d+,\s*-?\d+\.\d+/g,
+  };
+  
+  const matches: PIIMatch[] = [];
+  
+  for (const [type, pattern] of Object.entries(patterns)) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      matches.push({
+        type: type as PIIMatch['type'],
+        value: match[0],
+        start_index: match.index,
+        end_index: match.index + match[0].length,
+      });
+    }
+  }
+  
+  return matches;
+}
+
+function redactPII(text: string, matches: PIIMatch[]): string {
+  // Sort matches by start_index (descending) to replace from end to start
+  matches.sort((a, b) => b.start_index - a.start_index);
+  
+  let redacted = text;
+  for (const match of matches) {
+    const placeholder = `[[REDACTED_${match.type.toUpperCase()}]]`;
+    redacted = redacted.slice(0, match.start_index) + 
+               placeholder + 
+               redacted.slice(match.end_index);
+  }
+  
+  return redacted;
+}
+
+// Usage in Edge Function:
+const userInput = "My ID is 12345678 and phone is 0712345678";
+const piiMatches = detectPII(userInput);
+const redactedInput = redactPII(userInput, piiMatches);
+// Result: "My ID is [[REDACTED_NATIONAL_ID]] and phone is [[REDACTED_PHONE]]"
+
+// Log incident if PII detected:
+if (piiMatches.length > 0) {
+  await logPIIIncident({
+    request_id: crypto.randomUUID(),
+    user_id: userId,
+    pii_types: piiMatches.map(m => m.type),
+    redacted_count: piiMatches.length,
+    timestamp: new Date().toISOString(),
+  });
+}
+```
+
+CONSENT MANAGEMENT:
+
+When user EXPLICITLY consents to sharing PII (e.g., for personalized recommendations):
+1. Show consent dialog:
+   "To provide IEBC office recommendations, we need access to your approximate 
+    location (ward level). We will NOT store your exact coordinates. Do you consent?"
+   
+   [Yes, I consent] [No, continue anonymously]
+
+2. Record consent:
+   ```sql
+   INSERT INTO user_consents (
+     user_id,
+     consent_type,
+     scope,
+     granted_at,
+     expires_at,
+     ip_address
+   ) VALUES (
+     '{user_id}',
+     'location_sharing',
+     'ward_level_only',
+     NOW(),
+     NOW() + INTERVAL '1 year',
+     '{user_ip}'
+   );
+   ```
+
+3. Store data under stricter rules:
+   - Encryption at rest: AES-256
+   - Shorter retention: 6 months (vs. 2 years for non-PII logs)
+   - Limited access: Only specific service accounts
+
+RIGHT TO BE FORGOTTEN:
+
+User requests data deletion (Data Protection Act 2019, Section 35):
+
+1. Verify user identity (require login + email confirmation)
+2. Delete or anonymize data:
+   ```sql
+   -- Delete logs
+   DELETE FROM llm_logs WHERE user_id = '{user_id}';
+   
+   -- Anonymize forum posts (keep content, remove identity)
+   UPDATE forum_posts 
+   SET author_id = NULL, 
+       author_name = '[deleted]',
+       author_email = NULL
+   WHERE author_id = '{user_id}';
+   
+   -- Delete consent records
+   DELETE FROM user_consents WHERE user_id = '{user_id}';
+   
+   -- Delete user account
+   DELETE FROM auth.users WHERE id = '{user_id}';
+   ```
+
+3. Confirm to user within 30 days (legal requirement)
+
+HITL WORKFLOW (DETAILED, STEP-BY-STEP)
+================================================================================
+
+TRIGGER CONDITIONS (Non-exhaustive):
+
+1. Low Confidence: confidence_score < 0.7
+2. Uncited Claims: citation_completeness < 0.8
+3. Conflicting Sources: sources contradict on factual claims
+4. PII Detected: Any PII in input or output
+5. Political Content: Mentions candidates, parties, elections, referendum
+6. Legal Interpretation: Contains "you must", "you should", "your rights", etc.
+7. Safety Filter Triggered: toxicity > 0.2, bias > 0.3, hate speech detected
+8. User Flag: User clicks "Request Human Review" button
+9. High-Stakes Topic: Finance Bill, BBI, controversial legislation
+10. New Content Type: First-time use of a new retrieval source or model
+
+HITL QUEUE ITEM FIELDS:
+
+```json
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_input": "What are my rights if I am arrested?",
+  "model_output": "If you are arrested, you have the right to remain silent...",
+  "provenance": [
+    {
+      "source_url": "https://kenyalaw.org/...",
+      "retrieval_timestamp_utc": "2026-02-12T14:35:22Z",
+      "snippet_text": "..."
+    }
+  ],
+  "auto_flags": {
+    "confidence": 0.65,
+    "toxicity_score": 0.01,
+    "persuasion_flag": false,
+    "pii_detected": false,
+    "citation_completeness": 0.7
+  },
+  "suggested_edits": null,
+  "assigned_reviewer": null,
+  "status": "pending",
+  "created_at": "2026-02-12T14:35:23Z"
+}
+```
+
+REVIEWER ACTIONS:
+- Approve: Publish with reviewer_id, timestamp, and optional notes.
+- Edit: Modify output (track diff), then approve or resubmit for re-check.
+- Reject: Discard output, provide rejection reason (e.g., source unreliable, prompt error).
+- Request More Info: Escalate to subject-matter expert or trigger re-retrieval.
+
+AUDIT LOGGING:
+Each reviewer decision is logged in the `hitl_audit_log` table with:
+- request_id
+- reviewer_id
+- action (approve/edit/reject)
+- diff (if edit)
+- notes
+- timestamp_utc
+
+REVIEWER SLA:
+- Public-facing queries: 24 hours
+- Internal/admin queries: 48 hours
+- Emergency escalation: 2 hours (e.g., election misinformation detected)
+
+TRANSPARENCY & USER LABELING
+================================================================================
+
+All public-facing generated content MUST include:
+
+1. AI-GENERATED BADGE:
+   - Visible at top of response: "⚙️ AI-generated content"
+   - Tooltip: "This answer was generated by AI and reviewed for accuracy" (if reviewed) or "This answer was generated by AI and is pending human review" (if pending)
+
+2. SOURCES SECTION:
+   - List all URLs and retrieval timestamps used in generation.
+   - For summaries, include at least top 3 sources.
+
+3. FEEDBACK MECHANISM:
+   - Thumbs up/down buttons
+   - Report issue button that triggers HITL review
+
+4. REVIEW STATUS INDICATOR:
+   - If output was HITL-approved: "✅ Reviewed by CEKA expert"
+   - If output is pending: "⏳ Pending human review"
+   - If output was rejected: Not shown; fallback message displayed.
+
+5. EXPLANATION PAGE:
+   - Link: "How CEKA uses AI" – describes models, sources, review process, and limitations.
+
+UI COMPONENTS (Next.js/React) – preserve existing implementations; if not present, use:
+
+```tsx
+<AIGeneratedBadge reviewed={true} />
+<SourcesList sources={provenance} />
+<FeedbackButtons onHelpful={() => logFeedback('helpful')} />
+```
+
+LOGGING, AUDITABILITY & RETENTION
+================================================================================
+
+Each LLM invocation MUST produce an audit log entry with the following schema (JSON stored in `llm_logs` table or external logging service):
+
+```json
+{
+  "$schema": "https://ceka.org/schemas/llm_request_log.json",
+  "request_id": "uuid",
+  "user_id": "hashed_user_id_or_null",
+  "input_hash": "sha256(salt + redacted_input)",
+  "input_redacted": "string with PII redacted",
+  "model": {
+    "provider": "anthropic|openai|etc",
+    "model_id": "claude-sonnet-4-20250514",
+    "config": {
+      "temperature": 0.0,
+      "max_tokens": 1000,
+      "top_p": 1.0
+    }
+  },
+  "retrieval_provenance": [
+    {
+      "source_url": "string",
+      "retrieval_timestamp_utc": "ISO8601",
+      "snippet_checksum": "sha256",
+      "index_version": "string"
+    }
+  ],
+  "raw_output": "full generated text (redacted if PII)",
+  "post_filters": {
+    "toxicity_score": 0.02,
+    "persuasion_flag": false,
+    "citation_completeness": 0.95
+  },
+  "reviewer_decision": null,
+  "timestamp_utc": "ISO8601"
+}
+```
+
+RETENTION POLICY:
+- Raw logs containing redacted inputs/outputs: [FILL: e.g., 90 days]
+- Aggregated metrics (anonymized): [FILL: e.g., 2 years]
+- Audit logs with reviewer decisions: [FILL: e.g., 5 years] (legal requirement)
+- PII consent records: Until consent expires + 30 days
+
+All logs MUST be encrypted at rest (AES-256). Access restricted to Security Lead and Governance Officer.
+
+ACCESS CONTROL & SECRETS MANAGEMENT
+================================================================================
+
+- LLM endpoints (Edge Functions) require authentication; no public anonymous access to generation.
+- API keys stored in Supabase Vault (or HashiCorp Vault) – never in code or environment variables directly.
+- Service accounts have least-privilege IAM roles; rotate keys every 90 days.
+- Developer testing uses sandbox environment with separate keys and rate limits.
+
+RATE LIMITS & ABUSE MITIGATION
+================================================================================
+
+Public endpoints:
+- Anonymous: 10 requests/hour, 50/day
+- Authenticated: 50/hour, 200/day
+- Admin/Reviewer: 200/hour, 1000/day (with additional abuse detection)
+
+Abuse detection:
+- Monitor for spikes from single IP/user
+- Detect repeated blocked requests (PII, illicit activity) and auto-throttle
+- CAPTCHA on anonymous chat after 5 requests
+
+TESTING & EVALUATION (EXHAUSTIVE)
+================================================================================
+
+TEST SUITES (maintained in `/tests/llm/`):
+
+1. PROVENANCE EXTRACTION TESTS:
+   - Given a sample PDF/HTML, verify metadata extraction (title, date, URL).
+   - Ensure checksum generation is consistent.
+
+2. CITATION CORRECTNESS TESTS:
+   - For 100+ canonical queries, assert that generated responses contain inline citations.
+   - Assert that every [Source N] corresponds to a retrieved snippet.
+   - Measure citation_completeness; must be >= 0.95 for automated pass.
+
+3. SAFETY FILTER TESTS:
+   - Curated adversarial prompts (hate speech, PII, political persuasion).
+   - Verify block/redact behavior matches expected outcomes.
+   - Measure false positive/negative rates; report quarterly.
+
+4. RAG RETRIEVAL RECALL TESTS:
+   - Benchmark set of 500 Kenyan civic questions with known answer locations.
+   - Compute recall@5, recall@10; threshold recall@5 > 0.85.
+
+5. MODEL EVALUATION (CALIBRATION):
+   - For each model tier, run 100 sample tasks; measure accuracy, hallucination rate, latency.
+   - Store results in `/docs/MODEL_CALIBRATION_REPORT.md`.
+
+6. REGRESSION TESTS:
+   - Weekly cron job on staging environment using full retrieval index.
+   - Alert if any critical test fails (e.g., citation completeness drops).
+
+7. BIAS & FAIRNESS TESTS:
+   - Monthly audit using Kenyan-context test sets (ethnic, gender, regional diversity).
+   - Track sentiment distribution across groups; flag disparities > 0.2.
+
+All tests must pass in CI before deployment to production.
+
+METRICS & KPIS (TO TRACK)
+================================================================================
+
+| Metric | Target | Collection Method |
+|--------|--------|-------------------|
+| Hallucination rate (claims without source) | < 2% | Post-generation verification |
+| Average retrieval relevance score | > 0.8 | Cosine similarity of top-1 |
+| Reviewer approval rate | > 90% | HITL audit log |
+| Time-to-review (median) | < 12 hours | HITL queue timestamps |
+| User-reported errors per 1000 outputs | < 1 | Feedback buttons + manual reports |
+| Safety filter false positive rate | < 5% | Periodic sampling |
+| Index staleness (max age of critical docs) | < 24 hours | Freshness checks |
+
+INCIDENT RESPONSE & ESCALATION
+================================================================================
+
+INCIDENT CATEGORIES:
+
+1. DATA LEAK (PII exposure in output or logs)
+2. MODEL MISBEHAVIOR (generation of harmful/biased content)
+3. INDEX CORRUPTION (serving outdated/incorrect legal info)
+4. SERVICE OUTAGE (LLM endpoints unreachable)
+5. ABUSE DETECTED (coordinated adversarial use)
+
+IMMEDIATE STEPS:
+- Isolate service: toggle feature flag to disable offending endpoint.
+- Revoke exposed keys (if any) and rotate.
+- Notify Security Lead and Governance Officer immediately.
+- For PII leak: also notify Data Protection Officer and prepare breach notification.
+
+POST-INCIDENT:
+- Root cause analysis within 48 hours.
+- Update tests/policies to prevent recurrence.
+- For public incidents: publish remediation summary and user guidance.
+
+CI/CD & DEPLOYMENT CHECKLIST (DETAILED)
+================================================================================
+
+PRE-DEPLOYMENT VALIDATIONS (must pass in staging):
+1. Retrieval connectors health check → 200 OK
+2. Index health: vector store available, latest version deployed
+3. Integration tests: RAG end-to-end, citation correctness, safety filters
+4. Model connectors respond within SLO (2s p95)
+5. Secrets check: no hard-coded keys, all env vars present
+6. Dependency scan: no critical vulnerabilities
+7. Reviewer roster exists and at least one reviewer is on-call
+
+DEPLOYMENT STEPS:
+1. Bump index_version (if index changed) and run migration script.
+2. Deploy model connector config updates (if any).
+3. Enable feature flag for canary users (1% of traffic).
+4. Monitor metrics for 24-48 hours: hallucination rate, error rate, latency.
+5. If metrics stable, increase to 25%, then 100% per governance approval.
+6. Post-deployment: verify in production with synthetic tests.
+
+ROLLBACK PLAN:
+- Maintain previous index and model connector versions.
+- Feature flag can be toggled off instantly.
+- Automated rollback if error rate spikes >5% for 5 minutes.
+
+MODEL VERSIONING & CHANGELOG
+================================================================================
+
+Each model integration entry in `/docs/LLM_MANIFEST.md` must include:
+- model_name, model_version, provider
+- config snapshot (temperature, max_tokens, etc.)
+- purpose (tier assignment, specific task)
+- rollout_date
+- changelog entry (reason for change, author)
+
+Changelog example:
+```
+2026-02-12 – Governance Officer – Upgrade primary model to claude-sonnet-4-20250514
+- Improved accuracy on legal QA benchmark (+7%)
+- Reduced hallucination rate from 3.1% to 1.8%
+- Vendor confirmed no prompt retention for Kenyan region
+```
+
+VENDOR USAGE & CONTRACTS
+================================================================================
+
+For each third-party model provider:
+- Store vendor name, contract date, service agreement summary.
+- Document data usage policy: does vendor retain prompts/outputs? For how long?
+- If vendor retains data, ensure no PII or sensitive queries are sent (redact before sending).
+- Review vendor terms annually.
+
+REAL DATA UNAVAILABLE: Obtain vendor TOS and record in `/docs/VENDOR_TERMS/`.
+
+PRIVACY & DATA PROTECTION (DETAILED)
+================================================================================
+
+- Data minimization: send minimal context to model; strip metadata not needed for generation.
+- Pseudonymization: replace user IDs with irreversible hash in logs; store mapping separately with strict access.
+- Consent: explicit, granular, recorded with timestamp and expiry.
+- Right to be forgotten: implement deletion pipeline covering all user data, including logs and index (if personal data embedded).
+
+FINE-TUNING & FEEDBACK LOOP
+================================================================================
+
+FINE-TUNING POLICY:
+- Only permitted on licensed or user-contributed datasets with explicit consent.
+- Training dataset must be documented: source, license, curation process, version.
+- Fine-tuned models must be stored separately, with versioning and rollback capability.
+
+FEEDBACK LOOP:
+- Reviewer edits can be collected into a curated correction dataset.
+- Dataset must be anonymized, stripped of PII, and only used with governance approval.
+- Feedback dataset versioned and used for periodic model calibration.
+
+BIAS & FAIRNESS (EXHAUSTIVE)
+================================================================================
+
+1. MAINTAIN TEST SUITES:
+   - Kenyan languages: English, Swahili, Sheng (common urban slang)
+   - Ethnic group mentions (42+ tribes) – test for neutral framing
+   - Gender pronouns and occupational stereotypes
+   - Regional references (counties, constituencies)
+
+2. MONTHLY BIAS DETECTION RUN:
+   - Generate responses for 200+ diverse prompts.
+   - Analyze sentiment, toxicity, and political slant across demographic axes.
+   - Flag any metric deviating >0.2 from baseline.
+
+3. REMEDIATION ACTIONS:
+   - If bias detected: adjust prompts, add counter-examples to RAG, or retrain filters.
+   - Document all remediation in `/docs/BIAS_REMEDIATION_LOG.md`.
+
+DOCUMENTATION & USER HELP
+================================================================================
+
+PUBLIC-FACING DOCS:
+- "How CEKA uses AI" page: explain models, sources, review process, limitations.
+- FAQ: "Why did I see 'pending review'?", "How can I report an error?"
+- Transparency report: quarterly summary of incidents, metrics, improvements.
+
+INTERNAL DOCS (for developers and reviewers):
+- LLM runbook: incident response, on-call procedures.
+- Retrieval connector docs: adding new sources, updating crawlers.
+- Index schema definitions.
+- Reviewer onboarding guide (see Appendix C).
+
+IMPLEMENTATION ARTIFACTS (TEMPLATES & SNIPPETS)
+================================================================================
+
+1. REQUEST LOGGING SCHEMA (JSON) – as shown in LOGGING section.
+
+2. PROMPT CONSTRUCTION PATTERN (pseudo-template):
+```
+System: You are a factual civic-education assistant constrained to the provided evidence.
+If a claim cannot be supported by evidence, respond with "Insufficient authoritative evidence — human review required."
+
+User Instruction:
+Evidence (do not generate new facts; cite explicitly):
+1) ---
+2) ---
+
+Task: Produce a concise neutral output that:
+- Explicitly cites which evidence supports each factual sentence using bracketed citations.
+- Lists sources at the end with full URLs and retrieval timestamps.
+- If any fact cannot be supported, mark it "unsupported" and add to HITL queue.
+```
+
+3. HITL QUEUE ITEM EXAMPLE – as shown in HITL WORKFLOW.
+
+4. SUPABASE EDGE FUNCTION BOILERPLATE (see MODEL SELECTION section).
+
+5. PII DETECTION HELPER (see PII & REDACTION RULES).
+
+APPENDIX A — INDEX & SCHEMA SPECIFICATION
+================================================================================
+
+Supabase `documents` table schema (pgvector):
+
+```sql
+CREATE TABLE documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_url TEXT NOT NULL,
+  title TEXT,
+  text_chunk TEXT NOT NULL,
+  chunk_start INT,
+  chunk_end INT,
+  checksum TEXT NOT NULL,
+  license TEXT,
+  retrieved_at TIMESTAMPTZ NOT NULL,
+  index_version TEXT NOT NULL,
+  embedding VECTOR(1536),  -- dimension depends on model
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_documents_source_url ON documents(source_url);
+CREATE INDEX idx_documents_checksum ON documents(checksum);
+CREATE INDEX idx_documents_index_version ON documents(index_version);
+CREATE INDEX idx_documents_retrieved_at ON documents(retrieved_at);
+CREATE INDEX idx_documents_embedding ON documents USING hnsw (embedding vector_cosine_ops);
+```
+
+APPENDIX B — SAMPLE AUDIT LOG RECORD
+================================================================================
+
+Stored in `hitl_audit_log` table:
+
+```sql
+CREATE TABLE hitl_audit_log (
+  audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL,
+  model_id TEXT,
+  index_version TEXT,
+  reviewer_id UUID NOT NULL,
+  action TEXT CHECK (action IN ('approve', 'edit', 'reject')),
+  diff TEXT,  -- if edit, stores unified diff
+  notes TEXT,
+  timestamp_utc TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+APPENDIX C — REVIEWER ONBOARDING CHECKLIST
+================================================================================
+
+1. [ ] Read and acknowledge CEKA LLM.txt policy.
+2. [ ] Complete certification: score ≥90% on test of Kenyan civic/legal knowledge.
+3. [ ] Pass training: review 50 simulated HITL items with ≥90% consistency with governance baseline.
+4. [ ] Sign confidentiality and non-partisanship agreement.
+5. [ ] Access provisioned to HITL dashboard and relevant logs.
+6. [ ] On-call rotation scheduled.
+
+APPENDIX D — SECURITY & INFRASTRUCTURE (KEY POINTS)
+================================================================================
+
+- Network segmentation: LLM connectors run in isolated VPC with egress rules restricted to provider API endpoints.
+- Secrets: stored in Supabase Vault, rotated quarterly. No plaintext secrets in environment variables.
+- Monitoring: integrate with Grafana dashboards for latency, error rate, token usage.
+- Backups: vector index backed up daily; snapshots retained for 30 days.
+
+APPENDIX E — OPERATIONAL PARAMETERS TO SPECIFY (PLACEHOLDER LIST)
+================================================================================
+
+| Parameter | Current Value | Owner | Next Review |
+|----------|---------------|-------|-------------|
+| Confidence threshold (HITL) | 0.7 | Governance Officer | Quarterly |
+| Toxicity block threshold | 0.5 | Security Lead | Quarterly |
+| Citation completeness threshold | 0.8 | Governance Officer | Quarterly |
+| Rate limits (anon/ auth) | [FILL] | Technical Lead | Semi-annual |
+| Log retention (raw) | [FILL] | Data Protection Officer | Annual |
+| Model calibration interval | 6 months | Technical Lead | - |
+
+HOW TO COMPLETE PLACEHOLDER ITEMS (ACTIONS REQUIRED BY CEKA)
+================================================================================
+
+1. Populate reviewer roster with names, roles, contact info – maintain in `/docs/REVIEWER_ROSTER.md`.
+2. Choose model provider(s) and record model ids; obtain vendor TOS about prompt/output retention.
+3. Set numeric operational thresholds via calibration runs; store in deployment manifest.
+4. Legal counsel to validate prohibited use list and retention durations.
+5. Implement reviewer SLAs and on-call rotation.
+
+CHANGELOG
+================================================================================
+
+| Date       | Author            | Summary of Change | Reason |
+|------------|-------------------|-------------------|--------|
+| 2026-02-12 | Governance Officer | Initial version  | Establish normative LLM governance |
+
+---
+**END OF FILE — THIS DOCUMENT IS NORMATIVE AND MUST BE REVIEWED BEFORE ANY LLM DEPLOYMENT.**
+```
