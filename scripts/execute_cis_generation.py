@@ -1,138 +1,122 @@
 import os
-import json
-import logging
 import time
+import json
 import uuid
-from datetime import datetime
-from typing import List, Dict, Any, Optional
-import google.generativeai as genai
+from typing import List, Dict, Any
 from supabase import create_client, Client
+from sovereign_ai_router import get_router
+from const_rag import ConstitutionRAG  # RESTORED: The Memory
 
 # ==============================================================================
-# CEKA CIS ARTICLE GENERATOR (FULL HAM)
-# Mission: Generate 3 high-fidelity articles with Constitutional RAG Integration
+# CIS GENERATION ENGINE: SOVEREIGNTY PROTOCOL v2 (Omni-Model + RAG)
+# Mission: Generate sovereign articles using Incorruptible Memory & Autoshift.
 # ==============================================================================
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - [CIS-GENERATOR] - %(levelname)s - %(message)s'
-)
-
-# Robust .env loader
-def load_env_file():
-    env_path = "d:/CEKA/ceka v010/CEKA/.env"
-    try:
-        if os.path.exists(env_path):
-            with open(env_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        os.environ[key.strip()] = value.strip()
-            print(f"📂 Loaded environment variables from {env_path}")
-        else:
-            print(f"⚠️ .env file not found at {env_path}")
-    except Exception as e:
-        print(f"❌ Failed to load .env file: {str(e)}")
-
-load_env_file()
-
-# Configuration
-SUPABASE_URL = "https://cajrvemigxghnfmyopiy.supabase.co"
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_KEY_REQUIRED")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "GEMINI_API_KEY_REQUIRED")
-
-# MODEL UPDATES: Using standard stable model
-GENERATION_MODEL = "models/gemini-flash-latest" 
-EMBEDDING_MODEL = "models/gemini-embedding-001"
 
 class CISGenerator:
     def __init__(self):
-        try:
-            genai.configure(api_key=GEMINI_API_KEY)
-            self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-            self.embeddings_model = EMBEDDING_MODEL
-            print(f"✅ CIS Generator initialized. Gen Model: {GENERATION_MODEL}, Embed Model: {EMBEDDING_MODEL}")
-        except Exception as e:
-            print(f"⚠️ Initialization warning: {str(e)}")
-            self.supabase = None
-        
-        self.prompt_path = "C:/Users/Administrator/.gemini/antigravity/brain/fabb9d5c-c69c-4a7d-b9cd-409e4a5ce4b8/cortex_article_engine_prompt.md"
-        self.output_dir = "d:/CEKA/ceka v010/CEKA/generated_reports"
+        self._load_env()
+        self.router = get_router()       # NEW: The Brain (Autoshift)
+        self.rag = ConstitutionRAG()     # RESTORED: The Memory (RAG)
+        self.supabase: Client = None
+        self._init_supabase()
+        self.output_dir = "generated_reports"
         os.makedirs(self.output_dir, exist_ok=True)
         
-        self._load_master_prompt()
+        # Add delay to avoid immediate rate limits on startup
+        print("🧠 Sovereign AI Router + RAG Memory Initialized. Warming up...")
+        time.sleep(2)
 
-    def _load_master_prompt(self):
+    def _load_env(self):
+        # Load .env if present
+        if os.path.exists(".env"):
+            with open(".env", "r") as f:
+                for line in f:
+                    if "=" in line and not line.startswith("#"):
+                        k, v = line.strip().split("=", 1)
+                        os.environ[k] = v
+
+    def _init_supabase(self):
+        url = os.environ.get("SUPABASE_URL") or "https://cajrvemigxghnfmyopiy.supabase.co"
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if url and key:
+            self.supabase = create_client(url, key)
+            print("✅ Supabase Connection: Active")
+        else:
+            print("⚠️ Supabase Connection: Inactive (Missing Key)")
+
+    def generate_article(self, task: Dict[str, Any]):
+        print(f"\n🚀 Executing Sovereign Task: {task['topic']}")
+        print(f"   Angle: {task['angle']}")
+        
+        # 1. RETRIEVE CONSTITUTIONAL CONTEXT (RESTORED logic)
+        print("   📚 Consulting Incorruptible Memory (RAG)...")
+        context_items = self.rag.retrieve_context(f"{task['topic']} {task['angle']}")
+        print(f"   ↳ Retrieved {len(context_items)} constitutional clauses.")
+        
+        # Format context string for the prompt
+        context_str = ""
+        for item in context_items:
+            context_str += f"""
+            [Source: Constitution of Kenya, Article {item['article']}]
+            "{item['content']}"
+            (Relevance Score: {item['similarity']:.4f})
+            \n"""
+
+        # 2. CONSTRUCT THE SOVEREIGN PROMPT (With RAG Context)
+        prompt = f"""
+        You are the CEKA Sovereign Engine, a specialized AI designed to write high-impact civic education articles for Kenyan citizens.
+        
+        TOPIC: {task['topic']}
+        ANGLE: {task['angle']}
+        AUDIENCE: {task['audience']}
+        TONE: {task['tone']}
+        TARGET LENGTH: {task['target_length']} (CRITICAL: MUST BE > 7500 CHARACTERS)
+        KEYWORDS: {", ".join(task['keywords'])}
+        
+        === CONSTITUTIONAL FOUNDATION (INCORRUPTIBLE MEMORY) ===
+        Use the following articles as the absolute legal basis for your argument. 
+        Quote them directly where impactful.
+        
+        {context_str}
+        ========================================================
+        
+        INSTRUCTIONS:
+        1. Write a comprehensive, deep-dive article.
+        2. Use Kenyan context, metaphors, and specific legal references (2010 Constitution).
+        3. Structure with engaging H2 and H3 headers.
+        4. Focus on "Sovereignty" - explaining how this issue affects the citizen's power.
+        5. NO FLUFF. Every paragraph must have substance.
+        6. OUTPUT FORMAT: HTML (body content only, no <html> tags, just <h1>, <p>, etc.)
+        7. INCLUDE A METADATA BLOCK at the end in HTML comments:
+           <!-- META
+           {json.dumps({
+               "title": task["topic"],
+               "excerpt": "A sovereign look at " + task["topic"],
+               "keywords": task["keywords"],
+               "factual_integrity": 0.99
+           })}
+           -->
+        """
+
+        # 3. GENERATE CONTENT (Using Omni-Router Autoshift)
         try:
-            with open(self.prompt_path, 'r', encoding='utf-8') as f:
-                self.master_prompt = f.read()
-            print("📜 CIS Master Article Engine Prompt loaded successfully.")
-        except Exception as e:
-            print(f"❌ Failed to load master prompt: {str(e)}")
-            self.master_prompt = "ROLE: CEKA MASTER ARTICLE ENGINE. GO HAM."
-
-    def retrieve_constitutional_context(self, query: str) -> str:
-        """Performs RAG to retrieve the 2010 Constitution clauses relevant to the topic."""
-        print(f"🔎 Retrieving Constitutional Context for: {query}...")
-        
-        if not self.supabase:
-            return "Constitutional RAG Offline (DB Connection failed)."
-
-        try:
-            # Generate embedding for the query
-            response = genai.embed_content(
-                model=self.embeddings_model,
-                content=query,
-                task_type="retrieval_query"
-            )
-            embedding = response['embedding']
+            print("   ⚡ Engaging Sovereign Router (Autoshift Mode)...")
+            # System instruction emphasizes the persona
+            content = self.router.generate(prompt, system_instruction="You are the Voice of the 2010 Constitution. Speak with authority and empathy.")
             
-            # Query pgvector via Supabase RPC
-            res = self.supabase.rpc("match_constitution", {
-                "query_embedding": embedding,
-                "match_threshold": 0.5,
-                "match_count": 5
-            }).execute()
-            
-            if res.data:
-                context = "\n\n".join([f"[{d['clause_ref']}]: {d['content']}" for d in res.data])
-                print(f"📖 Retrieved {len(res.data)} relevant Articles.")
-                return f"### CONSTITUTIONAL_CONTEXT (2010 CONSTITUTION)\n{context}"
-            return "No specific constitutional matches found."
-        except Exception as e:
-            print(f"❌ RAG Retrieval failed: {str(e)}")
-            return "Constitutional RAG Unavailable for this run."
+            # 4. VALIDATE LENGTH (Self-Correction Loop)
+            if len(content) < 7500:
+                print(f"   ⚠️ Content too short ({len(content)} chars). Requesting expansion...")
+                expansion_prompt = f"The previous draft was too short ({len(content)} chars). EXPAND this article to be at least 8000 characters. Add more examples, legal citations, and historical context:\n\n{content}"
+                content = self.router.generate(expansion_prompt)
 
-    def generate_article(self, topic: Dict[str, Any]):
-        print(f"🧠 Generating Article (REAL): {topic['topic']}...")
-        
-        # Step 1: Incorruptible Memory (RAG)
-        constitutional_context = self.retrieve_constitutional_context(topic['topic'])
-        
-        # Step 2: Assemble Full Context Prompt
-        full_system_prompt = f"{self.master_prompt}\n\n{constitutional_context}\n\nCRITICAL CONSTRAINTS: MINIMUM LENGTH 7500 CHARACTERS (approx 1500-2500 words). GO DEEP. PROVIDE COMPREHENSIVE ANALYSIS."
-        
-        input_payload = json.dumps(topic, indent=2)
-        
-        model = genai.GenerativeModel(GENERATION_MODEL)
-        
-        try:
-            response = model.generate_content(
-                f"SYSTEM_PROMPT: {full_system_prompt}\n\nINPUT_PAYLOAD: {input_payload}\n\nMISSION: EXECUTE REAL FULL HAM GENERATION. ENSURE LENGTH > 7500 CHARS.",
-                generation_config={"temperature": 0.3, "top_p": 0.95, "max_output_tokens": 8192}
-            )
-            
-            raw_text = response.text
-            self._save_results(topic['topic'], raw_text)
+            self._save_results(task['topic'], content)
             
         except Exception as e:
-            print(f"❌ Generation failure for {topic['topic']}: {str(e)}")
+            print(f"❌ GENERATION FAILED: {str(e)}")
 
     def _save_results(self, topic_title: str, content: str):
-        # Extract metadata if possible
+        # Extract Metadata
         metadata = {}
         if "<!-- META" in content:
             try:
@@ -154,6 +138,7 @@ class CISGenerator:
             # Insert into DB if possible
             try:
                 self.supabase.table("generated_articles").insert({
+                    "id": str(uuid.uuid4()),
                     "title": topic_title,
                     "excerpt": metadata.get("excerpt", f"CIS Report on {topic_title}"),
                     "content": content,
@@ -202,15 +187,27 @@ class CISGenerator:
                 "keywords": ["Civic Education", "Article 1", "Public Participation", "Accountability"],
                 "publish_target": "web",
                 "required_sources": ["constitution_2010"],
+                "deliverables": ["html", "metadata_json"],
+            },
+            {
+                "task_id": str(uuid.uuid4()),
+                "topic": "The Finance Bill 2025: A Citizen's Analysis",
+                "angle": "Economic Sovereignty vs Debt Slavery",
+                "audience": "General Public, Youth",
+                "target_length": "2500 words",
+                "tone": "Urgent, Analytical, Revolutionary",
+                "keywords": ["Finance Bill", "Taxation", "Public Debt", "Article 201"],
+                "publish_target": "web",
+                "required_sources": ["constitution_2010"],
                 "deliverables": ["html", "metadata_json"]
-            }
+            },
         ]
         
         for task in tasks:
             self.generate_article(task)
             print("⏳ Waiting 10s to respect rate limits...")
-            time.sleep(10) # Increased delay
+            time.sleep(10)
 
 if __name__ == "__main__":
-    GENERATOR = CISGenerator()
-    GENERATOR.run_batch()
+    generator = CISGenerator()
+    generator.run_batch()

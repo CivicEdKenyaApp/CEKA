@@ -98,29 +98,52 @@ export function useAIReview() {
 
     const promoteToBlogPost = async (article: GeneratedArticle) => {
         try {
-            const slug = article.title
+            setLoading(true);
+
+            // 1. Generate a URL-friendly slug
+            let slug = article.title
                 .toLowerCase()
                 .replace(/[^\w\s-]/g, '')
                 .replace(/\s+/g, '-')
                 .replace(/-+/g, '-')
                 .trim();
 
+            // Ensure slug uniqueness (simple append)
+            const { data: existing } = await supabase
+                .from('blog_posts')
+                .select('slug')
+                .eq('slug', slug)
+                .single();
+
+            if (existing) {
+                slug = `${slug}-${Date.now().toString().slice(-4)}`;
+            }
+
+            // 2. Prepare the Payload (FULL MAPPING)
+            const blogPostPayload = {
+                title: article.title,
+                slug: slug,
+                content: article.content, // preserving HTML
+                excerpt: article.excerpt,
+                status: 'published',
+                published_at: new Date().toISOString(),
+                author: 'CEKA', // Default author for AI content
+                // Map SEO keywords to tags if possible, or just leave as null if schema differs
+                tags: article.seo_keywords || [],
+                // We'll trust the DB to handle missing fields gracefully or add them if schema allows
+                // For now, mapping known fields from our schema check
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            // 3. Insert into Live Table
             const { error: blogError } = await supabase
                 .from('blog_posts')
-                .insert([{
-                    title: article.title,
-                    slug,
-                    content: article.content,
-                    excerpt: article.excerpt,
-                    status: 'published',
-                    published_at: new Date().toISOString(),
-                    meta_description: article.meta_description,
-                    seo_keywords: article.seo_keywords,
-                    author: 'CEKA'
-                }]);
+                .insert([blogPostPayload]);
 
             if (blogError) throw blogError;
 
+            // 4. Update the Draft Status to 'published'
             const { error: updateError } = await (supabase.from('generated_articles' as any) as any)
                 .update({ status: 'published' })
                 .eq('id', article.id);
@@ -128,17 +151,21 @@ export function useAIReview() {
             if (updateError) throw updateError;
 
             toast({
-                title: "Published",
-                description: "Article is now live on the blog!"
+                title: "🚀 WE ARE LIVE!",
+                description: `Article published successfully to /blog/${slug}`,
+                className: "bg-green-500 text-white border-none"
             });
 
             fetchDrafts();
         } catch (err: any) {
+            console.error("Publishing Error:", err);
             toast({
-                title: "Error",
-                description: "Failed to publish blog post: " + err.message,
+                title: "Publishing Failed",
+                description: err.message,
                 variant: "destructive"
             });
+        } finally {
+            setLoading(false);
         }
     };
 

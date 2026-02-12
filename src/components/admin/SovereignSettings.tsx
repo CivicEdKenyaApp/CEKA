@@ -20,9 +20,16 @@ import {
     Activity,
     Terminal,
     Save,
-    ChevronRight,
     Radar,
-    Clock
+    Clock,
+    Code2,
+    FlaskConical,
+    MessagesSquare,
+    Workflow,
+    AlertTriangle,
+    CheckCircle2,
+    Copy,
+    RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,6 +121,9 @@ export function SovereignSettings() {
                     <TabsTrigger value="memory" className="rounded-2xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-slate-900 font-bold transition-all text-slate-500">
                         <Database className="h-4 w-4 mr-2" /> RAG Memory
                     </TabsTrigger>
+                    <TabsTrigger value="simulator" className="rounded-2xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-slate-900 font-bold transition-all text-slate-500">
+                        <FlaskConical className="h-4 w-4 mr-2" /> Simulator
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="pipeline" className="space-y-6 outline-none">
@@ -131,22 +141,9 @@ export function SovereignSettings() {
                             </CardContent>
                         </Card>
 
-                        {/* Live Metrics */}
+                        {/* Live Metrics & Neural Constellation */}
                         <div className="space-y-6">
-                            <Card className="border-none shadow-xl rounded-[32px] bg-slate-900 text-white p-6 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-kenya-red/20 blur-[64px] rounded-full -mr-16 -mt-16" />
-                                <div className="relative z-10 space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">System Integrity</p>
-                                        <Radio className="h-4 w-4 text-kenya-green animate-pulse" />
-                                    </div>
-                                    <div className="text-5xl font-black">99.8%</div>
-                                    <div className="flex items-center gap-2 text-[10px] text-kenya-green font-bold">
-                                        <ShieldCheck className="h-3 w-3" />
-                                        BATTLE-READY
-                                    </div>
-                                </div>
-                            </Card>
+                            <NeuralConstellation />
 
                             <Card className="border-none shadow-xl rounded-[32px] bg-white p-6 space-y-4">
                                 <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Factual Rigor Floor</p>
@@ -283,16 +280,255 @@ export function SovereignSettings() {
                         </div>
                     </Card>
                 </TabsContent>
+                <TabsContent value="simulator" className="outline-none">
+                    <IntelligenceSimulator />
+                </TabsContent>
             </Tabs>
+        </div>
+    );
+}
+
+function PromptEditor({ profile, onSave }: { profile: IntelligenceProfile; onSave: (p: IntelligenceProfile) => void }) {
+    const [editingPrompt, setEditingPrompt] = useState(profile.system_prompt);
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Code2 className="h-4 w-4" /> Persona Prompt Editor
+                </h4>
+                <Button
+                    size="sm"
+                    className="h-8 rounded-xl bg-kenya-red hover:bg-red-600 shadow-lg text-[10px] font-black uppercase tracking-wider"
+                    onClick={() => onSave({ ...profile, system_prompt: editingPrompt })}
+                >
+                    <Save className="h-3 w-3 mr-2" /> Commit to Mind
+                </Button>
+            </div>
+            <div className="relative rounded-[24px] overflow-hidden border border-slate-200 bg-slate-950 p-1">
+                <div className="absolute top-4 left-4 flex gap-1.5 z-10">
+                    <div className="h-2 w-2 rounded-full bg-red-500/50" />
+                    <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
+                    <div className="h-2 w-2 rounded-full bg-green-500/50" />
+                </div>
+                <textarea
+                    value={editingPrompt}
+                    onChange={(e) => setEditingPrompt(e.target.value)}
+                    className="w-full h-[300px] bg-transparent text-indigo-300 font-mono text-xs p-10 outline-none resize-none selection:bg-indigo-500/30 leading-relaxed"
+                    spellCheck={false}
+                />
+                <div className="absolute bottom-4 right-6 text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                    Monaco_SIS_v2.0 // UTF-8
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function IntelligenceSimulator() {
+    const [query, setQuery] = useState("");
+    const [simulating, setSimulating] = useState(false);
+    const [result, setResult] = useState<any>(null);
+
+    const runSimulation = async () => {
+        if (!query) return;
+        setSimulating(true);
+        setResult(null);
+
+        try {
+            // 1. Submit Request to Queue
+            const { data, error } = await supabase
+                .from('sovereign_simulation_queue')
+                .insert([{ query }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            const requestId = data.id;
+
+            // 2. Subscribe to Realtime Updates for this request
+            const channel = supabase
+                .channel(`sim-${requestId}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'sovereign_simulation_queue',
+                        filter: `id=eq.${requestId}`
+                    },
+                    (payload) => {
+                        const newRow = payload.new as any;
+                        if (newRow.status === 'completed' && newRow.result_json) {
+                            setResult(newRow.result_json);
+                            setSimulating(false);
+                            supabase.removeChannel(channel);
+                        } else if (newRow.status === 'failed') {
+                            setSimulating(false);
+                            supabase.removeChannel(channel);
+                        }
+                    }
+                )
+                .subscribe();
+
+            // Fallback timeout (if daemon is offline)
+            setTimeout(() => {
+                if (simulating) {
+                    supabase.removeChannel(channel);
+                    setSimulating(false);
+                }
+            }, 30000); // 30s timeout
+
+        } catch (error) {
+            console.error("Simulation failed:", error);
+            setSimulating(false);
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="border-none shadow-2xl rounded-[40px] bg-white p-8 space-y-6">
+                <div className="space-y-2">
+                    <h3 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                        <FlaskConical className="h-6 w-6 text-kenya-red" />
+                        Intelligence Simulator
+                    </h3>
+                    <p className="text-slate-500 text-xs font-medium">Test the Sovereign Mind's reasoning before pushing to production.</p>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Query / Topic Ingress</label>
+                        <textarea
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="e.g. Analysis of the Finance Bill 2025 impact on SMEs..."
+                            className="w-full h-32 rounded-[24px] bg-slate-50 border border-slate-100 p-6 text-sm font-medium focus:ring-2 focus:ring-kenya-red/20 outline-none transition-all"
+                        />
+                    </div>
+                    <Button
+                        disabled={simulating || !query}
+                        onClick={runSimulation}
+                        className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-black font-bold text-sm shadow-xl flex items-center justify-center gap-3 group overflow-hidden relative"
+                    >
+                        {simulating ? (
+                            <>
+                                <RefreshCw className="h-5 w-5 animate-spin" />
+                                <span>Engaging Reasoners...</span>
+                            </>
+                        ) : (
+                            <>
+                                <PlayCircle className="h-5 w-5 text-kenya-red group-hover:scale-110 transition-all" />
+                                <span>Run Sovereign Dry-Run</span>
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </Card>
+
+            <div className="space-y-6">
+                <AnimatePresence mode="wait">
+                    {simulating ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.05 }}
+                            className="h-full min-h-[400px] border-2 border-dashed border-slate-200 rounded-[40px] flex flex-col items-center justify-center p-12 text-center space-y-6"
+                        >
+                            <div className="relative">
+                                <Activity className="h-12 w-12 text-slate-200" />
+                                <motion.div
+                                    animate={{ height: ["0%", "100%", "0%"] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                    className="absolute inset-0 bg-kenya-red/10 overflow-hidden"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-sm font-black uppercase tracking-widest text-slate-300">Scanning Incorruptible Memory...</p>
+                                <div className="flex gap-1 justify-center">
+                                    {[0, 1, 2].map(i => (
+                                        <motion.div
+                                            key={i}
+                                            animate={{ opacity: [0.2, 1, 0.2] }}
+                                            transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
+                                            className="h-1 w-4 rounded-full bg-slate-200"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : result ? (
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="space-y-6"
+                        >
+                            {/* Simulator Results */}
+                            <Card className="border-none shadow-2xl rounded-[32px] bg-slate-900 text-white overflow-hidden">
+                                <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck className="h-4 w-4 text-kenya-green" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Simulation Output</span>
+                                    </div>
+                                    <div className="p-2 bg-kenya-green/20 text-kenya-green rounded-full text-[9px] font-black uppercase border border-kenya-green/20">
+                                        Integrity: {(result.integrity * 100).toFixed(1)}%
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Retrieved Articles</p>
+                                        <div className="flex gap-2">
+                                            {result.articles.map((art: string) => (
+                                                <div key={art} className="px-2 py-1 bg-white/5 rounded-lg text-[10px] font-bold border border-white/5">
+                                                    {art}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Internal Reasoning</p>
+                                        <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                                            {result.reasoning}
+                                        </p>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5">
+                                        <Button variant="ghost" className="w-full text-xs text-slate-400 hover:text-white font-bold gap-2">
+                                            <MessagesSquare className="h-4 w-4" /> View Full Chain of Thought
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <Card className="border-none shadow-xl rounded-[32px] bg-white p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Draft Synthesis</p>
+                                    <Button variant="ghost" size="sm" className="h-6 rounded-lg text-[9px] font-black uppercase">
+                                        <Copy className="h-3 w-3 mr-1" /> Copy HTML
+                                    </Button>
+                                </div>
+                                <div
+                                    className="prose prose-sm max-w-none text-slate-900 line-clamp-6 opacity-80"
+                                    dangerouslySetInnerHTML={{ __html: result.draft_preview }}
+                                />
+                            </Card>
+                        </motion.div>
+                    ) : (
+                        <div className="h-full min-h-[400px] rounded-[40px] bg-slate-50 border-2 border-slate-100 p-12 flex flex-col items-center justify-center text-center space-y-4">
+                            <Workflow className="h-12 w-12 text-slate-200" />
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waiting for Ingress...</p>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 }
 
 function PipelineNodes() {
     const nodes = [
-        { id: 'scout', label: 'The Omni-Scout', icon: Radar, color: 'blue' },
-        { id: 'judge', label: 'Neural Judge', icon: ShieldCheck, color: 'red' },
-        { id: 'griot', label: 'The Griot', icon: BrainCircuit, color: 'green' }
+        { id: 'scout', label: 'The Omni-Scout', icon: Radar, color: 'blue', status: 'Scanning' },
+        { id: 'judge', label: 'Neural Judge', icon: ShieldCheck, color: 'red', status: 'Listening' },
+        { id: 'griot', label: 'The Griot', icon: BrainCircuit, color: 'green', status: 'Ready' }
     ];
 
     return (
@@ -303,7 +539,7 @@ function PipelineNodes() {
                     className="h-full bg-slate-900"
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 />
             </div>
 
@@ -311,24 +547,27 @@ function PipelineNodes() {
                 {nodes.map((node, i) => (
                     <div key={node.id} className="flex flex-col items-center gap-4 group">
                         <motion.div
-                            whileHover={{ scale: 1.1 }}
+                            whileHover={{ scale: 1.1, rotate: [0, -2, 2, 0] }}
                             className={cn(
                                 "h-24 w-24 rounded-[32px] bg-white border-2 border-slate-100 flex items-center justify-center shadow-xl group-hover:border-slate-900 transition-all duration-500",
-                                i === 1 ? "ring-8 ring-slate-100" : ""
+                                i === 1 ? "ring-8 ring-slate-50" : ""
                             )}
                         >
                             <node.icon className={cn(
                                 "h-10 w-10 transition-all duration-500",
-                                node.color === 'blue' ? 'text-blue-500 group-hover:text-blue-600' :
-                                    node.color === 'red' ? 'text-kenya-red group-hover:text-red-600' :
-                                        'text-kenya-green group-hover:text-green-600'
+                                node.color === 'blue' ? 'text-blue-500' :
+                                    node.color === 'red' ? 'text-kenya-red' :
+                                        'text-kenya-green'
                             )} />
                         </motion.div>
                         <div className="text-center">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{node.label}</p>
-                            <div className="flex items-center justify-center gap-1 mt-1">
-                                <div className="h-1 w-1 rounded-full bg-kenya-green animate-pulse" />
-                                <span className="text-[8px] font-bold text-kenya-green uppercase">Scanning</span>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-tight mb-1">{node.label}</p>
+                            <div className="flex items-center justify-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+                                <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse",
+                                    node.color === 'blue' ? 'bg-blue-400' :
+                                        node.color === 'red' ? 'bg-red-400' : 'bg-green-400'
+                                )} />
+                                <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">{node.status}</span>
                             </div>
                         </div>
                     </div>
@@ -339,3 +578,64 @@ function PipelineNodes() {
 }
 
 // End of SovereignSettings components
+
+function NeuralConstellation() {
+    const providers = [
+        { name: 'Gemini 2.0 Flash', status: 'active', color: 'bg-blue-500', tier: 'Primary' },
+        { name: 'OpenRouter (GPT-4o)', status: 'standby', color: 'bg-purple-500', tier: 'Failover 1' },
+        { name: 'Groq (Llama 3 70B)', status: 'standby', color: 'bg-orange-500', tier: 'Failover 2' },
+        { name: 'Mistral Large', status: 'standby', color: 'bg-yellow-500', tier: 'Failover 3' },
+        { name: 'DeepSeek V3', status: 'standby', color: 'bg-cyan-500', tier: 'Failover 4' },
+    ];
+
+    return (
+        <Card className="border-none shadow-xl rounded-[32px] bg-slate-900 text-white p-6 relative overflow-hidden">
+            {/* Background Ambience */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+                <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.15)_0%,_transparent_60%)] animate-pulse" />
+            </div>
+
+            <div className="relative z-10 space-y-6">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <Network className="h-4 w-4 text-indigo-400" />
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Neural Constellation</p>
+                    </div>
+                    <div className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[9px] font-black uppercase tracking-wider border border-green-500/20">
+                        Autoshift Active
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    {providers.map((p, i) => (
+                        <div key={p.name} className="flex items-center justify-between group">
+                            <div className="flex items-center gap-3">
+                                <div className={cn("h-2 w-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all duration-500",
+                                    p.status === 'active' ? `${p.color} scale-125 animate-pulse` : "bg-slate-700"
+                                )} />
+                                <span className={cn("text-xs font-bold transition-colors",
+                                    p.status === 'active' ? "text-white" : "text-slate-500"
+                                )}>
+                                    {p.name}
+                                </span>
+                            </div>
+                            <div className="text-[9px] font-mono uppercase tracking-wider text-slate-600">
+                                {p.status === 'active' ? (
+                                    <span className={cn("text-xs font-black", p.color.replace("bg-", "text-"))}>ENGAGED</span>
+                                ) : (
+                                    <span>{p.tier}</span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="pt-2 border-t border-white/5 flex justify-between items-center">
+                    <p className="text-[9px] italic text-slate-500">
+                        *Routing logic automatically fails over in &lt;200ms
+                    </p>
+                </div>
+            </div>
+        </Card>
+    );
+}
