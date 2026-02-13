@@ -36,7 +36,7 @@ const CEKA_SOCIALS = [
     {
         platform: 'Instagram',
         handle: '@civiceducationke',
-        followers: '2,600+',
+        followers: '3,300+',
         reach: '200,000 avg monthly',
         url: 'https://instagram.com/civiceducationke',
         icon: Instagram,
@@ -68,7 +68,7 @@ const CEKA_SOCIALS = [
         handle: '@civiceducationkenya',
         followers: 'New',
         reach: null,
-        url: 'https://upscrolled.com/civiceducationkenya',
+        url: 'https://share.upscrolled.com/en/user/538b4769-8e08-48cf-9f50-debeb4885ac1/',
         icon: UpscrolledLogo,
         color: 'bg-blue-600',
         textColor: 'text-white'
